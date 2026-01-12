@@ -1,0 +1,234 @@
+name: Monorepo Releases
+
+on:
+  push:
+    branches:
+      - main
+      - bootstrap
+
+jobs:
+  # =========================
+  # Detect changes by folder
+  # =========================
+  changes:
+    name: Detect changed projects
+    runs-on: ubuntu-latest
+    outputs:
+      engine: ${{ steps.filter.outputs.engine }}
+      cli: ${{ steps.filter.outputs.cli }}
+      editor: ${{ steps.filter.outputs.editor }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            engine:
+              - 'core/pdf-template-engine/**'
+            cli:
+              - 'tools/cli/**'
+            editor:
+              - 'tools/editor/**'
+
+  # =========================
+  # Release: LIB (Gradle)
+  # =========================
+  release-engine:
+    name: Release Engine
+    needs: changes
+    if: needs.changes.outputs.engine == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build
+        working-directory: core/pdf-template-engine
+        run: ./gradlew build
+
+      - name: Read version
+        id: version
+        working-directory: core/pdf-template-engine
+        run: |
+          echo "version=$(./gradlew -q printVersion)" >> $GITHUB_OUTPUT
+
+      - name: Skip SNAPSHOT versions
+        id: snapshot
+        run: |
+          if [[ "${{ steps.version.outputs.version }}" == *"SNAPSHOT"* ]]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if tag exists
+        id: tagcheck
+        run: |
+          if git rev-parse "engine-v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create tag
+        if: steps.tagcheck.outputs.exists == 'false' && steps.snapshot.outputs.skip == 'false'
+        run: |
+          git tag engine-v${{ steps.version.outputs.version }}
+          git push origin engine-v${{ steps.version.outputs.version }}
+
+      - name: Create GitHub Release
+        if: steps.tagcheck.outputs.exists == 'false' && steps.snapshot.outputs.skip == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: engine-v${{ steps.version.outputs.version }}
+          name: pdf-template-engine v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+
+  # =========================
+  # Release: CLI (Gradle)
+  # =========================
+  release-cli:
+    name: Release CLI
+    needs: changes
+    if: needs.changes.outputs.cli == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build
+        working-directory: tools/cli
+        run: ./gradlew shadowJar
+
+      - name: Read version
+        id: version
+        working-directory: tools/cli
+        run: |
+          echo "version=$(./gradlew -q printVersion)" >> $GITHUB_OUTPUT
+
+      - name: Skip SNAPSHOT versions
+        id: snapshot
+        run: |
+          if [[ "${{ steps.version.outputs.version }}" == *"SNAPSHOT"* ]]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if tag exists
+        id: tagcheck
+        run: |
+          if git rev-parse "cli-v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create tag
+        if: steps.tagcheck.outputs.exists == 'false' && steps.snapshot.outputs.skip == 'false'
+        run: |
+          git tag cli-v${{ steps.version.outputs.version }}
+          git push origin cli-v${{ steps.version.outputs.version }}
+
+      - name: Create GitHub Release
+        if: steps.tagcheck.outputs.exists == 'false' && steps.snapshot.outputs.skip == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: cli-v${{ steps.version.outputs.version }}
+          name: pdf-template-cli v${{ steps.version.outputs.version }}
+          files: tools/cli/build/libs/*.jar
+
+  # =========================
+  # Release: Electron App
+  # =========================
+  release-editor:
+    name: Release Editor (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.editor == 'true'
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: tools/editor
+        run: npm ci
+
+      - name: Build Electron app
+        working-directory: tools/editor
+        run: npm run build
+
+      - name: Read version
+        id: version
+        working-directory: tools/editor
+        run: |
+          node -e "console.log('version=' + require('./package.json').version)" >> $GITHUB_OUTPUT
+
+      - name: Determine release type
+        id: releasetype
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if [[ "$VERSION" == *"-dev"* ]] || [[ "$VERSION" == *"-alpha"* ]]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          elif [[ "$VERSION" == *"-beta"* ]] || [[ "$VERSION" == *"-rc"* ]]; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if tag exists
+        id: tagcheck
+        shell: bash
+        run: |
+          if git rev-parse "editor-v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      # 🔹 Só cria a TAG UMA VEZ (macOS)
+      - name: Create tag
+        if: >
+          matrix.os == 'macos-latest' &&
+          steps.tagcheck.outputs.exists == 'false' &&
+          steps.prerelease.outputs.skip == 'false'
+        run: |
+          git tag editor-v${{ steps.version.outputs.version }}
+          git push origin editor-v${{ steps.version.outputs.version }}
+
+      # 🔹 Release (todos anexam arquivos)
+      - name: Create / Update GitHub Release
+        if: steps.tagcheck.outputs.exists == 'false' && steps.prerelease.outputs.skip == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: editor-v${{ steps.version.outputs.version }}
+          name: pdf-template-editor v${{ steps.version.outputs.version }}
+          files: |
+            tools/editor/dist/**/*.dmg
+            tools/editor/dist/**/*.exe
+            tools/editor/dist/**/*.AppImage

@@ -1,0 +1,253 @@
+
+---
+
+## Layer Responsibilities
+
+### api/
+- Public entry points
+- Minimal surface area
+- No OpenPDF imports
+- No framework dependencies
+
+Example:
+- PdfTemplateEngine
+- RenderResult
+
+---
+
+### generator/
+- Core domain logic
+- Template parsing and validation
+- Rendering pipeline
+- Business rules
+
+Rules:
+- MUST NOT depend on OpenPDF
+- MUST NOT depend on file system
+- MUST NOT depend on frameworks
+
+---
+
+### engine/
+- Defines PDF engine contracts
+- Abstract operations like:
+  - createDocument
+  - addText
+  - addTable
+
+Rules:
+- Interfaces only
+- No implementation logic
+
+---
+
+### adapter/
+- Technical implementations
+- Uses concrete libraries (e.g. OpenPDF)
+
+Rules:
+- MAY depend on generator + engine
+- MUST NOT be referenced by generator or api
+
+---
+
+## Dependency Rules (STRICT)
+
+Allowed:
+- api → generator
+- generator → engine
+- adapter → engine
+- adapter → generator
+
+Forbidden:
+- generator → adapter
+- api → adapter
+- api → OpenPDF
+- generator → OpenPDF
+
+Violations MUST be rejected in code review.
+
+---
+
+## Testing Strategy
+
+- generator layer:
+  - Unit tests only
+  - No OpenPDF
+- adapter layer:
+  - Integration tests allowed
+  - OpenPDF usage tested here
+
+---
+
+## Versioning Rules
+
+- The API layer defines public compatibility
+- Changes in api/ are considered breaking
+- generator/ changes are internal unless exposed via api/
+
+---
+
+## Design Principles
+
+- Prefer composition over inheritance
+- Keep constructors explicit
+- Avoid static state
+- Favor immutability
+
+---
+
+## What NOT to do
+
+- Do not expose OpenPDF types in api/
+- Do not add framework annotations (Spring, etc.)
+- Do not bypass engine ports
+- Do not create "utils" with business logic
+
+---
+
+## AI Usage Instructions
+
+When generating code:
+- Respect the package boundaries
+- Do not introduce OpenPDF into generator or api
+- Keep public APIs minimal
+- Prefer small, focused classes
+
+---
+
+## Ownership
+
+This MDC is authoritative for Kotlin libraries in this repository.
+Any deviation must be documented and justified.
+
+io.github.<org>.core
+├── api/ # Public API (stable)
+├── generator/ # Core PDF generation logic (engine-agnostic)
+├── engine/ # Engine ports (interfaces)
+├── adapter/ # Concrete implementations (OpenPDF, etc.)
+│ └── openpdf/
+├── util/ # Shared utilities
+
+
+---
+
+## Layer Responsibilities
+
+### api/
+- Public entry points
+- Minimal surface area
+- No OpenPDF imports
+- No framework dependencies
+
+Example:
+- PdfTemplateEngine
+- RenderResult
+
+---
+
+### generator/
+- Core domain logic
+- Template parsing and validation
+- Rendering pipeline
+- Business rules
+
+Rules:
+- MUST NOT depend on OpenPDF
+- MUST NOT depend on file system
+- MUST NOT depend on frameworks
+
+---
+
+### engine/
+- Defines PDF engine contracts
+- Abstract operations like:
+  - createDocument
+  - addText
+  - addTable
+
+Rules:
+- Interfaces only
+- No implementation logic
+
+---
+
+### adapter/
+- Technical implementations
+- Uses concrete libraries (e.g. OpenPDF)
+
+Rules:
+- MAY depend on generator + engine
+- MUST NOT be referenced by generator or api
+
+---
+
+## Dependency Rules (STRICT)
+
+Allowed:
+- api → generator
+- generator → engine
+- adapter → engine
+- adapter → generator
+
+Forbidden:
+- generator → adapter
+- api → adapter
+- api → OpenPDF
+- generator → OpenPDF
+
+Violations MUST be rejected in code review.
+
+---
+
+## Testing Strategy
+
+- generator layer:
+  - Unit tests only
+  - No OpenPDF
+- adapter layer:
+  - Integration tests allowed
+  - OpenPDF usage tested here
+
+---
+
+## Versioning Rules
+
+- The API layer defines public compatibility
+- Changes in api/ are considered breaking
+- generator/ changes are internal unless exposed via api/
+
+---
+
+## Design Principles
+
+- Prefer composition over inheritance
+- Keep constructors explicit
+- Avoid static state
+- Favor immutability
+
+---
+
+## What NOT to do
+
+- Do not expose OpenPDF types in api/
+- Do not add framework annotations (Spring, etc.)
+- Do not bypass engine ports
+- Do not create "utils" with business logic
+
+---
+
+## AI Usage Instructions
+
+When generating code:
+- Respect the package boundaries
+- Do not introduce OpenPDF into generator or api
+- Keep public APIs minimal
+- Prefer small, focused classes
+
+---
+
+## Ownership
+
+This MDC is authoritative for Kotlin libraries in this repository.
+Any deviation must be documented and justified.

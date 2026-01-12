@@ -1,0 +1,48 @@
+---
+description: Testing standards and conventions for ITM External CFDI project
+globs: ["**/test/**/*.kt", "**/*Test.kt", "**/*Tests.kt"]
+alwaysApply: false
+---
+
+---
+description: Testing standards and conventions for ITM External CFDI project
+globs: ["**/test/**/*.kt", "**/*Test.kt", "**/*Tests.kt"]
+alwaysApply: false
+---
+
+# Testing Standards
+
+## Framework and Structure
+- Use JUnit as the testing framework
+- Organize tests in the `src/test/kotlin` directory structure within each module
+- Mirror the main source package structure in tests
+- Domain tests should only test business logic without external dependencies
+- App tests can include integration tests with external dependencies
+
+## Test Naming Conventions
+- Use backtick descriptive naming for test methods
+- Example: `should process valid CFDI successfully`
+- Example: `should throw ValidationException when CFDI is malformed`
+- Write descriptive test names that explain the behavior being tested
+
+## Test Organization
+- Group related tests in the same test class
+- Use `@Nested` inner classes for logical grouping when appropriate
+- Follow the Arrange-Act-Assert pattern
+
+## Assertions and Mocking
+- Use JUnit 5 assertions (`assertThat`, `assertEquals`, etc.)
+- NEVER add comments or error messages in assertEquals and other assertions - only compare the properties themselves
+- Do NOT pass the "display this in case of an error" parameter to assertions
+- In unit tests always use mockk() instead of annotations like @Mockk and always have a @AfterEach with confirmVerified
+- All verifies must be fully qualified, don't use any(), at most, use withArg if needed, or TestUtils.equalsWithTimeTolerance
+
+## Test Data
+- Keep test data close to the tests that use it
+- Use meaningful test data that reflects real-world scenarios
+- Avoid hardcoded values when possible - use constants or builders
+
+## Module-Specific Testing
+- **Domain Module Tests**: Test pure business logic, mock all external dependencies
+- **App Module Tests**: Test implementations, can include integration tests with real dependencies
+- Use dependency injection in tests following the same patterns as production code

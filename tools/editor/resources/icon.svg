@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Light background gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F8FAFC"/>
+      <stop offset="50%" style="stop-color:#F1F5F9"/>
+      <stop offset="100%" style="stop-color:#E2E8F0"/>
+    </linearGradient>
+    
+    <!-- Gradient for internal icon -->
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#FAFAFF"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded background - Light color -->
+  <rect x="24" y="24" width="464" height="464" rx="100" ry="100" fill="url(#bgGrad)"/>
+  
+  <!-- Top highlight - purple tone -->
+  <ellipse cx="256" cy="140" rx="180" ry="80" fill="#A78BFA" opacity="0.4"/>
+  
+  <!-- Central icon: Stylized document -->
+  <g transform="translate(140, 100)">
+    <!-- Soft shadow -->
+    <path d="M 20 8 L 170 8 L 220 58 L 220 308 Q 220 328 200 328 L 20 328 Q 0 328 0 308 L 0 28 Q 0 8 20 8 Z" 
+          fill="black" 
+          opacity="0.1"/>
+    
+    <!-- Main document -->
+    <path d="M 20 0 L 170 0 L 220 50 L 220 300 Q 220 320 200 320 L 20 320 Q 0 320 0 300 L 0 20 Q 0 0 20 0 Z" 
+          fill="url(#iconGrad)"/>
+    
+    <!-- Folded corner -->
+    <path d="M 170 0 L 170 50 L 220 50 Z" fill="#E0E7FF"/>
+    
+    <!-- Template lines -->
+    <rect x="30" y="80" width="100" height="12" rx="6" fill="#818CF8"/>
+    <rect x="30" y="105" width="160" height="12" rx="6" fill="#C4B5FD"/>
+    <rect x="30" y="130" width="130" height="12" rx="6" fill="#DDD6FE"/>
+    
+    <!-- Stylized data/table area -->
+    <rect x="30" y="165" width="160" height="80" rx="10" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="2"/>
+    
+    <!-- Grid icon inside -->
+    <rect x="45" y="180" width="30" height="20" rx="4" fill="#818CF8"/>
+    <rect x="85" y="180" width="30" height="20" rx="4" fill="#A78BFA"/>
+    <rect x="125" y="180" width="50" height="20" rx="4" fill="#C4B5FD"/>
+    <rect x="45" y="210" width="50" height="20" rx="4" fill="#DDD6FE"/>
+    <rect x="105" y="210" width="70" height="20" rx="4" fill="#A78BFA"/>
+    
+    <!-- Highlight element -->
+    <rect x="30" y="265" width="70" height="12" rx="6" fill="#818CF8"/>
+    <rect x="110" y="265" width="80" height="12" rx="6" fill="#6366F1"/>
+  </g>
+  
+  <!-- RED PDF badge -->
+  <g transform="translate(320, 370)">
+    <rect x="0" y="0" width="90" height="40" rx="10" fill="#DC2626"/>
+    <text x="45" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="bold" fill="white" text-anchor="middle">PDF</text>
+  </g>
+</svg>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Generator Library - Simple Documentation</title>
+</head>
+<body>
+    <h1>PDF Generator Library</h1>
+    
+    <p>A Kotlin/Java library for PDF generation from JSON templates using OpenPDF.</p>
+    
+    <h2>Installation</h2>
+    
+    <h3>Gradle (Kotlin DSL)</h3>
+    
+    <pre><code>repositories {
+    maven { url = uri("https://jitpack.io") }
+}
+
+dependencies {
+    implementation("com.github.adilsoncruz:open-pdf-generator:1.0.0")
+}</code></pre>
+    
+    <h3>Maven</h3>
+    
+    <pre><code>&lt;repositories&gt;
+    &lt;repository&gt;
+        &lt;id&gt;jitpack.io&lt;/id&gt;
+        &lt;url&gt;https://jitpack.io&lt;/url&gt;
+    &lt;/repository&gt;
+&lt;/repositories&gt;
+
+&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.github.adilsoncruz&lt;/groupId&gt;
+        &lt;artifactId&gt;open-pdf-generator&lt;/artifactId&gt;
+        &lt;version&gt;1.0.0&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+    
+    <h2>Quick Example</h2>
+    
+    <pre><code>import com.pdfgenerator.PDFGenerator
+import com.pdfgenerator.template.Template
+import java.io.File
+
+fun main() {
+    val templateJson = """
+    {
+      "version": "1.0",
+      "pageSettings": {
+        "size": "A4",
+        "orientation": "portrait",
+        "margins": {"top": 30, "right": 30, "bottom": 30, "left": 30}
+      },
+      "pageElements": [
+        {
+          "type": "text",
+          "id": "title",
+          "x": 50,
+          "y": 50,
+          "value": "My First PDF!",
+          "style": {
+            "fontSize": 24,
+            "fontWeight": "bold"
+          }
+        }
+      ]
+    }
+    """
+    
+    val template = Template.fromString(templateJson)
+    val generator = PDFGenerator()
+    generator.generate(template, emptyMap(), File("output.pdf"))
+    
+    println("PDF generated successfully!")
+}</code></pre>
+    
+    <h2>Features</h2>
+    
+    <ul>
+        <li>Ultra Lightweight - Only 5.1 MB Fat JAR</li>
+        <li>Performance - Fast cold start</li>
+        <li>JSON Templates - Simple to use</li>
+        <li>Data Binding - Dynamic data</li>
+        <li>Paginated Tables - Automatic pagination</li>
+        <li>Fixed Headers - On all pages</li>
+        <li>QR Code and Barcode - Native support</li>
+        <li>Open Source - LGPLv3 License</li>
+    </ul>
+    
+    <h2>Supported Elements</h2>
+    
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Element</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Text</td>
+                <td>Static or dynamic text</td>
+            </tr>
+            <tr>
+                <td>Image</td>
+                <td>Images from URL, file, or base64</td>
+            </tr>
+            <tr>
+                <td>Table</td>
+                <td>Tables with automatic pagination</td>
+            </tr>
+            <tr>
+                <td>Rectangle</td>
+                <td>Rectangles for backgrounds</td>
+            </tr>
+            <tr>
+                <td>Line</td>
+                <td>Horizontal, vertical, or diagonal lines</td>
+            </tr>
+            <tr>
+                <td>Barcode</td>
+                <td>QR Code and barcodes</td>
+            </tr>
+            <tr>
+                <td>Conditional</td>
+                <td>Conditional rendering</td>
+            </tr>
+            <tr>
+                <td>Loop</td>
+                <td>Element repetition</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h2>Links</h2>
+    
+    <ul>
+        <li><a href="https://github.com/adilsoncruz/open-pdf-generator">GitHub</a></li>
+        <li><a href="https://jitpack.io/#adilsoncruz/open-pdf-generator">JitPack</a></li>
+        <li><a href="https://adilsoncruz.github.io/open-pdf-generator/">Full Documentation</a></li>
+    </ul>
+    
+    <hr>
+    
+    <footer>
+        <p>Copyright &copy; 2025 Adi Cruz | LGPLv3 License</p>
+    </footer>
+</body>
+</html>

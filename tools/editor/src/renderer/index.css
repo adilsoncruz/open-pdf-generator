@@ -1,0 +1,287 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Variables for theming */
+:root {
+  /* Light theme (default) */
+  --color-bg: #f3f4f6;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f9fafb;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f3f4f6;
+  --color-border: #e5e7eb;
+  --color-border-light: #d1d5db;
+  
+  --color-text: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #9ca3af;
+  
+  --color-primary: #8b5cf6;
+  --color-primary-light: #a78bfa;
+  --color-primary-dark: #7c3aed;
+  
+  --color-accent: #f43f5e;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark theme */
+.dark {
+  --color-bg: #0a0a0f;
+  --color-bg-secondary: #12121a;
+  --color-bg-tertiary: #1a1a24;
+  --color-surface: #1e1e2a;
+  --color-surface-hover: #252532;
+  --color-border: #2a2a3a;
+  --color-border-light: #3a3a4a;
+  
+  --color-text: #ffffff;
+  --color-text-secondary: #a0a0b0;
+  --color-text-muted: #6a6a7a;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+code {
+  font-family: 'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Custom scrollbar - Light */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Dark scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}
+
+/* Drag handle for elements */
+.element-handle {
+  cursor: move;
+  transition: background-color 0.2s;
+}
+
+.element-handle:hover {
+  background-color: rgba(139, 92, 246, 0.1);
+}
+
+/* Selection highlight */
+.element-selected {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Code editor styling */
+.code-editor {
+  font-family: 'JetBrains Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* Focus rings */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition-property: background-color, border-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* Utility classes for themed components */
+@layer components {
+  .theme-bg {
+    background-color: var(--color-bg);
+  }
+  
+  .theme-bg-secondary {
+    background-color: var(--color-bg-secondary);
+  }
+  
+  .theme-bg-tertiary {
+    background-color: var(--color-bg-tertiary);
+  }
+  
+  .theme-surface {
+    background-color: var(--color-surface);
+  }
+  
+  .theme-surface-hover:hover {
+    background-color: var(--color-surface-hover);
+  }
+  
+  .theme-border {
+    border-color: var(--color-border);
+  }
+  
+  .theme-border-light {
+    border-color: var(--color-border-light);
+  }
+  
+  .theme-text {
+    color: var(--color-text);
+  }
+  
+  .theme-text-secondary {
+    color: var(--color-text-secondary);
+  }
+  
+  .theme-text-muted {
+    color: var(--color-text-muted);
+  }
+  
+  /* Primary button */
+  .btn-primary {
+    @apply px-4 py-2 rounded-lg font-semibold text-white transition-all;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+  }
+  
+  /* Secondary button */
+  .btn-secondary {
+    @apply px-4 py-2 rounded-lg font-medium transition-all;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--color-surface-hover);
+    border-color: var(--color-border-light);
+  }
+  
+  /* Card component */
+  .card {
+    @apply rounded-xl;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+  
+  .card:hover {
+    border-color: var(--color-border-light);
+  }
+  
+  /* Input styling - keeps white background and black text for readability */
+  .input {
+    @apply px-3 py-2 rounded-lg text-sm transition-all;
+    background-color: #ffffff;
+    border: 1px solid var(--color-border);
+    color: #1a1a2e;
+  }
+  
+  .input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+  
+  .input::placeholder {
+    color: #9ca3af;
+  }
+  
+  /* Panel styling */
+  .panel {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+  }
+  
+  /* Section header */
+  .section-header {
+    @apply text-xs font-semibold uppercase tracking-wide;
+    color: var(--color-text-muted);
+  }
+}
+
+/* Glow effect for primary elements */
+.glow {
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+}
+
+.glow-sm {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+/* Animation for theme toggle */
+@keyframes spin-once {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-once {
+  animation: spin-once 0.5s ease-in-out;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-primary {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: var(--color-primary);
+}
+
+.badge-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--color-warning);
+}
+
+.badge-accent {
+  background-color: rgba(244, 63, 94, 0.1);
+  color: var(--color-accent);
+}

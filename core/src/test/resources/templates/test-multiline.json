@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "New Template",
+    "description": "",
+    "author": "",
+    "created": "2025-12-03T02:49:15.065Z",
+    "modified": "2025-12-03T02:49:15.065Z",
+    "tags": []
+  },
+  "pageSettings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 30,
+      "right": 30,
+      "bottom": 30,
+      "left": 30
+    }
+  },
+  "pageElements": [
+    {
+      "type": "text",
+      "id": "text-1764763505046",
+      "x": 66,
+      "y": 30,
+      "value": "",
+      "width": 373,
+      "height": 52,
+      "style": {
+        "fontSize": 12,
+        "fontFamily": "Helvetica",
+        "fontWeight": "normal",
+        "color": "#000000",
+        "alignment": "left",
+        "multiline": true
+      },
+      "dataBinding": "comments"
+    },
+    {
+      "type": "static_text",
+      "id": "static_text-1764763533241",
+      "x": 134,
+      "y": 81,
+      "value": "Static Text",
+      "width": 200,
+      "height": 30,
+      "style": {
+        "fontSize": 12,
+        "fontFamily": "Helvetica",
+        "fontWeight": "normal",
+        "color": "#000000",
+        "alignment": "left"
+      },
+      "positionMode": "RELATIVE"
+    }
+  ]
+}

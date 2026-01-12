@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "New Template",
+    "description": "",
+    "author": "",
+    "created": "2025-12-02T20:44:29.033Z",
+    "modified": "2025-12-02T20:44:29.035Z",
+    "tags": []
+  },
+  "pageSettings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 30,
+      "right": 30,
+      "bottom": 30,
+      "left": 30
+    }
+  },
+  "pageElements": [
+    {
+      "type": "loop",
+      "id": "loop-1764708358511",
+      "x": 50,
+      "y": 50,
+      "width": 400,
+      "height": 150,
+      "dataBinding": "items",
+      "itemSpacing": 35,
+      "elements": [
+        {
+          "type": "text",
+          "id": "text-1764708433743",
+          "x": 8,
+          "y": 6,
+          "value": "name",
+          "width": 150,
+          "height": 20,
+          "style": {
+            "fontSize": 10,
+            "fontFamily": "Helvetica",
+            "color": "#000000"
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "rectangle-1764708500093",
+          "x": 288,
+          "y": 7,
+          "width": 100,
+          "height": 80,
+          "style": {
+            "fillColor": "#e0e0e0"
+          }
+        },
+        {
+          "type": "line",
+          "id": "line-1764708514994",
+          "x": 9,
+          "y": 32,
+          "x2": 274,
+          "y2": 33,
+          "style": {
+            "strokeColor": "#000000",
+            "strokeWidth": 1
+          }
+        }
+      ],
+      "style": {
+        "borderColor": "#8b5cf6",
+        "borderWidth": 1,
+        "borderStyle": "dashed"
+      },
+      "hidden": false
+    }
+  ]
+}

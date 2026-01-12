@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Template Editor - Open Source Visual PDF Designer</title>
+    <meta name="description" content="A powerful open-source desktop application for designing PDF templates visually. Create professional invoices, reports, and documents with ease.">
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <img src="assets/icon.png" alt="PDF Template Editor" class="logo-icon">
+                <span>PDF Template Editor</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#screenshots">Screenshots</a>
+                <a href="#documentation">Docs</a>
+                <a href="#download" class="nav-cta">Download</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero" id="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-icon">✨</span>
+                <span>Open Source & Free</span>
+            </div>
+            <h1 class="hero-title">
+                Design PDFs
+                <span class="gradient-text">Visually</span>
+            </h1>
+            <p class="hero-description">
+                A powerful desktop application for creating and editing PDF templates with a drag-and-drop visual editor. 
+                Build professional invoices, reports, and documents without writing code.
+            </p>
+            <div class="hero-actions">
+                <a href="#download" class="btn btn-primary">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7,10 12,15 17,10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download for macOS
+                </a>
+                <a href="https://github.com/adilsoncruz/open-pdf-generator" class="btn btn-secondary" target="_blank">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    View on GitHub
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-value">v1.0.0</span>
+                    <span class="stat-label">Latest Version</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">macOS</span>
+                    <span class="stat-label">Platform</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">MIT</span>
+                    <span class="stat-label">License</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-icon-container">
+                <div class="hero-icon-glow"></div>
+                <img src="assets/icon.png" alt="PDF Template Editor" class="hero-icon-large">
+                <div class="hero-icon-badge">
+                    <span class="badge-version">v1.0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Features</span>
+                <h2 class="section-title">Everything you need to create professional PDFs</h2>
+                <p class="section-description">A complete toolset for designing, previewing, and generating PDF templates</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                    </div>
+                    <h3>Visual Editor</h3>
+                    <p>Drag and drop elements onto the canvas. Position, resize, and style everything visually without code.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                        </svg>
+                    </div>
+                    <h3>Multiple Elements</h3>
+                    <p>Add text, images, tables, rectangles, lines, and barcodes. Each element has customizable properties.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Headers & Footers</h3>
+                    <p>Create fixed headers and footers that repeat on every page. Perfect for page numbers and branding.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Data Binding</h3>
+                    <p>Use <code>{{data.field}}</code> syntax to bind template elements to dynamic data from JSON.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                    </div>
+                    <h3>Real-time Preview</h3>
+                    <p>See your changes instantly in the canvas preview. Test with sample data before generating.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                    </div>
+                    <h3>PDF Generation</h3>
+                    <p>Generate production-ready PDFs using the built-in Kotlin/Java library powered by OpenPDF.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            <path d="m15 5 4 4"/>
+                        </svg>
+                    </div>
+                    <h3>Loop Elements</h3>
+                    <p>Iterate over arrays of data with automatic pagination. Perfect for invoices with multiple line items.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18"/>
+                            <path d="M9 21V9"/>
+                        </svg>
+                    </div>
+                    <h3>Relative Positioning</h3>
+                    <p>Position elements relative to content above. Dynamic layouts that adjust to varying content lengths.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshots Section -->
+    <section class="screenshots" id="screenshots">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Screenshots</span>
+                <h2 class="section-title">See it in action</h2>
+                <p class="section-description">Explore the intuitive interface designed for productivity</p>
+            </div>
+            <div class="screenshots-gallery">
+                <div class="screenshot-card main">
+                    <div class="screenshot-frame">
+                        <img src="assets/screenshots/main-editor.png" alt="Main Editor Interface" class="screenshot-img">
+                    </div>
+                    <div class="screenshot-info">
+                        <h3>Main Editor Interface</h3>
+                        <p>The complete workspace with sidebar, canvas, and properties panel</p>
+                    </div>
+                </div>
+                <div class="screenshot-grid">
+                    <div class="screenshot-card">
+                        <div class="screenshot-frame small">
+                            <img src="assets/screenshots/data-panel.png" alt="Data Panel" class="screenshot-img">
+                        </div>
+                        <div class="screenshot-info">
+                            <h3>Data Panel</h3>
+                            <p>JSON editor with validation, search, and formatting</p>
+                        </div>
+                    </div>
+                    <div class="screenshot-card">
+                        <div class="screenshot-frame small">
+                            <img src="assets/screenshots/properties-panel.png" alt="Properties Panel" class="screenshot-img">
+                        </div>
+                        <div class="screenshot-info">
+                            <h3>Properties Panel</h3>
+                            <p>Fine-tune element settings with precision</p>
+                        </div>
+                    </div>
+                    <div class="screenshot-card">
+                        <div class="screenshot-frame small">
+                            <div class="screenshot-placeholder">
+                                <div class="mini-mock pdf-result">
+                                    <div class="mini-pdf">
+                                        <div class="pdf-page">
+                                            <div class="pdf-header"></div>
+                                            <div class="pdf-title"></div>
+                                            <div class="pdf-table">
+                                                <div class="pdf-row"></div>
+                                                <div class="pdf-row"></div>
+                                                <div class="pdf-row"></div>
+                                            </div>
+                                            <div class="pdf-footer"></div>
+                                        </div>
+                                    </div>
+                                    <div class="pdf-badge">PDF</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screenshot-info">
+                            <h3>Generated PDF</h3>
+                            <p>Professional output ready to use</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section class="documentation" id="documentation">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Documentation</span>
+                <h2 class="section-title">Get started quickly</h2>
+                <p class="section-description">Everything you need to know to create your first template</p>
+            </div>
+            
+            <div class="docs-grid">
+                <div class="doc-card">
+                    <div class="doc-header">
+                        <span class="doc-number">01</span>
+                        <h3>Installation</h3>
+                    </div>
+                    <div class="doc-content">
+                        <ol>
+                            <li>Download the <code>.dmg</code> file</li>
+                            <li>Open the downloaded file</li>
+                            <li>Drag <strong>PDF Template Editor</strong> to Applications</li>
+                            <li>Launch from Applications folder</li>
+                        </ol>
+                        <div class="doc-note">
+                            <strong>Note:</strong> On first launch, you may need to allow the app in System Preferences → Security & Privacy.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-header">
+                        <span class="doc-number">02</span>
+                        <h3>Creating a Template</h3>
+                    </div>
+                    <div class="doc-content">
+                        <ol>
+                            <li>Click <strong>New</strong> to create a blank template</li>
+                            <li>Select a section (Header, Body, or Footer)</li>
+                            <li>Add elements from the sidebar</li>
+                            <li>Position elements by dragging on the canvas</li>
+                            <li>Edit properties in the right panel</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-header">
+                        <span class="doc-number">03</span>
+                        <h3>Data Binding</h3>
+                    </div>
+                    <div class="doc-content">
+                        <p>Use double curly braces to bind data:</p>
+                        <div class="code-block">
+                            <code>{{customer.name}}</code>
+                            <code>{{invoice.total}}</code>
+                            <code>{{pageNumber}}</code>
+                        </div>
+                        <p>Click <strong>Test Data</strong> to add sample JSON data and see the preview update in real-time.</p>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <div class="doc-header">
+                        <span class="doc-number">04</span>
+                        <h3>Generating PDFs</h3>
+                    </div>
+                    <div class="doc-content">
+                        <ol>
+                            <li>Ensure your template is saved</li>
+                            <li>Add test data in the Data Panel</li>
+                            <li>Click <strong>Generate PDF</strong></li>
+                            <li>Wait for the Java library to process</li>
+                            <li>Choose to open the generated PDF</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="docs-elements">
+                <h3>Available Elements</h3>
+                <div class="elements-grid">
+                    <div class="element-item">
+                        <div class="element-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 7h16M9 20v-13M15 20v-13" />
+                            </svg>
+                        </div>
+                        <div class="element-info">
+                            <h4>Text</h4>
+                            <p>Static or dynamic text with font customization</p>
+                        </div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="M21 15l-5-5L5 21" />
+                            </svg>
+                        </div>
+                        <div class="element-info">
+                            <h4>Image</h4>
+                            <p>Insert images from URL or data binding</p>
+                        </div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <path d="M3 9h18M3 15h18M12 3v18" />
+                            </svg>
+                        </div>
+                        <div class="element-info">
+                            <h4>Table</h4>
+                            <p>Dynamic tables with configurable columns</p>
+                        </div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                            </svg>
+                        </div>
+                        <div class="element-info">
+                            <h4>Rectangle</h4>
+                            <p>Shapes with fill and border options</p>
+                        </div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 19l14-14" />
+                            </svg>
+                        </div>
+                        <div class="element-info">
+                            <h4>Line</h4>
+                            <p>Horizontal or vertical dividers</p>
+                        </div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <path d="M6 6h2v12H6zM10 6h1v12h-1zM13 6h1v12h-1zM16 6h2v12h-2z" />
+                            </svg>
+                        </div>
+                        <div class="element-info">
+                            <h4>Barcode</h4>
+                            <p>Generate barcodes from data</p>
+                        </div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                <path d="m15 5 4 4"/>
+                            </svg>
+                        </div>
+                        <div class="element-info">
+                            <h4>Loop</h4>
+                            <p>Repeat elements for each item in an array</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="docs-advanced">
+                <h3>Advanced Features</h3>
+                <div class="advanced-grid">
+                    <div class="advanced-card">
+                        <h4>🔄 Loop Element</h4>
+                        <p>Iterate over arrays of data to create repeated content. Perfect for invoice line items, product lists, and more.</p>
+                        <div class="code-block">
+                            <code>dataBinding: "items"</code>
+                            <code>Child elements use: name, price, qty</code>
+                        </div>
+                        <ul class="advanced-features">
+                            <li>Add child elements inside the loop (Text, Image, Rectangle, etc.)</li>
+                            <li>Automatic pagination when content exceeds page</li>
+                            <li>Configurable item spacing</li>
+                            <li>Drag-and-drop reordering of children</li>
+                        </ul>
+                    </div>
+                    <div class="advanced-card">
+                        <h4>📍 Position Mode</h4>
+                        <p>Control how elements are positioned relative to other content.</p>
+                        <ul class="advanced-features">
+                            <li><strong>ABSOLUTE</strong> (default): Fixed position on the page</li>
+                            <li><strong>RELATIVE</strong>: Position based on content above</li>
+                        </ul>
+                        <p class="advanced-tip">Use RELATIVE mode for elements that should flow after dynamic content like loops or multiline text.</p>
+                    </div>
+                    <div class="advanced-card">
+                        <h4>📝 Multiline Text Overflow</h4>
+                        <p>Control how multiline text behaves when it exceeds the defined height.</p>
+                        <ul class="advanced-features">
+                            <li><strong>visible</strong>: Content can overflow the box</li>
+                            <li><strong>hidden</strong>: Content is clipped at the defined height</li>
+                            <li><strong>auto</strong>: Height adjusts to fit all content</li>
+                        </ul>
+                        <p class="advanced-tip">Use <code>overflow: auto</code> when you have a RELATIVE element below that should position after all the text content.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="docs-shortcuts">
+                <h3>Keyboard Shortcuts</h3>
+                <div class="shortcuts-grid">
+                    <div class="shortcut">
+                        <kbd>⌘</kbd> + <kbd>N</kbd>
+                        <span>New Template</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>⌘</kbd> + <kbd>O</kbd>
+                        <span>Open Template</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>⌘</kbd> + <kbd>S</kbd>
+                        <span>Save</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>S</kbd>
+                        <span>Save As</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>⌫</kbd>
+                        <span>Delete Element</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>⌘</kbd> + <kbd>C</kbd>
+                        <span>Copy Element</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>⌘</kbd> + <kbd>V</kbd>
+                        <span>Paste Element</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>
+                        <span>Move Element</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>⌘</kbd> + <kbd>F</kbd>
+                        <span>Search in JSON</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>⌘</kbd> + <kbd>G</kbd>
+                        <span>Generate PDF</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section class="download" id="download">
+        <div class="container">
+            <div class="download-card">
+                <div class="download-content">
+                    <img src="assets/icon.png" alt="PDF Template Editor" class="download-icon">
+                    <h2>Download PDF Template Editor</h2>
+                    <p>Free and open source. No account required.</p>
+                    <div class="download-info">
+                        <span class="info-item">
+                            <strong>Version:</strong> 1.0.0
+                        </span>
+                        <span class="info-item">
+                            <strong>Platform:</strong> macOS (Intel & Apple Silicon)
+                        </span>
+                        <span class="info-item">
+                            <strong>Size:</strong> ~117 MB
+                        </span>
+                    </div>
+                    <a href="https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.0.0/PDF-Template-Editor-1.0.0.dmg" class="btn btn-download">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download .dmg
+                    </a>
+                    <p class="download-note">
+                        Requires macOS 10.15 (Catalina) or later
+                    </p>
+                </div>
+                <div class="download-features">
+                    <h3>What's included:</h3>
+                    <ul>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Visual template editor with dark/light themes
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Built-in PDF generation library
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Header & footer support
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Loop elements with auto-pagination
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Relative positioning for dynamic layouts
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Data binding with JSON
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Sample templates included
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            No internet required
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="assets/icon.png" alt="PDF Template Editor" class="footer-logo">
+                    <span>PDF Template Editor</span>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/adilsoncruz/open-pdf-generator" target="_blank">GitHub</a>
+                    <a href="https://github.com/adilsoncruz/open-pdf-generator/issues" target="_blank">Report Issue</a>
+                    <a href="https://github.com/adilsoncruz/open-pdf-generator/blob/main/LICENSE" target="_blank">MIT License</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Made with ❤️ for the open source community</p>
+                <p>© 2025 PDF Template Editor. Released under MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

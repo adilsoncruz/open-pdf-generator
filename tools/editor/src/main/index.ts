@@ -1,0 +1,1009 @@
+import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
+import * as path from 'path'
+import * as fs from 'fs/promises'
+import { spawn, execSync } from 'child_process'
+import * as os from 'os'
+import * as https from 'https'
+import * as http from 'http'
+import { initAutoUpdater, checkForUpdates } from './autoUpdater'
+
+let mainWindow: BrowserWindow | null = null
+let splashWindow: BrowserWindow | null = null
+
+// ============ CLI Management ============
+
+const CLI_VERSION = '1.0.0'
+const CLI_DIR = path.join(os.homedir(), '.pdf-generator')
+const CLI_JAR_PATH = path.join(CLI_DIR, 'pdf-generator.jar')
+const CLI_VERSION_FILE = path.join(CLI_DIR, 'version.txt')
+
+// URL para download do JAR (pode ser configurado para GitHub Releases ou outro servidor)
+const CLI_DOWNLOAD_URL = `https://github.com/adilsoncruz/open-pdf-generator/releases/download/v${CLI_VERSION}/open-pdf-generator-${CLI_VERSION}-standalone.jar`
+
+interface CLIStatus {
+  installed: boolean
+  version: string | null
+  jarPath: string
+  needsUpdate: boolean
+  javaInstalled: boolean
+  javaVersion: string | null
+  javaPath: string | null
+}
+
+/**
+ * Caminhos comuns do Java no macOS
+ */
+const JAVA_PATHS = [
+  '/usr/bin/java',
+  '/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java',
+  '/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin/java',
+  '/Library/Java/JavaVirtualMachines/openjdk-17.jdk/Contents/Home/bin/java',
+  '/Library/Java/JavaVirtualMachines/openjdk-21.jdk/Contents/Home/bin/java',
+  '/opt/homebrew/opt/openjdk/bin/java',
+  '/opt/homebrew/opt/openjdk@17/bin/java',
+  '/opt/homebrew/opt/openjdk@21/bin/java',
+  '/usr/local/opt/openjdk/bin/java',
+  '/usr/local/opt/openjdk@17/bin/java',
+  '/usr/local/opt/openjdk@21/bin/java',
+]
+
+let cachedJavaPath: string | null = null
+
+/**
+ * Encontra o caminho do Java no sistema
+ */
+async function findJavaPath(): Promise<string | null> {
+  if (cachedJavaPath) return cachedJavaPath
+  
+  // Primeiro tenta o JAVA_HOME
+  const javaHome = process.env.JAVA_HOME
+  if (javaHome) {
+    const javaPath = path.join(javaHome, 'bin', 'java')
+    try {
+      await fs.access(javaPath)
+      cachedJavaPath = javaPath
+      return javaPath
+    } catch {
+      // JAVA_HOME is not valid, continue searching
+    }
+  }
+  
+  // Tenta caminhos conhecidos
+  for (const javaPath of JAVA_PATHS) {
+    try {
+      await fs.access(javaPath)
+      cachedJavaPath = javaPath
+      return javaPath
+    } catch {
+      // Continua procurando
+    }
+  }
+  
+  // Tenta usar /usr/libexec/java_home (macOS)
+  try {
+    const javaHomePath = execSync('/usr/libexec/java_home 2>/dev/null', { encoding: 'utf-8' }).trim()
+    if (javaHomePath) {
+      const javaPath = path.join(javaHomePath, 'bin', 'java')
+      try {
+        await fs.access(javaPath)
+        cachedJavaPath = javaPath
+        return javaPath
+      } catch {
+        // java_home returned invalid path
+      }
+    }
+  } catch {
+    // java_home not available
+  }
+  
+  // Last attempt: use 'java' directly (works in dev)
+  try {
+    execSync('java -version 2>&1', { encoding: 'utf-8' })
+    cachedJavaPath = 'java'
+    return 'java'
+  } catch {
+    // Java not found
+  }
+  
+  return null
+}
+
+/**
+ * Checks if Java is installed and returns the version
+ */
+async function checkJavaInstalled(): Promise<{ installed: boolean; version: string | null; javaPath: string | null }> {
+  const javaPath = await findJavaPath()
+  
+  if (!javaPath) {
+    return { installed: false, version: null, javaPath: null }
+  }
+  
+  try {
+    const output = execSync(`"${javaPath}" -version 2>&1`, { encoding: 'utf-8' })
+    const match = output.match(/version "([^"]+)"/) || output.match(/version (\S+)/)
+    return {
+      installed: true,
+      version: match ? match[1] : 'unknown',
+      javaPath
+    }
+  } catch {
+    return { installed: false, version: null, javaPath: null }
+  }
+}
+
+/**
+ * Verifica o status do CLI
+ */
+async function checkCLIStatus(): Promise<CLIStatus> {
+  const javaCheck = await checkJavaInstalled()
+  
+  try {
+    await fs.access(CLI_JAR_PATH)
+    
+    let installedVersion: string | null = null
+    try {
+      installedVersion = (await fs.readFile(CLI_VERSION_FILE, 'utf-8')).trim()
+    } catch {
+      installedVersion = 'unknown'
+    }
+    
+    return {
+      installed: true,
+      version: installedVersion,
+      jarPath: CLI_JAR_PATH,
+      needsUpdate: installedVersion !== CLI_VERSION,
+      javaInstalled: javaCheck.installed,
+      javaVersion: javaCheck.version,
+      javaPath: javaCheck.javaPath
+    }
+  } catch {
+    return {
+      installed: false,
+      version: null,
+      jarPath: CLI_JAR_PATH,
+      needsUpdate: false,
+      javaInstalled: javaCheck.installed,
+      javaVersion: javaCheck.version,
+      javaPath: javaCheck.javaPath
+    }
+  }
+}
+
+/**
+ * Instala o CLI a partir de uma fonte local ou URL
+ */
+async function installCLI(source?: string): Promise<{ success: boolean; error?: string; errorCode?: string }> {
+  try {
+    // Create directory if it doesn't exist
+    await fs.mkdir(CLI_DIR, { recursive: true })
+    
+    if (source) {
+      // Copiar de um arquivo local
+      await fs.copyFile(source, CLI_JAR_PATH)
+    } else {
+      // Try to find the JAR in the app resources directory (fallback for dev)
+      const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
+      let fallbackJar: string | null = null
+      
+      if (isDev) {
+        // Em desenvolvimento, tentar pegar do build da library
+        const libJar = path.join(__dirname, '..', '..', '..', 'library', 'build', 'libs', `open-pdf-generator-${CLI_VERSION}-standalone.jar`)
+        try {
+          await fs.access(libJar)
+          fallbackJar = libJar
+        } catch {
+          // Tentar o JAR antigo do resources
+          const resourceJar = path.join(__dirname, '..', '..', 'resources', 'pdf-generator.jar')
+          try {
+            await fs.access(resourceJar)
+            fallbackJar = resourceJar
+          } catch {
+            // Nenhum JAR encontrado localmente
+          }
+        }
+      }
+      
+      if (fallbackJar) {
+        console.log(`📦 Instalando CLI de: ${fallbackJar}`)
+        await fs.copyFile(fallbackJar, CLI_JAR_PATH)
+      } else {
+        // Tentar baixar da URL
+        return await downloadCLI(CLI_DOWNLOAD_URL)
+      }
+    }
+    
+    // Save version
+    await fs.writeFile(CLI_VERSION_FILE, CLI_VERSION)
+    
+    console.log(`✅ CLI instalado com sucesso em: ${CLI_JAR_PATH}`)
+    return { success: true }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+    console.error(`❌ Erro ao instalar CLI: ${errorMsg}`)
+    return { success: false, error: errorMsg }
+  }
+}
+
+/**
+ * Baixa o CLI de uma URL
+ */
+async function downloadCLI(url: string): Promise<{ success: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    console.log(`📥 Baixando CLI de: ${url}`)
+    
+    const protocol = url.startsWith('https') ? https : http
+    
+    const request = protocol.get(url, (response) => {
+      // Seguir redirects
+      if (response.statusCode === 301 || response.statusCode === 302) {
+        const redirectUrl = response.headers.location
+        if (redirectUrl) {
+          downloadCLI(redirectUrl).then(resolve)
+          return
+        }
+      }
+      
+      if (response.statusCode !== 200) {
+        resolve({ 
+          success: false, 
+          error: `Erro ao baixar CLI: HTTP ${response.statusCode}` 
+        })
+        return
+      }
+      
+      const chunks: Buffer[] = []
+      response.on('data', (chunk) => chunks.push(chunk))
+      response.on('end', async () => {
+        try {
+          const data = Buffer.concat(chunks)
+          await fs.writeFile(CLI_JAR_PATH, data)
+          await fs.writeFile(CLI_VERSION_FILE, CLI_VERSION)
+          console.log(`✅ CLI baixado com sucesso: ${CLI_JAR_PATH}`)
+          resolve({ success: true })
+        } catch (error) {
+          resolve({ 
+            success: false, 
+            error: error instanceof Error ? error.message : 'Erro ao salvar arquivo' 
+          })
+        }
+      })
+    })
+    
+    request.on('error', (error) => {
+      resolve({ 
+        success: false, 
+        error: `Erro de rede: ${error.message}` 
+      })
+    })
+    
+    request.setTimeout(30000, () => {
+      request.destroy()
+      resolve({ success: false, error: 'Timeout ao baixar CLI' })
+    })
+  })
+}
+
+/**
+ * Install CLI from a file selected by the user
+ */
+async function installCLIFromFile(): Promise<{ success: boolean; error?: string; errorCode?: string }> {
+  if (!mainWindow) {
+    return { success: false, errorCode: ErrorCodes.MAIN_WINDOW_NOT_FOUND }
+  }
+  
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select PDF Generator CLI JAR',
+    properties: ['openFile'],
+    filters: [
+      { name: 'JAR Files', extensions: ['jar'] }
+    ]
+  })
+  
+  if (result.canceled || result.filePaths.length === 0) {
+    return { success: false, errorCode: ErrorCodes.OPERATION_CANCELLED }
+  }
+  
+  return await installCLI(result.filePaths[0])
+}
+
+function createSplashWindow() {
+  const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
+  
+  splashWindow = new BrowserWindow({
+    width: 400,
+    height: 350,
+    frame: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable: false,
+    center: true,
+    show: false, // Show only when content loads
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  })
+
+  // Show splash as soon as content is ready
+  splashWindow.once('ready-to-show', () => {
+    splashWindow?.show()
+  })
+
+  // Carregar arquivo HTML da splash
+  const splashPath = isDev
+    ? path.join(__dirname, '..', '..', 'resources', 'splash.html')
+    : path.join(process.resourcesPath, 'splash.html')
+  
+  splashWindow.loadFile(splashPath)
+}
+
+function createMenu() {
+  const isMac = process.platform === 'darwin'
+  
+  const template: Electron.MenuItemConstructorOptions[] = [
+    // App menu (macOS only)
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' as const },
+        { type: 'separator' as const },
+        { role: 'services' as const },
+        { type: 'separator' as const },
+        { role: 'hide' as const },
+        { role: 'hideOthers' as const },
+        { role: 'unhide' as const },
+        { type: 'separator' as const },
+        { role: 'quit' as const }
+      ]
+    }] : []),
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'New',
+          accelerator: 'CmdOrCtrl+N',
+          click: () => {
+            mainWindow?.webContents.send('menu:new')
+          }
+        },
+        {
+          label: 'Open...',
+          accelerator: 'CmdOrCtrl+O',
+          click: () => {
+            mainWindow?.webContents.send('menu:open')
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Save',
+          accelerator: 'CmdOrCtrl+S',
+          click: () => {
+            mainWindow?.webContents.send('menu:save')
+          }
+        },
+        {
+          label: 'Save As...',
+          accelerator: 'CmdOrCtrl+Shift+S',
+          click: () => {
+            mainWindow?.webContents.send('menu:save-as')
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Export PDF...',
+          click: () => {
+            mainWindow?.webContents.send('menu:export')
+          }
+        },
+        { type: 'separator' },
+        ...(isMac ? [] : [{
+          label: 'Exit',
+          accelerator: 'CmdOrCtrl+Q',
+          role: 'quit' as const
+        }])
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        {
+          label: 'Undo',
+          accelerator: 'CmdOrCtrl+Z',
+          click: () => {
+            mainWindow?.webContents.send('menu:undo')
+          }
+        },
+        {
+          label: 'Redo',
+          accelerator: 'CmdOrCtrl+Y',
+          click: () => {
+            mainWindow?.webContents.send('menu:redo')
+          }
+        },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+        { type: 'separator' },
+        {
+          label: 'Copy Element',
+          click: () => {
+            mainWindow?.webContents.send('menu:copy')
+          }
+        },
+        {
+          label: 'Paste Element',
+          click: () => {
+            mainWindow?.webContents.send('menu:paste')
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Delete Element',
+          accelerator: 'Delete',
+          click: () => {
+            mainWindow?.webContents.send('menu:delete')
+          }
+        }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        { type: 'separator' },
+        { role: 'close' }
+      ]
+    },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'Documentation',
+          click: () => {
+            shell.openExternal('https://adilsoncruz.github.io/open-pdf-generator/')
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Report Issue',
+          click: () => {
+            shell.openExternal('https://github.com/adilsoncruz/open-pdf-generator/issues')
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'About',
+          click: () => {
+            if (mainWindow) {
+              dialog.showMessageBox(mainWindow, {
+                type: 'info',
+                title: 'About PDF Template Editor',
+                message: 'PDF Template Editor',
+                detail: `Version ${app.getVersion()}\n\nVisual editor for PDF template generation.\n\n© 2024`
+              })
+            }
+          }
+        }
+      ]
+    }
+  ]
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+}
+
+function createWindow() {
+  // Determine icon path based on platform
+  const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
+  const resourcesPath = isDev
+    ? path.join(__dirname, '..', '..', 'resources') // Em dev: dist/main -> desktop-app/resources
+    : process.resourcesPath // Em prod: app.asar/resources
+  
+  const iconPath = process.platform === 'darwin'
+    ? path.join(resourcesPath, 'icon.icns')
+    : process.platform === 'win32'
+    ? path.join(resourcesPath, 'icon.ico')
+    : path.join(resourcesPath, 'icon.png')
+
+  mainWindow = new BrowserWindow({
+    width: 1600,
+    height: 1000,
+    minWidth: 1200,
+    minHeight: 800,
+    icon: iconPath,
+    show: false, // Don't show until ready
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+    backgroundColor: '#f3f4f6',
+    title: 'PDF Template Editor',
+  })
+  
+  createMenu()
+
+  // Quando a janela estiver pronta para mostrar
+  mainWindow.once('ready-to-show', () => {
+    // Fechar splash e mostrar janela principal
+    if (splashWindow) {
+      splashWindow.close()
+      splashWindow = null
+    }
+    mainWindow?.show()
+    mainWindow?.focus()
+    
+    // Inicializar auto-updater
+    if (mainWindow) {
+      initAutoUpdater(mainWindow)
+      checkForUpdates()
+    }
+  })
+
+  // Em desenvolvimento, carrega do Vite dev server
+  if (isDev) {
+    mainWindow.loadURL('http://localhost:5173')
+    mainWindow.webContents.openDevTools()
+  } else {
+    // In production, load from build
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+  }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null
+  })
+}
+
+app.whenReady().then(() => {
+  // Mostrar splash screen imediatamente
+  createSplashWindow()
+  
+  // Set dock icon on macOS
+  if (process.platform === 'darwin') {
+    const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
+    const dockIcon = isDev
+      ? path.join(__dirname, '..', '..', 'resources', 'icon.png') // Em dev: dist/main -> desktop-app/resources
+      : path.join(process.resourcesPath, 'icon.png') // Em prod: app.asar/resources
+    
+    try {
+      app.dock?.setIcon(dockIcon)
+    } catch (error) {
+      console.warn('Could not load dock icon:', error)
+    }
+  }
+  
+  // Criar janela principal (em background)
+  createWindow()
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow()
+    }
+  })
+})
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+// IPC Handlers
+
+// Abrir arquivo
+ipcMain.handle('dialog:openFile', async () => {
+  if (!mainWindow) return null
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [
+      { name: 'JSON Templates', extensions: ['json'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  })
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+
+  const filePath = result.filePaths[0]
+  const content = await fs.readFile(filePath, 'utf-8')
+
+  return {
+    path: filePath,
+    content,
+  }
+})
+
+// Abrir arquivo de dados JSON
+ipcMain.handle('dialog:openDataFile', async () => {
+  if (!mainWindow) return null
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [
+      { name: 'JSON Data Files', extensions: ['json'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+    title: 'Selecionar Arquivo de Dados JSON',
+  })
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+
+  const filePath = result.filePaths[0]
+  const content = await fs.readFile(filePath, 'utf-8')
+
+  return {
+    path: filePath,
+    content,
+  }
+})
+
+// Salvar arquivo
+ipcMain.handle('dialog:saveFile', async (_, content: string, defaultPath?: string) => {
+  if (!mainWindow) return null
+
+  const result = await dialog.showSaveDialog(mainWindow, {
+    defaultPath,
+    filters: [
+      { name: 'JSON Templates', extensions: ['json'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  })
+
+  if (result.canceled || !result.filePath) {
+    return null
+  }
+
+  await fs.writeFile(result.filePath, content, 'utf-8')
+
+  return result.filePath
+})
+
+// Ler arquivo
+ipcMain.handle('fs:readFile', async (_, filePath: string) => {
+  try {
+    const content = await fs.readFile(filePath, 'utf-8')
+    return { success: true, content }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+// Escrever arquivo
+ipcMain.handle('fs:writeFile', async (_, filePath: string, content: string) => {
+  try {
+    await fs.writeFile(filePath, content, 'utf-8')
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+// ============ CLI IPC Handlers ============
+
+// Verificar status do CLI
+ipcMain.handle('cli:status', async () => {
+  return await checkCLIStatus()
+})
+
+// Instalar CLI automaticamente
+ipcMain.handle('cli:install', async () => {
+  return await installCLI()
+})
+
+// Instalar CLI a partir de arquivo selecionado
+ipcMain.handle('cli:installFromFile', async () => {
+  return await installCLIFromFile()
+})
+
+// Get installation directory path
+ipcMain.handle('cli:getInstallPath', () => {
+  return CLI_DIR
+})
+
+// Gerar PDF e retornar como base64 (para preview)
+// Error codes for i18n translation in renderer
+const ErrorCodes = {
+  JAVA_NOT_INSTALLED: 'JAVA_NOT_INSTALLED',
+  CLI_NOT_INSTALLED: 'CLI_NOT_INSTALLED',
+  ERROR_READING_PDF: 'ERROR_READING_PDF',
+  ERROR_GENERATING_PDF: 'ERROR_GENERATING_PDF',
+  ERROR_EXECUTING_JAVA: 'ERROR_EXECUTING_JAVA',
+  UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+  MAIN_WINDOW_NOT_FOUND: 'MAIN_WINDOW_NOT_FOUND',
+  OPERATION_CANCELLED: 'OPERATION_CANCELLED',
+} as const
+
+ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: string) => {
+  console.log('📄 [Preview] Starting PDF preview generation...')
+  
+  try {
+    const cliStatus = await checkCLIStatus()
+    console.log('📄 [Preview] CLI Status:', {
+      installed: cliStatus.installed,
+      javaInstalled: cliStatus.javaInstalled,
+      version: cliStatus.version,
+      javaVersion: cliStatus.javaVersion
+    })
+    
+    if (!cliStatus.javaInstalled) {
+      console.error('❌ [Preview] Java not installed')
+      return {
+        success: false,
+        errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
+        javaNotInstalled: true
+      }
+    }
+    
+    if (!cliStatus.installed) {
+      console.error('❌ [Preview] CLI not installed')
+      return {
+        success: false,
+        errorCode: ErrorCodes.CLI_NOT_INSTALLED,
+        cliNotInstalled: true
+      }
+    }
+
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-preview-'))
+    const templateFile = path.join(tmpDir, 'template.json')
+    const dataFile = path.join(tmpDir, 'data.json')
+    const pdfFile = path.join(tmpDir, 'preview.pdf')
+
+    console.log('📄 [Preview] Temp files:', { templateFile, dataFile, pdfFile })
+
+    await fs.writeFile(templateFile, templateJson)
+    await fs.writeFile(dataFile, dataJson)
+    
+    // Log template summary
+    try {
+      const template = JSON.parse(templateJson)
+      console.log('📄 [Preview] Template:', {
+        version: template.version,
+        name: template.metadata?.name,
+        pageElementsCount: template.pageElements?.length || 0,
+        hasHeader: !!template.pageSettings?.header,
+        hasFooter: !!template.pageSettings?.footer
+      })
+    } catch {
+      console.log('📄 [Preview] Could not parse template for logging')
+    }
+
+    const javaPath = cliStatus.javaPath || 'java'
+    console.log('📄 [Preview] Executing:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '-o', pdfFile)
+    
+    return new Promise((resolve) => {
+      const java = spawn(javaPath, [
+        '-jar',
+        CLI_JAR_PATH,
+        'generate',
+        templateFile,
+        '-d',
+        dataFile,
+        '-o',
+        pdfFile,
+      ])
+
+      let stdout = ''
+      let stderr = ''
+
+      java.stdout.on('data', (data) => {
+        const text = data.toString()
+        stdout += text
+        console.log('[CLI STDOUT]', text.trim())
+      })
+
+      java.stderr.on('data', (data) => {
+        const text = data.toString()
+        stderr += text
+        console.error('[CLI STDERR]', text.trim())
+      })
+
+      java.on('close', async (code) => {
+        console.log('📄 [Preview] CLI exited with code:', code)
+        
+        await fs.unlink(templateFile).catch(() => {})
+        await fs.unlink(dataFile).catch(() => {})
+
+        if (code === 0) {
+          try {
+            const pdfBuffer = await fs.readFile(pdfFile)
+            const base64 = pdfBuffer.toString('base64')
+            
+            console.log('✅ [Preview] PDF generated successfully, size:', pdfBuffer.length, 'bytes')
+            
+            await fs.unlink(pdfFile).catch(() => {})
+            await fs.rmdir(tmpDir).catch(() => {})
+            
+            resolve({
+              success: true,
+              pdfBase64: base64,
+            })
+          } catch (readError) {
+            console.error('❌ [Preview] Error reading PDF file:', readError)
+            resolve({
+              success: false,
+              errorCode: ErrorCodes.ERROR_READING_PDF,
+            })
+          }
+        } else {
+          console.error('❌ [Preview] CLI failed with code:', code)
+          console.error('❌ [Preview] STDERR:', stderr)
+          console.error('❌ [Preview] STDOUT:', stdout)
+          
+          await fs.unlink(pdfFile).catch(() => {})
+          await fs.rmdir(tmpDir).catch(() => {})
+          
+          resolve({
+            success: false,
+            errorCode: ErrorCodes.ERROR_GENERATING_PDF,
+            code,
+            // Include CLI output for debugging
+            cliError: stderr || stdout,
+          })
+        }
+      })
+
+      java.on('error', async (error) => {
+        console.error('❌ [Preview] Java spawn error:', error)
+        
+        await fs.unlink(templateFile).catch(() => {})
+        await fs.unlink(dataFile).catch(() => {})
+        await fs.unlink(pdfFile).catch(() => {})
+        await fs.rmdir(tmpDir).catch(() => {})
+        
+        resolve({
+          success: false,
+          errorCode: ErrorCodes.ERROR_EXECUTING_JAVA,
+        })
+      })
+    })
+  } catch (error) {
+    console.error('❌ [Preview] Unexpected error:', error)
+    return {
+      success: false,
+      errorCode: ErrorCodes.UNKNOWN_ERROR,
+    }
+  }
+})
+
+// Generate PDF (calls Java library via child process)
+ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string, outputPath?: string) => {
+  try {
+    const cliStatus = await checkCLIStatus()
+    
+    if (!cliStatus.javaInstalled) {
+      return {
+        success: false,
+        errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
+        cliNotInstalled: false,
+        javaNotInstalled: true
+      }
+    }
+    
+    if (!cliStatus.installed) {
+      return {
+        success: false,
+        errorCode: ErrorCodes.CLI_NOT_INSTALLED,
+        cliNotInstalled: true,
+        jarPath: CLI_JAR_PATH
+      }
+    }
+
+    console.log('🔍 PDF Generation Debug Info:')
+    console.log('  CLI Version:', cliStatus.version)
+    console.log('  JAR Path:', CLI_JAR_PATH)
+    console.log('  Java Version:', cliStatus.javaVersion)
+
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-gen-'))
+    const templateFile = path.join(tmpDir, 'template.json')
+    const dataFile = path.join(tmpDir, 'data.json')
+    const pdfFile = outputPath || path.join(tmpDir, 'output.pdf')
+
+    await fs.writeFile(templateFile, templateJson)
+    await fs.writeFile(dataFile, dataJson)
+
+    const javaPath = cliStatus.javaPath || 'java'
+    console.log('  Java Path:', javaPath)
+    console.log('  Command:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '-o', pdfFile)
+
+    return new Promise((resolve) => {
+      const java = spawn(javaPath, [
+        '-jar',
+        CLI_JAR_PATH,
+        'generate',
+        templateFile,
+        '-d',
+        dataFile,
+        '-o',
+        pdfFile,
+      ])
+
+      let stdout = ''
+      let stderr = ''
+
+      java.stdout.on('data', (data) => {
+        const text = data.toString()
+        stdout += text
+        console.log('[JAR STDOUT]', text)
+      })
+
+      java.stderr.on('data', (data) => {
+        const text = data.toString()
+        stderr += text
+        console.error('[JAR STDERR]', text)
+      })
+
+      java.on('close', async (code) => {
+        await fs.unlink(templateFile).catch(() => {})
+        await fs.unlink(dataFile).catch(() => {})
+
+        if (code === 0) {
+          resolve({
+            success: true,
+            outputPath: pdfFile,
+            stdout,
+          })
+        } else {
+          await fs.unlink(pdfFile).catch(() => {})
+          
+          resolve({
+            success: false,
+            errorCode: ErrorCodes.ERROR_GENERATING_PDF,
+            code,
+          })
+        }
+      })
+
+      java.on('error', async () => {
+        await fs.unlink(templateFile).catch(() => {})
+        await fs.unlink(dataFile).catch(() => {})
+        await fs.unlink(pdfFile).catch(() => {})
+        
+        resolve({
+          success: false,
+          errorCode: ErrorCodes.ERROR_EXECUTING_JAVA,
+        })
+      })
+    })
+  } catch {
+    return {
+      success: false,
+      errorCode: ErrorCodes.UNKNOWN_ERROR,
+    }
+  }
+})
+
+// Open generated PDF
+ipcMain.handle('pdf:open', async (_, pdfPath: string) => {
+  try {
+    const { shell } = require('electron')
+    await shell.openPath(pdfPath)
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: (error as Error).message,
+    }
+  }
+})
+

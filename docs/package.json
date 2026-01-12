@@ -1,0 +1,24 @@
+{
+  "name": "open-pdf-generator-docs",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Documentation for Open PDF Generator",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0",
+    "vue": "^3.3.4"
+  },
+  "keywords": [
+    "pdf",
+    "documentation",
+    "vitepress"
+  ],
+  "author": "Adi Cruz",
+  "license": "LGPL-3.0"
+}
+
