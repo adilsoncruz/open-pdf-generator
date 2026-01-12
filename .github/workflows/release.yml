@@ -5,6 +5,20 @@ on:
     branches:
       - main
       - bootstrap
+  workflow_dispatch:
+    inputs:
+      release_engine:
+        description: 'Release Core Engine'
+        type: boolean
+        default: false
+      release_cli:
+        description: 'Release CLI'
+        type: boolean
+        default: false
+      release_editor:
+        description: 'Release Editor'
+        type: boolean
+        default: false
 
 jobs:
   # =========================
@@ -19,11 +33,15 @@ jobs:
       editor: ${{ steps.filter.outputs.editor }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Detect changes
         id: filter
         uses: dorny/paths-filter@v3
         with:
+          # Compare against the previous commit on the same branch
+          base: ${{ github.event.before }}
           filters: |
             engine:
               - 'core/**'
@@ -38,7 +56,7 @@ jobs:
   release-engine:
     name: Release Engine
     needs: changes
-    if: needs.changes.outputs.engine == 'true'
+    if: needs.changes.outputs.engine == 'true' || inputs.release_engine == true
     runs-on: ubuntu-latest
 
     steps:
@@ -97,7 +115,7 @@ jobs:
   release-cli:
     name: Release CLI
     needs: changes
-    if: needs.changes.outputs.cli == 'true'
+    if: needs.changes.outputs.cli == 'true' || inputs.release_cli == true
     runs-on: ubuntu-latest
 
     steps:
@@ -156,7 +174,7 @@ jobs:
   release-editor:
     name: Release Editor (${{ matrix.os }})
     needs: changes
-    if: needs.changes.outputs.editor == 'true'
+    if: needs.changes.outputs.editor == 'true' || inputs.release_editor == true
     runs-on: ${{ matrix.os }}
 
     strategy:
