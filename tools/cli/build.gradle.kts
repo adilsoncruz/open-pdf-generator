@@ -61,3 +61,10 @@ kotlin {
     jvmToolchain(21)
 }
 
+
+// Task to print version for CI/CD
+tasks.register("printVersion") {
+    doLast {
+        println(project.version)
+    }
+}
