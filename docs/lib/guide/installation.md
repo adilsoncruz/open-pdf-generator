@@ -65,7 +65,7 @@ dependencies {
 To use the latest version from the `main` branch:
 
 ```kotlin
-implementation("com.github.adilsoncruz:open-pdf-generator:main-SNAPSHOT")
+implementation("com.github.adilsoncruz:open-pdf-generator:main")
 ```
 :::
 
