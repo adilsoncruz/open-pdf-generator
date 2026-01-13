@@ -244,11 +244,18 @@ jobs:
 
       - name: Install dependencies
         working-directory: tools/editor
+        shell: bash
         run: npm ci
 
       - name: Build Electron app
         working-directory: tools/editor
+        shell: bash
         run: npm run build
+
+      - name: Package Electron app
+        working-directory: tools/editor
+        shell: bash
+        run: npm run package
 
       - name: Read version
         id: version
