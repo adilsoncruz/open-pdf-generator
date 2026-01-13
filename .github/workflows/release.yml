@@ -262,7 +262,7 @@ jobs:
       - name: Package Electron app
         working-directory: tools/editor
         shell: bash
-        run: node node_modules/electron-builder/out/cli/cli.js
+        run: node node_modules/electron-builder/out/cli/cli.js --publish never
 
       - name: Read version
         id: version
