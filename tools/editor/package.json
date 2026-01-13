@@ -5,15 +5,15 @@
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\"",
-    "dev:renderer": "vite",
-    "dev:main": "tsc -p tsconfig.main.json && cross-env NODE_ENV=development electron .",
+    "dev:renderer": "npm exec vite",
+    "dev:main": "npm exec tsc -- -p tsconfig.main.json && cross-env NODE_ENV=development npm exec electron .",
     "build": "npm run build:renderer && npm run build:main",
-    "build:renderer": "vite build",
-    "build:main": "tsc -p tsconfig.main.json",
-    "start": "electron .",
-    "package": "npm run build && electron-builder",
-    "lint": "eslint src --ext .ts,.tsx",
-    "type-check": "tsc --noEmit"
+    "build:renderer": "npm exec vite -- build",
+    "build:main": "npm exec tsc -- -p tsconfig.main.json",
+    "start": "npm exec electron .",
+    "package": "npm run build && npm exec electron-builder",
+    "lint": "npm exec eslint -- src --ext .ts,.tsx",
+    "type-check": "npm exec tsc -- --noEmit"
   },
   "keywords": [
     "pdf",
