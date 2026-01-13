@@ -129,7 +129,11 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Build
+      - name: Build Core (dependency)
+        working-directory: core
+        run: ./gradlew build -x test
+
+      - name: Build CLI
         working-directory: tools/cli
         run: ./gradlew shadowJar
 
