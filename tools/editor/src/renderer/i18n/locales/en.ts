@@ -253,6 +253,16 @@ const en: Translations = {
     unknownError: 'Unknown error.',
   },
 
+  validation: {
+    invalidTemplate: 'Invalid Template',
+    invalidTemplateHint: 'The selected file is not a valid PDF template.',
+    missingVersion: 'Missing "version" field.',
+    missingPageSettings: 'Missing "pageSettings" field.',
+    missingElements: 'Missing "elements" or "pageElements" field.',
+    invalidJson: 'Invalid JSON format.',
+    validTemplate: 'Template is valid.',
+  },
+
   confirmations: {
     unsavedChanges: 'You have unsaved changes. Continue anyway?',
     deleteElement: 'Delete this element?',

@@ -23,6 +23,7 @@ interface UpdateStatus {
 }
 
 let mainWindow: BrowserWindow | null = null
+let handlersRegistered = false
 let updateStatus: UpdateStatus = {
   checking: false,
   available: false,
@@ -166,6 +167,12 @@ async function notifyUpdateReady(info: UpdateInfo) {
 }
 
 function registerIpcHandlers() {
+  // Prevent duplicate registration
+  if (handlersRegistered) {
+    return
+  }
+  handlersRegistered = true
+
   // Check for updates manually
   ipcMain.handle('update:check', async () => {
     try {

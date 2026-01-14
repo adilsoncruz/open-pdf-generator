@@ -26,6 +26,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('pdf:generatePreview', templateJson, dataJson),
   openPDF: (pdfPath: string) => ipcRenderer.invoke('pdf:open', pdfPath),
   
+  // Template Validation API
+  validateTemplate: (templatePath: string) =>
+    ipcRenderer.invoke('template:validate', templatePath),
+  
   // Menu Events - remove listeners antigos antes de adicionar novos
   onMenuNew: (callback: () => void) => {
     ipcRenderer.removeAllListeners('menu:new')
@@ -146,6 +150,14 @@ export interface ElectronAPI {
     javaNotInstalled?: boolean
   }>
   openPDF: (pdfPath: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Template Validation
+  validateTemplate: (templatePath: string) => Promise<{
+    valid: boolean
+    message?: string
+    errorCode?: string
+    cliError?: string
+  }>
   
   // Menu Events
   onMenuNew: (callback: () => void) => void

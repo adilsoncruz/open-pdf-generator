@@ -66,6 +66,14 @@ export interface ElectronAPI {
   }>
   openPDF: (pdfPath: string) => Promise<{ success: boolean; error?: string }>
   
+  // Template Validation
+  validateTemplate: (templatePath: string) => Promise<{
+    valid: boolean
+    message?: string
+    errorCode?: string
+    cliError?: string
+  }>
+  
   // Menu Events
   onMenuNew: (callback: () => void) => void
   onMenuOpen: (callback: () => void) => void

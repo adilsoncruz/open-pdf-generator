@@ -234,11 +234,40 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     const result = await window.electronAPI.openFile()
     if (result) {
       try {
+        // First, try to parse JSON to catch syntax errors
         const loadedTemplate = JSON.parse(result.content)
+        
+        // Validate template using CLI (if available)
+        const validation = await window.electronAPI.validateTemplate(result.path)
+        
+        if (!validation.valid) {
+          // Check if CLI is available - if not, do basic validation
+          if (validation.errorCode === 'CLI_NOT_INSTALLED' || validation.errorCode === 'JAVA_NOT_INSTALLED') {
+            // CLI not available, do basic structural validation
+            if (!loadedTemplate.version) {
+              alert(`${t.validation.invalidTemplate}\n\n${t.validation.missingVersion}`)
+              return
+            }
+            if (!loadedTemplate.pageSettings) {
+              alert(`${t.validation.invalidTemplate}\n\n${t.validation.missingPageSettings}`)
+              return
+            }
+            if (!loadedTemplate.elements && !loadedTemplate.pageElements) {
+              alert(`${t.validation.invalidTemplate}\n\n${t.validation.missingElements}`)
+              return
+            }
+          } else {
+            // CLI validation failed - show error
+            const errorDetails = validation.cliError || t.validation.invalidTemplateHint
+            alert(`${t.validation.invalidTemplate}\n\n${errorDetails}`)
+            return
+          }
+        }
+        
         setTemplate(loadedTemplate)
         setCurrentFilePath(result.path)
       } catch (error) {
-        alert('Error loading template: ' + (error as Error).message)
+        alert(`${t.validation.invalidTemplate}\n\n${t.validation.invalidJson}: ${(error as Error).message}`)
       }
     }
   }

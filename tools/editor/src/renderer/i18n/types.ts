@@ -269,6 +269,17 @@ export interface Translations {
     unknownError: string
   }
 
+  // Template validation
+  validation: {
+    invalidTemplate: string
+    invalidTemplateHint: string
+    missingVersion: string
+    missingPageSettings: string
+    missingElements: string
+    invalidJson: string
+    validTemplate: string
+  }
+
   // Confirmations
   confirmations: {
     unsavedChanges: string
