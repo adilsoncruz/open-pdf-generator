@@ -1007,3 +1007,80 @@ ipcMain.handle('pdf:open', async (_, pdfPath: string) => {
   }
 })
 
+// Validate template using CLI
+ipcMain.handle('template:validate', async (_, templatePath: string) => {
+  console.log('🔍 [Validate] Validating template:', templatePath)
+  
+  try {
+    const cliStatus = await checkCLIStatus()
+    
+    if (!cliStatus.javaInstalled) {
+      return {
+        valid: false,
+        errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
+      }
+    }
+    
+    if (!cliStatus.installed) {
+      return {
+        valid: false,
+        errorCode: ErrorCodes.CLI_NOT_INSTALLED,
+      }
+    }
+
+    const javaPath = cliStatus.javaPath || 'java'
+    
+    return new Promise((resolve) => {
+      const java = spawn(javaPath, [
+        '-jar',
+        CLI_JAR_PATH,
+        'validate',
+        templatePath,
+      ])
+
+      let stdout = ''
+      let stderr = ''
+
+      java.stdout.on('data', (data) => {
+        stdout += data.toString()
+      })
+
+      java.stderr.on('data', (data) => {
+        stderr += data.toString()
+      })
+
+      java.on('close', (code) => {
+        console.log('🔍 [Validate] CLI exited with code:', code)
+        
+        if (code === 0) {
+          resolve({
+            valid: true,
+            message: stdout.trim(),
+          })
+        } else {
+          // Parse CLI error output to provide user-friendly message
+          const errorOutput = stderr || stdout
+          resolve({
+            valid: false,
+            errorCode: 'INVALID_TEMPLATE',
+            cliError: errorOutput.trim(),
+          })
+        }
+      })
+
+      java.on('error', (error) => {
+        console.error('❌ [Validate] Java spawn error:', error)
+        resolve({
+          valid: false,
+          errorCode: ErrorCodes.ERROR_EXECUTING_JAVA,
+        })
+      })
+    })
+  } catch (error) {
+    console.error('❌ [Validate] Unexpected error:', error)
+    return {
+      valid: false,
+      errorCode: ErrorCodes.UNKNOWN_ERROR,
+    }
+  }
+})

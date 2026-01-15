@@ -97,9 +97,26 @@ class TableRenderer : Renderer<TableElement> {
             table.isSkipFirstHeader = false
 
             try {
-                context.document.add(table)
+                // For relative positioning, we need to use absolute positioning
+                // to respect the calculated Y position
+                val pageHeight = context.document.pageSize.height
+                val yPosition = pageHeight - element.y
+                
+                // Write table at the calculated position
+                val tableHeight = table.writeSelectedRows(
+                    0, -1,
+                    element.x, yPosition,
+                    context.writer.directContent
+                )
+                
+                // Update render state with the actual table height
+                if (context.renderState != null) {
+                    val actualHeight = kotlin.math.abs(tableHeight)
+                    val elementY = element.y - context.bodyOffsetY
+                    context.renderState.updateMaxY(elementY + actualHeight)
+                }
             } catch (e: Exception) {
-                logger.error("Erro ao adicionar tabela ${element.id}: ${e.message}", e)
+                logger.error("Error adding table ${element.id}: ${e.message}", e)
                 if (context.config.strictMode) {
                     throw e
                 }
@@ -108,11 +125,18 @@ class TableRenderer : Renderer<TableElement> {
             val pageHeight = context.document.pageSize.height
             val yPosition = pageHeight - element.y
 
-            table.writeSelectedRows(
+            val tableHeight = table.writeSelectedRows(
                 0, -1,
                 element.x, yPosition,
                 context.writer.directContent
             )
+            
+            // Update render state with the actual table height
+            if (context.renderState != null) {
+                val actualHeight = kotlin.math.abs(tableHeight)
+                val elementY = element.y - context.bodyOffsetY
+                context.renderState.updateMaxY(elementY + actualHeight)
+            }
         }
     }
 

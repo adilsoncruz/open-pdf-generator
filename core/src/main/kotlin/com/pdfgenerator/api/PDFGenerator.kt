@@ -316,7 +316,9 @@ class PDFGenerator(
                         val adjustedElement = adjustElementForBodyWithY(element, bodyOffsetX, bodyOffsetY, effectiveY)
                         renderEngine.render(adjustedElement, context)
 
-                        if (element !is LoopElement) {
+                        // Update render state for elements that don't manage their own height
+                        // TableElement and LoopElement update renderState themselves
+                        if (element !is LoopElement && element !is TableElement) {
                             val elementHeight = getElementHeight(element, data, context)
                             renderState.updateMaxY(effectiveY + elementHeight)
                         }
