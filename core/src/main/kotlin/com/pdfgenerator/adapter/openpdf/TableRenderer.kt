@@ -4,6 +4,7 @@ import com.lowagie.text.Element
 import com.lowagie.text.Font
 import com.lowagie.text.Phrase
 import com.lowagie.text.pdf.BaseFont
+import com.lowagie.text.pdf.ColumnText
 import com.lowagie.text.pdf.PdfPCell
 import com.lowagie.text.pdf.PdfPTable
 import com.pdfgenerator.engine.RenderContext
@@ -97,23 +98,46 @@ class TableRenderer : Renderer<TableElement> {
             table.isSkipFirstHeader = false
 
             try {
-                // For relative positioning, we need to use absolute positioning
-                // to respect the calculated Y position
                 val pageHeight = context.document.pageSize.height
-                val yPosition = pageHeight - element.y
+                val pageWidth = context.document.pageSize.width
+                val footerHeight = context.template.pageSettings.footer?.height ?: 0f
                 
-                // Write table at the calculated position
-                val tableHeight = table.writeSelectedRows(
-                    0, -1,
-                    element.x, yPosition,
-                    context.writer.directContent
-                )
+                // Starting Y position (from top, converted to PDF coordinates)
+                val startY = pageHeight - element.y
                 
-                // Update render state with the actual table height
+                // Bottom boundary (above footer)
+                val bottomY = margins.bottom + footerHeight
+                
+                // Use ColumnText for pagination with positioned start
+                val ct = ColumnText(context.writer.directContent)
+                ct.addElement(table)
+                
+                // Set initial column bounds
+                val leftX = element.x
+                val rightX = element.x + totalWidth
+                ct.setSimpleColumn(leftX, bottomY, rightX, startY)
+                
+                var status = ct.go()
+                var totalRenderedHeight = startY - ct.yLine
+                
+                // Continue on new pages if needed
+                while (ColumnText.hasMoreText(status)) {
+                    context.document.newPage()
+                    
+                    // On new pages, start from top (below header)
+                    val headerHeight = context.template.pageSettings.header?.height ?: 0f
+                    val newPageStartY = pageHeight - margins.top - headerHeight
+                    
+                    ct.setSimpleColumn(leftX, bottomY, rightX, newPageStartY)
+                    status = ct.go()
+                    totalRenderedHeight += newPageStartY - ct.yLine
+                }
+                
+                // Update render state with the height used on the first page
                 if (context.renderState != null) {
-                    val actualHeight = kotlin.math.abs(tableHeight)
                     val elementY = element.y - context.bodyOffsetY
-                    context.renderState.updateMaxY(elementY + actualHeight)
+                    val firstPageHeight = startY - ct.yLine
+                    context.renderState.updateMaxY(elementY + kotlin.math.abs(firstPageHeight))
                 }
             } catch (e: Exception) {
                 logger.error("Error adding table ${element.id}: ${e.message}", e)
