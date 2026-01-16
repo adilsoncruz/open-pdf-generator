@@ -211,8 +211,8 @@ Tables automatically break between pages with repeated headers.
 
 ## Next Steps
 
-- [Installation](/guide/installation) - Add to your project
-- [First Steps](/guide/first-steps) - Create your first PDF
-- [Templates](/guide/templates) - Understand the structure
+- [Installation](/lib/guide/installation) - Add to your project
+- [First Steps](/lib/guide/first-steps) - Create your first PDF
+- [Templates](/lib/guide/templates) - Understand the structure
 
 

@@ -522,7 +522,7 @@ With text:
 ```
 
 ::: tip Tip
-For tables, use [`TableElement`](/guide/elements/table) which is easier!
+For tables, use [`TableElement`](/lib/guide/elements/table) which is easier!
 :::
 
 ---
@@ -569,7 +569,7 @@ For tables, use [`TableElement`](/guide/elements/table) which is easier!
 ```
 
 ::: tip Tip
-For rectangles, use [`RectangleElement`](/guide/elements/rectangle) which is simpler!
+For rectangles, use [`RectangleElement`](/lib/guide/elements/rectangle) which is simpler!
 :::
 
 ---
@@ -773,8 +773,8 @@ Always use 6-digit hexadecimal format:
 
 ## Next Steps
 
-- [Rectangle Element](/guide/elements/rectangle) - Alternative for complete borders
-- [Text Element](/guide/elements/text) - Combine with underlines
-- [Table Element](/guide/elements/table) - Alternative for grids
-- [Examples](/examples/) - See Line in action
+- [Rectangle Element](/lib/guide/elements/rectangle) - Alternative for complete borders
+- [Text Element](/lib/guide/elements/text) - Combine with underlines
+- [Table Element](/lib/guide/elements/table) - Alternative for grids
+- [Examples](/lib/examples/) - See Line in action
 

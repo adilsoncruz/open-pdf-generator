@@ -105,9 +105,9 @@ fun main() {
 
 Now that you've created your first PDF, continue learning:
 
-- [JSON Templates](/guide/templates) - Understand template structure
-- [Data Binding](/guide/data-binding) - Learn to bind dynamic data
-- [Elements](/guide/elements/text) - Explore all available elements
-- [Examples](/examples/) - See practical examples
+- [JSON Templates](/lib/guide/templates) - Understand template structure
+- [Data Binding](/lib/guide/data-binding) - Learn to bind dynamic data
+- [Elements](/lib/guide/elements/text) - Explore all available elements
+- [Examples](/lib/examples/) - See practical examples
 
 

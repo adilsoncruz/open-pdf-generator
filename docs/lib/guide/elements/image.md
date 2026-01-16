@@ -464,8 +464,8 @@ ImageRenderer.setMaxCacheSize(100) // 100 images
 
 ## Next Steps
 
-- [Barcode Element](/guide/elements/barcode) - QR Codes and barcodes
-- [Rectangle Element](/guide/elements/rectangle) - Backgrounds and borders
-- [Loop Element](/guide/elements/loop) - Multiple images
-- [Examples](/examples/) - See Image in action
+- [Barcode Element](/lib/guide/elements/barcode) - QR Codes and barcodes
+- [Rectangle Element](/lib/guide/elements/rectangle) - Backgrounds and borders
+- [Loop Element](/lib/guide/elements/loop) - Multiple images
+- [Examples](/lib/examples/) - See Image in action
 

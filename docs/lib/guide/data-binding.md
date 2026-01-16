@@ -111,7 +111,7 @@ Chain transformations:
 }
 ```
 
-See [Transformations](/guide/transformations) for all available pipes.
+See [Transformations](/lib/guide/transformations) for all available pipes.
 
 ---
 
@@ -223,7 +223,7 @@ Use the `default` pipe for fallback values:
 
 ## Next Steps
 
-- [Transformations](/guide/transformations) - Format and transform data
-- [Conditions](/guide/conditions) - Conditional rendering
-- [Elements](/guide/elements/text) - All available elements
+- [Transformations](/lib/guide/transformations) - Format and transform data
+- [Conditions](/lib/guide/conditions) - Conditional rendering
+- [Elements](/lib/guide/elements/text) - All available elements
 

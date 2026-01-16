@@ -281,7 +281,7 @@ Make sure to use the `standalone` JAR that includes all dependencies.
 
 ## Next Steps
 
-- [First Steps](/guide/first-steps) - Create your first PDF
-- [Templates](/guide/templates) - Understand JSON structure
-- [Examples](/examples/) - See practical examples
+- [First Steps](/lib/guide/first-steps) - Create your first PDF
+- [Templates](/lib/guide/templates) - Understand JSON structure
+- [Examples](/lib/examples/) - See practical examples
 

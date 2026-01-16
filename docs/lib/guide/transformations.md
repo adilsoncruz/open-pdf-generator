@@ -668,7 +668,7 @@ You can apply multiple transformations in sequence:
 
 ## Next Steps
 
-- [Conditions](/guide/conditions) - Conditional rendering
-- [Elements](/guide/elements/text) - Available element types
-- [Examples](/examples/) - See transformations in action
+- [Conditions](/lib/guide/conditions) - Conditional rendering
+- [Elements](/lib/guide/elements/text) - Available element types
+- [Examples](/lib/examples/) - See transformations in action
 

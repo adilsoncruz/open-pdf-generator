@@ -403,5 +403,5 @@ File("template.json").writeText(json)
 
 - [Template](/api/template) - Load JSON templates
 - [Elements](/api/elements) - All elements
-- [Examples](/examples/) - Use cases
+- [Examples](/lib/examples/) - Use cases
 

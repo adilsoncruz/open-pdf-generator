@@ -138,7 +138,7 @@ Headers and footers repeat on every page automatically.
 
 ## Next Steps
 
-- [Data Binding](/guide/data-binding) - Bind dynamic data
-- [Elements](/guide/elements/text) - Learn about each element
-- [Examples](/examples/) - See practical examples
+- [Data Binding](/lib/guide/data-binding) - Bind dynamic data
+- [Elements](/lib/guide/elements/text) - Learn about each element
+- [Examples](/lib/examples/) - See practical examples
 

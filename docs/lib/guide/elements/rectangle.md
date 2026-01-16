@@ -591,8 +591,8 @@ Always use 6-digit format:
 
 ## Next Steps
 
-- [Line Element](/guide/elements/line) - Lines and dividers
-- [Image Element](/guide/elements/image) - Backgrounds with images
-- [Text Element](/guide/elements/text) - Overlay text
-- [Examples](/examples/) - See Rectangle in action
+- [Line Element](/lib/guide/elements/line) - Lines and dividers
+- [Image Element](/lib/guide/elements/image) - Backgrounds with images
+- [Text Element](/lib/guide/elements/text) - Overlay text
+- [Examples](/lib/examples/) - See Rectangle in action
 

@@ -122,7 +122,7 @@ Apply transformations to data:
 }
 ```
 
-See [Transformations](/guide/transformations) for the complete list.
+See [Transformations](/lib/guide/transformations) for the complete list.
 
 ---
 
@@ -464,7 +464,7 @@ Render only under conditions:
 }
 ```
 
-See [Conditions](/guide/conditions) for more details.
+See [Conditions](/lib/guide/conditions) for more details.
 
 ---
 
@@ -486,7 +486,7 @@ See [Conditions](/guide/conditions) for more details.
 }
 ```
 
-See [Loop Element](/guide/elements/loop) for more details.
+See [Loop Element](/lib/guide/elements/loop) for more details.
 
 ---
 
@@ -561,7 +561,7 @@ When you have a loop with variable number of items and want to position text aft
 
 ## Next Steps
 
-- [Transformations](/guide/transformations) - Format data
-- [Conditions](/guide/conditions) - Conditional rendering
-- [Image Element](/guide/elements/image) - Add images
-- [Examples](/examples/) - See Text in action
+- [Transformations](/lib/guide/transformations) - Format data
+- [Conditions](/lib/guide/conditions) - Conditional rendering
+- [Image Element](/lib/guide/elements/image) - Add images
+- [Examples](/lib/examples/) - See Text in action

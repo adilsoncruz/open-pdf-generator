@@ -437,8 +437,8 @@ The element automatically validates:
 
 ## Next Steps
 
-- [Conditions](/guide/conditions) - Complete condition syntax
-- [Loop](/guide/elements/loop) - Combine with loops
-- [printCondition](/guide/elements/text#printcondition) - Conditions on individual elements
-- [Examples](/examples/) - See in action
+- [Conditions](/lib/guide/conditions) - Complete condition syntax
+- [Loop](/lib/guide/elements/loop) - Combine with loops
+- [printCondition](/lib/guide/elements/text#printcondition) - Conditions on individual elements
+- [Examples](/lib/examples/) - See in action
 

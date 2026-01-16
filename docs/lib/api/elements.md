@@ -410,7 +410,7 @@ Repeats elements for each item in a list.
 
 ## Next Steps
 
-- [JSON Templates](/guide/templates) - Complete structure
-- [Data Binding](/guide/data-binding) - Data binding
-- [Transformations](/guide/transformations) - Available pipes
+- [JSON Templates](/lib/guide/templates) - Complete structure
+- [Data Binding](/lib/guide/data-binding) - Data binding
+- [Transformations](/lib/guide/transformations) - Available pipes
 

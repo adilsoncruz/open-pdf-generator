@@ -190,6 +190,6 @@ Elements with `positionMode: RELATIVE` are positioned relative to the accumulate
 
 ## Next Steps
 
-- [Loop Element](/guide/elements/loop) - Loops with automatic pagination
-- [Text Element](/guide/elements/text) - Multiline text with overflow
-- [Pagination](/guide/advanced/pagination) - Understand how pagination works
+- [Loop Element](/lib/guide/elements/loop) - Loops with automatic pagination
+- [Text Element](/lib/guide/elements/text) - Multiline text with overflow
+- [Pagination](/lib/guide/advanced/pagination) - Understand how pagination works

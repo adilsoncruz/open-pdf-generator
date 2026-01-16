@@ -471,7 +471,7 @@ If `dataBinding` returns an empty array:
 - ❌ Row height is uniform
 - ❌ Does not support images inside cells (use `text` only)
 
-For more complex layouts, use [LoopElement](/guide/elements/loop).
+For more complex layouts, use [LoopElement](/lib/guide/elements/loop).
 
 ---
 
@@ -555,6 +555,6 @@ For more complex layouts, use [LoopElement](/guide/elements/loop).
 
 ## Next Steps
 
-- [LoopElement](/guide/elements/loop) - Alternative for complex layouts
-- [Transformations](/guide/transformations) - Format cell data
-- [Examples](/examples/) - See tables in action
+- [LoopElement](/lib/guide/elements/loop) - Alternative for complex layouts
+- [Transformations](/lib/guide/transformations) - Format cell data
+- [Examples](/lib/examples/) - See tables in action

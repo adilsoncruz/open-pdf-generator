@@ -11,7 +11,7 @@ Use `LoopElement` for:
 - ✅ Building reports with repetitive sections
 
 ::: tip Tip
-For simple tabular data, use [`TableElement`](/guide/elements/table). For more complex layouts, use `LoopElement`.
+For simple tabular data, use [`TableElement`](/lib/guide/elements/table). For more complex layouts, use `LoopElement`.
 :::
 
 ---
@@ -598,8 +598,8 @@ LoopElement now supports **automatic pagination**! When loop items exceed availa
 
 ## Next Steps
 
-- [TableElement](/guide/elements/table) - Alternative for tabular data
-- [Conditional](/guide/elements/conditional) - Combine loops with conditions
-- [Transformations](/guide/transformations) - Format data in loops
-- [Examples](/examples/) - See loops in action
+- [TableElement](/lib/guide/elements/table) - Alternative for tabular data
+- [Conditional](/lib/guide/elements/conditional) - Combine loops with conditions
+- [Transformations](/lib/guide/transformations) - Format data in loops
+- [Examples](/lib/examples/) - See loops in action
 

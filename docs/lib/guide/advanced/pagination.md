@@ -435,7 +435,7 @@ val totalPages = ceil(totalRows / rowsPerPage)
 
 ## Next Steps
 
-- [Header & Footer](/guide/advanced/header-footer) - Fixed headers and footers
-- [Table Element](/guide/elements/table) - Paginated table details
-- [Performance](/guide/advanced/performance) - Optimization for large volumes
+- [Header & Footer](/lib/guide/advanced/header-footer) - Fixed headers and footers
+- [Table Element](/lib/guide/elements/table) - Paginated table details
+- [Performance](/lib/guide/advanced/performance) - Optimization for large volumes
 

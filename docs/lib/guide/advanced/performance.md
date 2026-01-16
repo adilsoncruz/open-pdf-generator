@@ -404,7 +404,7 @@ class Handler {
 
 ## Next Steps
 
-- [Installation](/guide/installation) - Initial setup
-- [Header & Footer](/guide/advanced/header-footer) - Optimize headers
-- [Examples](/examples/) - Optimized templates
+- [Installation](/lib/guide/installation) - Initial setup
+- [Header & Footer](/lib/guide/advanced/header-footer) - Optimize headers
+- [Examples](/lib/examples/) - Optimized templates
 

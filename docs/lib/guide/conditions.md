@@ -516,8 +516,8 @@ For stricter behavior, validate your templates before using in production.
 
 ## Next Steps
 
-- [Transformations](/guide/transformations) - Modify values
-- [Conditional Elements](/guide/elements/conditional) - ConditionalElement details
-- [Loops](/guide/elements/loop) - Combine loops with conditions
-- [Examples](/examples/) - See conditions in action
+- [Transformations](/lib/guide/transformations) - Modify values
+- [Conditional Elements](/lib/guide/elements/conditional) - ConditionalElement details
+- [Loops](/lib/guide/elements/loop) - Combine loops with conditions
+- [Examples](/lib/examples/) - See conditions in action
 

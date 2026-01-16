@@ -603,8 +603,8 @@ For 50-character URL:
 
 ## Next Steps
 
-- [Image Element](/guide/elements/image) - Alternative for ready-made codes
-- [Text Element](/guide/elements/text) - Add labels
-- [Rectangle Element](/guide/elements/rectangle) - Create frames
-- [Examples](/examples/) - See Barcode in action
+- [Image Element](/lib/guide/elements/image) - Alternative for ready-made codes
+- [Text Element](/lib/guide/elements/text) - Add labels
+- [Rectangle Element](/lib/guide/elements/rectangle) - Create frames
+- [Examples](/lib/examples/) - See Barcode in action
 

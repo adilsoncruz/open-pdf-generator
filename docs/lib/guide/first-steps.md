@@ -461,9 +461,9 @@ For complex templates, use the **PDF Template Editor** (desktop app):
 
 ## Next Steps
 
-- [Templates](/guide/templates) - Complete JSON structure
-- [Data Binding](/guide/data-binding) - Bind dynamic data
-- [Transformations](/guide/transformations) - Format data
-- [Elements](/guide/elements/text) - All available elements
-- [Examples](/examples/) - More advanced examples
+- [Templates](/lib/guide/templates) - Complete JSON structure
+- [Data Binding](/lib/guide/data-binding) - Bind dynamic data
+- [Transformations](/lib/guide/transformations) - Format data
+- [Elements](/lib/guide/elements/text) - All available elements
+- [Examples](/lib/examples/) - More advanced examples
 

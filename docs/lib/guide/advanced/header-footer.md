@@ -638,7 +638,7 @@ A4 Portrait:
 
 ## Next Steps
 
-- [Pagination](/guide/advanced/pagination) - Page break control
-- [Table Element](/guide/elements/table) - Paginated tables with repeating header
-- [Examples](/examples/) - See header/footer in action
+- [Pagination](/lib/guide/advanced/pagination) - Page break control
+- [Table Element](/lib/guide/elements/table) - Paginated tables with repeating header
+- [Examples](/lib/examples/) - See header/footer in action
 
