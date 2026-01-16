@@ -4,8 +4,11 @@ export default defineConfig({
   title: 'Open PDF Generator',
   description: 'Open source toolkit for generating PDFs from JSON templates',
   
+  // Base path for GitHub Pages (repo name)
+  base: '/open-pdf-generator/',
+  
   head: [
-    ['link', { rel: 'icon', href: '/icon.png' }]
+    ['link', { rel: 'icon', href: '/open-pdf-generator/icon.png' }]
   ],
 
   themeConfig: {
