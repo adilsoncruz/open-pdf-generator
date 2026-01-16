@@ -73,7 +73,7 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "AdiCruz",
+      "owner": "adilsoncruz",
       "repo": "pdf-generator-project",
       "releaseType": "release"
     },
