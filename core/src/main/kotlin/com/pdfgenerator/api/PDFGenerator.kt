@@ -257,10 +257,31 @@ class PDFGenerator(
                 )
             }
 
-            val effectiveMarginTop = template.pageSettings.margins.top +
-                (template.pageSettings.header?.height ?: 0f)
-            val effectiveMarginBottom = template.pageSettings.margins.bottom +
-                (template.pageSettings.footer?.height ?: 0f)
+            // Get header/footer conditions and heights
+            val headerCondition = template.pageSettings.header?.printCondition
+            val footerCondition = template.pageSettings.footer?.printCondition
+            val templateHeaderHeight = template.pageSettings.header?.height ?: 0f
+            val templateFooterHeight = template.pageSettings.footer?.height ?: 0f
+            
+            // Evaluate for page 1 to determine initial margins
+            val page1Data = data.toMutableMap().apply { put("_pageNumber", 1) }
+            
+            val headerVisiblePage1 = template.pageSettings.header?.let { header ->
+                val condition = header.printCondition
+                condition == null || ConditionEvaluator.evaluate(condition, page1Data, null)
+            } ?: false
+
+            val footerVisiblePage1 = template.pageSettings.footer?.let { footer ->
+                val condition = footer.printCondition
+                condition == null || ConditionEvaluator.evaluate(condition, page1Data, null)
+            } ?: false
+
+            // Effective heights for page 1 (document margins)
+            val effectiveHeaderHeightPage1 = if (headerVisiblePage1) templateHeaderHeight else 0f
+            val effectiveFooterHeightPage1 = if (footerVisiblePage1) templateFooterHeight else 0f
+
+            val effectiveMarginTop = template.pageSettings.margins.top + effectiveHeaderHeightPage1
+            val effectiveMarginBottom = template.pageSettings.margins.bottom + effectiveFooterHeightPage1
 
             val document = Document(
                 template.pageSettings.getPageSize(),
@@ -283,24 +304,34 @@ class PDFGenerator(
             val margins = template.pageSettings.margins
             val bodyContainerWidth = document.pageSize.width - margins.left - margins.right
             val bodyContainerHeight = document.pageSize.height - margins.top - margins.bottom -
-                (template.pageSettings.header?.height ?: 0f) -
-                (template.pageSettings.footer?.height ?: 0f)
+                effectiveHeaderHeightPage1 - effectiveFooterHeightPage1
 
             val renderState = RenderState()
 
-            val bodyOffsetY = margins.top + (template.pageSettings.header?.height ?: 0f)
+            val bodyOffsetY = margins.top + effectiveHeaderHeightPage1
             val bodyOffsetX = margins.left
+
+            // Enrich data with system variables
+            val enrichedData = data.toMutableMap().apply {
+                put("_pageNumber", 1) // Initial page
+                put("_date", java.time.LocalDate.now().toString())
+                put("_dateTime", java.time.LocalDateTime.now().toString())
+            }
 
             val context = RenderContext(
                 document = document,
                 writer = writer,
                 template = template,
-                data = data,
+                data = enrichedData,
                 config = config,
                 containerWidth = bodyContainerWidth,
                 containerHeight = bodyContainerHeight,
                 renderState = renderState,
-                bodyOffsetY = bodyOffsetY
+                bodyOffsetY = bodyOffsetY,
+                headerPrintCondition = headerCondition,
+                footerPrintCondition = footerCondition,
+                templateHeaderHeight = templateHeaderHeight,
+                templateFooterHeight = templateFooterHeight
             )
 
             template.pageElements.forEach { element ->

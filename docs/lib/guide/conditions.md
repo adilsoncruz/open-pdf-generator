@@ -285,6 +285,52 @@ Access deep properties:
 
 ---
 
+### System Variables in Conditions
+
+You can use system variables like `_pageNumber` in conditions:
+
+#### Show element only on first page:
+
+```json
+{
+  "type": "text",
+  "value": "Welcome message (first page only)",
+  "printCondition": "_pageNumber == 1"
+}
+```
+
+#### Show element starting from page 2:
+
+```json
+{
+  "type": "text",
+  "value": "Continued from previous page...",
+  "printCondition": "_pageNumber > 1"
+}
+```
+
+#### Header/Footer with page conditions:
+
+```json
+{
+  "header": {
+    "height": 60,
+    "printCondition": "_pageNumber > 1",
+    "elements": [...]
+  }
+}
+```
+
+**Available System Variables:**
+
+| Variable | Description |
+|----------|-------------|
+| `_pageNumber` | Current page number (1, 2, 3...) |
+| `_date` | Current date (YYYY-MM-DD) |
+| `_dateTime` | Current date and time |
+
+---
+
 ## Conditional Element
 
 Use `ConditionalElement` to group multiple elements under a condition:

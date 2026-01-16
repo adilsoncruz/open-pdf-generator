@@ -27,7 +27,11 @@ data class RenderContext(
     val containerHeight: Float? = null,
     val isSummaryPage: Boolean = false,
     val renderState: RenderState? = null,
-    val bodyOffsetY: Float = 0f
+    val bodyOffsetY: Float = 0f,
+    val headerPrintCondition: String? = null,
+    val footerPrintCondition: String? = null,
+    val templateHeaderHeight: Float = 0f,
+    val templateFooterHeight: Float = 0f
 )
 
 data class LoopContext(

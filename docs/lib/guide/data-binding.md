@@ -117,20 +117,47 @@ See [Transformations](/guide/transformations) for all available pipes.
 
 ## Special Variables
 
+### System Variables
+
+These variables are automatically available in all contexts (page elements, header, footer):
+
+| Variable | Description | Format |
+|----------|-------------|--------|
+| `_pageNumber` | Current page number | 1, 2, 3... |
+| `_date` | Current date | YYYY-MM-DD (e.g., 2026-01-16) |
+| `_dateTime` | Current date and time | YYYY-MM-DDTHH:mm:ss (e.g., 2026-01-16T14:30:45) |
+
+### Loop Variables
+
 | Variable | Description |
 |----------|-------------|
-| `$currentPage` | Current page number |
-| `$totalPages` | Total number of pages |
 | `$item` | Current item in loop |
 | `$index` | Current index in loop (0-based) |
-| `$itemNumber` | Current item number in loop (1-based) |
 
 ### Page Numbers Example
 
 ```json
 {
   "type": "text",
-  "value": "Page {{$currentPage}} of {{$totalPages}}"
+  "dataBinding": "_pageNumber"
+}
+```
+
+Or combined with text:
+
+```json
+{
+  "type": "text",
+  "value": "Page ${_pageNumber}"
+}
+```
+
+### Date Example
+
+```json
+{
+  "type": "text",
+  "value": "Generated on: ${_date}"
 }
 ```
 

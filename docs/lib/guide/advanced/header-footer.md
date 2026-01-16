@@ -161,7 +161,7 @@ Fixed headers and footers are elements that repeat on all pages of the document,
         "id": "footer-page",
         "x": 500,
         "y": 15,
-        "value": "Page {{pageNumber}} of {{totalPages}}",
+        "value": "Page ${_pageNumber}",
         "style": {
           "fontSize": 8,
           "color": "#6b7280"
@@ -174,28 +174,104 @@ Fixed headers and footers are elements that repeat on all pages of the document,
 
 ---
 
-## Pagination Variables
+## System Variables
 
-Inside headers and footers, you can use special variables:
+Inside headers and footers, you can use special system variables:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| <code v-pre>{{pageNumber}}</code> | Current page number | 1, 2, 3... |
-| <code v-pre>{{totalPages}}</code> | Total pages | 5 |
+| `_pageNumber` | Current page number | 1, 2, 3... |
+| `_date` | Current date (YYYY-MM-DD) | 2026-01-16 |
+| `_dateTime` | Current date and time | 2026-01-16T14:30:45 |
 
 ### Usage Example
 
 ```json
 {
   "type": "text",
-  "value": "Page {{pageNumber}} of {{totalPages}}",
+  "dataBinding": "_pageNumber",
   "style": {
     "fontSize": 9
   }
 }
 ```
 
-**Result:** `Page 3 of 10`
+Or combined with text:
+
+```json
+{
+  "type": "text",
+  "value": "Page ${_pageNumber}",
+  "style": {
+    "fontSize": 9
+  }
+}
+```
+
+### Date in Footer
+
+```json
+{
+  "type": "text",
+  "value": "Generated on: ${_date}",
+  "style": {
+    "fontSize": 8,
+    "color": "#6b7280"
+  }
+}
+```
+
+---
+
+## Conditional Header/Footer
+
+You can control when header/footer is displayed using `printCondition`:
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `printCondition` | string | Condition to show/hide the header/footer |
+
+### Show Header Only on Page 2+
+
+```json
+{
+  "header": {
+    "height": 60,
+    "printCondition": "_pageNumber > 1",
+    "elements": [...]
+  }
+}
+```
+
+### Show Footer Only on First Page
+
+```json
+{
+  "footer": {
+    "height": 40,
+    "printCondition": "_pageNumber == 1",
+    "elements": [...]
+  }
+}
+```
+
+### Based on Data
+
+```json
+{
+  "header": {
+    "height": 80,
+    "printCondition": "showHeader == true",
+    "elements": [...]
+  }
+}
+```
+
+::: tip Dynamic Space
+When using `printCondition` with `_pageNumber`, the space for header/footer is automatically adjusted per page. For example, if header only shows on page 2+, page 1 will have more space for content.
+:::
 
 ---
 
@@ -390,7 +466,7 @@ The rectangle will occupy the entire available width (page - margins).
         "id": "page",
         "x": 480,
         "y": 20,
-        "value": "{{pageNumber}}/{{totalPages}}",
+        "value": "Page ${_pageNumber}",
         "style": {
           "fontSize": 9,
           "color": "#6b7280"
@@ -544,10 +620,9 @@ A4 Portrait:
 
 ## Limitations
 
-- ❌ Does not support different headers/footers per page
-- ❌ Does not support conditional headers/footers
-- ❌ Height is fixed (does not auto-adjust)
-- ❌ Does not support multiple headers (only one fixedHeader)
+- ❌ Height is fixed (does not auto-adjust to content)
+- ❌ Does not support multiple headers/footers (only one header and one footer)
+- ❌ `totalPages` is not yet supported (only `_pageNumber` is available)
 
 ---
 

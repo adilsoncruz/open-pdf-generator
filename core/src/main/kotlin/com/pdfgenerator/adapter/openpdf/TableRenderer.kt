@@ -99,14 +99,41 @@ class TableRenderer : Renderer<TableElement> {
 
             try {
                 val pageHeight = context.document.pageSize.height
-                val pageWidth = context.document.pageSize.width
-                val footerHeight = context.template.pageSettings.footer?.height ?: 0f
+                
+                // Helper to calculate header height for a specific page
+                fun getHeaderHeightForPage(pageNum: Int): Float {
+                    val condition = context.headerPrintCondition
+                    if (condition == null) return context.templateHeaderHeight
+                    val pageData = context.data.toMutableMap().apply { put("_pageNumber", pageNum) }
+                    return if (ConditionEvaluator.evaluate(condition, pageData, null)) {
+                        context.templateHeaderHeight
+                    } else {
+                        0f
+                    }
+                }
+                
+                // Helper to calculate footer height for a specific page
+                fun getFooterHeightForPage(pageNum: Int): Float {
+                    val condition = context.footerPrintCondition
+                    if (condition == null) return context.templateFooterHeight
+                    val pageData = context.data.toMutableMap().apply { put("_pageNumber", pageNum) }
+                    return if (ConditionEvaluator.evaluate(condition, pageData, null)) {
+                        context.templateFooterHeight
+                    } else {
+                        0f
+                    }
+                }
+                
+                var currentPage = context.writer.pageNumber
+                
+                // Calculate bounds for first page
+                val footerHeightPage1 = getFooterHeightForPage(currentPage)
                 
                 // Starting Y position (from top, converted to PDF coordinates)
                 val startY = pageHeight - element.y
                 
-                // Bottom boundary (above footer)
-                val bottomY = margins.bottom + footerHeight
+                // Bottom boundary for first page
+                val bottomY = margins.bottom + footerHeightPage1
                 
                 // Use ColumnText for pagination with positioned start
                 val ct = ColumnText(context.writer.directContent)
@@ -123,12 +150,17 @@ class TableRenderer : Renderer<TableElement> {
                 // Continue on new pages if needed
                 while (ColumnText.hasMoreText(status)) {
                     context.document.newPage()
+                    currentPage++
                     
-                    // On new pages, start from top (below header)
-                    val headerHeight = context.template.pageSettings.header?.height ?: 0f
+                    // Calculate header/footer heights for this page
+                    val headerHeight = getHeaderHeightForPage(currentPage)
+                    val footerHeight = getFooterHeightForPage(currentPage)
+                    
+                    // On new pages, start from top (below header if visible on this page)
                     val newPageStartY = pageHeight - margins.top - headerHeight
+                    val newPageBottomY = margins.bottom + footerHeight
                     
-                    ct.setSimpleColumn(leftX, bottomY, rightX, newPageStartY)
+                    ct.setSimpleColumn(leftX, newPageBottomY, rightX, newPageStartY)
                     status = ct.go()
                     totalRenderedHeight += newPageStartY - ct.yLine
                 }

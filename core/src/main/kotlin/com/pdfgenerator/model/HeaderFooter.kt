@@ -6,4 +6,3 @@ data class HeaderFooter(
     val groups: List<ElementGroup>? = null,
     val printCondition: String? = null
 )
-

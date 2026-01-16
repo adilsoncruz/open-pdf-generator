@@ -42,14 +42,21 @@ class HeaderFooterPageEvent(
                 initialized = true
             }
 
+            // Enrich data with system variables
+            val pageData = data.toMutableMap().apply {
+                put("_pageNumber", writer.pageNumber)
+                put("_date", java.time.LocalDate.now().toString())
+                put("_dateTime", java.time.LocalDateTime.now().toString())
+            }
+
             template.pageSettings.bodyBackground?.let { bodyBackground ->
                 val bgCondition = bodyBackground.printCondition
-                if (bgCondition == null || ConditionEvaluator.evaluate(bgCondition, data, null)) {
+                if (bgCondition == null || ConditionEvaluator.evaluate(bgCondition, pageData, null)) {
                     renderBodyBackgroundOptimized(writer, document, bodyBackground)
                 }
             }
         } catch (e: Exception) {
-            logger.error("Erro ao renderizar body background: ${e.message}", e)
+            logger.error("Error rendering body background: ${e.message}", e)
             if (config.strictMode) {
                 throw e
             }
@@ -58,21 +65,28 @@ class HeaderFooterPageEvent(
 
     override fun onEndPage(writer: PdfWriter, document: Document) {
         try {
+            // Enrich data with system variables
+            val pageData = data.toMutableMap().apply {
+                put("_pageNumber", writer.pageNumber)
+                put("_date", java.time.LocalDate.now().toString())
+                put("_dateTime", java.time.LocalDateTime.now().toString())
+            }
+
             template.pageSettings.header?.let { header ->
                 val headerCondition = header.printCondition
-                if (headerCondition == null || ConditionEvaluator.evaluate(headerCondition, data, null)) {
-                    renderHeaderOptimized(writer, document, header)
+                if (headerCondition == null || ConditionEvaluator.evaluate(headerCondition, pageData, null)) {
+                    renderHeaderOptimized(writer, document, header, pageData)
                 }
             }
 
             template.pageSettings.footer?.let { footer ->
                 val footerCondition = footer.printCondition
-                if (footerCondition == null || ConditionEvaluator.evaluate(footerCondition, data, null)) {
-                    renderFooterOptimized(writer, document, footer)
+                if (footerCondition == null || ConditionEvaluator.evaluate(footerCondition, pageData, null)) {
+                    renderFooterOptimized(writer, document, footer, pageData)
                 }
             }
         } catch (e: Exception) {
-            logger.error("Erro ao renderizar header/footer: ${e.message}", e)
+            logger.error("Error rendering header/footer: ${e.message}", e)
             if (config.strictMode) {
                 throw e
             }
@@ -137,13 +151,16 @@ class HeaderFooterPageEvent(
         }
     }
 
-    private fun renderHeaderOptimized(writer: PdfWriter, document: Document, header: HeaderFooter) {
+    private fun renderHeaderOptimized(writer: PdfWriter, document: Document, header: HeaderFooter, pageData: Map<String, Any?>) {
         val cb = writer.directContent
         cb.saveState()
 
         try {
             val elements = headerAdjustedElements ?: return
-            val context = headerContext ?: return
+            val baseContext = headerContext ?: return
+            
+            // Create context with page-enriched data (includes pageNumber)
+            val context = baseContext.copy(data = pageData)
 
             elements.forEach { element ->
                 renderEngine.render(element, context)
@@ -153,13 +170,16 @@ class HeaderFooterPageEvent(
         }
     }
 
-    private fun renderFooterOptimized(writer: PdfWriter, document: Document, footer: HeaderFooter) {
+    private fun renderFooterOptimized(writer: PdfWriter, document: Document, footer: HeaderFooter, pageData: Map<String, Any?>) {
         val cb = writer.directContent
         cb.saveState()
 
         try {
             val elements = footerAdjustedElements ?: return
-            val context = footerContext ?: return
+            val baseContext = footerContext ?: return
+            
+            // Create context with page-enriched data (includes pageNumber)
+            val context = baseContext.copy(data = pageData)
 
             elements.forEach { element ->
                 renderEngine.render(element, context)
