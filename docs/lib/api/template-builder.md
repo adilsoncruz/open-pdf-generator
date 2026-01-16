@@ -401,7 +401,7 @@ File("template.json").writeText(json)
 
 ## Next Steps
 
-- [Template](/api/template) - Load JSON templates
-- [Elements](/api/elements) - All elements
+- [Template](/lib/api/template) - Load JSON templates
+- [Elements](/lib/api/elements) - All elements
 - [Examples](/lib/examples/) - Use cases
 

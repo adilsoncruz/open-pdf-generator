@@ -324,7 +324,7 @@ val landscapeTemplate = baseTemplate.copy(
 
 ## Next Steps
 
-- [TemplateBuilder](/api/template-builder) - Create templates programmatically
-- [Elements](/api/elements) - Element types
-- [PDFGenerator](/api/pdf-generator) - Generate PDF
+- [TemplateBuilder](/lib/api/template-builder) - Create templates programmatically
+- [Elements](/lib/api/elements) - Element types
+- [PDFGenerator](/lib/api/pdf-generator) - Generate PDF
 

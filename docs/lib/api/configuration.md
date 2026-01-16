@@ -159,7 +159,7 @@ Default font family used when elements don't specify a `fontFamily` property.
 
 ### Custom fonts
 
-You can register custom fonts via the font directory configuration. See [Custom Fonts](/lib/guide/advanced/fonts) for details.
+You can register custom fonts via the font directory configuration.
 
 ### Example
 
