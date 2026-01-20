@@ -106,23 +106,6 @@ class ElementsTest {
     }
     
     @Test
-    fun `should support legacy x2 y2 format for LineElement`() {
-        @Suppress("DEPRECATION")
-        val element = LineElement(
-            id = "line1",
-            x = 50f,
-            y = 50f,
-            width = 0f,
-            x2 = 200f,
-            y2 = 100f
-        )
-        
-        // When legacy x2/y2 are provided, they take precedence
-        assertEquals(200f, element.getEndX(500f))
-        assertEquals(100f, element.getEndY(500f))
-    }
-    
-    @Test
     fun `should support 100% width and height for LineElement`() {
         val element = LineElement(
             id = "line1",

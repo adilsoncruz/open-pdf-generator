@@ -56,14 +56,21 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
     }
 
     private fun generateBarcodeImage(element: BarcodeElement, data: String, scaleFactor: Int = 1): Image {
-        val format = when (element.barcodeType) {
-            "qrcode" -> BarcodeFormat.QR_CODE
-            "barcode" -> BarcodeFormat.CODE_128
+        val format = when (element.barcodeType.lowercase()) {
+            "qrcode", "qr_code" -> BarcodeFormat.QR_CODE
+            "barcode", "code128", "code_128" -> BarcodeFormat.CODE_128
+            "code39", "code_39" -> BarcodeFormat.CODE_39
+            "ean13", "ean_13" -> BarcodeFormat.EAN_13
+            "ean8", "ean_8" -> BarcodeFormat.EAN_8
+            "upc_a", "upca" -> BarcodeFormat.UPC_A
+            "upc_e", "upce" -> BarcodeFormat.UPC_E
+            "pdf417" -> BarcodeFormat.PDF_417
+            "datamatrix", "data_matrix" -> BarcodeFormat.DATA_MATRIX
             else -> throw IllegalArgumentException("Unsupported barcode type: ${element.barcodeType}")
         }
 
         val hints = mutableMapOf<EncodeHintType, Any>()
-        if (element.barcodeType == "qrcode") {
+        if (format == BarcodeFormat.QR_CODE) {
             val errorCorrection = when (element.style?.errorCorrection) {
                 "L" -> ErrorCorrectionLevel.L
                 "M" -> ErrorCorrectionLevel.M

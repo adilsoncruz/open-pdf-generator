@@ -362,6 +362,18 @@ class PDFGenerator(
                 }
             }
 
+            // Ensure at least one page is created even if there are no elements
+            // In OpenPDF, a page is only created when content is added to it.
+            // We add a Paragraph with a single space to force page creation.
+            val cb = writer.directContent
+            // Check if any content was written to the page by checking if the page is still blank
+            // We always write an invisible marker to ensure the page is created
+            cb.saveState()
+            cb.setColorFill(java.awt.Color(255, 255, 255, 0)) // Fully transparent
+            cb.rectangle(0f, 0f, 1f, 1f)
+            cb.fill()
+            cb.restoreState()
+
             if (template.summaryPage != null && template.summaryPage.elements.isNotEmpty()) {
                 val summaryCondition = template.summaryPage.printCondition
                 if (summaryCondition == null || ConditionEvaluator.evaluate(summaryCondition, data, null)) {

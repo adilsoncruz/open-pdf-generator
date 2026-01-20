@@ -378,8 +378,19 @@ data class BarcodeElement(
         if (dataBinding.isBlank()) {
             errors.add(ValidationError(id, "BarcodeElement deve ter dataBinding"))
         }
-        if (barcodeType !in listOf("qrcode", "barcode")) {
-            errors.add(ValidationError(id, "barcodeType deve ser 'qrcode' ou 'barcode'"))
+        val supportedTypes = listOf(
+            "qrcode", "qr_code",
+            "barcode", "code128", "code_128",
+            "code39", "code_39",
+            "ean13", "ean_13",
+            "ean8", "ean_8",
+            "upc_a", "upca",
+            "upc_e", "upce",
+            "pdf417",
+            "datamatrix", "data_matrix"
+        )
+        if (barcodeType.lowercase() !in supportedTypes) {
+            errors.add(ValidationError(id, "barcodeType deve ser um dos tipos suportados: qrcode, code128, code39, ean13, ean8, upc_a, upc_e, pdf417, datamatrix"))
         }
         return errors
     }

@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <!-- Silenciar logs da lib durante benchmarks -->
+    <!-- Silenciar logs da lib durante testes -->
     <logger name="com.pdfgenerator" level="WARN"/>
     
     <root level="INFO">
