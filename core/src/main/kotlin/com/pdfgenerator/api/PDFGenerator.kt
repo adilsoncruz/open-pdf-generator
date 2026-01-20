@@ -371,7 +371,16 @@ class PDFGenerator(
                     val summaryOffsetX = margins.left
                     val summaryOffsetY = margins.top
 
-                    val summaryContext = context.copy(isSummaryPage = true)
+                    // Summary page has no header/footer, so recalculate container dimensions
+                    val summaryContainerWidth = document.pageSize.width - margins.left - margins.right
+                    val summaryContainerHeight = document.pageSize.height - margins.top - margins.bottom
+
+                    val summaryContext = context.copy(
+                        isSummaryPage = true,
+                        containerWidth = summaryContainerWidth,
+                        containerHeight = summaryContainerHeight,
+                        bodyOffsetY = summaryOffsetY
+                    )
 
                     template.summaryPage.background?.let { bg ->
                         bg.elements.forEach { element ->
@@ -444,16 +453,7 @@ class PDFGenerator(
             is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
             is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
             is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> {
-                val deltaX = element.x2 - element.x
-                val deltaY = element.y2 - element.y
-                element.copy(
-                    x = adjustedX,
-                    y = adjustedY,
-                    x2 = adjustedX + deltaX,
-                    y2 = adjustedY + deltaY
-                )
-            }
+            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
             is TableElement -> element.copy(x = adjustedX, y = adjustedY)
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
@@ -470,16 +470,7 @@ class PDFGenerator(
             is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
             is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
             is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> {
-                val deltaX = element.x2 - element.x
-                val deltaY = element.y2 - element.y
-                element.copy(
-                    x = adjustedX,
-                    y = adjustedY,
-                    x2 = adjustedX + deltaX,
-                    y2 = adjustedY + deltaY
-                )
-            }
+            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
             is TableElement -> element.copy(x = adjustedX, y = adjustedY)
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
@@ -544,7 +535,10 @@ class PDFGenerator(
                 }
             }
             is BarcodeElement -> element.height
-            is LineElement -> kotlin.math.abs(element.y2 - element.y).coerceAtLeast(1f)
+            is LineElement -> {
+                val containerHeight = context.containerHeight ?: 100f
+                kotlin.math.abs(element.resolveHeight(containerHeight)).coerceAtLeast(1f)
+            }
             is TableElement -> {
                 val tableData = DataBindingResolver.resolve(element.dataBinding, data, null)
                 val itemCount = if (tableData is List<*>) tableData.size else 0
@@ -607,8 +601,8 @@ class PDFGenerator(
                     }
                 }
                 is LineElement -> {
-                    val lineHeight = kotlin.math.abs(element.y2 - element.y)
-                    if (lineHeight > 0) lineHeight else 1f
+                    val lineHeight = element.resolveHeight(loopHeight)
+                    if (lineHeight > 0) kotlin.math.abs(lineHeight) else 1f
                 }
                 is BarcodeElement -> element.height
                 else -> 20f

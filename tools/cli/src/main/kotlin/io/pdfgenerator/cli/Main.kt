@@ -135,9 +135,25 @@ class ValidateCommand : CliktCommand(
         try {
             val templateObj = Template.fromFile(template)
             
+            // Check for required fields that Gson might have set to null
+            if (templateObj.version == null) {
+                throw IllegalArgumentException("Missing required field: 'version'")
+            }
+            if (templateObj.pageSettings == null) {
+                throw IllegalArgumentException("Missing required field: 'pageSettings'")
+            }
+            
+            // Run the template's built-in validation
+            val validationResult = templateObj.validate()
+            if (!validationResult.isValid) {
+                val errorMessages = validationResult.errors.joinToString("\n  - ") { "${it.path}: ${it.message}" }
+                throw IllegalArgumentException("Template validation failed:\n  - $errorMessages")
+            }
+            
             if (verbose) {
                 echo()
                 echo("Template details:")
+                echo("  Version: ${templateObj.version}")
                 echo("  Page size: ${templateObj.pageSettings.size}")
                 echo("  Page orientation: ${templateObj.pageSettings.orientation}")
                 echo("  Header: ${if (templateObj.pageSettings.header != null) "yes" else "no"}")

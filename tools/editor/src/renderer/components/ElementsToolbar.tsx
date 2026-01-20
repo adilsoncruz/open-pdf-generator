@@ -1,66 +1,15 @@
 import { useTemplateStore } from '../store/templateStore'
+import { Icon, type IconName } from './atoms'
 
-// Minimalist SVG icons
-const Icons = {
-  text: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 7h16M9 20v-13M15 20v-13" />
-    </svg>
-  ),
-  static_text: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 7h16M9 20v-13M15 20v-13" />
-      <circle cx="18" cy="18" r="4" fill="currentColor" stroke="none" />
-    </svg>
-  ),
-  image: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <path d="M21 15l-5-5L5 21" />
-    </svg>
-  ),
-  table: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M3 9h18M3 15h18M12 3v18" />
-    </svg>
-  ),
-  rectangle: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-    </svg>
-  ),
-  line: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M5 19l14-14" />
-    </svg>
-  ),
-  barcode: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M6 6h2v12H6zM10 6h1v12h-1zM13 6h1v12h-1zM16 6h2v12h-2z" />
-    </svg>
-  ),
-  loop: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M17 2l4 4-4 4" />
-      <path d="M3 11v-1a4 4 0 014-4h14" />
-      <path d="M7 22l-4-4 4-4" />
-      <path d="M21 13v1a4 4 0 01-4 4H3" />
-    </svg>
-  ),
-}
-
-const ELEMENT_TYPES = [
-  { type: 'text', label: 'Text', icon: Icons.text },
-  { type: 'static_text', label: 'Static Text', icon: Icons.static_text },
-  { type: 'image', label: 'Image', icon: Icons.image },
-  { type: 'table', label: 'Table', icon: Icons.table },
-  { type: 'rectangle', label: 'Rectangle', icon: Icons.rectangle },
-  { type: 'line', label: 'Line', icon: Icons.line },
-  { type: 'barcode', label: 'Barcode/QR', icon: Icons.barcode },
-  { type: 'loop', label: 'Loop', icon: Icons.loop },
+const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
+  { type: 'text', label: 'Text', icon: 'text' },
+  { type: 'static_text', label: 'Static Text', icon: 'static-text' },
+  { type: 'image', label: 'Image', icon: 'image' },
+  { type: 'table', label: 'Table', icon: 'table' },
+  { type: 'rectangle', label: 'Rectangle', icon: 'rectangle' },
+  { type: 'line', label: 'Line', icon: 'line' },
+  { type: 'barcode', label: 'Barcode/QR', icon: 'barcode' },
+  { type: 'loop', label: 'Loop', icon: 'loop' },
 ]
 
 export default function ElementsToolbar() {
@@ -150,8 +99,8 @@ export default function ElementsToolbar() {
       case 'line':
         element = {
           ...baseElement,
-          x2: 250,
-          y2: 50,
+          width: 200,
+          height: 0,
           style: {
             strokeColor: '#000000',
             strokeWidth: 1,
@@ -211,9 +160,11 @@ export default function ElementsToolbar() {
           }`}
           title={elem.label}
         >
-          <div className={`w-6 h-6 ${isDisabled ? 'theme-text-muted' : 'theme-text-secondary group-hover:text-primary-400'}`}>
-            {elem.icon}
-          </div>
+          <Icon 
+            name={elem.icon} 
+            size="lg" 
+            className={isDisabled ? 'theme-text-muted' : 'theme-text-secondary group-hover:text-primary-400'}
+          />
           
           {/* Tooltip */}
           <div className="absolute right-full mr-2 px-2 py-1 theme-surface border theme-border theme-text text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">

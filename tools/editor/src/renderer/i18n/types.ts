@@ -278,6 +278,8 @@ export interface Translations {
     missingElements: string
     invalidJson: string
     validTemplate: string
+    templateValidationFailed: string
+    selectAnotherFile: string
   }
 
   // Confirmations

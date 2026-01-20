@@ -291,11 +291,57 @@ data class LineElement(
     override val y: Float,
     override val positionMode: PositionMode? = null,
     override val relativeOffsetY: Float? = null,
-    val x2: Float,
-    val y2: Float,
+    val width: Any,  // Can be Float or String ("100%")
+    val height: Any = 0f,  // Can be Float or String ("100%")
     val style: LineStyle? = null,
-    val printCondition: String? = null
+    val printCondition: String? = null,
+    // Legacy support for old x2/y2 format
+    @Deprecated("Use width instead")
+    val x2: Float? = null,
+    @Deprecated("Use height instead")
+    val y2: Float? = null
 ) : Element {
+    fun resolveWidth(containerWidth: Float): Float {
+        return when (width) {
+            is Number -> width.toFloat()
+            is String -> {
+                if (width.endsWith("%")) {
+                    val percentage = width.removeSuffix("%").toFloatOrNull() ?: 100f
+                    (containerWidth * percentage) / 100f
+                } else {
+                    width.toFloatOrNull() ?: 100f
+                }
+            }
+            else -> 100f
+        }
+    }
+
+    fun resolveHeight(containerHeight: Float): Float {
+        return when (height) {
+            is Number -> height.toFloat()
+            is String -> {
+                if (height.endsWith("%")) {
+                    val percentage = height.removeSuffix("%").toFloatOrNull() ?: 100f
+                    (containerHeight * percentage) / 100f
+                } else {
+                    height.toFloatOrNull() ?: 0f
+                }
+            }
+            else -> 0f
+        }
+    }
+    
+    // Calculate end coordinates from width/height or legacy x2/y2
+    fun getEndX(containerWidth: Float = 0f): Float {
+        if (x2 != null) return x2
+        return x + resolveWidth(containerWidth)
+    }
+    
+    fun getEndY(containerHeight: Float = 0f): Float {
+        if (y2 != null) return y2
+        return y + resolveHeight(containerHeight)
+    }
+    
     override fun validate(pageSettings: PageSettings): List<ValidationError> = emptyList()
 }
 

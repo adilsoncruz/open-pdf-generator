@@ -1,77 +1,8 @@
 import { useState, type DragEvent } from 'react'
 import { useTemplateStore, type Element, type ElementGroup } from '../store/templateStore'
 import { useTranslation } from '../i18n'
-
-// Minimalist SVG icons
-const PageIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <path d="M14 2v6h6" />
-    <path d="M16 13H8" />
-    <path d="M16 17H8" />
-    <path d="M10 9H8" />
-  </svg>
-)
-
-const PlusIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 5v14M5 12h14" />
-  </svg>
-)
-
-const LayersIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-    <path d="M2 17l10 5 10-5" />
-    <path d="M2 12l10 5 10-5" />
-  </svg>
-)
-
-const ArrowUpIcon = () => (
-  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 19V5M5 12l7-7 7 7" />
-  </svg>
-)
-
-const ArrowDownIcon = () => (
-  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 5v14M19 12l-7 7-7-7" />
-  </svg>
-)
-
-const ArrowLeftIcon = () => (
-  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M19 12H5M12 19l-7-7 7-7" />
-  </svg>
-)
-
-const ArrowRightIcon = () => (
-  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M5 12h14M12 5l7 7-7 7" />
-  </svg>
-)
-
-const EyeIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-)
-
-const EyeOffIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-    <line x1="1" y1="1" x2="23" y2="23" />
-  </svg>
-)
-
-const SectionIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <line x1="3" y1="6" x2="21" y2="6" />
-    <line x1="3" y1="12" x2="21" y2="12" />
-    <line x1="3" y1="18" x2="21" y2="18" />
-  </svg>
-)
+import { Icon, Input, Select, Button, type IconName } from './atoms'
+import { NumberField, IconButton } from './molecules'
 
 export default function Sidebar() {
   const { t } = useTranslation()
@@ -101,7 +32,7 @@ export default function Sidebar() {
             onClick={() => setPageSettingsExpanded(!pageSettingsExpanded)}
           >
             <h2 className="section-header flex items-center gap-2">
-              <PageIcon />
+              <Icon name="page" size="sm" />
               {t.sidebar.pageSettings}
             </h2>
             <button
@@ -115,11 +46,11 @@ export default function Sidebar() {
           {pageSettingsExpanded && (
             <>
               {/* Page Size */}
-              <div className="mb-3 mt-3">
-                <label className="block text-xs font-medium theme-text-secondary mb-1">
+              <div className="mb-3 mt-3 space-y-1">
+                <label className="text-xs font-medium theme-text-secondary">
                   {t.sidebar.size}
                 </label>
-                <select
+                <Select
                   value={template.pageSettings.size}
                   onChange={(e) => {
                     const { updateTemplate } = useTemplateStore.getState()
@@ -130,11 +61,11 @@ export default function Sidebar() {
                       }
                     })
                   }}
-                  className="w-full input"
-                >
-                  <option value="A4">A4 (595 × 842 pt)</option>
-                  <option value="Letter">Letter (612 × 792 pt)</option>
-                </select>
+                  options={[
+                    { value: 'A4', label: 'A4 (595 × 842 pt)' },
+                    { value: 'Letter', label: 'Letter (612 × 792 pt)' },
+                  ]}
+                />
               </div>
 
               {/* Margins */}
@@ -143,98 +74,90 @@ export default function Sidebar() {
                   {t.sidebar.margins}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs theme-text-muted mb-1 flex items-center gap-1">
-                      <ArrowUpIcon />
-                      {t.sidebar.top}
-                    </label>
-                    <input
-                      type="number"
-                      value={template.pageSettings.margins.top}
-                      onChange={(e) => {
-                        const { updateTemplate } = useTemplateStore.getState()
-                        updateTemplate({
-                          pageSettings: {
-                            ...template.pageSettings,
-                            margins: {
-                              ...template.pageSettings.margins,
-                              top: parseFloat(e.target.value) || 0
-                            }
+                  <NumberField
+                    label={
+                      <span className="flex items-center gap-1">
+                        <Icon name="arrow-up" size="xs" />
+                        {t.sidebar.top}
+                      </span>
+                    }
+                    value={template.pageSettings.margins.top}
+                    onValueChange={(value) => {
+                      const { updateTemplate } = useTemplateStore.getState()
+                      updateTemplate({
+                        pageSettings: {
+                          ...template.pageSettings,
+                          margins: {
+                            ...template.pageSettings.margins,
+                            top: value || 0
                           }
-                        })
-                      }}
-                      className="w-full input text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs theme-text-muted mb-1 flex items-center gap-1">
-                      <ArrowDownIcon />
-                      {t.sidebar.bottom}
-                    </label>
-                    <input
-                      type="number"
-                      value={template.pageSettings.margins.bottom}
-                      onChange={(e) => {
-                        const { updateTemplate } = useTemplateStore.getState()
-                        updateTemplate({
-                          pageSettings: {
-                            ...template.pageSettings,
-                            margins: {
-                              ...template.pageSettings.margins,
-                              bottom: parseFloat(e.target.value) || 0
-                            }
+                        }
+                      })
+                    }}
+                  />
+                  <NumberField
+                    label={
+                      <span className="flex items-center gap-1">
+                        <Icon name="arrow-down" size="xs" />
+                        {t.sidebar.bottom}
+                      </span>
+                    }
+                    value={template.pageSettings.margins.bottom}
+                    onValueChange={(value) => {
+                      const { updateTemplate } = useTemplateStore.getState()
+                      updateTemplate({
+                        pageSettings: {
+                          ...template.pageSettings,
+                          margins: {
+                            ...template.pageSettings.margins,
+                            bottom: value || 0
                           }
-                        })
-                      }}
-                      className="w-full input text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs theme-text-muted mb-1 flex items-center gap-1">
-                      <ArrowLeftIcon />
-                      {t.sidebar.left}
-                    </label>
-                    <input
-                      type="number"
-                      value={template.pageSettings.margins.left}
-                      onChange={(e) => {
-                        const { updateTemplate } = useTemplateStore.getState()
-                        updateTemplate({
-                          pageSettings: {
-                            ...template.pageSettings,
-                            margins: {
-                              ...template.pageSettings.margins,
-                              left: parseFloat(e.target.value) || 0
-                            }
+                        }
+                      })
+                    }}
+                  />
+                  <NumberField
+                    label={
+                      <span className="flex items-center gap-1">
+                        <Icon name="arrow-left" size="xs" />
+                        {t.sidebar.left}
+                      </span>
+                    }
+                    value={template.pageSettings.margins.left}
+                    onValueChange={(value) => {
+                      const { updateTemplate } = useTemplateStore.getState()
+                      updateTemplate({
+                        pageSettings: {
+                          ...template.pageSettings,
+                          margins: {
+                            ...template.pageSettings.margins,
+                            left: value || 0
                           }
-                        })
-                      }}
-                      className="w-full input text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs theme-text-muted mb-1 flex items-center gap-1">
-                      <ArrowRightIcon />
-                      {t.sidebar.right}
-                    </label>
-                    <input
-                      type="number"
-                      value={template.pageSettings.margins.right}
-                      onChange={(e) => {
-                        const { updateTemplate } = useTemplateStore.getState()
-                        updateTemplate({
-                          pageSettings: {
-                            ...template.pageSettings,
-                            margins: {
-                              ...template.pageSettings.margins,
-                              right: parseFloat(e.target.value) || 0
-                            }
+                        }
+                      })
+                    }}
+                  />
+                  <NumberField
+                    label={
+                      <span className="flex items-center gap-1">
+                        <Icon name="arrow-right" size="xs" />
+                        {t.sidebar.right}
+                      </span>
+                    }
+                    value={template.pageSettings.margins.right}
+                    onValueChange={(value) => {
+                      const { updateTemplate } = useTemplateStore.getState()
+                      updateTemplate({
+                        pageSettings: {
+                          ...template.pageSettings,
+                          margins: {
+                            ...template.pageSettings.margins,
+                            right: value || 0
                           }
-                        })
-                      }}
-                      className="w-full input text-xs"
-                    />
-                  </div>
+                        }
+                      })
+                    }}
+                  />
                 </div>
               </div>
             </>
@@ -244,7 +167,7 @@ export default function Sidebar() {
         {/* Section Selector */}
         <div className="mb-4 p-3 theme-bg-tertiary border theme-border rounded-xl">
           <h2 className="section-header mb-3 flex items-center gap-2">
-            <SectionIcon />
+            <Icon name="section" size="sm" />
             {t.sidebar.section}
           </h2>
           <div className="space-y-2">
@@ -284,7 +207,7 @@ export default function Sidebar() {
                   className="w-6 h-6 flex items-center justify-center theme-surface hover:bg-primary-500/20 rounded transition"
                   title={t.sidebar.addHeader}
                 >
-                  <PlusIcon />
+                  <Icon name="plus" size="sm" />
                 </button>
               </div>
             )}
@@ -337,7 +260,7 @@ export default function Sidebar() {
                   className="w-6 h-6 flex items-center justify-center theme-surface hover:bg-primary-500/20 rounded transition"
                   title={t.sidebar.addFooter}
                 >
-                  <PlusIcon />
+                  <Icon name="plus" size="sm" />
                 </button>
               </div>
             )}
@@ -378,7 +301,7 @@ export default function Sidebar() {
                   className="w-6 h-6 flex items-center justify-center theme-surface hover:bg-green-500/20 rounded transition"
                   title={t.sidebar.addSummary}
                 >
-                  <PlusIcon />
+                  <Icon name="plus" size="sm" />
                 </button>
               </div>
             )}
@@ -419,7 +342,7 @@ export default function Sidebar() {
                   className="w-6 h-6 flex items-center justify-center theme-surface hover:bg-purple-500/20 rounded transition"
                   title={t.sidebar.addBackground}
                 >
-                  <PlusIcon />
+                  <Icon name="plus" size="sm" />
                 </button>
               </div>
             )}
@@ -431,7 +354,7 @@ export default function Sidebar() {
       <div className="px-4 py-3 border-t theme-border">
         <div className="flex items-center justify-between mb-3">
           <h2 className="section-header flex items-center gap-2">
-            <LayersIcon />
+            <Icon name="layers" size="sm" />
             {t.sidebar.elementsTitle}
           </h2>
         </div>
@@ -557,8 +480,7 @@ function GroupButton() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="theme-surface border theme-border rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
             <h3 className="text-lg font-semibold theme-text mb-4">{t.sidebar.createGroup}</h3>
-            <input
-              type="text"
+            <Input
               value={groupNameInput}
               onChange={(e) => setGroupNameInput(e.target.value)}
               onKeyDown={(e) => {
@@ -569,22 +491,22 @@ function GroupButton() {
                 }
               }}
               placeholder={t.sidebar.groupName}
-              className="w-full input mb-4"
+              className="mb-4"
               autoFocus
             />
             <div className="flex justify-end gap-2">
-              <button
+              <Button
+                variant="secondary"
                 onClick={handleCancelGroup}
-                className="btn-secondary"
               >
                 {t.common.cancel}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 onClick={handleCreateGroup}
-                className="btn-primary"
               >
                 {t.common.create}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -806,7 +728,7 @@ function ElementsList() {
                   {(() => {
                     const groupElements = elements.filter(el => group.elementIds.includes(el.id))
                     const allHidden = groupElements.every(el => el.hidden)
-                    return allHidden ? <EyeOffIcon /> : <EyeIcon />
+                    return allHidden ? <Icon name="eye-off" size="sm" /> : <Icon name="eye" size="sm" />
                   })()}
                 </button>
               </div>
@@ -840,7 +762,7 @@ function ElementsList() {
                         className="text-primary-400 hover:text-primary-300"
                         title={element.hidden ? t.sidebar.showElement : t.sidebar.hideElement}
                       >
-                        {element.hidden ? <EyeOffIcon /> : <EyeIcon />}
+                        {element.hidden ? <Icon name="eye-off" size="sm" /> : <Icon name="eye" size="sm" />}
                       </button>
                     </div>
                   </div>
@@ -907,7 +829,7 @@ function ElementsList() {
                   }`}
                   title={element.hidden ? t.sidebar.showElement : t.sidebar.hideElement}
                 >
-                  {element.hidden ? <EyeOffIcon /> : <EyeIcon />}
+                  {element.hidden ? <Icon name="eye-off" size="sm" /> : <Icon name="eye" size="sm" />}
                 </button>
                 {/* Delete */}
                 <button
@@ -973,47 +895,14 @@ function LoopElementItem({ element, index, currentSection }: LoopElementItemProp
   const loopChildren = element.elements || []
   
   const getChildIcon = (type: string) => {
-    switch (type) {
-      case 'text':
-        return (
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 7h16M9 20v-13M15 20v-13" />
-          </svg>
-        )
-      case 'static_text':
-        return (
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 7h16M9 20v-13M15 20v-13" />
-            <circle cx="18" cy="18" r="3" fill="currentColor" stroke="none" />
-          </svg>
-        )
-      case 'image':
-        return (
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <path d="M21 15l-5-5L5 21" />
-          </svg>
-        )
-      case 'rectangle':
-        return (
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-          </svg>
-        )
-      case 'line':
-        return (
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M5 19l14-14" />
-          </svg>
-        )
-      default:
-        return (
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-          </svg>
-        )
+    const iconMap: Record<string, IconName> = {
+      text: 'text',
+      static_text: 'static-text',
+      image: 'image',
+      rectangle: 'rectangle',
+      line: 'minus',
     }
+    return <Icon name={iconMap[type] || 'rectangle'} size="xs" />
   }
   
   const handleAddChildElement = (type: string) => {
@@ -1033,7 +922,7 @@ function LoopElementItem({ element, index, currentSection }: LoopElementItemProp
     } else if (type === 'rectangle') {
       newElement = { ...newElement, width: 100, height: 20, style: { fillColor: '#e0e0e0' } }
     } else if (type === 'line') {
-      newElement = { ...newElement, x2: 100, y2: 0, style: { strokeColor: '#000000', strokeWidth: 1 } }
+      newElement = { ...newElement, width: 100, height: 0, style: { strokeColor: '#000000', strokeWidth: 1 } }
     }
     
     addElementToLoop(element.id, newElement, currentSection)
@@ -1088,7 +977,7 @@ function LoopElementItem({ element, index, currentSection }: LoopElementItemProp
               className="text-purple-400 hover:text-purple-300"
                 title={element.hidden ? t.sidebar.showElement : t.sidebar.hideElement}
             >
-              {element.hidden ? <EyeOffIcon /> : <EyeIcon />}
+              {element.hidden ? <Icon name="eye-off" size="sm" /> : <Icon name="eye" size="sm" />}
             </button>
             <button
               onClick={(e) => {

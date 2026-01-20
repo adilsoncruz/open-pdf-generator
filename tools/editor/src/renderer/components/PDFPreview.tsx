@@ -11,6 +11,8 @@ import {
   ExclamationTriangleIcon,
   DocumentPlusIcon
 } from '@heroicons/react/24/outline'
+import { Button, Select, Divider } from './atoms'
+import { IconButton } from './molecules'
 
 // Configure PDF.js worker using local file from node_modules
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url'
@@ -286,12 +288,13 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
             <div className="flex flex-col items-center gap-3 max-w-xs text-center">
               <ExclamationTriangleIcon className="w-12 h-12 text-amber-400" />
               <span className="text-white text-sm">{error}</span>
-              <button
+              <Button
                 onClick={generatePreview}
-                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                variant="primary"
+                size="sm"
               >
                 {t.preview.tryAgain}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -330,12 +333,13 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center gap-3 text-center">
               <span className="text-white/70 text-sm">{t.preview.loading}</span>
-              <button
+              <Button
                 onClick={generatePreview}
-                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                variant="primary"
+                size="sm"
               >
                 {t.preview.refresh}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -344,55 +348,57 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
       
       {/* Zoom Controls - Fixed at bottom center */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 theme-surface rounded-xl shadow-lg border theme-border p-2 flex items-center gap-2">
-        <button
+        <IconButton
+          icon="zoom-out"
           onClick={zoomOut}
           disabled={scale <= 0.4}
-          className="p-2 hover:bg-primary-500/20 rounded-lg transition theme-text disabled:opacity-30"
-          title="Zoom out"
-        >
-          <span className="text-lg whitespace-nowrap">🔍−</span>
-        </button>
+          tooltip="Zoom out"
+          className="w-8 h-8"
+        />
         
-        <select
-          value={Math.round(scale * 100)}
+        <Select
+          value={Math.round(scale * 100).toString()}
           onChange={(e) => setScale(Number(e.target.value) / 100)}
-          className="px-2 py-1 text-sm input"
-        >
-          <option value={40}>40%</option>
-          <option value={60}>60%</option>
-          <option value={80}>80%</option>
-          <option value={100}>100%</option>
-          <option value={120}>120%</option>
-          <option value={150}>150%</option>
-          <option value={200}>200%</option>
-        </select>
+          options={[
+            { value: '40', label: '40%' },
+            { value: '60', label: '60%' },
+            { value: '80', label: '80%' },
+            { value: '100', label: '100%' },
+            { value: '120', label: '120%' },
+            { value: '150', label: '150%' },
+            { value: '200', label: '200%' },
+          ]}
+          size="sm"
+          className="w-20"
+        />
         
-        <button
+        <IconButton
+          icon="zoom-in"
           onClick={zoomIn}
           disabled={scale >= 2}
-          className="p-2 hover:bg-primary-500/20 rounded-lg transition theme-text disabled:opacity-30"
-          title="Zoom in"
-        >
-          <span className="text-lg whitespace-nowrap">🔍+</span>
-        </button>
+          tooltip="Zoom in"
+          className="w-8 h-8"
+        />
         
-        <div className="w-px h-6 theme-border mx-1"></div>
+        <Divider orientation="vertical" className="h-6 mx-1" />
         
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={fitToWidth}
-          className="px-2 py-1 text-xs hover:bg-primary-500/20 rounded-lg transition theme-text-secondary"
-          title="Fit to Width"
+          className="px-2 py-1 text-xs"
         >
           Fit
-        </button>
+        </Button>
         
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setScale(1)}
-          className="px-2 py-1 text-xs hover:bg-primary-500/20 rounded-lg transition theme-text-secondary"
-          title="Actual Size (100%)"
+          className="px-2 py-1 text-xs"
         >
           100%
-        </button>
+        </Button>
       </div>
     </div>
   )

@@ -1,0 +1,286 @@
+---
+alwaysApply: true
+---
+
+# MDC – React Project with Atomic Design
+
+## Purpose
+This MDC (Model Development Context) defines standards, rules, and expectations for AI agents contributing to a **React** project structured with **Atomic Design**. The goal is consistency, scalability, and high-quality UI/UX with clean architecture.
+
+Agents must strictly follow this document when generating code, refactoring, or suggesting improvements.
+
+---
+
+## Tech Stack Assumptions
+- React 18+
+- TypeScript (mandatory)
+- Electron (main + preload + renderer)
+- Vite (preferred) or Webpack
+- Tailwind CSS or CSS Modules
+- Storybook (renderer only)
+- ESLint + Prettier
+- Testing Library + Vitest/Jest
+
+---
+
+## Atomic Design Structure
+
+The UI layer **must** follow Atomic Design principles and apply **only to the renderer process**.
+
+```
+src/
+ ├── main/            # Electron main process
+ ├── preload/         # Secure IPC bridge
+ ├── renderer/        # React application
+ │   ├── components/
+ │   │   ├── atoms/
+ │   │   ├── molecules/
+ │   │   ├── organisms/
+ │   │   ├── templates/
+ │   │   └── pages/
+ │   ├── hooks/
+ │   ├── services/
+ │   ├── store/
+ │   ├── styles/
+ │   ├── utils/
+ │   └── types/
+```
+src/
+ ├── components/
+ │   ├── atoms/
+ │   ├── molecules/
+ │   ├── organisms/
+ │   ├── templates/
+ │   └── pages/
+ ├── hooks/
+ ├── services/
+ ├── store/
+ ├── styles/
+ ├── utils/
+ └── types/
+```
+
+### Definitions
+
+#### Atoms
+- Smallest UI elements
+- No business logic
+- No API calls
+- Examples: Button, Input, Icon, Text
+
+Rules:
+- Must be reusable
+- Accept only primitive props
+- Stateless whenever possible
+
+#### Molecules
+- Combination of atoms
+- Small UI logic allowed
+- No side effects
+
+Examples:
+- Input + Label
+- Button + Icon
+- SearchField
+
+#### Organisms
+- Complex UI blocks
+- Can contain state
+- Can consume hooks
+
+Examples:
+- Header
+- Sidebar
+- LoginForm
+
+#### Templates
+- Layout composition
+- Define structure, not content
+- No API calls
+
+Examples:
+- AuthLayout
+- DashboardLayout
+
+#### Pages
+- Route-level components
+- Can fetch data
+- Connect UI with business logic
+
+Rules:
+- No styling logic
+- Delegate UI to templates/organisms
+
+---
+
+## Component Rules
+
+### File Structure per Component
+
+```
+ComponentName/
+ ├── ComponentName.tsx
+ ├── ComponentName.types.ts
+ ├── ComponentName.styles.ts (if applicable)
+ ├── ComponentName.test.tsx
+ └── index.ts
+```
+
+### Naming Conventions
+- Components: PascalCase
+- Hooks: useCamelCase
+- Props interfaces: ComponentNameProps
+
+---
+
+## TypeScript Guidelines
+
+- `any` is forbidden
+- Prefer `type` over `interface` unless extending
+- All props must be typed
+
+Example:
+
+```ts
+export type ButtonProps = {
+  label: string;
+  onClick?: () => void;
+  variant?: 'primary' | 'secondary';
+};
+```
+
+---
+
+## Styling Rules
+
+### Tailwind (if used)
+- No inline styles
+- No dynamic class strings without `clsx`
+
+### CSS Modules
+- One module per component
+- Class names must be semantic
+
+---
+
+## State Management
+
+- Local state: `useState`
+- Shared state: Context or Zustand
+- Avoid prop drilling
+
+Agents **must not** introduce Redux unless explicitly requested.
+
+---
+
+## Data Fetching
+
+- Pages or hooks only (renderer)
+- Never fetch data inside atoms or molecules
+- No direct Node.js or Electron API access from renderer
+- Use IPC via preload for filesystem, OS or native features
+
+```
+src/renderer/services/userService.ts
+```
+src/services/userService.ts
+```
+
+---
+
+## Hooks
+
+- Business logic must live in hooks (renderer)
+- Hooks must be reusable
+- One responsibility per hook
+- Side effects that require OS access must call IPC services
+
+Example:
+
+```ts
+export function useUser() {
+  // logic
+}
+```ts
+export function useUser() {
+  // logic
+}
+```
+
+---
+
+## Testing Rules
+
+- Atoms: snapshot + basic interaction
+- Molecules/Organisms: behavior tests
+- Pages: integration tests
+
+Use Testing Library principles:
+- Test user behavior, not implementation
+
+---
+
+## Storybook
+
+- Mandatory for atoms and molecules
+- One story per variant
+- Stories must not contain business logic
+
+---
+
+## Performance Guidelines
+
+- Memoize organisms when necessary
+- Avoid unnecessary re-renders
+- Lazy load pages
+
+---
+
+## Accessibility (A11y)
+
+- Semantic HTML only
+- All inputs must have labels
+- Buttons must be keyboard accessible
+- Use ARIA only when necessary
+
+---
+
+## What Agents MUST NOT Do
+
+- Create UI components outside Atomic Design hierarchy
+- Mix business logic with UI
+- Access `fs`, `path`, `process`, or Electron APIs directly in renderer
+- Bypass preload security layer
+- Introduce new libraries without approval
+- Break folder conventions
+- Use inline styles or `any`
+
+---
+
+## Agent Output Expectations
+
+When generating code, the agent must:
+1. Specify the Atomic level (atom/molecule/etc)
+2. Follow file and naming conventions
+3. Include TypeScript types
+4. Respect separation of concerns
+
+---
+
+## Example Agent Instruction
+
+> Create a **molecule** using `Button` and `Icon` atoms for a submit action. No API calls. Include tests and Storybook.
+
+---
+
+## Version
+
+- MDC Version: 1.0.0
+- Architecture: Atomic Design
+- Target: React + TypeScript
+
+---
+
+**End of MDC**
+
+

@@ -1,5 +1,32 @@
 import { useState } from 'react'
 import { useTemplateStore, type Element, type ElementGroup } from '../store/templateStore'
+import { Icon, Input, Select, Checkbox, Divider, ColorInput, Button, TextArea } from './atoms'
+import { NumberField, ColorField, PropertyGroup, PropertyRow, TabBar, IconButton } from './molecules'
+
+/**
+ * Reusable panel header component with pin button
+ */
+function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  const { isPropertiesPanelPinned, togglePropertiesPanelPinned } = useTemplateStore()
+  
+  return (
+    <div className="p-3 border-b theme-border flex items-center justify-between shrink-0">
+      <div className="flex-1 min-w-0">
+        <h2 className="text-sm font-semibold theme-text truncate">{title}</h2>
+        {subtitle && (
+          <p className="text-xs theme-text-muted mt-0.5 truncate">{subtitle}</p>
+        )}
+      </div>
+      <IconButton
+        icon={isPropertiesPanelPinned ? 'pin' : 'pin-off'}
+        onClick={togglePropertiesPanelPinned}
+        tooltip={isPropertiesPanelPinned ? 'Unpin panel' : 'Pin panel'}
+        variant={isPropertiesPanelPinned ? 'default' : 'ghost'}
+        className={isPropertiesPanelPinned ? 'text-blue-500' : ''}
+      />
+    </div>
+  )
+}
 
 export default function PropertiesPanel() {
   // HOOKS DEVEM VIR PRIMEIRO (antes de qualquer return)
@@ -7,6 +34,8 @@ export default function PropertiesPanel() {
   
   
   const store = useTemplateStore()
+  const isPropertiesPanelPinned = store.isPropertiesPanelPinned
+  const togglePropertiesPanelPinned = store.togglePropertiesPanelPinned
   
   const template = store.template
   const selectedElementIds = store.selectedElementIds
@@ -122,8 +151,11 @@ export default function PropertiesPanel() {
     
     
     return (
-      <div className="w-[360px] theme-bg-secondary border-l theme-border p-4">
+      <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
+        <PanelHeader title="Properties" />
+        <div className="p-4 flex-1">
         <p className="text-sm theme-text-muted">Select an element or group to edit</p>
+        </div>
       </div>
     )
   }
@@ -151,79 +183,21 @@ export default function PropertiesPanel() {
     }
   }
 
-  // Icon component for tabs
-  const TabIcon = ({ id }: { id: string }) => {
-    const iconProps = "w-4 h-4"
-    
-    switch (id) {
-      case 'appearance':
-  return (
-          <svg className={iconProps} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <circle cx="8" cy="8" r="5" />
-            <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-          </svg>
-        )
-      case 'borders':
-        return (
-          <svg className={iconProps} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="3" y="3" width="10" height="10" />
-          </svg>
-        )
-      case 'textfield':
-        return (
-          <svg className={iconProps} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M4 3h8M8 3v10M6 13h4" strokeLinecap="round" />
-          </svg>
-        )
-      case 'line':
-        return (
-          <svg className={iconProps} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <line x1="3" y1="13" x2="13" y2="3" strokeLinecap="round" />
-          </svg>
-        )
-      case 'image':
-        return (
-          <svg className={iconProps} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="2" y="2" width="12" height="12" rx="1" />
-            <circle cx="6" cy="6" r="1.5" fill="currentColor" />
-            <path d="M2 11l3-3 2 2 4-4 3 3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )
-      case 'barcode':
-        return (
-          <svg className={iconProps} viewBox="0 0 16 16" fill="currentColor">
-            <rect x="2" y="3" width="1.5" height="10" />
-            <rect x="4.5" y="3" width="0.8" height="10" />
-            <rect x="6.3" y="3" width="1.5" height="10" />
-            <rect x="8.8" y="3" width="0.8" height="10" />
-            <rect x="10.6" y="3" width="1.2" height="10" />
-            <rect x="12.8" y="3" width="1.2" height="10" />
-          </svg>
-        )
-      case 'general':
-        return (
-          <svg className={iconProps} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <circle cx="8" cy="8" r="5" />
-            <path d="M8 5v3l2 2" strokeLinecap="round" />
-          </svg>
-        )
-      case 'columns':
-        return (
-          <svg className={iconProps} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="2" y="3" width="4" height="10" />
-            <rect x="7" y="3" width="4" height="10" />
-            <rect x="12" y="3" width="2" height="10" />
-          </svg>
-        )
-      case 'styles':
-        return (
-          <svg className={iconProps} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M3 8h10M5 5h6M6 11h4" strokeLinecap="round" />
-          </svg>
-        )
-      default:
-        return null
+  // Icon mapping for tabs
+  const getTabIcon = (id: string) => {
+    const iconMap: Record<string, string> = {
+      appearance: 'appearance',
+      borders: 'borders',
+      textfield: 'textfield',
+      line: 'line',
+      image: 'image',
+      barcode: 'qrcode',
+      general: 'general',
+      columns: 'columns',
+      styles: 'styles',
+      loop: 'loop',
     }
+    return iconMap[id] || 'settings'
   }
 
   // Define tabs based on element type
@@ -273,41 +247,43 @@ export default function PropertiesPanel() {
 
   return (
     <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b theme-border">
+      {/* Header with Pin Button */}
+      <div className="p-3 border-b theme-border flex items-center justify-between">
+        <div className="flex-1">
         <h2 className="text-sm font-semibold theme-text">Properties</h2>
         {isMultiSelection ? (
-          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
-            <p className="text-xs text-blue-700 font-medium">
+            <div className="mt-1.5 p-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
               {selectedElements.length} elements selected
             </p>
-            <p className="text-xs text-blue-600 mt-1">
+              <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-0.5">
               Changes will be applied to all
             </p>
           </div>
         ) : (
-          <p className="text-xs theme-text-muted mt-1">{selectedElement.type}</p>
-        )}
+            <p className="text-xs theme-text-muted mt-0.5">{selectedElement.type}</p>
+          )}
+        </div>
+        <IconButton
+          icon={isPropertiesPanelPinned ? 'pin' : 'pin-off'}
+          onClick={togglePropertiesPanelPinned}
+          tooltip={isPropertiesPanelPinned ? 'Unpin panel' : 'Pin panel'}
+          variant={isPropertiesPanelPinned ? 'default' : 'ghost'}
+          className={isPropertiesPanelPinned ? 'text-blue-500' : ''}
+        />
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b theme-border theme-bg-tertiary">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 px-2 py-2.5 text-xs font-medium border-b-2 transition flex items-center justify-center gap-1 whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'border-primary-500 text-primary-600 dark:text-primary-400 bg-white dark:bg-gray-800'
-                : 'border-transparent theme-text-secondary hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-            title={tab.label}
-          >
-            <TabIcon id={tab.id} />
-            <span className="ml-1">{tab.label}</span>
-          </button>
-        ))}
-      </div>
+      <TabBar
+        tabs={tabs.map((tab) => ({
+          id: tab.id,
+          label: tab.label,
+          icon: <Icon name={getTabIcon(tab.id) as any} size="sm" />,
+        }))}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        className="border-b theme-border"
+      />
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -320,158 +296,118 @@ export default function PropertiesPanel() {
         
         {!isMultiSelection && (
                   <>
-          <div>
-            <label className="block text-xs font-medium theme-text mb-1">ID</label>
-            <input
-              type="text"
+            <div className="space-y-1 mb-3">
+              <label className="text-xs font-medium theme-text-muted">ID</label>
+              <Input
               value={selectedElement.id}
               disabled
-              className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900"
+                size="sm"
             />
           </div>
-                    <div className="border-t theme-border my-3"></div>
+            <Divider className="my-3" />
                   </>
         )}
 
                 {/* Location */}
-            <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Location</h3>
+                <PropertyGroup title="Location" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">X</label>
-              <input
-                type="number"
+                    <NumberField
+                      label="X"
                 value={selectedElement.x}
-                onChange={(e) => handleUpdate('x', parseFloat(e.target.value))}
+                      onValueChange={(value) => handleUpdate('x', value)}
                 onBlur={handleInputBlur}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-            <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Y</label>
-              <input
-                type="number"
+                    />
+                    <NumberField
+                      label="Y"
                 value={selectedElement.y}
-                onChange={(e) => handleUpdate('y', parseFloat(e.target.value))}
+                      onValueChange={(value) => handleUpdate('y', value)}
                 onBlur={handleInputBlur}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
-            </div>
           </div>
           
           {/* Modo de Posicionamento */}
           <div className="mt-3">
-            <label className="block text-xs theme-text-secondary mb-1">Position Mode</label>
-            <select
+                    <Select
               value={selectedElement.positionMode || 'ABSOLUTE'}
               onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
-              className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="ABSOLUTE">Absolute (fixed on canvas)</option>
-              <option value="RELATIVE">Relative (follows content above)</option>
-            </select>
+                      options={[
+                        { value: 'ABSOLUTE', label: 'Absolute (fixed on canvas)' },
+                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                      ]}
+                    />
             {selectedElement.positionMode === 'RELATIVE' && (
               <>
                 <p className="text-[10px] text-purple-500 mt-1 mb-2">
                   ↳ Positioned after the previous element in PDF
                 </p>
+                        <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
                 <div className="flex items-center gap-2">
-                  <label className="block text-xs theme-text-secondary">Offset Y (PDF):</label>
-                  <input
+                            <Input
                     type="number"
                     value={selectedElement.relativeOffsetY ?? 10}
                     onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
-                    className="w-20 px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
+                              className="w-20"
+                              size="sm"
                   />
                   <span className="text-[10px] theme-text-muted">px</span>
                 </div>
+                        </PropertyRow>
                 <p className="text-[10px] theme-text-muted mt-1">
                   Space between the previous element and this one
                 </p>
               </>
             )}
           </div>
-                </div>
-
-                <div className="border-t theme-border my-3"></div>
+                </PropertyGroup>
 
                 {/* Size */}
-              <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Size</h3>
+                <PropertyGroup title="Size" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">W (Width)</label>
-                <input
-                  type="number"
+                    <NumberField
+                      label="W (Width)"
                   value={selectedElement.width}
-                  onChange={(e) => handleUpdate('width', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-              <div>
-                      <label className="block text-xs theme-text-secondary mb-1">H (Height)</label>
-                <input
-                  type="number"
+                      onValueChange={(value) => handleUpdate('width', value)}
+                    />
+                    <NumberField
+                      label="H (Height)"
                   value={selectedElement.height}
-                  onChange={(e) => handleUpdate('height', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('height', value)}
                 />
               </div>
-          </div>
-                </div>
-
-                <div className="border-t theme-border my-3"></div>
+                </PropertyGroup>
 
                 {/* Color */}
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Color</h3>
-                  <div className="space-y-2">
+                <PropertyGroup title="Color" collapsible={false}>
                     <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs theme-text-secondary mb-1">Text</label>
-                        <input
-                          type="color"
+                    <ColorField
+                      label="Text"
                           value={selectedElement.style?.color || '#000000'}
-                          onChange={(e) => handleStyleUpdate('color', e.target.value)}
-                          className="w-full h-7 border theme-border rounded cursor-pointer"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs theme-text-secondary mb-1">Background</label>
-                        <input
-                          type="color"
+                      onValueChange={(color) => handleStyleUpdate('color', color)}
+                    />
+                    <ColorField
+                      label="Background"
                           value={selectedElement.style?.backgroundColor && selectedElement.style?.backgroundColor !== 'transparent' ? selectedElement.style?.backgroundColor : '#FFFFFF'}
-                          onChange={(e) => handleStyleUpdate('backgroundColor', e.target.value)}
-                          className="w-full h-7 border theme-border rounded cursor-pointer"
+                      onValueChange={(color) => handleStyleUpdate('backgroundColor', color)}
                           disabled={!selectedElement.style?.backgroundColor || selectedElement.style?.backgroundColor === 'transparent'}
                         />
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs theme-text-secondary">Transparent Background</label>
-                      <input
-                        type="checkbox"
-                        id="transparent-bg"
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs theme-text-secondary">Transparent Background</span>
+                    <Checkbox
                         checked={!selectedElement.style?.backgroundColor || selectedElement.style?.backgroundColor === 'transparent'}
                         onChange={(e) => handleStyleUpdate('backgroundColor', e.target.checked ? 'transparent' : '#FFFFFF')}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       />
                     </div>
-                  </div>
-                </div>
+                </PropertyGroup>
 
                 
                 {selectedElement.type === 'text' && (
-                  <>
-                    <div className="border-t theme-border my-3"></div>
-                    <div>
-                      <h3 className="text-xs font-semibold theme-text mb-2">Print Condition</h3>
-                      <input
-                        type="text"
+                  <PropertyGroup title="Print Condition" collapsible={false}>
+                    <Input
                         value={selectedElement.printCondition || ''}
                         onChange={(e) => handleUpdate('printCondition', e.target.value || null)}
                         placeholder="Ex: invoice.total > 1000"
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      size="sm"
                       />
                       <p className="text-xs theme-text-muted mt-1">
                         Leave empty to always print
@@ -489,8 +425,7 @@ export default function PropertiesPanel() {
                           <div>• total &gt;= 100 && total &lt; 500</div>
                         </div>
                       </div>
-                    </div>
-                  </>
+                  </PropertyGroup>
                 )}
               </>
             )}
@@ -499,12 +434,9 @@ export default function PropertiesPanel() {
             {activeTab === 'borders' && (
           <>
                 {/* Paddings */}
-            <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Paddings</h3>
-                  <div className="space-y-2">
+                <PropertyGroup title="Paddings" collapsible={false}>
                     <div className="flex items-center mb-2">
-                      <input
-                        type="checkbox"
+                    <Checkbox
                         id="same-padding"
                         checked={selectedElement.style?.samePadding || false}
                         onChange={(e) => {
@@ -538,20 +470,16 @@ export default function PropertiesPanel() {
                             }
                           }
                         }}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       />
                       <label htmlFor="same-padding" className="ml-2 text-xs theme-text">
                         Use the same value for every padding
                       </label>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs theme-text-secondary mb-1">Left</label>
-                        <input
-                          type="number"
+                    <NumberField
+                      label="Left"
                           value={selectedElement.style?.paddingLeft || selectedElement.style?.paddingX || 0}
-                          onChange={(e) => {
-                            const value = parseFloat(e.target.value) || 0
+                      onValueChange={(value) => {
                             if (selectedElement.style?.samePadding) {
                               // Se checkbox marcado, atualiza todos de uma vez
                               const newStyle = {
@@ -570,59 +498,40 @@ export default function PropertiesPanel() {
                               handleStyleUpdate('paddingLeft', value)
                             }
                           }}
-                          className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                          min="0"
-                          step="1"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs theme-text-secondary mb-1">Right</label>
-                        <input
-                          type="number"
+                      min={0}
+                      step={1}
+                    />
+                    <NumberField
+                      label="Right"
                           value={selectedElement.style?.paddingRight || selectedElement.style?.paddingX || 0}
-                          onChange={(e) => handleStyleUpdate('paddingRight', parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                          min="0"
-                          step="1"
+                      onValueChange={(value) => handleStyleUpdate('paddingRight', value)}
+                      min={0}
+                      step={1}
                           disabled={selectedElement.style?.samePadding || false}
                         />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs theme-text-secondary mb-1">Top</label>
-                        <input
-                          type="number"
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <NumberField
+                      label="Top"
                           value={selectedElement.style?.paddingTop || selectedElement.style?.paddingY || 0}
-                          onChange={(e) => handleStyleUpdate('paddingTop', parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                          min="0"
-                          step="1"
+                      onValueChange={(value) => handleStyleUpdate('paddingTop', value)}
+                      min={0}
+                      step={1}
                           disabled={selectedElement.style?.samePadding || false}
                         />
-                      </div>
-                      <div>
-                        <label className="block text-xs theme-text-secondary mb-1">Bottom</label>
-                        <input
-                          type="number"
+                    <NumberField
+                      label="Bottom"
                           value={selectedElement.style?.paddingBottom || selectedElement.style?.paddingY || 0}
-                          onChange={(e) => handleStyleUpdate('paddingBottom', parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                          min="0"
-                          step="1"
+                      onValueChange={(value) => handleStyleUpdate('paddingBottom', value)}
+                      min={0}
+                      step={1}
                           disabled={selectedElement.style?.samePadding || false}
                         />
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t theme-border my-3"></div>
+                </PropertyGroup>
 
                 {/* Borders */}
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Borders</h3>
-                  
+                <PropertyGroup title="Borders" collapsible={false}>
                   {/* Border Preview Box */}
                   <div className="mb-3 p-3 theme-bg-tertiary border theme-border rounded flex items-center justify-center">
                     <div 
@@ -645,69 +554,55 @@ export default function PropertiesPanel() {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <label className="text-xs theme-text-secondary w-20">Pen Color:</label>
-                      <input
-                        type="color"
+                    <PropertyRow label="Pen Color:" labelWidth="lg">
+                      <ColorInput
                         value={selectedElement.style?.borderColor || '#000000'}
                         onChange={(e) => handleStyleUpdate('borderColor', e.target.value)}
-                        className="w-8 h-6 border theme-border rounded cursor-pointer"
                       />
-                      <span className="text-xs theme-text-secondary font-mono">
-                        {selectedElement.style?.borderColor || '#000000'}
-                      </span>
-                    </div>
+                    </PropertyRow>
 
-                    <div className="flex items-center gap-3">
-                      <label className="text-xs theme-text-secondary w-20">Pen Style:</label>
+                    <PropertyRow label="Pen Style:" labelWidth="lg">
                       <div className="flex gap-1 flex-1">
                         {[
                           { value: 'solid', label: 'Solid' },
                           { value: 'dashed', label: 'Dashed' },
                           { value: 'dotted', label: 'Dotted' }
                         ].map((style) => (
-                          <button
+                          <Button
                             key={style.value}
+                            variant={((selectedElement.style?.borderStyle || 'solid') === style.value) ? 'primary' : 'outline'}
+                            size="sm"
                             onClick={() => handleStyleUpdate('borderStyle', style.value)}
-                            className={`flex-1 px-2 py-2 text-xs rounded border-2 transition-all ${
-                              (selectedElement.style?.borderStyle || 'solid') === style.value
-                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/20'
-                                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
-                            }`}
-                            title={style.label}
+                            className="flex-1 flex-col py-2"
                           >
                             <div 
                               className="h-0 mx-auto w-full"
                               style={{ 
                                 borderTopWidth: '2px',
                                 borderTopStyle: style.value as 'solid' | 'dashed' | 'dotted',
-                                borderTopColor: (selectedElement.style?.borderStyle || 'solid') === style.value ? '#8b5cf6' : '#666'
+                                borderTopColor: (selectedElement.style?.borderStyle || 'solid') === style.value ? '#fff' : '#666'
                               }}
                             />
-                            <span className={`mt-1 block text-[10px] ${
-                              (selectedElement.style?.borderStyle || 'solid') === style.value
-                                ? 'text-primary-600 font-medium'
-                                : 'text-gray-500'
-                            }`}>
+                            <span className="mt-1 block text-[10px]">
                               {style.label}
                             </span>
-                          </button>
+                          </Button>
                         ))}
                       </div>
-                    </div>
+                    </PropertyRow>
 
-                    <div className="flex items-center gap-3">
-                      <label className="text-xs theme-text-secondary w-20">Pen Width:</label>
-                      <input
+                    <PropertyRow label="Pen Width:" labelWidth="lg">
+                      <Input
                         type="number"
                         value={selectedElement.style?.borderWidth ?? 0}
                         onChange={(e) => handleStyleUpdate('borderWidth', parseFloat(e.target.value) || 0)}
-                        className="w-24 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        min="0"
-                        max="10"
-                        step="0.5"
+                        size="sm"
+                        className="w-24"
+                        min={0}
+                        max={10}
+                        step={0.5}
                       />
-                    </div>
+                    </PropertyRow>
                     
                     {/* Default border styles */}
                     <div className="pt-2">
@@ -863,87 +758,80 @@ export default function PropertiesPanel() {
                       })()}
                     </div>
                   </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                {/* Corner Radius */}
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Corner Radius</h3>
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs theme-text-secondary w-20">Radius:</label>
-                    <input
+                <PropertyGroup title="Corner Radius" collapsible={false}>
+                  <PropertyRow label="Radius:" labelWidth="lg">
+                    <div className="flex items-center gap-2">
+                      <Input
                       type="number"
                       value={selectedElement.style?.cornerRadius || 0}
                       onChange={(e) => handleStyleUpdate('cornerRadius', parseFloat(e.target.value))}
-                      className="w-24 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      min="0"
-                      step="1"
+                        size="sm"
+                        className="w-24"
+                        min={0}
+                        step={1}
                     />
                     <span className="text-xs theme-text-muted">px</span>
                   </div>
-                </div>
+                  </PropertyRow>
+                </PropertyGroup>
               </>
             )}
 
             {/* TEXT FIELD TAB */}
             {activeTab === 'textfield' && (
               <>
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Content</h3>
+                <PropertyGroup title="Content" collapsible={false}>
                   <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Text</label>
-              <textarea
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Text</label>
+                      <TextArea
                 value={selectedElement.value || ''}
                 onChange={(e) => handleUpdate('value', e.target.value)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 rows={3}
               />
             </div>
-
                     
                     {selectedElement.type === 'text' && (
-            <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Data Binding</label>
-              <input
-                type="text"
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium theme-text-muted">Data Binding</label>
+                        <Input
                 value={selectedElement.dataBinding || ''}
                 onChange={(e) => handleUpdate('dataBinding', e.target.value)}
                 placeholder="e.g., user.name"
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded font-mono bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          size="sm"
+                          className="font-mono"
               />
             </div>
                     )}
                   </div>
-                </div>
-
-                <div className="border-t theme-border my-3"></div>
+                </PropertyGroup>
 
                 {/* Font Section - Jasper Style */}
-            <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Font</h3>
-                  <div className="space-y-3">
+                <PropertyGroup title="Font" collapsible={false}>
                     {/* Font Family + Size in one line */}
                     <div className="flex items-center gap-1">
-              <select
+                    <Select
                 value={selectedElement.style?.fontFamily || 'Helvetica'}
                 onChange={(e) => handleStyleUpdate('fontFamily', e.target.value)}
-                        className="flex-1 min-w-0 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="Helvetica">Helvetica</option>
-                        <option value="Helvetica-Bold">Helvetica Bold</option>
-                        <option value="Times">Times New Roman</option>
-                        <option value="Courier">Courier New</option>
-              </select>
+                      className="flex-1 min-w-0"
+                      options={[
+                        { value: 'Helvetica', label: 'Helvetica' },
+                        { value: 'Helvetica-Bold', label: 'Helvetica Bold' },
+                        { value: 'Times', label: 'Times New Roman' },
+                        { value: 'Courier', label: 'Courier New' },
+                      ]}
+                    />
                       
-              <input
+                    <Input
                 type="number"
                 value={selectedElement.style?.fontSize || 12}
                 onChange={(e) => handleStyleUpdate('fontSize', parseFloat(e.target.value))}
-                        className="w-11 px-1.5 py-1.5 text-xs text-center border theme-border rounded bg-white text-gray-900 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        min="6"
-                        max="72"
+                      className="w-11 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      size="sm"
+                      min={6}
+                      max={72}
                       />
                       
                       <button
@@ -1026,12 +914,9 @@ export default function PropertiesPanel() {
                       >
                         S
                 </button>
-              </div>
-            </div>
                 </div>
 
-                <div className="border-t theme-border my-3"></div>
-
+                    {/* Alignment Section */}
             <div>
                   <h3 className="text-xs font-semibold theme-text mb-2">Alignment</h3>
                   <div className="grid grid-cols-2 gap-3">
@@ -1153,70 +1038,50 @@ export default function PropertiesPanel() {
             </div>
                   </div>
                 </div>
+            </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Multiline</h3>
+            <PropertyGroup title="Multiline" collapsible={false}>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs theme-text-secondary">Line wrap</label>
-                <input
-                  type="checkbox"
+                    <Checkbox
                   id="multiline"
                   checked={selectedElement.style?.multiline || false}
                   onChange={(e) => handleStyleUpdate('multiline', e.target.checked)}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      label="Line wrap"
                 />
-              </div>
               {selectedElement.style?.multiline && (
                 <>
-                <div>
-                    <label className="block text-xs theme-text-secondary mb-1">
-                    1st Line Indent (pt)
-                  </label>
-                  <input
-                    type="number"
+                  <NumberField
+                    label="1st Line Indent (pt)"
                     value={selectedElement.style?.firstLineIndent || 0}
-                    onChange={(e) => handleStyleUpdate('firstLineIndent', parseFloat(e.target.value) || 0)}
-                    placeholder="0"
-                    min="0"
-                    step="5"
-                      className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    onValueChange={(value) => handleStyleUpdate('firstLineIndent', value)}
+                    min={0}
+                    step={5}
                   />
-                </div>
                   
-                  <div>
-                    <label className="block text-xs theme-text-secondary mb-1">
-                      Line Height
-                    </label>
-                    <input
-                      type="number"
+                  <div className="space-y-1">
+                    <NumberField
+                      label="Line Height"
                       value={selectedElement.style?.lineHeight ?? ''}
-                      onChange={(e) => handleStyleUpdate('lineHeight', e.target.value ? parseFloat(e.target.value) : null)}
-                      placeholder="1.0 = no extra space"
-                      min="0.5"
-                      max="3"
-                      step="0.1"
-                      className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleStyleUpdate('lineHeight', value || null)}
+                      min={0.5}
+                      max={3}
+                      step={0.1}
                     />
-                    <p className="text-[10px] theme-text-muted mt-1">Ex: 1.0 (no space), 1.2, 1.5</p>
+                    <p className="text-[10px] theme-text-muted">Ex: 1.0 (no space), 1.2, 1.5</p>
                   </div>
                   
-                  <div>
-                    <label className="block text-xs theme-text-secondary mb-1">
-                      Overflow (text height)
-                    </label>
-                    <select
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium theme-text-muted">Overflow (text height)</label>
+                    <Select
                       value={selectedElement.style?.overflow || 'visible'}
                       onChange={(e) => handleStyleUpdate('overflow', e.target.value)}
-                      className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    >
-                      <option value="visible">visible - Content can exceed height</option>
-                      <option value="hidden">hidden - Clips content at height</option>
-                      <option value="auto">auto - Height adjusts to content</option>
-                    </select>
-                    <p className="text-[10px] theme-text-muted mt-1">
+                      options={[
+                        { value: 'visible', label: 'visible - Content can exceed height' },
+                        { value: 'hidden', label: 'hidden - Clips content at height' },
+                        { value: 'auto', label: 'auto - Height adjusts to content' },
+                      ]}
+                    />
+                    <p className="text-[10px] theme-text-muted">
                       {selectedElement.style?.overflow === 'auto' 
                         ? '✓ Relative elements will be positioned after the actual content'
                         : selectedElement.style?.overflow === 'hidden'
@@ -1225,95 +1090,74 @@ export default function PropertiesPanel() {
                     </p>
                   </div>
                   
-                  <div>
-                    <label className="block text-xs font-semibold theme-text mb-2">
-                      Internal Padding (pt)
-                    </label>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium theme-text-muted">Internal Padding (pt)</label>
                     <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[10px] theme-text-muted mb-1">Top</label>
-                        <input
-                          type="number"
+                      <NumberField
+                        label="Top"
                           value={selectedElement.style?.paddingTop || 0}
-                          onChange={(e) => handleStyleUpdate('paddingTop', parseFloat(e.target.value) || 0)}
-                          min="0"
-                          step="1"
-                          className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] theme-text-muted mb-1">Bottom</label>
-                        <input
-                          type="number"
+                        onValueChange={(value) => handleStyleUpdate('paddingTop', value)}
+                        min={0}
+                        step={1}
+                      />
+                      <NumberField
+                        label="Bottom"
                           value={selectedElement.style?.paddingBottom || 0}
-                          onChange={(e) => handleStyleUpdate('paddingBottom', parseFloat(e.target.value) || 0)}
-                          min="0"
-                          step="1"
-                          className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] theme-text-muted mb-1">Left</label>
-                        <input
-                          type="number"
+                        onValueChange={(value) => handleStyleUpdate('paddingBottom', value)}
+                        min={0}
+                        step={1}
+                      />
+                      <NumberField
+                        label="Left"
                           value={selectedElement.style?.paddingLeft || 0}
-                          onChange={(e) => handleStyleUpdate('paddingLeft', parseFloat(e.target.value) || 0)}
-                          min="0"
-                          step="1"
-                          className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] theme-text-muted mb-1">Right</label>
-                        <input
-                          type="number"
+                        onValueChange={(value) => handleStyleUpdate('paddingLeft', value)}
+                        min={0}
+                        step={1}
+                      />
+                      <NumberField
+                        label="Right"
                           value={selectedElement.style?.paddingRight || 0}
-                          onChange={(e) => handleStyleUpdate('paddingRight', parseFloat(e.target.value) || 0)}
-                          min="0"
-                          step="1"
-                          className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        />
-                      </div>
+                        onValueChange={(value) => handleStyleUpdate('paddingRight', value)}
+                        min={0}
+                        step={1}
+                      />
                     </div>
                   </div>
                 </>
               )}
                   </div>
-            </div>
+              </PropertyGroup>
               </>
             )}
           </>
         )}
 
         {/* LINE ELEMENT TABS */}
-        {selectedElement.type === 'line' && 'x2' in selectedElement && 'y2' in selectedElement && (
+        {selectedElement.type === 'line' && (
           <>
             {/* APPEARANCE TAB */}
             {activeTab === 'appearance' && (
               <>
                 {!isMultiSelection && (
                   <>
-                    <div>
-                      <label className="block text-xs font-medium theme-text mb-1">ID</label>
-                      <input
-                        type="text"
+                    <div className="space-y-1 mb-3">
+                      <label className="text-xs font-medium theme-text-muted">ID</label>
+                      <Input
                         value={selectedElement.id}
                         disabled
-                        className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900"
+                        size="sm"
                       />
                     </div>
-                    <div className="border-t theme-border my-3"></div>
+                    <Divider className="my-3" />
                   </>
                 )}
 
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Print Condition</h3>
-                  <input
-                    type="text"
+                <PropertyGroup title="Print Condition" collapsible={false}>
+                  <Input
                     value={selectedElement.printCondition || ''}
                     onChange={(e) => handleUpdate('printCondition', e.target.value || null)}
                     placeholder="Ex: invoice.total > 1000"
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    size="sm"
                   />
                   <p className="text-xs theme-text-muted mt-1">
                     Leave empty to always print
@@ -1331,92 +1175,102 @@ export default function PropertiesPanel() {
                       <div>• total &gt;= 100 && total &lt; 500</div>
                     </div>
                   </div>
-                </div>
+                </PropertyGroup>
               </>
             )}
 
             {/* LINE TAB */}
             {activeTab === 'line' && (
               <>
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Coordinates</h3>
-              <div className="space-y-3">
+                <PropertyGroup title="Position" collapsible={false}>
                     <div className="grid grid-cols-2 gap-3">
-                  <div>
-                        <label className="block text-xs theme-text-secondary mb-1">X Start</label>
-                    <input
-                      type="number"
+                    <NumberField
+                      label="X"
                       value={selectedElement.x}
-                      onChange={(e) => handleUpdate('x', parseFloat(e.target.value))}
-                          className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('x', value)}
                     />
-                  </div>
-                  <div>
-                        <label className="block text-xs theme-text-secondary mb-1">Y Start</label>
-                    <input
-                      type="number"
+                    <NumberField
+                      label="Y"
                       value={selectedElement.y}
-                      onChange={(e) => handleUpdate('y', parseFloat(e.target.value))}
-                          className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('y', value)}
                     />
                   </div>
-                </div>
+                </PropertyGroup>
 
+                <PropertyGroup title="Size" collapsible={false}>
                     <div className="grid grid-cols-2 gap-3">
                   <div>
-                        <label className="block text-xs theme-text-secondary mb-1">X End</label>
-                    <input
-                      type="number"
-                      value={selectedElement.x2}
-                      onChange={(e) => handleUpdate('x2', parseFloat(e.target.value))}
-                          className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
+                      <NumberField
+                        label="Width"
+                        value={typeof selectedElement.width === 'string' ? undefined : (selectedElement.width ?? (selectedElement.x2 ? selectedElement.x2 - selectedElement.x : 100))}
+                        onValueChange={(value) => handleUpdate('width', value)}
+                        disabled={selectedElement.width === '100%'}
+                      />
+                      <label className="flex items-center mt-2 cursor-pointer">
+                        <Checkbox
+                          checked={selectedElement.width === '100%'}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              updateSelectedElements({ width: '100%', x: 0 })
+                            } else {
+                              updateSelectedElements({ width: 100 })
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span className="text-xs theme-text-secondary">100% Width</span>
+                      </label>
                   </div>
                   <div>
-                        <label className="block text-xs theme-text-secondary mb-1">Y End</label>
-                    <input
-                      type="number"
-                      value={selectedElement.y2}
-                      onChange={(e) => handleUpdate('y2', parseFloat(e.target.value))}
-                          className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
+                      <NumberField
+                        label="Height"
+                        value={typeof selectedElement.height === 'string' ? undefined : (selectedElement.height ?? (selectedElement.y2 ? selectedElement.y2 - selectedElement.y : 0))}
+                        onValueChange={(value) => handleUpdate('height', value)}
+                        disabled={selectedElement.height === '100%'}
+                      />
+                      <label className="flex items-center mt-2 cursor-pointer">
+                        <Checkbox
+                          checked={selectedElement.height === '100%'}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              updateSelectedElements({ height: '100%', y: 0 })
+                            } else {
+                              updateSelectedElements({ height: 0 })
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span className="text-xs theme-text-secondary">100% Height</span>
+                      </label>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  <p className="text-xs theme-text-muted mt-2">
+                    Line is drawn from (X, Y) to (X + Width, Y + Height)
+                  </p>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Style</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs theme-text-secondary">Line Color</label>
-                  <input
-                    type="color"
+                <PropertyGroup title="Style" collapsible={false}>
+                  <PropertyRow label="Line Color" labelWidth="lg">
+                    <ColorInput
                     value={selectedElement.style?.strokeColor || '#000000'}
                     onChange={(e) => handleStyleUpdate('strokeColor', e.target.value)}
-                        className="w-10 h-8 border theme-border rounded cursor-pointer"
-                  />
-                </div>
+                    />
+                  </PropertyRow>
 
-                <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Thickness (pt)</label>
-                  <input
-                    type="number"
+                  <div className="mt-2">
+                    <NumberField
+                      label="Thickness (pt)"
                     value={selectedElement.style?.strokeWidth ?? 1}
-                    onChange={(e) => handleStyleUpdate('strokeWidth', parseFloat(e.target.value) || 0.5)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    min="0.5"
-                    max="20"
-                    step="0.5"
+                      onValueChange={(value) => handleStyleUpdate('strokeWidth', value || 0.5)}
+                      min={0.5}
+                      max={20}
+                      step={0.5}
                   />
                   <p className="text-xs theme-text-muted mt-1">
                     Min: 0.5pt, Max: 20pt
                   </p>
                 </div>
-              </div>
-            </div>
+                </PropertyGroup>
               </>
             )}
           </>
@@ -1430,43 +1284,37 @@ export default function PropertiesPanel() {
               <>
                 {!isMultiSelection && (
           <>
-            <div>
-                      <label className="block text-xs font-medium theme-text mb-1">ID</label>
-                      <input
-                        type="text"
+                    <div className="space-y-1 mb-3">
+                      <label className="text-xs font-medium theme-text-muted">ID</label>
+                      <Input
                         value={selectedElement.id}
                         disabled
-                        className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900"
+                        size="sm"
                       />
                     </div>
-                    <div className="border-t theme-border my-3"></div>
+                    <Divider className="my-3" />
                   </>
                 )}
 
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Location</h3>
+                <PropertyGroup title="Location" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs theme-text-secondary mb-1">X</label>
-                      <input
-                        type="number"
+                      <NumberField
+                        label="X"
                         value={selectedElement.x}
-                        onChange={(e) => handleUpdate('x', parseFloat(e.target.value))}
+                        onValueChange={(value) => handleUpdate('x', value)}
                         disabled={selectedElement.width === '100%'}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
                       />
                       {selectedElement.width === '100%' && (
                         <p className="text-xs theme-text-muted mt-1">Fixed at 0 (width 100%)</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Y</label>
-                      <input
-                        type="number"
+                      <NumberField
+                        label="Y"
                         value={selectedElement.y}
-                        onChange={(e) => handleUpdate('y', parseFloat(e.target.value))}
+                        onValueChange={(value) => handleUpdate('y', value)}
                         disabled={selectedElement.height === '100%'}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
                       />
                       {selectedElement.height === '100%' && (
                         <p className="text-xs theme-text-muted mt-1">Fixed at 0 (100% height)</p>
@@ -1476,145 +1324,118 @@ export default function PropertiesPanel() {
                   
                   {/* Modo de Posicionamento */}
                   <div className="mt-3">
-                    <label className="block text-xs theme-text-secondary mb-1">Position Mode</label>
-                    <select
+                    <Select
                       value={selectedElement.positionMode || 'ABSOLUTE'}
                       onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
-                      className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="ABSOLUTE">Absoluto (fixo no canvas)</option>
-                      <option value="RELATIVE">Relative (follows content above)</option>
-                    </select>
+                      options={[
+                        { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
+                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                      ]}
+                    />
                     {selectedElement.positionMode === 'RELATIVE' && (
                       <>
                         <p className="text-[10px] text-purple-500 mt-1 mb-2">
                           ↳ Positioned after the previous element in PDF
                         </p>
+                        <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
                         <div className="flex items-center gap-2">
-                          <label className="block text-xs theme-text-secondary">Offset Y (PDF):</label>
-                          <input
+                            <Input
                             type="number"
                             value={selectedElement.relativeOffsetY ?? 10}
                             onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
-                            className="w-20 px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
+                              size="sm"
+                              className="w-20"
                           />
                           <span className="text-[10px] theme-text-muted">px</span>
                         </div>
+                        </PropertyRow>
                         <p className="text-[10px] theme-text-muted mt-1">
                           Space between the previous element and this one
                         </p>
                       </>
                     )}
                   </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Size</h3>
+                <PropertyGroup title="Size" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs theme-text-secondary mb-1">W (Width)</label>
-                      <input
-                        type="number"
-                        value={typeof selectedElement.width === 'string' ? '' : selectedElement.width}
-                        onChange={(e) => handleUpdate('width', parseFloat(e.target.value))}
+                      <NumberField
+                        label="W (Width)"
+                        value={typeof selectedElement.width === 'string' ? undefined : selectedElement.width}
+                        onValueChange={(value) => handleUpdate('width', value)}
                         disabled={selectedElement.width === '100%'}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
                       />
                       <label className="flex items-center mt-2 cursor-pointer">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={selectedElement.width === '100%'}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              // Marcar: definir width=100% e x=0
                               updateSelectedElements({ width: '100%', x: 0 })
                             } else {
-                              
                               updateSelectedElements({ width: 100 })
                             }
                           }}
-                          className="mr-2 w-3.5 h-3.5 text-blue-600 theme-border rounded focus:ring-2 focus:ring-blue-500"
+                          className="mr-2"
                         />
                         <span className="text-xs theme-text-secondary">100% Width</span>
               </label>
                     </div>
                     <div>
-                      <label className="block text-xs theme-text-secondary mb-1">H (Height)</label>
-                      <input
-                        type="number"
-                        value={typeof selectedElement.height === 'string' ? '' : selectedElement.height}
-                        onChange={(e) => handleUpdate('height', parseFloat(e.target.value))}
+                      <NumberField
+                        label="H (Height)"
+                        value={typeof selectedElement.height === 'string' ? undefined : selectedElement.height}
+                        onValueChange={(value) => handleUpdate('height', value)}
                         disabled={selectedElement.height === '100%'}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
                       />
                       <label className="flex items-center mt-2 cursor-pointer">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={selectedElement.height === '100%'}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              // Marcar: definir height=100% e y=0
                               updateSelectedElements({ height: '100%', y: 0 })
                             } else {
-                              
                               updateSelectedElements({ height: 100 })
                             }
                           }}
-                          className="mr-2 w-3.5 h-3.5 text-blue-600 theme-border rounded focus:ring-2 focus:ring-blue-500"
+                          className="mr-2"
                         />
                         <span className="text-xs theme-text-secondary">100% Height</span>
                       </label>
                     </div>
                   </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Color</h3>
+                <PropertyGroup title="Color" collapsible={false}>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs theme-text-secondary">Fill</label>
-              <input
-                type="color"
+                    <PropertyRow label="Fill" labelWidth="sm">
+                      <ColorInput
                 value={selectedElement.style?.fillColor || '#4a90e2'}
                 onChange={(e) => handleStyleUpdate('fillColor', e.target.value)}
                         disabled={!selectedElement.style?.fillColor}
-                        className="w-10 h-8 border theme-border rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
+                      />
+                    </PropertyRow>
+                    <Checkbox
+                      id="rect-transparent"
                         checked={!selectedElement.style?.fillColor}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            // Marcar: remover preenchimento (transparente)
                             handleStyleUpdate('fillColor', null)
                           } else {
-                            
                             handleStyleUpdate('fillColor', '#4a90e2')
                           }
                         }}
-                        className="mr-2 w-3.5 h-3.5 text-blue-600 theme-border rounded focus:ring-2 focus:ring-blue-500"
+                      label="Transparent"
                       />
-                      <span className="text-xs theme-text-secondary">Transparent</span>
-              </label>
                   </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Print Condition</h3>
-                  <input
-                    type="text"
+                <PropertyGroup title="Print Condition" collapsible={false}>
+                  <Input
                     value={selectedElement.printCondition || ''}
                     onChange={(e) => handleUpdate('printCondition', e.target.value || null)}
                     placeholder="Ex: invoice.total > 1000"
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    size="sm"
                   />
                   <p className="text-xs theme-text-muted mt-1">
                     Leave empty to always print
@@ -1632,7 +1453,7 @@ export default function PropertiesPanel() {
                       <div>• total &gt;= 100 && total &lt; 500</div>
                     </div>
                   </div>
-                </div>
+                </PropertyGroup>
               </>
             )}
 
@@ -1667,69 +1488,55 @@ export default function PropertiesPanel() {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <label className="text-xs theme-text-secondary w-20">Pen Color:</label>
-                  <input
-                    type="color"
+                    <PropertyRow label="Pen Color:" labelWidth="lg">
+                      <ColorInput
                     value={selectedElement.style?.borderColor || '#000000'}
                     onChange={(e) => handleStyleUpdate('borderColor', e.target.value)}
-                        className="w-8 h-6 border theme-border rounded cursor-pointer"
                   />
-                      <span className="text-xs theme-text-secondary font-mono">
-                        {selectedElement.style?.borderColor || '#000000'}
-                      </span>
-                </div>
+                    </PropertyRow>
 
-                    <div className="flex items-center gap-3">
-                      <label className="text-xs theme-text-secondary w-20">Pen Style:</label>
+                    <PropertyRow label="Pen Style:" labelWidth="lg">
                       <div className="flex gap-1 flex-1">
                         {[
                           { value: 'solid', label: 'Solid' },
                           { value: 'dashed', label: 'Dashed' },
                           { value: 'dotted', label: 'Dotted' }
                         ].map((style) => (
-                          <button
+                          <Button
                             key={style.value}
+                            variant={((selectedElement.style?.borderStyle || 'solid') === style.value) ? 'primary' : 'outline'}
+                            size="sm"
                             onClick={() => handleStyleUpdate('borderStyle', style.value)}
-                            className={`flex-1 px-2 py-2 text-xs rounded border-2 transition-all ${
-                              (selectedElement.style?.borderStyle || 'solid') === style.value
-                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/20'
-                                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
-                            }`}
-                            title={style.label}
+                            className="flex-1 flex-col py-2"
                           >
                             <div 
                               className="h-0 mx-auto w-full"
                               style={{ 
                                 borderTopWidth: '2px',
                                 borderTopStyle: style.value as 'solid' | 'dashed' | 'dotted',
-                                borderTopColor: (selectedElement.style?.borderStyle || 'solid') === style.value ? '#8b5cf6' : '#666'
+                                borderTopColor: (selectedElement.style?.borderStyle || 'solid') === style.value ? '#fff' : '#666'
                               }}
                             />
-                            <span className={`mt-1 block text-[10px] ${
-                              (selectedElement.style?.borderStyle || 'solid') === style.value
-                                ? 'text-primary-600 font-medium'
-                                : 'text-gray-500'
-                            }`}>
+                            <span className="mt-1 block text-[10px]">
                               {style.label}
                             </span>
-                          </button>
+                          </Button>
                         ))}
                       </div>
-                    </div>
+                    </PropertyRow>
 
-                    <div className="flex items-center gap-3">
-                      <label className="text-xs theme-text-secondary w-20">Pen Width:</label>
-                  <input
+                    <PropertyRow label="Pen Width:" labelWidth="lg">
+                      <Input
                     type="number"
                     value={selectedElement.style?.borderWidth ?? 1}
                     onChange={(e) => handleStyleUpdate('borderWidth', parseFloat(e.target.value) || 0)}
-                        className="w-24 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    min="0"
-                        max="10"
-                    step="0.5"
-                  />
-                </div>
+                        size="sm"
+                        className="w-24"
+                        min={0}
+                        max={10}
+                        step={0.5}
+                      />
+                    </PropertyRow>
                     
                     {/* Default border styles */}
                     <div className="pt-2">
@@ -1887,24 +1694,22 @@ export default function PropertiesPanel() {
                   </div>
                 </div>
 
-                <div className="border-t theme-border my-3"></div>
-
-                {/* Corner Radius */}
-            <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Corner Radius</h3>
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs theme-text-secondary w-20">Radius:</label>
-              <input
+                <PropertyGroup title="Corner Radius" collapsible={false}>
+                  <PropertyRow label="Radius:" labelWidth="lg">
+                    <div className="flex items-center gap-2">
+                      <Input
                 type="number"
                 value={selectedElement.style?.cornerRadius || 0}
                 onChange={(e) => handleStyleUpdate('cornerRadius', parseFloat(e.target.value))}
-                      className="w-24 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                min="0"
-                step="1"
+                        size="sm"
+                        className="w-24"
+                        min={0}
+                        step={1}
               />
                     <span className="text-xs theme-text-muted">px</span>
                   </div>
-            </div>
+                  </PropertyRow>
+                </PropertyGroup>
               </>
             )}
           </>
@@ -1918,112 +1723,84 @@ export default function PropertiesPanel() {
               <>
                 {!isMultiSelection && (
           <>
-            <div>
-                      <label className="block text-xs font-medium theme-text mb-1">ID</label>
-                      <input
-                        type="text"
+                    <div className="space-y-1 mb-3">
+                      <label className="text-xs font-medium theme-text-muted">ID</label>
+                      <Input
                         value={selectedElement.id}
                         disabled
-                        className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900"
+                        size="sm"
                       />
                     </div>
-                    <div className="border-t theme-border my-3"></div>
+                    <Divider className="my-3" />
                   </>
                 )}
 
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Location</h3>
+                <PropertyGroup title="Location" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">X</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="X"
                         value={selectedElement.x}
-                        onChange={(e) => handleUpdate('x', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Y</label>
-                      <input
-                        type="number"
+                      onValueChange={(value) => handleUpdate('x', value)}
+                    />
+                    <NumberField
+                      label="Y"
                         value={selectedElement.y}
-                        onChange={(e) => handleUpdate('y', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('y', value)}
                       />
                     </div>
-                  </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Size</h3>
+                <PropertyGroup title="Size" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">W (Width)</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="W (Width)"
                         value={selectedElement.width}
-                        onChange={(e) => handleUpdate('width', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">H (Height)</label>
-                      <input
-                        type="number"
+                      onValueChange={(value) => handleUpdate('width', value)}
+                    />
+                    <NumberField
+                      label="H (Height)"
                         value={selectedElement.height}
-                        onChange={(e) => handleUpdate('height', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('height', value)}
                       />
                     </div>
-                  </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Image Fit</h3>
+                <PropertyGroup title="Image Fit" collapsible={false}>
                   <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Redimensionamento (fit)</label>
-                      <select
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Redimensionamento (fit)</label>
+                      <Select
                         value={selectedElement.fit || 'contain'}
                         onChange={(e) => handleUpdate('fit', e.target.value)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      >
-                        <option value="contain">Contain (fits inside, keeps aspect ratio)</option>
-                        <option value="cover">Cover (cobre tudo, pode cortar)</option>
-                        <option value="fill">Fill (estica, pode distorcer)</option>
-                        <option value="scale-down">Scale Down (only shrinks if larger)</option>
-                      </select>
+                        options={[
+                          { value: 'contain', label: 'Contain (fits inside, keeps aspect ratio)' },
+                          { value: 'cover', label: 'Cover (cobre tudo, pode cortar)' },
+                          { value: 'fill', label: 'Fill (estica, pode distorcer)' },
+                          { value: 'scale-down', label: 'Scale Down (only shrinks if larger)' },
+                        ]}
+                      />
                     </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Alignment</label>
-                      <select
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Alignment</label>
+                      <Select
                         value={selectedElement.alignment || 'center'}
                         onChange={(e) => handleUpdate('alignment', e.target.value)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      >
-                        <option value="left">Esquerda</option>
-                        <option value="center">Centro</option>
-                        <option value="right">Direita</option>
-                      </select>
+                        options={[
+                          { value: 'left', label: 'Esquerda' },
+                          { value: 'center', label: 'Centro' },
+                          { value: 'right', label: 'Direita' },
+                        ]}
+                      />
                     </div>
                   </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Print Condition</h3>
-                  <input
-                    type="text"
+                <PropertyGroup title="Print Condition" collapsible={false}>
+                  <Input
                     value={selectedElement.printCondition || ''}
                     onChange={(e) => handleUpdate('printCondition', e.target.value || null)}
                     placeholder="Ex: invoice.total > 1000"
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    size="sm"
                   />
                   <p className="text-xs theme-text-muted mt-1">
                     Leave empty to always print
@@ -2041,41 +1818,38 @@ export default function PropertiesPanel() {
                       <div>• total &gt;= 100 && total &lt; 500</div>
                     </div>
                   </div>
-                </div>
+                </PropertyGroup>
               </>
             )}
 
             {/* IMAGE TAB */}
             {activeTab === 'image' && (
-              <>
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Image Source</h3>
+              <PropertyGroup title="Image Source" collapsible={false}>
                   <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">URL ou Caminho</label>
-              <input
-                type="text"
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium theme-text-muted">URL ou Caminho</label>
+                    <Input
                 value={selectedElement.source || ''}
                 onChange={(e) => handleUpdate('source', e.target.value)}
                         placeholder="https://... ou /path/to/image.png"
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded font-mono bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      size="sm"
+                      className="font-mono"
               />
             </div>
 
-            <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Data Binding</label>
-              <input
-                type="text"
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium theme-text-muted">Data Binding</label>
+                    <Input
                 value={selectedElement.dataBinding || ''}
                 onChange={(e) => handleUpdate('dataBinding', e.target.value)}
                 placeholder="e.g., company.logo"
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded font-mono bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      size="sm"
+                      className="font-mono"
               />
                       <p className="text-xs theme-text-muted mt-1">For dynamic images</p>
                     </div>
                   </div>
-            </div>
-              </>
+              </PropertyGroup>
             )}
           </>
         )}
@@ -2097,109 +1871,85 @@ export default function PropertiesPanel() {
               <>
                 {!isMultiSelection && (
                   <>
-                    <div>
-                      <label className="block text-xs font-medium theme-text mb-1">ID</label>
-                      <input
-                        type="text"
+                    <div className="space-y-1 mb-3">
+                      <label className="text-xs font-medium theme-text-muted">ID</label>
+                      <Input
                         value={selectedElement.id}
                         disabled
-                        className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900"
+                        size="sm"
                       />
                     </div>
-                    <div className="border-t theme-border my-3"></div>
+                    <Divider className="my-3" />
                   </>
                 )}
 
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Location</h3>
+                <PropertyGroup title="Location" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">X</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="X"
                         value={selectedElement.x}
-                        onChange={(e) => handleUpdate('x', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Y</label>
-                      <input
-                        type="number"
+                      onValueChange={(value) => handleUpdate('x', value)}
+                    />
+                    <NumberField
+                      label="Y"
                         value={selectedElement.y}
-                        onChange={(e) => handleUpdate('y', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('y', value)}
                       />
-                    </div>
                   </div>
                   
                   {/* Modo de Posicionamento - Barcode */}
                   <div className="mt-3">
-                    <label className="block text-xs theme-text-secondary mb-1">Position Mode</label>
-                    <select
+                    <Select
                       value={selectedElement.positionMode || 'ABSOLUTE'}
                       onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
-                      className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="ABSOLUTE">Absoluto (fixo no canvas)</option>
-                      <option value="RELATIVE">Relative (follows content above)</option>
-                    </select>
+                      options={[
+                        { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
+                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                      ]}
+                    />
                     {selectedElement.positionMode === 'RELATIVE' && (
                       <>
                         <p className="text-[10px] text-purple-500 mt-1 mb-2">
                           ↳ Positioned after the previous element in PDF
                         </p>
+                        <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
                         <div className="flex items-center gap-2">
-                          <label className="block text-xs theme-text-secondary">Offset Y (PDF):</label>
-                          <input
+                            <Input
                             type="number"
                             value={selectedElement.relativeOffsetY ?? 10}
                             onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
-                            className="w-20 px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
+                              size="sm"
+                              className="w-20"
                           />
                           <span className="text-[10px] theme-text-muted">px</span>
                         </div>
+                        </PropertyRow>
                       </>
                     )}
                   </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Size</h3>
+                <PropertyGroup title="Size" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">W (Width)</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="W (Width)"
                         value={selectedElement.width}
-                        onChange={(e) => handleUpdate('width', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">H (Height)</label>
-                      <input
-                        type="number"
+                      onValueChange={(value) => handleUpdate('width', value)}
+                    />
+                    <NumberField
+                      label="H (Height)"
                         value={selectedElement.height}
-                        onChange={(e) => handleUpdate('height', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('height', value)}
                       />
                     </div>
-                  </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Print Condition</h3>
-                  <input
-                    type="text"
+                <PropertyGroup title="Print Condition" collapsible={false}>
+                  <Input
                     value={selectedElement.printCondition || ''}
                     onChange={(e) => handleUpdate('printCondition', e.target.value || null)}
                     placeholder="Ex: invoice.total > 1000"
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    size="sm"
                   />
                   <p className="text-xs theme-text-muted mt-1">
                     Leave empty to always print
@@ -2217,70 +1967,60 @@ export default function PropertiesPanel() {
                       <div>• total &gt;= 100 && total &lt; 500</div>
                     </div>
                   </div>
-                </div>
+                </PropertyGroup>
               </>
             )}
 
             {/* BARCODE TAB */}
             {activeTab === 'barcode' && (
               <>
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Code Type</h3>
-                  <select
+                <PropertyGroup title="Code Type" collapsible={false}>
+                  <Select
                     value={selectedElement.barcodeType || 'qrcode'}
                     onChange={(e) => handleUpdate('barcodeType', e.target.value)}
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="qrcode">QR Code</option>
-                    <option value="barcode">Barcode</option>
-                  </select>
-                </div>
-                
-                <div className="border-t theme-border my-3"></div>
+                    options={[
+                      { value: 'qrcode', label: 'QR Code' },
+                      { value: 'barcode', label: 'Barcode' },
+                    ]}
+                  />
+                </PropertyGroup>
 
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Data</h3>
-                  <div>
-                    <label className="block text-xs theme-text-secondary mb-1">Data Binding</label>
-                  <input
-                    type="text"
+                <PropertyGroup title="Data" collapsible={false}>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium theme-text-muted">Data Binding</label>
+                    <Input
                     value={selectedElement.dataBinding || ''}
                     onChange={(e) => handleUpdate('dataBinding', e.target.value)}
                     placeholder="Ex: invoice.qrCode, customer.cpf"
-                      className="w-full px-2 py-1.5 text-xs border theme-border rounded font-mono bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      size="sm"
+                      className="font-mono"
                   />
                   <p className="text-xs theme-text-muted mt-1">
                       Field to be encoded
                     </p>
                   </div>
-                </div>
+                </PropertyGroup>
                 
                 {/* Error Correction (apenas QR Code) */}
                 {selectedElement.barcodeType === 'qrcode' && (
-                  <>
-                    <div className="border-t theme-border my-3"></div>
-                  <div>
-                      <h3 className="text-xs font-semibold theme-text mb-2">QR Code Quality</h3>
-                      <div>
-                        <label className="block text-xs theme-text-secondary mb-1">
-                          Error Correction
-                    </label>
-                    <select
+                  <PropertyGroup title="QR Code Quality" collapsible={false}>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Error Correction</label>
+                      <Select
                       value={selectedElement.style?.errorCorrection || 'M'}
                       onChange={(e) => handleStyleUpdate('errorCorrection', e.target.value)}
-                          className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    >
-                      <option value="L">Low (~7%)</option>
-                      <option value="M">Medium (~15%)</option>
-                      <option value="Q">Quartile (~25%)</option>
-                      <option value="H">High (~30%)</option>
-                    </select>
+                        options={[
+                          { value: 'L', label: 'Low (~7%)' },
+                          { value: 'M', label: 'Medium (~15%)' },
+                          { value: 'Q', label: 'Quartile (~25%)' },
+                          { value: 'H', label: 'High (~30%)' },
+                        ]}
+                      />
                     <p className="text-xs theme-text-muted mt-1">
                           Higher = more damage resistant
                     </p>
                   </div>
-              </div>
-                  </>
+                  </PropertyGroup>
                 )}
               </>
             )}
@@ -2295,190 +2035,136 @@ export default function PropertiesPanel() {
               <>
                 {!isMultiSelection && (
                   <>
-                    <div>
-                      <label className="block text-xs font-medium theme-text mb-1">ID</label>
-                      <input
-                        type="text"
+                    <div className="space-y-1 mb-3">
+                      <label className="text-xs font-medium theme-text-muted">ID</label>
+                      <Input
                         value={selectedElement.id}
                         disabled
-                        className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900"
+                        size="sm"
                       />
                     </div>
-                    <div className="border-t theme-border my-3"></div>
+                    <Divider className="my-3" />
                   </>
                 )}
 
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Location</h3>
+                <PropertyGroup title="Location" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">X</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="X"
                         value={selectedElement.x}
-                        onChange={(e) => handleUpdate('x', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Y</label>
-                      <input
-                        type="number"
+                      onValueChange={(value) => handleUpdate('x', value)}
+                    />
+                    <NumberField
+                      label="Y"
                         value={selectedElement.y}
-                        onChange={(e) => handleUpdate('y', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('y', value)}
                       />
-                    </div>
                   </div>
                   
                   {/* Modo de Posicionamento - Loop */}
                   <div className="mt-3">
-                    <label className="block text-xs theme-text-secondary mb-1">Position Mode</label>
-                    <select
+                    <Select
                       value={selectedElement.positionMode || 'ABSOLUTE'}
                       onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
-                      className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="ABSOLUTE">Absoluto (fixo no canvas)</option>
-                      <option value="RELATIVE">Relative (follows content above)</option>
-                    </select>
+                      options={[
+                        { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
+                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                      ]}
+                    />
                     {selectedElement.positionMode === 'RELATIVE' && (
                       <>
                         <p className="text-[10px] text-purple-500 mt-1 mb-2">
                           ↳ Positioned after the previous element in PDF
                         </p>
+                        <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
                         <div className="flex items-center gap-2">
-                          <label className="block text-xs theme-text-secondary">Offset Y (PDF):</label>
-                          <input
+                            <Input
                             type="number"
                             value={selectedElement.relativeOffsetY ?? 10}
                             onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
-                            className="w-20 px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
+                              size="sm"
+                              className="w-20"
                           />
                           <span className="text-[10px] theme-text-muted">px</span>
                         </div>
+                        </PropertyRow>
                       </>
                     )}
                   </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Size</h3>
+                <PropertyGroup title="Size" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">W (Width)</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="W (Width)"
                         value={selectedElement.width}
-                        onChange={(e) => handleUpdate('width', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">H (Height)</label>
-                      <input
-                        type="number"
+                      onValueChange={(value) => handleUpdate('width', value)}
+                    />
+                    <NumberField
+                      label="H (Height)"
                         value={selectedElement.height}
-                        onChange={(e) => handleUpdate('height', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('height', value)}
                       />
                     </div>
-                  </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Print Condition</h3>
-                  <input
-                    type="text"
+                <PropertyGroup title="Print Condition" collapsible={false}>
+                  <Input
                     value={selectedElement.printCondition || ''}
                     onChange={(e) => handleUpdate('printCondition', e.target.value || null)}
                     placeholder="Ex: items.length > 0"
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    size="sm"
                   />
                   <p className="text-xs theme-text-muted mt-1">
                     Leave empty to always print
                   </p>
-                </div>
+                </PropertyGroup>
               </>
             )}
 
             {/* LOOP TAB */}
             {activeTab === 'loop' && (
               <>
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Loop Configuration</h3>
-                  
-                  <div className="mb-3">
-                    <label className="block text-xs theme-text-secondary mb-1">Data Binding (Lista)</label>
-                    <input
-                      type="text"
+                <PropertyGroup title="Loop Configuration" collapsible={false}>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Data Binding (Lista)</label>
+                      <Input
                       value={selectedElement.dataBinding || ''}
                       onChange={(e) => handleUpdate('dataBinding', e.target.value)}
                       placeholder="Ex: invoice.items"
-                      className="w-full px-2 py-1.5 text-xs border theme-border rounded font-mono bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        size="sm"
+                        className="font-mono"
                     />
                     <p className="text-xs theme-text-muted mt-1">
                       Path to the list in the data JSON
                     </p>
                   </div>
 
-                  <div className="mb-3">
-                    <label className="block text-xs theme-text-secondary mb-1">Item Spacing (px)</label>
-                    <input
-                      type="number"
+                    <NumberField
+                      label="Item Spacing (px)"
                       value={selectedElement.itemSpacing || 20}
-                      onChange={(e) => handleUpdate('itemSpacing', parseFloat(e.target.value))}
-                      className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => handleUpdate('itemSpacing', value)}
                     />
-                    <p className="text-xs theme-text-muted mt-1">
+                    <p className="text-xs theme-text-muted -mt-1">
                       Vertical space between each repetition
                     </p>
                   </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Add Elements</h3>
-                  
-                  
+                <PropertyGroup title="Add Elements" collapsible={false}>
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     {[
-                      { type: 'text', label: 'Text', icon: (
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M4 7h16M9 20v-13M15 20v-13" />
-                        </svg>
-                      )},
-                      { type: 'static_text', label: 'Static', icon: (
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M4 7h16M9 20v-13M15 20v-13" />
-                          <circle cx="18" cy="18" r="3" fill="currentColor" stroke="none" />
-                        </svg>
-                      )},
-                      { type: 'image', label: 'Image', icon: (
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="3" y="3" width="18" height="18" rx="2" />
-                          <circle cx="8.5" cy="8.5" r="1.5" />
-                          <path d="M21 15l-5-5L5 21" />
-                        </svg>
-                      )},
-                      { type: 'rectangle', label: 'Rectangle', icon: (
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="3" y="3" width="18" height="18" rx="2" />
-                        </svg>
-                      )},
-                      { type: 'line', label: 'Line', icon: (
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M5 19l14-14" />
-                        </svg>
-                      )},
+                      { type: 'text', label: 'Text', icon: 'text' as const },
+                      { type: 'static_text', label: 'Static', icon: 'static-text' as const },
+                      { type: 'image', label: 'Image', icon: 'image' as const },
+                      { type: 'rectangle', label: 'Rectangle', icon: 'rectangle' as const },
+                      { type: 'line', label: 'Line', icon: 'minus' as const },
                     ].map((item) => (
-                      <button
+                      <Button
                         key={item.type}
+                        variant="outline"
+                        size="sm"
                         onClick={() => {
                           const id = `${item.type}-${Date.now()}`
                           let newElement: any = { type: item.type, id, x: 0, y: 0 }
@@ -2496,25 +2182,25 @@ export default function PropertiesPanel() {
                           } else if (item.type === 'rectangle') {
                             newElement = { ...newElement, width: 100, height: 20, style: { fillColor: '#e0e0e0' } }
                           } else if (item.type === 'line') {
-                            newElement = { ...newElement, x2: 100, y2: 0, style: { strokeColor: '#000000', strokeWidth: 1 } }
+                            newElement = { ...newElement, width: 100, height: 0, style: { strokeColor: '#000000', strokeWidth: 1 } }
                           }
                           
                           addElementToLoop(selectedElement.id, newElement, selectedElementLocation)
                         }}
-                        className="flex items-center gap-2 px-3 py-2.5 text-xs bg-white border border-gray-200 rounded-lg hover:bg-primary-50 hover:border-primary-400 transition-all text-gray-700 hover:text-primary-600"
+                        className="flex items-center gap-2 justify-start"
                       >
-                        <span className="text-primary-500">{item.icon}</span>
+                        <Icon name={item.icon} size="sm" />
                         {item.label}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                   
                   {/* Lista de elementos filhos */}
                   {(selectedElement.elements || []).length > 0 && (
                     <>
-                      <h3 className="text-xs font-semibold theme-text mb-2">
+                      <label className="text-xs font-medium theme-text mb-2 block">
                         Elements ({(selectedElement.elements || []).length})
-                      </h3>
+                      </label>
                       <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
                         {(selectedElement.elements || []).map((child: any, idx: number) => (
                           <LoopChildEditor
@@ -2539,12 +2225,9 @@ export default function PropertiesPanel() {
                       Ex: <code className="px-1 py-0.5 bg-blue-100 rounded font-mono">name</code>, <code className="px-1 py-0.5 bg-blue-100 rounded font-mono">value</code>, <code className="px-1 py-0.5 bg-blue-100 rounded font-mono">price</code>
                     </p>
                   </div>
-                </div>
+                </PropertyGroup>
 
-                <div className="border-t theme-border my-3"></div>
-
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Usage Example</h3>
+                <PropertyGroup title="Usage Example" collapsible={false}>
                   <div className="p-2 theme-bg-tertiary rounded border theme-border text-xs font-mono theme-text-secondary">
                     <div className="mb-1">Data Binding: <span className="text-primary-600">invoice.items</span></div>
                     <div className="mb-1">Elements use only the property name:</div>
@@ -2554,7 +2237,7 @@ export default function PropertiesPanel() {
                       <div>• qty → quantity</div>
                     </div>
                   </div>
-                </div>
+                </PropertyGroup>
               </>
             )}
           </>
@@ -2649,94 +2332,77 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
         {/* General Tab */}
         {activeTab === 'general' && (
           <div className="space-y-4">
-            
+            <PropertyGroup title="Position" collapsible={false}>
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs font-medium theme-text mb-1">
-                  Position X (pt)
-                </label>
-                <input
-                  type="number"
+                <NumberField
+                  label="X (pt)"
                   value={element.x || 0}
-                  onChange={(e) => onUpdate('x', parseFloat(e.target.value))}
-                  className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  onValueChange={(value) => onUpdate('x', value)}
+                  disabled={element.width === '100%'}
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-medium theme-text mb-1">
-                  Position Y (pt)
-                </label>
-                <input
-                  type="number"
+                <NumberField
+                  label="Y (pt)"
                   value={element.y || 0}
-                  onChange={(e) => onUpdate('y', parseFloat(e.target.value))}
-                  className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  onValueChange={(value) => onUpdate('y', value)}
                 />
-              </div>
             </div>
 
             {/* Modo de Posicionamento */}
-            <div>
-              <label className="block text-xs font-medium theme-text mb-1">
-                Position Mode
-              </label>
-              <select
+              <div className="mt-3">
+                <Select
                 value={element.positionMode || 'ABSOLUTE'}
                 onChange={(e) => onUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
-                className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="ABSOLUTE">Absolute (fixed on canvas)</option>
-                <option value="RELATIVE">Relative (follows content above)</option>
-              </select>
+                  options={[
+                    { value: 'ABSOLUTE', label: 'Absolute (fixed on canvas)' },
+                    { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                  ]}
+                />
               {element.positionMode === 'RELATIVE' && (
                 <>
                   <p className="text-[10px] text-purple-500 mt-1 mb-2">
                     ↳ Positioned after the previous element in PDF
                   </p>
+                    <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
                   <div className="flex items-center gap-2">
-                    <label className="block text-xs theme-text-secondary">Offset Y (PDF):</label>
-                    <input
+                        <Input
                       type="number"
                       value={element.relativeOffsetY ?? 10}
                       onChange={(e) => onUpdate('relativeOffsetY', parseFloat(e.target.value))}
-                      className="w-20 px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
+                          size="sm"
+                          className="w-20"
                     />
                     <span className="text-[10px] theme-text-muted">px</span>
                   </div>
+                    </PropertyRow>
                 </>
               )}
             </div>
+            </PropertyGroup>
 
-            <div>
-              <label className="block text-xs font-medium theme-text mb-1">
-                Data Binding
-              </label>
-              <input
-                type="text"
+            <PropertyGroup title="Data" collapsible={false}>
+              <div className="space-y-1">
+                <label className="text-xs font-medium theme-text-muted">Data Binding</label>
+                <Input
                 value={element.dataBinding || ''}
                 onChange={(e) => onUpdate('dataBinding', e.target.value)}
                 placeholder="e.g., invoice.items"
-                className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  size="sm"
               />
               <p className="text-xs theme-text-muted mt-1">
                 Data field containing the rows array
               </p>
             </div>
+            </PropertyGroup>
 
-            <div>
-              <label className="block text-xs font-medium theme-text mb-1">
-                Table Width (pt)
-              </label>
-              <input
-                type="number"
+            <PropertyGroup title="Size" collapsible={false}>
+              <NumberField
+                label="Table Width (pt)"
                 value={typeof element.width === 'number' ? element.width : 400}
-                onChange={(e) => onUpdate('width', parseFloat(e.target.value))}
+                onValueChange={(value) => onUpdate('width', value)}
                 disabled={element.width === '100%'}
-                className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
               />
-              <div className="mt-2 flex items-center">
-                <input
-                  type="checkbox"
+              <div className="mt-2">
+                <Checkbox
                   id="table-width-100"
                   checked={element.width === '100%'}
                   onChange={(e) => {
@@ -2747,34 +2413,27 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                       onUpdate('width', 400)
                     }
                   }}
-                  className="mr-2"
+                  label="100% Width (fit to container)"
                 />
-                <label htmlFor="table-width-100" className="text-xs theme-text">
-                  100% Width (fit to container)
-                </label>
               </div>
               {element.width === '100%' && (
                 <p className="text-xs theme-text-muted mt-1">
                   X will be fixed at 0 when width is 100%
                 </p>
               )}
-            </div>
+            </PropertyGroup>
 
-            <div>
-              <label className="block text-xs font-medium theme-text mb-1">
-                Print Condition
-              </label>
-              <input
-                type="text"
+            <PropertyGroup title="Print Condition" collapsible={false}>
+              <Input
                 value={element.printCondition || ''}
                 onChange={(e) => onUpdate('printCondition', e.target.value || null)}
                 placeholder="Ex: items.length > 0"
-                className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                size="sm"
               />
               <p className="text-xs theme-text-muted mt-1">
                 Leave empty to always print
               </p>
-            </div>
+            </PropertyGroup>
           </div>
         )}
 
@@ -2786,7 +2445,9 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
               <label className="block text-xs font-medium theme-text">
                 Columns ({(element.columns || []).length})
               </label>
-              <button
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() => {
                   const columns = element.columns || []
                   const newColumn = {
@@ -2800,13 +2461,10 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                   }
                   onUpdate('columns', [...columns, newColumn])
                 }}
-                className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-1"
               >
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
+                <Icon name="plus" size="xs" />
                 Add
-              </button>
+              </Button>
               </div>
             </div>
 
@@ -2827,62 +2485,49 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                     <span className="text-xs font-semibold theme-text">
                       Column {index + 1}
                     </span>
-                    <button
+                    <IconButton
+                      icon="trash"
+                      size="sm"
+                      variant="ghost"
                       onClick={() => {
                         const columns = [...(element.columns || [])]
                         columns.splice(index, 1)
                         onUpdate('columns', columns)
                       }}
-                      className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition"
-                      title="Remove column"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      tooltip="Remove column"
+                    />
                   </div>
 
                   <div className="space-y-2">
                     {/* Header */}
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">
-                        Header
-                      </label>
-                      <input
-                        type="text"
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Header</label>
+                      <Input
                         value={normalizedColumn.header || ''}
                         onChange={(e) => updateColumn(index, 'header', e.target.value)}
                         placeholder="Column name"
-                        className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        size="sm"
                       />
                     </div>
 
                     {/* Field */}
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">
-                        Field
-                      </label>
-                      <input
-                        type="text"
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Field</label>
+                      <Input
                         value={normalizedColumn.field || ''}
                         onChange={(e) => updateColumn(index, 'field', e.target.value)}
                         placeholder="nome.campo"
-                        className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        size="sm"
                       />
                     </div>
 
                     {/* Width */}
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">
-                        Width (pt)
-                      </label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="Width (pt)"
                         value={normalizedColumn.width || 100}
-                        onChange={(e) => updateColumn(index, 'width', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      onValueChange={(value) => updateColumn(index, 'width', value)}
                       />
-                    </div>
 
                     {/* Alignments */}
                     <div>
@@ -3018,110 +2663,94 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
             
             <div className="p-4 theme-bg-tertiary border theme-border rounded-lg">
               <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <line x1="3" y1="9" x2="21" y2="9" />
-                </svg>
+                <Icon name="grid" size="sm" />
                 Header
               </h3>
               
               {/* Cor */}
               <div className="mb-3">
-                <h4 className="text-xs font-medium theme-text-secondary mb-2">Cor</h4>
+                <label className="text-xs font-medium theme-text-muted mb-2 block">Color</label>
                 <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="block text-xs theme-text-secondary mb-1">Background</label>
-                    <div className="flex items-center gap-2">
-                  <input
-                    type="color"
+                  <ColorField
+                    label="Background"
                     value={element.style?.headerBackground && element.style?.headerBackground !== 'transparent' ? element.style?.headerBackground : '#f0f0f0'}
-                    onChange={(e) => onStyleUpdate('headerBackground', e.target.value)}
-                        className="w-10 h-10 border theme-border rounded cursor-pointer"
+                    onValueChange={(value) => onStyleUpdate('headerBackground', value)}
                         disabled={!element.style?.headerBackground || element.style?.headerBackground === 'transparent'}
                   />
-                </div>
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-xs theme-text-secondary mb-1">Text</label>
-                    <div className="flex items-center gap-2">
-                  <input
-                    type="color"
+                  <ColorField
+                    label="Text"
                     value={element.style?.headerColor || '#000000'}
-                    onChange={(e) => onStyleUpdate('headerColor', e.target.value)}
-                        className="w-10 h-10 border theme-border rounded cursor-pointer"
+                    onValueChange={(value) => onStyleUpdate('headerColor', value)}
                   />
                     </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <label className="text-xs theme-text-secondary">Transparent Background</label>
-                  <input
-                    type="checkbox"
+                <div className="mt-2">
+                  <Checkbox
+                    id="header-transparent-bg"
                     checked={!element.style?.headerBackground || element.style?.headerBackground === 'transparent'}
                     onChange={(e) => onStyleUpdate('headerBackground', e.target.checked ? 'transparent' : '#f0f0f0')}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    label="Transparent Background"
                   />
                 </div>
                 </div>
 
-              <div className="border-t theme-border my-3"></div>
+              <Divider className="my-3" />
 
               {/* Font */}
               <div className="mb-3">
-                <h4 className="text-xs font-medium theme-text-secondary mb-2">Font</h4>
+                <label className="text-xs font-medium theme-text-muted mb-2 block">Font</label>
                 <div className="flex items-center gap-1">
-                  <select
+                  <Select
                     value={element.style?.headerFontFamily || 'Helvetica'}
                     onChange={(e) => onStyleUpdate('headerFontFamily', e.target.value)}
-                    className="flex-1 min-w-0 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="Helvetica">Helvetica</option>
-                    <option value="Helvetica-Bold">Helvetica Bold</option>
-                    <option value="Times">Times New Roman</option>
-                    <option value="Courier">Courier New</option>
-                  </select>
-                  
-                  <input
-                    type="number"
-                    min="6"
-                    max="72"
-                    value={element.style?.headerFontSize || 12}
-                    onChange={(e) => onStyleUpdate('headerFontSize', parseFloat(e.target.value))}
-                    className="w-11 px-1.5 py-1.5 text-xs text-center border theme-border rounded bg-white text-gray-900 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    options={[
+                      { value: 'Helvetica', label: 'Helvetica' },
+                      { value: 'Helvetica-Bold', label: 'Helvetica Bold' },
+                      { value: 'Times', label: 'Times New Roman' },
+                      { value: 'Courier', label: 'Courier New' },
+                    ]}
+                    className="flex-1 min-w-0"
                   />
                   
-                  <button
+                  <Input
+                    type="number"
+                    min={6}
+                    max={72}
+                    value={element.style?.headerFontSize || 12}
+                    onChange={(e) => onStyleUpdate('headerFontSize', parseFloat(e.target.value))}
+                    size="sm"
+                    className="w-11 text-center"
+                  />
+                  
+                  <IconButton
+                    icon="minus"
+                    size="sm"
+                    variant="outline"
                     onClick={() => {
                       const currentSize = element.style?.headerFontSize || 12
                       onStyleUpdate('headerFontSize', Math.max(6, currentSize - 1))
                     }}
-                    className="w-7 h-7 text-xs border theme-border rounded bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition flex items-center justify-center flex-shrink-0"
-                    title="Decrease size"
-                  >
-                    A-
-                  </button>
-                  <button
+                    tooltip="Decrease size"
+                  />
+                  <IconButton
+                    icon="plus"
+                    size="sm"
+                    variant="outline"
                     onClick={() => {
                       const currentSize = element.style?.headerFontSize || 12
                       onStyleUpdate('headerFontSize', Math.min(72, currentSize + 1))
                     }}
-                    className="w-7 h-7 text-xs border theme-border rounded bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition flex items-center justify-center flex-shrink-0"
-                    title="Increase size"
-                  >
-                    A+
-                  </button>
+                    tooltip="Increase size"
+                  />
                 </div>
                 </div>
 
-              <div className="border-t theme-border my-3"></div>
+              <Divider className="my-3" />
 
               {/* Paddings do Header */}
               <div className="mb-3">
-                <h4 className="text-xs font-medium theme-text-secondary mb-2">Paddings</h4>
+                <label className="text-xs font-medium theme-text-muted mb-2 block">Paddings</label>
                 <div className="space-y-2">
-                  <div className="flex items-center mb-2">
-                    <input
-                      type="checkbox"
+                  <Checkbox
                       id="header-same-padding"
                       checked={element.style?.headerSamePadding || false}
                       onChange={(e) => {
@@ -3138,20 +2767,13 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                           onStyleUpdate('headerSamePadding', false)
                         }
                       }}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                    />
-                    <label htmlFor="header-same-padding" className="ml-2 text-xs theme-text">
-                      Use the same value for every padding
-                  </label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Left</label>
-                  <input
-                    type="number"
+                    label="Use the same value for every padding"
+                  />
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <NumberField
+                      label="Left"
                         value={element.style?.headerPaddingLeft || element.style?.headerPadding || 5}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value) || 0
+                      onValueChange={(value) => {
                           if (element.style?.headerSamePadding) {
                             onStyleUpdate('headerPaddingLeft', value)
                             onStyleUpdate('headerPaddingRight', value)
@@ -3162,58 +2784,44 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                             onStyleUpdate('headerPaddingLeft', value)
                           }
                         }}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    min="0"
-                        step="1"
-                  />
-                </div>
-                <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Right</label>
-                  <input
-                    type="number"
+                      min={0}
+                      step={1}
+                    />
+                    <NumberField
+                      label="Right"
                         value={element.style?.headerPaddingRight || element.style?.headerPadding || 5}
-                        onChange={(e) => onStyleUpdate('headerPaddingRight', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                    min="0"
-                        step="1"
+                      onValueChange={(value) => onStyleUpdate('headerPaddingRight', value)}
+                      min={0}
+                      step={1}
                         disabled={element.style?.headerSamePadding || false}
                       />
-                </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Top</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="Top"
                         value={element.style?.headerPaddingTop || element.style?.headerPadding || 5}
-                        onChange={(e) => onStyleUpdate('headerPaddingTop', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                        min="0"
-                        step="1"
+                      onValueChange={(value) => onStyleUpdate('headerPaddingTop', value)}
+                      min={0}
+                      step={1}
                         disabled={element.style?.headerSamePadding || false}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Bottom</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="Bottom"
                         value={element.style?.headerPaddingBottom || element.style?.headerPadding || 5}
-                        onChange={(e) => onStyleUpdate('headerPaddingBottom', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                        min="0"
-                        step="1"
+                      onValueChange={(value) => onStyleUpdate('headerPaddingBottom', value)}
+                      min={0}
+                      step={1}
                         disabled={element.style?.headerSamePadding || false}
                       />
-                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t theme-border my-3"></div>
+              <Divider className="my-3" />
 
               {/* Borders do Header */}
               <div className="mb-3">
-                <h4 className="text-xs font-medium theme-text-secondary mb-2">Borders</h4>
+                <label className="text-xs font-medium theme-text-muted mb-2 block">Borders</label>
                 
                 {/* Border Preview Box */}
                 <div className="mb-3 p-3 theme-bg-tertiary border theme-border rounded">
@@ -3245,35 +2853,29 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs theme-text-secondary w-20">Pen Color:</label>
-                  <input
-                    type="color"
+                  <PropertyRow label="Pen Color:" labelWidth="lg">
+                    <ColorInput
                     value={element.style?.headerBorderColor || element.style?.borderColor || '#cccccc'}
                     onChange={(e) => onStyleUpdate('headerBorderColor', e.target.value)}
-                      className="w-8 h-6 border theme-border rounded cursor-pointer"
                   />
-                    <span className="text-xs theme-text-secondary font-mono">
-                      {element.style?.headerBorderColor || element.style?.borderColor || '#cccccc'}
-                    </span>
-                </div>
+                  </PropertyRow>
 
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs theme-text-secondary w-20">Pen Width:</label>
-                  <input
+                  <PropertyRow label="Pen Width:" labelWidth="lg">
+                    <Input
                     type="number"
                       value={element.style?.headerBorderWidth ?? element.style?.borderWidth ?? 1}
                       onChange={(e) => onStyleUpdate('headerBorderWidth', parseFloat(e.target.value) || 0)}
-                      className="w-24 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    min="0"
-                      max="10"
-                    step="0.5"
-                  />
-                </div>
+                      size="sm"
+                      className="w-24"
+                      min={0}
+                      max={10}
+                      step={0.5}
+                    />
+                  </PropertyRow>
                   
                   {/* Default border styles */}
                   <div className="pt-2">
-                    <label className="block text-xs theme-text-secondary mb-2">Quick border setup:</label>
+                    <label className="text-xs font-medium theme-text-muted mb-2 block">Quick border setup:</label>
                     <div className="flex gap-2">
                       {/* All borders */}
                       <button
@@ -3353,108 +2955,94 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
             
             <div className="p-4 theme-bg-tertiary border theme-border rounded-lg">
               <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7" />
-                  <rect x="14" y="3" width="7" height="7" />
-                  <rect x="3" y="14" width="7" height="7" />
-                  <rect x="14" y="14" width="7" height="7" />
-                </svg>
+                <Icon name="grid" size="sm" />
                 Cells
               </h3>
               
               {/* Cor */}
               <div className="mb-3">
-                <h4 className="text-xs font-medium theme-text-secondary mb-2">Cor</h4>
+                <label className="text-xs font-medium theme-text-muted mb-2 block">Color</label>
                 <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="block text-xs theme-text-secondary mb-1">Background</label>
-                    <input
-                      type="color"
+                  <ColorField
+                    label="Background"
                       value={element.style?.cellBackground && element.style?.cellBackground !== 'transparent' ? element.style?.cellBackground : '#ffffff'}
-                      onChange={(e) => onStyleUpdate('cellBackground', e.target.value)}
-                      className="w-10 h-10 border theme-border rounded cursor-pointer"
+                    onValueChange={(value) => onStyleUpdate('cellBackground', value)}
                       disabled={!element.style?.cellBackground || element.style?.cellBackground === 'transparent'}
                     />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-xs theme-text-secondary mb-1">Text</label>
-                    <input
-                      type="color"
+                  <ColorField
+                    label="Text"
                       value={element.style?.cellColor || '#000000'}
-                      onChange={(e) => onStyleUpdate('cellColor', e.target.value)}
-                      className="w-10 h-10 border theme-border rounded cursor-pointer"
+                    onValueChange={(value) => onStyleUpdate('cellColor', value)}
                     />
                   </div>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <label className="text-xs theme-text-secondary">Transparent Background</label>
-                  <input
-                    type="checkbox"
+                <div className="mt-2">
+                  <Checkbox
+                    id="cell-transparent-bg"
                     checked={!element.style?.cellBackground || element.style?.cellBackground === 'transparent'}
                     onChange={(e) => onStyleUpdate('cellBackground', e.target.checked ? 'transparent' : '#ffffff')}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    label="Transparent Background"
                   />
                 </div>
               </div>
 
-              <div className="border-t theme-border my-3"></div>
+              <Divider className="my-3" />
 
               {/* Font */}
               <div className="mb-3">
-                <h4 className="text-xs font-medium theme-text-secondary mb-2">Font</h4>
+                <label className="text-xs font-medium theme-text-muted mb-2 block">Font</label>
                 <div className="flex items-center gap-1">
-                  <select
+                  <Select
                     value={element.style?.fontFamily || 'Helvetica'}
                     onChange={(e) => onStyleUpdate('fontFamily', e.target.value)}
-                    className="flex-1 min-w-0 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                  >
-                    <option value="Helvetica">Helvetica</option>
-                    <option value="Helvetica-Bold">Helvetica Bold</option>
-                    <option value="Times">Times New Roman</option>
-                    <option value="Courier">Courier New</option>
-                  </select>
-                  
-                  <input
-                    type="number"
-                    min="6"
-                    max="72"
-                    value={element.style?.fontSize || 10}
-                    onChange={(e) => onStyleUpdate('fontSize', parseFloat(e.target.value))}
-                    className="w-11 px-1.5 py-1.5 text-xs text-center border theme-border rounded bg-white text-gray-900 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    options={[
+                      { value: 'Helvetica', label: 'Helvetica' },
+                      { value: 'Helvetica-Bold', label: 'Helvetica Bold' },
+                      { value: 'Times', label: 'Times New Roman' },
+                      { value: 'Courier', label: 'Courier New' },
+                    ]}
+                    className="flex-1 min-w-0"
                   />
                   
-                  <button
+                  <Input
+                    type="number"
+                    min={6}
+                    max={72}
+                    value={element.style?.fontSize || 10}
+                    onChange={(e) => onStyleUpdate('fontSize', parseFloat(e.target.value))}
+                    size="sm"
+                    className="w-11 text-center"
+                  />
+                  
+                  <IconButton
+                    icon="minus"
+                    size="sm"
+                    variant="outline"
                     onClick={() => {
                       const currentSize = element.style?.fontSize || 10
                       onStyleUpdate('fontSize', Math.max(6, currentSize - 1))
                     }}
-                    className="w-7 h-7 text-xs border theme-border rounded bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition flex items-center justify-center flex-shrink-0"
-                    title="Decrease size"
-                  >
-                    A-
-                  </button>
-                  <button
+                    tooltip="Decrease size"
+                  />
+                  <IconButton
+                    icon="plus"
+                    size="sm"
+                    variant="outline"
                     onClick={() => {
                       const currentSize = element.style?.fontSize || 10
                       onStyleUpdate('fontSize', Math.min(72, currentSize + 1))
                     }}
-                    className="w-7 h-7 text-xs border theme-border rounded bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition flex items-center justify-center flex-shrink-0"
-                    title="Increase size"
-                  >
-                    A+
-                  </button>
+                    tooltip="Increase size"
+                  />
                 </div>
                 </div>
 
-              <div className="border-t theme-border my-3"></div>
+              <Divider className="my-3" />
 
               {/* Paddings das Cells */}
               <div className="mb-3">
-                <h4 className="text-xs font-medium theme-text-secondary mb-2">Paddings</h4>
+                <label className="text-xs font-medium theme-text-muted mb-2 block">Paddings</label>
                 <div className="space-y-2">
-                  <div className="flex items-center mb-2">
-                    <input
-                      type="checkbox"
+                  <Checkbox
                       id="cell-same-padding"
                       checked={element.style?.cellSamePadding || false}
                       onChange={(e) => {
@@ -3471,20 +3059,13 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                           onStyleUpdate('cellSamePadding', false)
                         }
                       }}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                    />
-                    <label htmlFor="cell-same-padding" className="ml-2 text-xs theme-text">
-                      Use the same value for every padding
-                  </label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Left</label>
-                  <input
-                        type="number"
+                    label="Use the same value for every padding"
+                  />
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <NumberField
+                      label="Left"
                         value={element.style?.cellPaddingLeft || element.style?.cellPadding || 5}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value) || 0
+                      onValueChange={(value) => {
                           if (element.style?.cellSamePadding) {
                             onStyleUpdate('cellPaddingLeft', value)
                             onStyleUpdate('cellPaddingRight', value)
@@ -3495,54 +3076,40 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                             onStyleUpdate('cellPaddingLeft', value)
                           }
                         }}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        min="0"
-                        step="1"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Right</label>
-                      <input
-                        type="number"
+                      min={0}
+                      step={1}
+                    />
+                    <NumberField
+                      label="Right"
                         value={element.style?.cellPaddingRight || element.style?.cellPadding || 5}
-                        onChange={(e) => onStyleUpdate('cellPaddingRight', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                        min="0"
-                        step="1"
+                      onValueChange={(value) => onStyleUpdate('cellPaddingRight', value)}
+                      min={0}
+                      step={1}
                         disabled={element.style?.cellSamePadding || false}
                       />
-                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Top</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="Top"
                         value={element.style?.cellPaddingTop || element.style?.cellPadding || 5}
-                        onChange={(e) => onStyleUpdate('cellPaddingTop', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                        min="0"
-                        step="1"
+                      onValueChange={(value) => onStyleUpdate('cellPaddingTop', value)}
+                      min={0}
+                      step={1}
                         disabled={element.style?.cellSamePadding || false}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Bottom</label>
-                      <input
-                        type="number"
+                    <NumberField
+                      label="Bottom"
                         value={element.style?.cellPaddingBottom || element.style?.cellPadding || 5}
-                        onChange={(e) => onStyleUpdate('cellPaddingBottom', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                        min="0"
-                        step="1"
+                      onValueChange={(value) => onStyleUpdate('cellPaddingBottom', value)}
+                      min={0}
+                      step={1}
                         disabled={element.style?.cellSamePadding || false}
                       />
-                    </div>
                 </div>
               </div>
             </div>
 
-              <div className="border-t theme-border my-3"></div>
+              <Divider className="my-3" />
 
               {/* Borders das Cells */}
               <div className="mb-3">
@@ -3578,72 +3145,58 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                 </div>
               
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs theme-text-secondary w-20">Pen Color:</label>
-                  <input
-                    type="color"
+                  <PropertyRow label="Pen Color:" labelWidth="lg">
+                    <ColorInput
                       value={element.style?.borderColor ?? '#cccccc'}
                     onChange={(e) => onStyleUpdate('borderColor', e.target.value)}
-                      className="w-8 h-6 border theme-border rounded cursor-pointer"
                   />
-                    <span className="text-xs theme-text-secondary font-mono">
-                      {element.style?.borderColor ?? '#cccccc'}
-                    </span>
-                </div>
+                  </PropertyRow>
 
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs theme-text-secondary w-20">Pen Style:</label>
+                  <PropertyRow label="Pen Style:" labelWidth="lg">
                     <div className="flex gap-1 flex-1">
                       {[
                         { value: 'solid', label: 'Solid' },
                         { value: 'dashed', label: 'Dashed' },
                         { value: 'dotted', label: 'Dotted' }
                       ].map((style) => (
-                        <button
+                        <Button
                           key={style.value}
+                          variant={((element.style?.borderStyle || 'solid') === style.value) ? 'primary' : 'outline'}
+                          size="sm"
                           onClick={() => onStyleUpdate('borderStyle', style.value)}
-                          className={`flex-1 px-2 py-2 text-xs rounded border-2 transition-all ${
-                            (element.style?.borderStyle || 'solid') === style.value
-                              ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/20'
-                              : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
-                          }`}
-                          title={style.label}
+                          className="flex-1 flex-col py-2"
                         >
                           <div 
                             className="h-0 mx-auto w-full"
                             style={{ 
                               borderTopWidth: '2px',
                               borderTopStyle: style.value as 'solid' | 'dashed' | 'dotted',
-                              borderTopColor: (element.style?.borderStyle || 'solid') === style.value ? '#8b5cf6' : '#666'
+                              borderTopColor: (element.style?.borderStyle || 'solid') === style.value ? '#fff' : '#666'
                             }}
                           />
-                          <span className={`mt-1 block text-[10px] ${
-                            (element.style?.borderStyle || 'solid') === style.value
-                              ? 'text-primary-600 font-medium'
-                              : 'text-gray-500'
-                          }`}>
+                          <span className="mt-1 block text-[10px]">
                             {style.label}
                           </span>
-                        </button>
+                        </Button>
                       ))}
                     </div>
-                  </div>
+                  </PropertyRow>
 
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs theme-text-secondary w-20">Pen Width:</label>
-                  <input
+                  <PropertyRow label="Pen Width:" labelWidth="lg">
+                    <Input
                     type="number"
                       value={element.style?.borderWidth ?? 1}
                       onChange={(e) => {
                         const newWidth = parseFloat(e.target.value) || 0
                         onStyleUpdate('borderWidth', newWidth)
                       }}
-                      className="w-24 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    min="0"
-                    max="10"
-                    step="0.5"
-                  />
-                </div>
+                      size="sm"
+                      className="w-24"
+                      min={0}
+                      max={10}
+                      step={0.5}
+                    />
+                  </PropertyRow>
                   
                   {/* Default border styles */}
                   <div className="pt-2">
@@ -3785,12 +3338,11 @@ function GroupPropertiesPanel({
             Group Name
           </label>
         </div>
-        <input
-          type="text"
+        <Input
           value={group.name}
           onChange={(e) => updateGroup(group.id, { name: e.target.value }, location)}
-          className="w-full px-3 py-2 text-sm border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           placeholder="Group name"
+          className="border-purple-300"
         />
       </div>
       
@@ -3799,12 +3351,12 @@ function GroupPropertiesPanel({
         <label className="block text-xs font-semibold theme-text mb-2">
           Print Condition
         </label>
-        <textarea
+        <TextArea
           value={group.printCondition || ''}
           onChange={(e) => updateGroup(group.id, { printCondition: e.target.value }, location)}
-          className="w-full px-3 py-2 text-xs border theme-border rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
           placeholder="Ex: invoice.total > 1000"
           rows={3}
+          className="font-mono"
         />
         <p className="text-xs theme-text-muted mt-1">
           If empty, the group will always print. Use JavaScript expressions like:
@@ -3846,9 +3398,7 @@ function GroupPropertiesPanel({
           }}
           className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm font-medium flex items-center justify-center gap-2"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <Icon name="close" size="sm" />
           Ungroup Elements
         </button>
         <p className="text-xs theme-text-muted mt-2 text-center">
@@ -3933,20 +3483,22 @@ function HeaderPropertiesPanel(): JSX.Element {
   
   if (!template.pageSettings.header) {
     return (
-      <div className="w-[360px] theme-bg-secondary border-l theme-border p-4">
+      <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
+        <PanelHeader title="Header Properties" />
+        <div className="p-4">
         <p className="text-sm theme-text-muted">Header does not exist</p>
+        </div>
       </div>
     )
   }
   
   return (
-    <div className="w-[360px] theme-bg-secondary border-l theme-border p-4 overflow-y-auto">
-      <h2 className="text-sm font-semibold theme-text border-b pb-3 mb-3">
-        Header Properties
-      </h2>
+    <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
+      <PanelHeader title="Header Properties" subtitle="Top of each page" />
       
+      <div className="flex-1 overflow-y-auto p-4">
       {/* Info */}
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
         <div className="flex items-center">
           <svg 
             className="w-4 h-4 mr-2 text-blue-600" 
@@ -3969,16 +3521,12 @@ function HeaderPropertiesPanel(): JSX.Element {
       
       {/* Altura */}
       <div className="mb-4">
-        <label className="block text-xs font-semibold theme-text mb-2">
-          Height (pt)
-        </label>
-        <input
-          type="number"
+        <NumberField
+          label="Height (pt)"
           value={template.pageSettings.header.height}
-          onChange={(e) => updateHeader({ height: parseFloat(e.target.value) || 0 })}
-          className="w-full px-3 py-2 text-xs border theme-border rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          min="0"
-          step="1"
+          onValueChange={(value) => updateHeader({ height: value || 0 })}
+          min={0}
+          step={1}
         />
       </div>
       
@@ -3987,12 +3535,12 @@ function HeaderPropertiesPanel(): JSX.Element {
         <label className="block text-xs font-semibold theme-text mb-2">
           Print Condition
         </label>
-        <textarea
+        <TextArea
           value={template.pageSettings.header.printCondition || ''}
           onChange={(e) => updateHeader({ printCondition: e.target.value || undefined })}
-          className="w-full px-3 py-2 text-xs border theme-border rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
           placeholder="Ex: pageNumber > 1"
           rows={3}
+          className="font-mono"
         />
         <p className="text-xs theme-text-muted mt-1">
           If empty, the header will always print. Use expressions like:
@@ -4001,6 +3549,7 @@ function HeaderPropertiesPanel(): JSX.Element {
           <li><code>pageNumber &gt; 1</code></li>
           <li><code>invoice.showHeader === true</code></li>
         </ul>
+      </div>
       </div>
     </div>
   )
@@ -4014,52 +3563,41 @@ function FooterPropertiesPanel(): JSX.Element {
   
   if (!template.pageSettings.footer) {
     return (
-      <div className="w-[360px] theme-bg-secondary border-l theme-border p-4">
+      <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
+        <PanelHeader title="Footer Properties" />
+        <div className="p-4">
         <p className="text-sm theme-text-muted">Footer does not exist</p>
+        </div>
       </div>
     )
   }
   
   return (
-    <div className="w-[360px] theme-bg-secondary border-l theme-border p-4 overflow-y-auto">
-      <h2 className="text-sm font-semibold theme-text border-b pb-3 mb-3">
-        Footer Properties
-      </h2>
+    <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
+      <PanelHeader title="Footer Properties" subtitle="Bottom of each page" />
       
+      <div className="flex-1 overflow-y-auto p-4">
       {/* Info */}
-      <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+      <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg">
         <div className="flex items-center">
-          <svg 
-            className="w-4 h-4 mr-2 text-orange-600" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <line x1="3" y1="15" x2="21" y2="15" />
-          </svg>
-          <span className="text-xs font-semibold text-orange-800">
+          <Icon name="section" size="sm" className="mr-2 text-orange-600 dark:text-orange-400" />
+          <span className="text-xs font-semibold text-orange-800 dark:text-orange-300">
             Footer
           </span>
         </div>
-        <p className="text-xs text-orange-700 mt-1">
+        <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">
           Footer rendered at the bottom of each page
         </p>
       </div>
       
       {/* Altura */}
       <div className="mb-4">
-        <label className="block text-xs font-semibold theme-text mb-2">
-          Height (pt)
-        </label>
-        <input
-          type="number"
+        <NumberField
+          label="Height (pt)"
           value={template.pageSettings.footer.height}
-          onChange={(e) => updateFooter({ height: parseFloat(e.target.value) || 0 })}
-          className="w-full px-3 py-2 text-xs border theme-border rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          min="0"
-          step="1"
+          onValueChange={(value) => updateFooter({ height: value || 0 })}
+          min={0}
+          step={1}
         />
       </div>
       
@@ -4068,12 +3606,12 @@ function FooterPropertiesPanel(): JSX.Element {
         <label className="block text-xs font-semibold theme-text mb-2">
           Print Condition
         </label>
-        <textarea
+        <TextArea
           value={template.pageSettings.footer.printCondition || ''}
           onChange={(e) => updateFooter({ printCondition: e.target.value || undefined })}
-          className="w-full px-3 py-2 text-xs border theme-border rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono"
           placeholder="Ex: pageNumber > 1"
           rows={3}
+          className="font-mono"
         />
         <p className="text-xs theme-text-muted mt-1">
           If empty, the footer will always print. Use expressions like:
@@ -4082,6 +3620,7 @@ function FooterPropertiesPanel(): JSX.Element {
           <li><code>pageNumber &gt; 1</code></li>
           <li><code>invoice.showFooter === true</code></li>
         </ul>
+      </div>
       </div>
     </div>
   )
@@ -4165,44 +3704,18 @@ function LoopChildEditor({ child, index, loopId, location }: LoopChildEditorProp
   const [isExpanded, setIsExpanded] = useState(false)
   const { updateLoopChildElement, deleteLoopChildElement } = useTemplateStore()
   
-  const getIcon = () => {
-    switch (child.type) {
-      case 'text':
-        return (
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 7h16M9 20v-13M15 20v-13" />
-          </svg>
-        )
-      case 'static_text':
-        return (
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 7h16M9 20v-13M15 20v-13" />
-            <circle cx="18" cy="18" r="3" fill="currentColor" stroke="none" />
-          </svg>
-        )
-      case 'image':
-        return (
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <path d="M21 15l-5-5L5 21" />
-          </svg>
-        )
-      case 'rectangle':
-        return (
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-          </svg>
-        )
-      case 'line':
-        return (
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M5 19l14-14" />
-          </svg>
-        )
-      default:
-        return null
+  const getElementIcon = (type: string) => {
+    const iconMap: Record<string, string> = {
+      text: 'text',
+      static_text: 'static-text',
+      image: 'image',
+      rectangle: 'rectangle',
+      line: 'line',
+      table: 'table',
+      barcode: 'barcode',
+      loop: 'loop',
     }
+    return iconMap[type] || 'rectangle'
   }
   
   return (
@@ -4214,7 +3727,7 @@ function LoopChildEditor({ child, index, loopId, location }: LoopChildEditorProp
       >
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 font-mono">{index + 1}</span>
-          <span className="text-primary-500">{getIcon()}</span>
+          <span className="text-primary-500"><Icon name={getElementIcon(child.type) as any} size="sm" /></span>
           <span className="text-xs font-medium text-gray-700 capitalize">{child.type.replace('_', ' ')}</span>
           {child.value && (
             <span className="text-xs text-gray-400 truncate max-w-[80px]">
@@ -4231,9 +3744,7 @@ function LoopChildEditor({ child, index, loopId, location }: LoopChildEditorProp
             className="p-1 text-red-500 hover:bg-red-100 rounded"
             title="Remove"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            <Icon name="trash" size="xs" />
           </button>
           <svg 
             className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -4251,113 +3762,81 @@ function LoopChildEditor({ child, index, loopId, location }: LoopChildEditorProp
         <div className="p-3 border-t border-gray-100 space-y-3">
           
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-[10px] text-gray-500 mb-1">X</label>
-              <input
-                type="number"
+            <NumberField
+              label="X"
                 value={child.x || 0}
-                onChange={(e) => updateLoopChildElement(loopId, child.id, { x: parseFloat(e.target.value) }, location)}
-                className="w-full px-2 py-1 text-xs border border-gray-200 rounded bg-white text-gray-900"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] text-gray-500 mb-1">Y</label>
-              <input
-                type="number"
+              onValueChange={(value) => updateLoopChildElement(loopId, child.id, { x: value }, location)}
+            />
+            <NumberField
+              label="Y"
                 value={child.y || 0}
-                onChange={(e) => updateLoopChildElement(loopId, child.id, { y: parseFloat(e.target.value) }, location)}
-                className="w-full px-2 py-1 text-xs border border-gray-200 rounded bg-white text-gray-900"
+              onValueChange={(value) => updateLoopChildElement(loopId, child.id, { y: value }, location)}
               />
-            </div>
           </div>
           
           {/* Tamanho (para elementos com width/height) */}
           {(child.type !== 'line') && (
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[10px] text-gray-500 mb-1">Width</label>
-                <input
-                  type="number"
+              <NumberField
+                label="Width"
                   value={child.width || 100}
-                  onChange={(e) => updateLoopChildElement(loopId, child.id, { width: parseFloat(e.target.value) }, location)}
-                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded bg-white text-gray-900"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] text-gray-500 mb-1">Height</label>
-                <input
-                  type="number"
+                onValueChange={(value) => updateLoopChildElement(loopId, child.id, { width: value }, location)}
+              />
+              <NumberField
+                label="Height"
                   value={child.height || 20}
-                  onChange={(e) => updateLoopChildElement(loopId, child.id, { height: parseFloat(e.target.value) }, location)}
-                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded bg-white text-gray-900"
+                onValueChange={(value) => updateLoopChildElement(loopId, child.id, { height: value }, location)}
                 />
-              </div>
             </div>
           )}
           
           {/* Valor (para texto) */}
           {(child.type === 'text' || child.type === 'static_text') && (
-            <div>
-              <label className="block text-[10px] text-gray-500 mb-1">Valor/Binding</label>
-              <input
-                type="text"
+            <div className="space-y-1">
+              <label className="text-[10px] text-gray-500">Valor/Binding</label>
+              <Input
                 value={child.value || ''}
                 onChange={(e) => updateLoopChildElement(loopId, child.id, { value: e.target.value }, location)}
                 placeholder={child.type === 'text' ? 'field' : 'Text'}
-                className="w-full px-2 py-1 text-xs border border-gray-200 rounded font-mono bg-white text-gray-900"
+                size="sm"
+                className="font-mono"
               />
             </div>
           )}
           
-          {/* Linha (x2, y2) */}
+          {/* Linha (width, height) */}
           {child.type === 'line' && (
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[10px] text-gray-500 mb-1">X2</label>
-                <input
-                  type="number"
-                  value={child.x2 || 100}
-                  onChange={(e) => updateLoopChildElement(loopId, child.id, { x2: parseFloat(e.target.value) }, location)}
-                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded bg-white text-gray-900"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] text-gray-500 mb-1">Y2</label>
-                <input
-                  type="number"
-                  value={child.y2 || 0}
-                  onChange={(e) => updateLoopChildElement(loopId, child.id, { y2: parseFloat(e.target.value) }, location)}
-                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded bg-white text-gray-900"
-                />
-              </div>
+              <NumberField
+                label="Width"
+                value={child.width ?? (child.x2 ? child.x2 - child.x : 100)}
+                onValueChange={(value) => updateLoopChildElement(loopId, child.id, { width: value }, location)}
+              />
+              <NumberField
+                label="Height"
+                value={child.height ?? (child.y2 ? child.y2 - child.y : 0)}
+                onValueChange={(value) => updateLoopChildElement(loopId, child.id, { height: value }, location)}
+              />
             </div>
           )}
           
           {/* Font Size (para texto) */}
           {(child.type === 'text' || child.type === 'static_text') && (
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[10px] text-gray-500 mb-1">Font Size</label>
-                <input
-                  type="number"
+              <NumberField
+                label="Font Size"
                   value={child.style?.fontSize || 10}
-                  onChange={(e) => updateLoopChildElement(loopId, child.id, { 
-                    style: { ...child.style, fontSize: parseFloat(e.target.value) } 
+                onValueChange={(value) => updateLoopChildElement(loopId, child.id, { 
+                  style: { ...child.style, fontSize: value } 
                   }, location)}
-                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded bg-white text-gray-900"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] text-gray-500 mb-1">Cor</label>
-                <input
-                  type="color"
+              />
+              <ColorField
+                label="Cor"
                   value={child.style?.color || '#000000'}
-                  onChange={(e) => updateLoopChildElement(loopId, child.id, { 
-                    style: { ...child.style, color: e.target.value } 
+                onValueChange={(value) => updateLoopChildElement(loopId, child.id, { 
+                  style: { ...child.style, color: value } 
                   }, location)}
-                  className="w-full h-7 border border-gray-200 rounded cursor-pointer"
                 />
-              </div>
             </div>
           )}
         </div>
@@ -4475,9 +3954,7 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
               className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-500"
               title="Back to Loop"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <Icon name="arrow-left" size="sm" />
             </button>
             <span className="text-purple-500">{getIcon()}</span>
             <span className="text-sm font-semibold theme-text capitalize">{child.type.replace('_', ' ')}</span>
@@ -4490,9 +3967,7 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
             className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
             title="Delete element"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            <Icon name="trash" size="sm" />
           </button>
         </div>
         
@@ -4502,21 +3977,15 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
       </div>
       
       {/* Tabs */}
-      <div className="flex border-b theme-border flex-shrink-0">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'border-b-2 border-primary-500 text-primary-600'
-                : 'theme-text-secondary hover:theme-text'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <TabBar
+        tabs={tabs.map((tab) => ({
+          id: tab.id,
+          label: tab.label,
+        }))}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        className="border-b theme-border flex-shrink-0"
+      />
       
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -4524,50 +3993,35 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
         {activeTab === 'appearance' && (
           <>
             {/* ID */}
-            <div>
-              <label className="block text-xs font-medium theme-text mb-1">ID</label>
-              <input
-                type="text"
+            <div className="space-y-1 mb-3">
+              <label className="text-xs font-medium theme-text-muted">ID</label>
+              <Input
                 value={child.id}
                 disabled
-                className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-gray-50 text-gray-500"
+                size="sm"
               />
             </div>
             
-            <div className="border-t theme-border my-3"></div>
+            <Divider className="my-3" />
             
-            
-            <div>
-              <h3 className="text-xs font-semibold theme-text mb-2">Position (relative to loop)</h3>
+            <PropertyGroup title="Position (relative to loop)" collapsible={false}>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs theme-text-secondary mb-1">X</label>
-                  <input
-                    type="number"
+                <NumberField
+                  label="X"
                     value={child.x || 0}
-                    onChange={(e) => handleUpdate('x', parseFloat(e.target.value))}
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs theme-text-secondary mb-1">Y</label>
-                  <input
-                    type="number"
+                  onValueChange={(value) => handleUpdate('x', value)}
+                />
+                <NumberField
+                  label="Y"
                     value={child.y || 0}
-                    onChange={(e) => handleUpdate('y', parseFloat(e.target.value))}
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
+                  onValueChange={(value) => handleUpdate('y', value)}
                   />
                 </div>
-              </div>
-            </div>
-            
-            <div className="border-t theme-border my-3"></div>
-            
+            </PropertyGroup>
             
             {child.type !== 'line' && (
               <>
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">Size</h3>
+                <PropertyGroup title="Size" collapsible={false}>
                   {/* Info do tamanho do loop */}
                   <div className="mb-3 p-2 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded text-xs">
                     <span className="text-purple-700 dark:text-purple-300">
@@ -4576,19 +4030,16 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Width</label>
-                      <input
-                        type="number"
-                        value={typeof child.width === 'string' ? '' : (child.width || 100)}
-                        onChange={(e) => handleUpdate('width', parseFloat(e.target.value))}
+                      <NumberField
+                        label="Width"
+                        value={typeof child.width === 'string' ? 0 : (child.width || 100)}
+                        onValueChange={(value) => handleUpdate('width', value)}
                         disabled={child.width === '100%'}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
                       />
                       {child.type === 'rectangle' && (
                         <>
-                          <label className="flex items-center mt-2 cursor-pointer">
-                            <input
-                              type="checkbox"
+                          <Checkbox
+                            id="loop-child-width-100"
                               checked={child.width === '100%'}
                               onChange={(e) => {
                                 if (e.target.checked) {
@@ -4597,10 +4048,9 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
                                   handleUpdate('width', 100)
                                 }
                               }}
-                              className="mr-2 w-3.5 h-3.5"
+                            label="100%"
+                            className="mt-2"
                             />
-                            <span className="text-xs theme-text-secondary">100%</span>
-                          </label>
                           {child.width === '100%' && (
                             <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
                               = {loopWidth}px (loop width)
@@ -4610,19 +4060,16 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Height</label>
-                      <input
-                        type="number"
-                        value={typeof child.height === 'string' ? '' : (child.height || 20)}
-                        onChange={(e) => handleUpdate('height', parseFloat(e.target.value))}
+                      <NumberField
+                        label="Height"
+                        value={typeof child.height === 'string' ? 0 : (child.height || 20)}
+                        onValueChange={(value) => handleUpdate('height', value)}
                         disabled={child.height === '100%'}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
                       />
                       {child.type === 'rectangle' && (
                         <>
-                          <label className="flex items-center mt-2 cursor-pointer">
-                            <input
-                              type="checkbox"
+                          <Checkbox
+                            id="loop-child-height-100"
                               checked={child.height === '100%'}
                               onChange={(e) => {
                                 if (e.target.checked) {
@@ -4631,10 +4078,9 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
                                   handleUpdate('height', 100)
                                 }
                               }}
-                              className="mr-2 w-3.5 h-3.5"
+                            label="100%"
+                            className="mt-2"
                             />
-                            <span className="text-xs theme-text-secondary">100%</span>
-                          </label>
                           {child.height === '100%' && (
                             <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
                               = {loopHeight}px (loop height)
@@ -4644,80 +4090,61 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
                       )}
                     </div>
                   </div>
-                </div>
-                <div className="border-t theme-border my-3"></div>
+                </PropertyGroup>
               </>
             )}
             
-            {/* Linha: Ponto Final */}
+            {/* Linha: Size */}
             {child.type === 'line' && (
-              <>
-                <div>
-                  <h3 className="text-xs font-semibold theme-text mb-2">End Point</h3>
+              <PropertyGroup title="Size" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">X2</label>
-                      <input
-                        type="number"
-                        value={child.x2 || 100}
-                        onChange={(e) => handleUpdate('x2', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
+                  <NumberField
+                    label="Width"
+                    value={child.width ?? (child.x2 ? child.x2 - child.x : 100)}
+                    onValueChange={(value) => handleUpdate('width', value)}
+                  />
+                  <NumberField
+                    label="Height"
+                    value={child.height ?? (child.y2 ? child.y2 - child.y : 0)}
+                    onValueChange={(value) => handleUpdate('height', value)}
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs theme-text-secondary mb-1">Y2</label>
-                      <input
-                        type="number"
-                        value={child.y2 || 0}
-                        onChange={(e) => handleUpdate('y2', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="border-t theme-border my-3"></div>
-              </>
+                <p className="text-xs theme-text-muted mt-2">
+                  Line is drawn from (X, Y) to (X + Width, Y + Height)
+                </p>
+              </PropertyGroup>
             )}
             
             {/* Valor/Texto para texto e static_text */}
             {(child.type === 'text' || child.type === 'static_text') && (
-              <div>
-                <h3 className="text-xs font-semibold theme-text mb-2">
-                  {child.type === 'text' ? 'Data Binding' : 'Texto'}
-                </h3>
-                <textarea
+              <PropertyGroup title={child.type === 'text' ? 'Data Binding' : 'Texto'} collapsible={false}>
+                <TextArea
                   value={child.value || ''}
                   onChange={(e) => handleUpdate('value', e.target.value)}
                   placeholder={child.type === 'text' ? 'field_name' : 'Enter text...'}
-                  className="w-full px-2 py-1.5 text-xs border theme-border rounded font-mono bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
                   rows={3}
+                  className="font-mono"
                 />
                 {child.type === 'text' && (
                   <p className="text-xs theme-text-muted mt-1">
                     Use only the property name (e.g., name, value, price)
                   </p>
                 )}
-              </div>
+              </PropertyGroup>
             )}
             
-            
             {child.type === 'rectangle' && (
-              <div>
-                <h3 className="text-xs font-semibold theme-text mb-2">Color</h3>
+              <PropertyGroup title="Color" collapsible={false}>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs theme-text-secondary">Fill</label>
-                    <input
-                      type="color"
+                  <PropertyRow label="Fill" labelWidth="lg">
+                    <ColorInput
                       value={child.style?.fillColor || '#4a90e2'}
                       onChange={(e) => handleStyleUpdate('fillColor', e.target.value)}
                       disabled={!child.style?.fillColor}
-                      className="w-10 h-8 border theme-border rounded cursor-pointer disabled:opacity-50"
                     />
-                  </div>
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
+                  </PropertyRow>
+                  <Checkbox
+                    id="loop-child-rect-transparent"
                       checked={!child.style?.fillColor}
                       onChange={(e) => {
                         if (e.target.checked) {
@@ -4726,12 +4153,10 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
                           handleStyleUpdate('fillColor', '#4a90e2')
                         }
                       }}
-                      className="mr-2 w-3.5 h-3.5"
+                    label="Transparent"
                     />
-                    <span className="text-xs theme-text-secondary">Transparent</span>
-                  </label>
                 </div>
-              </div>
+              </PropertyGroup>
             )}
           </>
         )}
@@ -4739,85 +4164,70 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
         {/* FONT TAB - Para texto */}
         {activeTab === 'font' && (child.type === 'text' || child.type === 'static_text') && (
           <>
-            <div>
-              <h3 className="text-xs font-semibold theme-text mb-2">Font</h3>
+            <PropertyGroup title="Font" collapsible={false}>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs theme-text-secondary mb-1">Family</label>
-                  <select
+                <div className="space-y-1">
+                  <label className="text-xs font-medium theme-text-muted">Family</label>
+                  <Select
                     value={child.style?.fontFamily || 'Helvetica'}
                     onChange={(e) => handleStyleUpdate('fontFamily', e.target.value)}
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
-                  >
-                    <option value="Helvetica">Helvetica</option>
-                    <option value="Times-Roman">Times Roman</option>
-                    <option value="Courier">Courier</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs theme-text-secondary mb-1">Size</label>
-                  <input
-                    type="number"
-                    value={child.style?.fontSize || 12}
-                    onChange={(e) => handleStyleUpdate('fontSize', parseFloat(e.target.value))}
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
+                    options={[
+                      { value: 'Helvetica', label: 'Helvetica' },
+                      { value: 'Times-Roman', label: 'Times Roman' },
+                      { value: 'Courier', label: 'Courier' },
+                    ]}
                   />
                 </div>
-              </div>
+                <NumberField
+                  label="Size"
+                    value={child.style?.fontSize || 12}
+                  onValueChange={(value) => handleStyleUpdate('fontSize', value)}
+                  />
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs theme-text-secondary mb-1">Weight</label>
-                <select
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium theme-text-muted">Weight</label>
+                  <Select
                   value={child.style?.fontWeight || 'normal'}
                   onChange={(e) => handleStyleUpdate('fontWeight', e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
-                >
-                  <option value="normal">Normal</option>
-                  <option value="bold">Bold</option>
-                </select>
+                    options={[
+                      { value: 'normal', label: 'Normal' },
+                      { value: 'bold', label: 'Bold' },
+                    ]}
+                  />
               </div>
-              <div>
-                <label className="block text-xs theme-text-secondary mb-1">Style</label>
-                <select
+                <div className="space-y-1">
+                  <label className="text-xs font-medium theme-text-muted">Style</label>
+                  <Select
                   value={child.style?.fontStyle || 'normal'}
                   onChange={(e) => handleStyleUpdate('fontStyle', e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
-                >
-                  <option value="normal">Normal</option>
-                  <option value="italic">Italic</option>
-                </select>
+                    options={[
+                      { value: 'normal', label: 'Normal' },
+                      { value: 'italic', label: 'Italic' },
+                    ]}
+                  />
               </div>
             </div>
+            </PropertyGroup>
             
-            <div className="border-t theme-border my-3"></div>
-            
-            <div>
-              <h3 className="text-xs font-semibold theme-text mb-2">Colors</h3>
+            <PropertyGroup title="Colors" collapsible={false}>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs theme-text-secondary">Text</label>
-                  <input
-                    type="color"
+                <PropertyRow label="Text" labelWidth="lg">
+                  <ColorInput
                     value={child.style?.color || '#000000'}
                     onChange={(e) => handleStyleUpdate('color', e.target.value)}
-                    className="w-10 h-8 border theme-border rounded cursor-pointer"
                   />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs theme-text-secondary">Background</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
+                </PropertyRow>
+                <PropertyRow label="Background" labelWidth="lg">
+                  <ColorInput
                       value={child.style?.backgroundColor || '#ffffff'}
                       onChange={(e) => handleStyleUpdate('backgroundColor', e.target.value)}
                       disabled={!child.style?.backgroundColor}
-                      className="w-10 h-8 border theme-border rounded cursor-pointer disabled:opacity-50"
-                    />
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
+                  />
+                </PropertyRow>
+                <Checkbox
+                  id="loop-child-bg-none"
                         checked={!child.style?.backgroundColor}
                         onChange={(e) => {
                           if (e.target.checked) {
@@ -4826,16 +4236,10 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
                             handleStyleUpdate('backgroundColor', '#ffffff')
                           }
                         }}
-                        className="mr-1 w-3 h-3"
+                  label="None"
                       />
-                      <span className="text-[10px] theme-text-muted">None</span>
-                    </label>
                   </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border-t theme-border my-3"></div>
+            </PropertyGroup>
             
             <div>
               <h3 className="text-xs font-semibold theme-text mb-2">Alignment</h3>
@@ -4856,34 +4260,25 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
               </div>
             </div>
             
-            <div className="border-t theme-border my-3"></div>
-            
-            <div>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
+            <PropertyGroup title="Multiline" collapsible={false}>
+              <Checkbox
+                id="loop-child-multiline"
                   checked={child.style?.multiline || false}
                   onChange={(e) => handleStyleUpdate('multiline', e.target.checked)}
-                  className="mr-2 w-3.5 h-3.5"
+                label="Multiline text"
                 />
-                <span className="text-xs theme-text">Multiline text</span>
-              </label>
-            </div>
             
             {child.style?.multiline && (
-              <div>
-                <label className="block text-xs theme-text-secondary mb-1">Line Height</label>
-                <input
-                  type="number"
+                <NumberField
+                  label="Line Height"
                   value={child.style?.lineHeight || 1.2}
-                  onChange={(e) => handleStyleUpdate('lineHeight', parseFloat(e.target.value))}
-                  step="0.1"
-                  min="0.5"
-                  max="3"
-                  className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
+                  onValueChange={(value) => handleStyleUpdate('lineHeight', value)}
+                  step={0.1}
+                  min={0.5}
+                  max={3}
                 />
-              </div>
-            )}
+              )}
+            </PropertyGroup>
           </>
         )}
         
@@ -4908,70 +4303,64 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
               </div>
               
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <label className="text-xs theme-text-secondary w-20">Color:</label>
-                  <input
-                    type="color"
+                <PropertyRow label="Color:" labelWidth="lg">
+                  <ColorInput
                     value={child.style?.borderColor || '#000000'}
                     onChange={(e) => handleStyleUpdate('borderColor', e.target.value)}
-                    className="w-8 h-6 border theme-border rounded cursor-pointer"
                   />
-                </div>
+                </PropertyRow>
                 
-                <div className="flex items-center gap-3">
-                  <label className="text-xs theme-text-secondary w-20">Style:</label>
+                <PropertyRow label="Style:" labelWidth="lg">
                   <div className="flex gap-1 flex-1">
                     {[
                       { value: 'solid', label: 'Solid' },
                       { value: 'dashed', label: 'Dashed' },
                       { value: 'dotted', label: 'Dotted' }
                     ].map((style) => (
-                      <button
+                      <Button
                         key={style.value}
+                        variant={((child.style?.borderStyle || 'solid') === style.value) ? 'primary' : 'outline'}
+                        size="sm"
                         onClick={() => handleStyleUpdate('borderStyle', style.value)}
-                        className={`flex-1 px-2 py-2 text-xs rounded border-2 transition ${
-                          (child.style?.borderStyle || 'solid') === style.value
-                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/20'
-                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
-                        }`}
+                        className="flex-1 flex-col py-2"
                       >
                         <div 
                           className="h-0 mx-auto w-full"
                           style={{ 
                             borderTopWidth: '2px',
                             borderTopStyle: style.value as 'solid' | 'dashed' | 'dotted',
-                            borderTopColor: (child.style?.borderStyle || 'solid') === style.value ? '#8b5cf6' : '#666'
+                            borderTopColor: (child.style?.borderStyle || 'solid') === style.value ? '#fff' : '#666'
                           }}
                         />
                         <span className="mt-1 block text-[10px]">{style.label}</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
-                </div>
+                </PropertyRow>
                 
-                <div className="flex items-center gap-3">
-                  <label className="text-xs theme-text-secondary w-20">Width:</label>
-                  <input
+                <PropertyRow label="Width:" labelWidth="lg">
+                  <Input
                     type="number"
                     value={child.style?.borderWidth ?? 1}
                     onChange={(e) => handleStyleUpdate('borderWidth', parseFloat(e.target.value) || 0)}
-                    className="w-24 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
-                    min="0"
-                    max="10"
-                    step="0.5"
+                    size="sm"
+                    className="w-24"
+                    min={0}
+                    max={10}
+                    step={0.5}
                   />
-                </div>
+                </PropertyRow>
                 
-                <div className="flex items-center gap-3">
-                  <label className="text-xs theme-text-secondary w-20">Radius:</label>
-                  <input
+                <PropertyRow label="Radius:" labelWidth="lg">
+                  <Input
                     type="number"
                     value={child.style?.cornerRadius || 0}
                     onChange={(e) => handleStyleUpdate('cornerRadius', parseFloat(e.target.value))}
-                    className="w-24 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
-                    min="0"
+                    size="sm"
+                    className="w-24"
+                    min={0}
                   />
-                </div>
+                </PropertyRow>
                 
                 {/* Default border styles */}
                 <div className="pt-2">
@@ -5082,119 +4471,107 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
         {/* STYLE TAB - Para linha */}
         {activeTab === 'style' && child.type === 'line' && (
           <>
-            <div>
-              <h3 className="text-xs font-semibold theme-text mb-2">Estilo da Linha</h3>
-              
+            <PropertyGroup title="Estilo da Linha" collapsible={false}>
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <label className="text-xs theme-text-secondary w-20">Color:</label>
-                  <input
-                    type="color"
+                <PropertyRow label="Color:" labelWidth="lg">
+                  <ColorInput
                     value={child.style?.strokeColor || '#000000'}
                     onChange={(e) => handleStyleUpdate('strokeColor', e.target.value)}
-                    className="w-8 h-6 border theme-border rounded cursor-pointer"
                   />
-                </div>
+                </PropertyRow>
                 
-                <div className="flex items-center gap-3">
-                  <label className="text-xs theme-text-secondary w-20">Espessura:</label>
-                  <input
+                <PropertyRow label="Espessura:" labelWidth="lg">
+                  <Input
                     type="number"
                     value={child.style?.strokeWidth || 1}
                     onChange={(e) => handleStyleUpdate('strokeWidth', parseFloat(e.target.value))}
-                    className="w-24 px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
-                    min="0.5"
-                    max="20"
-                    step="0.5"
+                    size="sm"
+                    className="w-24"
+                    min={0.5}
+                    max={20}
+                    step={0.5}
                   />
-                </div>
+                </PropertyRow>
                 
-                <div className="flex items-center gap-3">
-                  <label className="text-xs theme-text-secondary w-20">Style:</label>
+                <PropertyRow label="Style:" labelWidth="lg">
                   <div className="flex gap-1 flex-1">
                     {[
                       { value: 'solid', label: 'Solid' },
                       { value: 'dashed', label: 'Dashed' },
                       { value: 'dotted', label: 'Dotted' }
                     ].map((style) => (
-                      <button
+                      <Button
                         key={style.value}
+                        variant={((child.style?.borderStyle || 'solid') === style.value) ? 'primary' : 'outline'}
+                        size="sm"
                         onClick={() => handleStyleUpdate('borderStyle', style.value)}
-                        className={`flex-1 px-2 py-2 text-xs rounded border-2 transition ${
-                          (child.style?.borderStyle || 'solid') === style.value
-                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/20'
-                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
-                        }`}
+                        className="flex-1 flex-col py-2"
                       >
                         <div 
                           className="h-0 mx-auto w-full"
                           style={{ 
                             borderTopWidth: '2px',
                             borderTopStyle: style.value as 'solid' | 'dashed' | 'dotted',
-                            borderTopColor: (child.style?.borderStyle || 'solid') === style.value ? '#8b5cf6' : '#666'
+                            borderTopColor: (child.style?.borderStyle || 'solid') === style.value ? '#fff' : '#666'
                           }}
                         />
                         <span className="mt-1 block text-[10px]">{style.label}</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
+                </PropertyRow>
                 </div>
-              </div>
-            </div>
+            </PropertyGroup>
           </>
         )}
         
         {/* IMAGE TAB - Para imagem */}
         {activeTab === 'image' && child.type === 'image' && (
-          <>
-            <div>
-              <h3 className="text-xs font-semibold theme-text mb-2">Image Settings</h3>
-              
+          <PropertyGroup title="Image Settings" collapsible={false}>
               <div className="space-y-3">
-                <div>
-                  <label className="block text-xs theme-text-secondary mb-1">Source / Data Binding</label>
-                  <input
-                    type="text"
+              <div className="space-y-1">
+                <label className="text-xs font-medium theme-text-muted">Source / Data Binding</label>
+                <Input
                     value={child.source || ''}
                     onChange={(e) => handleUpdate('source', e.target.value)}
                     placeholder="campo_imagem ou URL"
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded font-mono bg-white text-gray-900 focus:ring-2 focus:ring-primary-500"
+                  size="sm"
+                  className="font-mono"
                   />
                   <p className="text-xs theme-text-muted mt-1">
                     Use o nome do campo ou uma URL direta
                   </p>
                 </div>
                 
-                <div>
-                  <label className="block text-xs theme-text-secondary mb-1">Fit (Ajuste)</label>
-                  <select
+              <div className="space-y-1">
+                <label className="text-xs font-medium theme-text-muted">Fit (Ajuste)</label>
+                <Select
                     value={child.fit || 'contain'}
                     onChange={(e) => handleUpdate('fit', e.target.value)}
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
-                  >
-                    <option value="contain">Contain (maintain aspect ratio, fit)</option>
-                    <option value="cover">Cover (cobrir, cortar)</option>
-                    <option value="fill">Fill (esticar)</option>
-                  </select>
+                  options={[
+                    { value: 'contain', label: 'Contain (maintain aspect ratio, fit)' },
+                    { value: 'cover', label: 'Cover (cobrir, cortar)' },
+                    { value: 'fill', label: 'Fill (esticar)' },
+                  ]}
+                />
                 </div>
                 
-                <div>
-                  <label className="block text-xs theme-text-secondary mb-1">Alignment</label>
-                  <select
+              <div className="space-y-1">
+                <label className="text-xs font-medium theme-text-muted">Alignment</label>
+                <Select
                     value={child.alignment || 'center'}
                     onChange={(e) => handleUpdate('alignment', e.target.value)}
-                    className="w-full px-2 py-1.5 text-xs border theme-border rounded bg-white text-gray-900"
-                  >
-                    <option value="center">Centro</option>
-                    <option value="top">Topo</option>
-                    <option value="bottom">Baixo</option>
-                    <option value="left">Esquerda</option>
-                    <option value="right">Direita</option>
-                  </select>
+                  options={[
+                    { value: 'center', label: 'Centro' },
+                    { value: 'top', label: 'Topo' },
+                    { value: 'bottom', label: 'Baixo' },
+                    { value: 'left', label: 'Esquerda' },
+                    { value: 'right', label: 'Direita' },
+                  ]}
+                />
                 </div>
               </div>
-            </div>
-          </>
+          </PropertyGroup>
         )}
       </div>
     </div>

@@ -210,12 +210,7 @@ class HeaderFooterPageEvent(
             is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
             is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
             is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(
-                x = adjustedX,
-                y = adjustedY,
-                x2 = adjustedX + (element.x2 - element.x),
-                y2 = adjustedY + (element.y2 - element.y)
-            )
+            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
             else -> element
         }
     }
@@ -234,12 +229,7 @@ class HeaderFooterPageEvent(
             is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
             is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
             is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(
-                x = adjustedX,
-                y = adjustedY,
-                x2 = adjustedX + (element.x2 - element.x),
-                y2 = adjustedY + (element.y2 - element.y)
-            )
+            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
             else -> element
         }
     }
@@ -256,16 +246,7 @@ class HeaderFooterPageEvent(
             is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
             is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
             is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> {
-                val deltaX = element.x2 - element.x
-                val deltaY = element.y2 - element.y
-                element.copy(
-                    x = adjustedX,
-                    y = adjustedY,
-                    x2 = adjustedX + deltaX,
-                    y2 = adjustedY + deltaY
-                )
-            }
+            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
             else -> element
         }
     }

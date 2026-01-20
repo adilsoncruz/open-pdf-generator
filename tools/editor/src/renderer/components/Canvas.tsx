@@ -1,6 +1,8 @@
 import { useState, useEffect, type MouseEvent, type CSSProperties } from 'react'
 import { useTemplateStore, type Element, type ElementLocation } from '../store/templateStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
+import { Select, Button, Divider } from './atoms'
+import { IconButton } from './molecules'
 
 // Component to render Loop child elements
 interface LoopChildElementProps {
@@ -124,23 +126,37 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
           />
         )
       case 'line':
-        const x2 = child.x2 || 100
-        const y2 = child.y2 || 0
-        const lineWidth = Math.abs(x2 - child.x) || 100
-        const lineHeight = Math.abs(y2 - child.y) || 1
+        // Support both new (width/height) and legacy (x2/y2) formats, including "100%"
+        const lineChildWidthRaw = child.width ?? (child.x2 ? child.x2 - child.x : 100)
+        const lineChildHeightRaw = child.height ?? (child.y2 ? child.y2 - child.y : 0)
+        const lineChildWidth = typeof lineChildWidthRaw === 'string' ? resolveWidth(lineChildWidthRaw) : lineChildWidthRaw
+        const lineChildHeight = typeof lineChildHeightRaw === 'string' ? resolveHeight(lineChildHeightRaw) : lineChildHeightRaw
+        const childStrokeWidth = child.style?.strokeWidth || 1
+        
+        // SVG must be large enough to contain the stroke
+        const svgChildWidth = Math.max(Math.abs(lineChildWidth), childStrokeWidth)
+        const svgChildHeight = Math.max(Math.abs(lineChildHeight), childStrokeWidth)
+        
+        // Calculate line coordinates with stroke offset
+        const childStrokeOffset = childStrokeWidth / 2
+        const childLineX1 = lineChildWidth >= 0 ? childStrokeOffset : svgChildWidth - childStrokeOffset
+        const childLineY1 = lineChildHeight >= 0 ? childStrokeOffset : svgChildHeight - childStrokeOffset
+        const childLineX2 = lineChildWidth >= 0 ? svgChildWidth - childStrokeOffset : childStrokeOffset
+        const childLineY2 = lineChildHeight >= 0 ? svgChildHeight - childStrokeOffset : childStrokeOffset
+        
         return (
           <svg 
-            width={lineWidth} 
-            height={Math.max(lineHeight, 2)} 
+            width={svgChildWidth} 
+            height={svgChildHeight} 
             style={{ overflow: 'visible' }}
           >
             <line 
-              x1="0" 
-              y1="0" 
-              x2={x2 - child.x} 
-              y2={y2 - child.y} 
+              x1={childLineX1}
+              y1={childLineY1}
+              x2={childLineX2}
+              y2={childLineY2}
               stroke={child.style?.strokeColor || '#000000'}
-              strokeWidth={child.style?.strokeWidth || 1}
+              strokeWidth={childStrokeWidth}
             />
           </svg>
         )
@@ -281,7 +297,63 @@ export default function Canvas() {
   }, [])
 
   return (
-    <div className="flex-1 flex flex-col theme-bg relative">
+    <div className="flex-1 flex flex-col theme-bg relative overflow-hidden">
+      {/* Zoom Controls - Fixed at bottom (outside scrollable area) */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 theme-surface rounded-xl shadow-lg border theme-border p-2 flex items-center gap-2">
+        <IconButton
+          icon="zoom-out"
+          iconSize="md"
+          onClick={handleZoomOut}
+          tooltip="Zoom Out (Ctrl+-)"
+          className="hover:bg-primary-500/20"
+        />
+        
+        <Select
+          value={zoom}
+          onChange={(e) => setZoom(Number(e.target.value))}
+          size="sm"
+          className="w-20"
+          options={[
+            { value: '25', label: '25%' },
+            { value: '50', label: '50%' },
+            { value: '75', label: '75%' },
+            { value: '100', label: '100%' },
+            { value: '125', label: '125%' },
+            { value: '150', label: '150%' },
+            { value: '175', label: '175%' },
+            { value: '200', label: '200%' },
+          ]}
+        />
+        
+        <IconButton
+          icon="zoom-in"
+          iconSize="md"
+          onClick={handleZoomIn}
+          tooltip="Zoom In (Ctrl++)"
+          className="hover:bg-primary-500/20"
+        />
+        
+        <Divider orientation="vertical" className="h-6 mx-1" />
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleZoomFit}
+          title="Fit to Screen"
+        >
+          Fit
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleZoomReset}
+          title="Actual Size (100%)"
+        >
+          100%
+        </Button>
+      </div>
+      
       {/* Scrollable content area */}
       <div className="flex-1 overflow-auto p-8">
         <div className="inline-block min-w-full min-h-full">
@@ -463,7 +535,7 @@ export default function Canvas() {
                   height: pageSize.height,
                 }}
               >
-                {/* Background da Summary (se existir) */}
+                {/* Background da Summary (se existir) - renderiza na página inteira */}
                 {template.summaryPage.background?.elements
                   ?.filter((element) => !element.hidden)
                   .map((element) => (
@@ -483,25 +555,36 @@ export default function Canvas() {
                     />
                   ))}
 
-                {/* Elementos da Summary */}
-                {template.summaryPage.elements
-                  .filter((element) => !element.hidden)
-                  .map((element) => (
-                    <CanvasElement
-                      key={element.id}
-                      element={element}
-                      isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
-                      onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
-                      onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
-                      margins={margins}
-                      pageSize={pageSize}
-                      selectedElementIds={selectedElementIds}
-                      selectedElementLocation={selectedElementLocation}
-                      allElements={template.summaryPage.elements}
-                      onUpdateMultiple={(deltaX, deltaY) => {}}
-                      updateElement={updateElement}
-                    />
-                  ))}
+                {/* Container com offset das margens para elementos da Summary */}
+                <div
+                  className="absolute"
+                  style={{
+                    left: margins.left,
+                    top: margins.top,
+                    right: margins.right,
+                    bottom: margins.bottom,
+                  }}
+                >
+                  {/* Elementos da Summary */}
+                  {template.summaryPage.elements
+                    .filter((element) => !element.hidden)
+                    .map((element) => (
+                      <CanvasElement
+                        key={element.id}
+                        element={element}
+                        isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
+                        onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
+                        onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
+                        margins={margins}
+                        pageSize={pageSize}
+                        selectedElementIds={selectedElementIds}
+                        selectedElementLocation={selectedElementLocation}
+                        allElements={template.summaryPage.elements}
+                        onUpdateMultiple={(deltaX, deltaY) => {}}
+                        updateElement={updateElement}
+                      />
+                    ))}
+                </div>
 
                 {/* Margin guides - Linhas mostrando as margens */}
                 <svg
@@ -1052,58 +1135,6 @@ export default function Canvas() {
         {/* Fim do wrapper para scroll */}
       </div>
       </div>
-      
-      {/* Zoom Controls - Fixed at bottom */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 theme-surface rounded-xl shadow-lg border theme-border p-2 flex items-center gap-2">
-        <button
-          onClick={handleZoomOut}
-          className="p-2 hover:bg-primary-500/20 rounded-lg transition theme-text"
-          title="Zoom Out"
-        >
-          <span className="text-lg whitespace-nowrap">🔍−</span>
-        </button>
-        
-        <select
-          value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
-          className="px-2 py-1 text-sm input"
-        >
-          <option value={25}>25%</option>
-          <option value={50}>50%</option>
-          <option value={75}>75%</option>
-          <option value={100}>100%</option>
-          <option value={125}>125%</option>
-          <option value={150}>150%</option>
-          <option value={175}>175%</option>
-          <option value={200}>200%</option>
-        </select>
-        
-        <button
-          onClick={handleZoomIn}
-          className="p-2 hover:bg-primary-500/20 rounded-lg transition theme-text"
-          title="Zoom In"
-        >
-          <span className="text-lg whitespace-nowrap">🔍+</span>
-        </button>
-        
-        <div className="w-px h-6 theme-border mx-1"></div>
-        
-        <button
-          onClick={handleZoomFit}
-          className="px-2 py-1 text-xs hover:bg-primary-500/20 rounded-lg transition theme-text-secondary"
-          title="Fit to Screen"
-        >
-          Fit
-        </button>
-        
-        <button
-          onClick={handleZoomReset}
-          className="px-2 py-1 text-xs hover:bg-primary-500/20 rounded-lg transition theme-text-secondary"
-          title="Actual Size (100%)"
-        >
-          100%
-        </button>
-      </div>
     </div>
   )
 }
@@ -1650,30 +1681,81 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         )
 
       case 'line':
-        const lineWidth = Math.abs(element.x2 - element.x)
-        const lineHeight = Math.abs(element.y2 - element.y)
+        // Get container dimensions for resolving "100%"
+        const getLineElementLocation = () => {
+          if (template.pageSettings.header?.elements.some(e => e.id === element.id)) return 'header'
+          if (template.pageSettings.footer?.elements.some(e => e.id === element.id)) return 'footer'
+          if (template.pageSettings.bodyBackground?.elements.some(e => e.id === element.id)) return 'bodyBackground'
+          if (template.summaryPage?.elements.some(e => e.id === element.id)) return 'summary'
+          return 'body'
+        }
         
-        const svgWidth = Math.max(lineWidth, 1)
-        const svgHeight = Math.max(lineHeight, 1)
+        const getLineContainerDimensions = () => {
+          const contentWidth = pageSize.width - margins.left - margins.right
+          const contentHeight = pageSize.height - margins.top - margins.bottom
+          const lineLocation = getLineElementLocation()
+          
+          if (lineLocation === 'header') {
+            return { width: contentWidth, height: template.pageSettings.header?.height || 100 }
+          } else if (lineLocation === 'footer') {
+            return { width: contentWidth, height: template.pageSettings.footer?.height || 100 }
+          } else if (lineLocation === 'bodyBackground' || lineLocation === 'summary') {
+            return { width: contentWidth, height: contentHeight }
+          } else {
+            const bodyHeight = contentHeight - 
+              (template.pageSettings.header?.height || 0) - 
+              (template.pageSettings.footer?.height || 0)
+            return { width: contentWidth, height: bodyHeight }
+          }
+        }
+        
+        const resolveLineDimension = (value: any, containerSize: number, defaultValue: number = 100) => {
+          if (typeof value === 'string' && value.endsWith('%')) {
+            const percentage = parseFloat(value)
+            return (containerSize * percentage) / 100
+          }
+          return typeof value === 'number' ? value : defaultValue
+        }
+        
+        const lineContainerDims = getLineContainerDimensions()
+        
+        // Support both new (width/height) and legacy (x2/y2) formats, including "100%"
+        const lineElWidthRaw = element.width ?? (element.x2 ? element.x2 - element.x : 100)
+        const lineElHeightRaw = element.height ?? (element.y2 ? element.y2 - element.y : 0)
+        const lineElWidth = resolveLineDimension(lineElWidthRaw, lineContainerDims.width, 100)
+        const lineElHeight = resolveLineDimension(lineElHeightRaw, lineContainerDims.height, 0)
+        const lineStrokeWidth = element.style?.strokeWidth || 1
+        
+        // SVG must be large enough to contain the stroke
+        const svgElWidth = Math.max(Math.abs(lineElWidth), lineStrokeWidth)
+        const svgElHeight = Math.max(Math.abs(lineElHeight), lineStrokeWidth)
+        
+        // Calculate line coordinates with stroke offset
+        const strokeOffset = lineStrokeWidth / 2
+        const lineX1 = lineElWidth >= 0 ? strokeOffset : svgElWidth - strokeOffset
+        const lineY1 = lineElHeight >= 0 ? strokeOffset : svgElHeight - strokeOffset
+        const lineX2 = lineElWidth >= 0 ? svgElWidth - strokeOffset : strokeOffset
+        const lineY2 = lineElHeight >= 0 ? svgElHeight - strokeOffset : strokeOffset
         
         return (
           <svg
             className={`cursor-move select-none ${isSelected ? 'ring-2 ring-primary-500' : ''}`}
             style={{
-              width: svgWidth,
-              height: svgHeight,
-              minWidth: '1px',
-              minHeight: '1px',
+              width: svgElWidth,
+              height: svgElHeight,
+              // Offset position to account for stroke centering
+              marginLeft: lineElHeight === 0 ? 0 : -strokeOffset,
+              marginTop: lineElWidth === 0 ? 0 : -strokeOffset,
             }}
             onMouseDown={handleMouseDown}
           >
             <line
-              x1={element.x < element.x2 ? 0 : lineWidth}
-              y1={element.y < element.y2 ? 0 : lineHeight}
-              x2={element.x < element.x2 ? lineWidth : 0}
-              y2={element.y < element.y2 ? lineHeight : 0}
+              x1={lineX1}
+              y1={lineY1}
+              x2={lineX2}
+              y2={lineY2}
               stroke={element.style?.strokeColor || '#000000'}
-              strokeWidth={element.style?.strokeWidth || 1}
+              strokeWidth={lineStrokeWidth}
             />
           </svg>
         )

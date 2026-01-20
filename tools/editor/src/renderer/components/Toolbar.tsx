@@ -1,9 +1,11 @@
-import { useState, forwardRef, useImperativeHandle, useRef, useEffect, useCallback } from 'react'
+import { useState, forwardRef, useImperativeHandle, useEffect, useCallback } from 'react'
 import { useTemplateStore } from '../store/templateStore'
 import { useUIStore } from '../store/uiStore'
 import { usePreviewStore } from '../store/previewStore'
 import { UpdateNotification } from './UpdateNotification'
 import { useTranslation } from '../i18n'
+import { Icon, Badge, Button } from './atoms'
+import { MenuItem, DropdownMenu, IconButton } from './molecules'
 
 // CLI status interface
 interface CLIStatus {
@@ -14,62 +16,6 @@ interface CLIStatus {
   javaInstalled: boolean
   javaVersion: string | null
 }
-
-// Minimalist SVG icons
-const DataIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-  </svg>
-)
-
-const SettingsIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-  </svg>
-)
-
-const FileTextIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-  </svg>
-)
-
-const SunIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="5" />
-    <line x1="12" y1="1" x2="12" y2="3" />
-    <line x1="12" y1="21" x2="12" y2="23" />
-    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-    <line x1="1" y1="12" x2="3" y2="12" />
-    <line x1="21" y1="12" x2="23" y2="12" />
-    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-  </svg>
-)
-
-const MoonIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-  </svg>
-)
-
-// Preview Icon
-const PreviewIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-)
-
-const SplitIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-    <line x1="12" y1="3" x2="12" y2="21" />
-  </svg>
-)
 
 interface ToolbarProps {
   onToggleDataPanel: () => void
@@ -108,7 +54,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   const [cliStatus, setCLIStatus] = useState<CLIStatus | null>(null)
   const [isInstallingCLI, setIsInstallingCLI] = useState(false)
   const [installError, setInstallError] = useState<string | null>(null)
-  const fileMenuRef = useRef<HTMLDivElement>(null)
   
   // Check if test data exists
   const hasTestData = testData && Object.keys(testData).length > 0
@@ -126,18 +71,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   useEffect(() => {
     checkCLIStatus()
   }, [checkCLIStatus])
-  
-  // Close menu on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (fileMenuRef.current && !fileMenuRef.current.contains(event.target as Node)) {
-        setShowFileMenu(false)
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
   
   // Map error codes to translated messages
   const getErrorMessage = useCallback((errorCode?: string): string => {
@@ -231,43 +164,54 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
       if (!confirmed) return
     }
 
-    const result = await window.electronAPI.openFile()
-    if (result) {
+    // Loop to keep file dialog open until valid template or user cancels
+    let keepTrying = true
+    while (keepTrying) {
+      const result = await window.electronAPI.openFile()
+      
+      if (!result) {
+        // User cancelled the file dialog
+        break
+      }
+      
       try {
         // First, try to parse JSON to catch syntax errors
         const loadedTemplate = JSON.parse(result.content)
         
-        // Validate template using CLI (if available)
+        // Always do basic structural validation first (CLI may not validate structure properly)
+        let structuralError = ''
+        if (!loadedTemplate.version) {
+          structuralError = t.validation.missingVersion
+        } else if (!loadedTemplate.pageSettings) {
+          structuralError = t.validation.missingPageSettings
+        } else if (!loadedTemplate.elements && !loadedTemplate.pageElements) {
+          structuralError = t.validation.missingElements
+        }
+        
+        if (structuralError) {
+          keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${structuralError}\n\n${t.validation.selectAnotherFile}`)
+          continue
+        }
+        
+        // Validate template using CLI (if available) for deeper validation
         const validation = await window.electronAPI.validateTemplate(result.path)
         
         if (!validation.valid) {
-          // Check if CLI is available - if not, do basic validation
-          if (validation.errorCode === 'CLI_NOT_INSTALLED' || validation.errorCode === 'JAVA_NOT_INSTALLED') {
-            // CLI not available, do basic structural validation
-            if (!loadedTemplate.version) {
-              alert(`${t.validation.invalidTemplate}\n\n${t.validation.missingVersion}`)
-              return
-            }
-            if (!loadedTemplate.pageSettings) {
-              alert(`${t.validation.invalidTemplate}\n\n${t.validation.missingPageSettings}`)
-              return
-            }
-            if (!loadedTemplate.elements && !loadedTemplate.pageElements) {
-              alert(`${t.validation.invalidTemplate}\n\n${t.validation.missingElements}`)
-              return
-            }
-          } else {
-            // CLI validation failed - show error
-            const errorDetails = validation.cliError || t.validation.invalidTemplateHint
-            alert(`${t.validation.invalidTemplate}\n\n${errorDetails}`)
-            return
+          // CLI validation failed - show friendly error message
+          if (validation.errorCode !== 'CLI_NOT_INSTALLED' && validation.errorCode !== 'JAVA_NOT_INSTALLED') {
+            keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${t.validation.templateValidationFailed}\n\n${t.validation.selectAnotherFile}`)
+            continue
           }
+          // If CLI not installed, we already did structural validation above, so proceed
         }
         
+        // Valid template - load it and exit loop
         setTemplate(loadedTemplate)
         setCurrentFilePath(result.path)
+        keepTrying = false
       } catch (error) {
-        alert(`${t.validation.invalidTemplate}\n\n${t.validation.invalidJson}: ${(error as Error).message}`)
+        // JSON parse error - show friendly message and ask to try again
+        keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${t.validation.invalidJson}\n\n${t.validation.selectAnotherFile}`)
       }
     }
   }
@@ -403,98 +347,56 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-glow-sm">
-            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <path d="M14 2v6h6" />
-            </svg>
+            <Icon name="file-text" size="md" className="text-white" />
           </div>
           <h1 className="text-lg font-semibold theme-text">
             PDF Template Editor
           </h1>
         </div>
 
-        {/* Menu Arquivo */}
-        <div className="relative" ref={fileMenuRef}>
-          <button
-            onClick={() => setShowFileMenu(!showFileMenu)}
-            className="px-3 py-1.5 text-sm theme-text-secondary hover:theme-surface-hover rounded transition flex items-center gap-2"
-            title={currentFilePath || t.toolbar.file}
-          >
-            {currentFilePath ? (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span className="max-w-[200px] truncate">{currentFilePath.split('/').pop()}</span>
-              </>
-            ) : (
-              t.toolbar.file
-            )}
-          </button>
-          
-          {showFileMenu && (
-            <div className="absolute left-0 top-full mt-1 w-48 theme-surface border theme-border rounded-lg shadow-lg z-50">
-              <button
-                onClick={() => {
-                  handleNew()
-                  setShowFileMenu(false)
-                }}
-                className="w-full text-left px-4 py-2 text-sm theme-text hover:bg-primary-500/10 flex items-center justify-between transition"
-              >
-                <span>{t.toolbar.new}</span>
-                <span className="text-xs theme-text-muted">Ctrl+N</span>
-              </button>
-              <button
-                onClick={() => {
-                  handleOpen()
-                  setShowFileMenu(false)
-                }}
-                className="w-full text-left px-4 py-2 text-sm theme-text hover:bg-primary-500/10 flex items-center justify-between transition"
-              >
-                <span>{t.toolbar.open}</span>
-                <span className="text-xs theme-text-muted">Ctrl+O</span>
-              </button>
-              <div className="border-t theme-border my-1"></div>
-              <button
-                onClick={() => {
-                  handleSave()
-                  setShowFileMenu(false)
-                }}
-                className="w-full text-left px-4 py-2 text-sm theme-text hover:bg-primary-500/10 flex items-center justify-between transition"
-              >
-                <span>{t.toolbar.save}</span>
-                <span className="text-xs theme-text-muted">Ctrl+S</span>
-              </button>
-              <button
-                onClick={() => {
-                  handleSaveAs()
-                  setShowFileMenu(false)
-                }}
-                className="w-full text-left px-4 py-2 text-sm theme-text hover:bg-primary-500/10 flex items-center justify-between transition"
-              >
-                <span>{t.toolbar.saveAs}</span>
-                <span className="text-xs theme-text-muted">Ctrl+Shift+S</span>
-              </button>
-              <div className="border-t theme-border my-1"></div>
-              <button
-                onClick={() => {
-                  handleExport()
-                  setShowFileMenu(false)
-                }}
-                className="w-full text-left px-4 py-2 text-sm theme-text hover:bg-primary-500/10 transition"
-              >
-                {t.toolbar.export}
-              </button>
-            </div>
-          )}
-        </div>
+        {/* File Menu */}
+        <DropdownMenu
+          isOpen={showFileMenu}
+          onOpenChange={setShowFileMenu}
+          trigger={
+            <button
+              className="px-3 py-1.5 text-sm theme-text-secondary hover:theme-surface-hover rounded transition flex items-center gap-2"
+              title={currentFilePath || t.toolbar.file}
+            >
+              {currentFilePath ? (
+                <>
+                  <Icon name="file-text" size="sm" />
+                  <span className="max-w-[200px] truncate">{currentFilePath.split('/').pop()}</span>
+                </>
+              ) : (
+                t.toolbar.file
+              )}
+            </button>
+          }
+        >
+          <MenuItem shortcut="Ctrl+N" onClick={() => { handleNew(); setShowFileMenu(false) }}>
+            {t.toolbar.new}
+          </MenuItem>
+          <MenuItem shortcut="Ctrl+O" onClick={() => { handleOpen(); setShowFileMenu(false) }}>
+            {t.toolbar.open}
+          </MenuItem>
+          <div className="border-t theme-border my-1" />
+          <MenuItem shortcut="Ctrl+S" onClick={() => { handleSave(); setShowFileMenu(false) }}>
+            {t.toolbar.save}
+          </MenuItem>
+          <MenuItem shortcut="Ctrl+Shift+S" onClick={() => { handleSaveAs(); setShowFileMenu(false) }}>
+            {t.toolbar.saveAs}
+          </MenuItem>
+          <div className="border-t theme-border my-1" />
+          <MenuItem onClick={() => { handleExport(); setShowFileMenu(false) }}>
+            {t.toolbar.export}
+          </MenuItem>
+        </DropdownMenu>
 
         <div className="flex items-center space-x-2">
           {/* Changes status */}
           {isDirty && (
-            <span className="badge badge-warning">
-              • {t.common.unsaved}
-            </span>
+            <Badge variant="warning">• {t.common.unsaved}</Badge>
           )}
         </div>
         
@@ -505,66 +407,57 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
       <div className="flex items-center space-x-3">
         {/* CLI Status Indicator */}
         {cliStatus && !cliStatus.installed && (
-          <button
+          <Button
             onClick={() => setShowCLIModal(true)}
-            className="px-3 py-1.5 text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 rounded-lg flex items-center gap-2 hover:bg-yellow-500/30 transition"
+            variant="ghost"
+            leftIcon={<Icon name="warning" size="sm" />}
+            className="px-3 py-1.5 text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30"
             title={t.toolbar.cliNotInstalled}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
             {t.toolbar.cliNotInstalled}
-          </button>
+          </Button>
         )}
         
         {/* 4. Preview Toggle Button */}
         {onTogglePreview && (
-          <button
+          <Button
             onClick={onTogglePreview}
-            className={`px-4 py-2 text-sm flex items-center gap-2 transition-all ${
-              effectivePreviewMode !== 'hidden'
-                ? 'btn-primary'
-                : 'btn-secondary'
-            }`}
+            variant={effectivePreviewMode !== 'hidden' ? 'primary' : 'secondary'}
+            leftIcon={<Icon name={effectivePreviewMode === 'split' ? 'split' : 'preview'} size="sm" />}
             title={`${t.toolbar.preview} (Ctrl+Shift+P)`}
           >
-            {effectivePreviewMode === 'split' ? <SplitIcon /> : <PreviewIcon />}
             {t.toolbar.preview}
-          </button>
+          </Button>
         )}
         
         {/* 3. Test Data */}
-        <button
+        <Button
           onClick={onToggleDataPanel}
-          className="px-4 py-2 text-sm btn-secondary flex items-center gap-2"
+          variant="secondary"
+          leftIcon={<Icon name="data" size="sm" />}
         >
-          <DataIcon />
           {t.toolbar.testData}
-        </button>
+        </Button>
 
         <div className="w-px h-8 theme-border"></div>
         
         {/* 2. Theme Toggle */}
-        <button
+        <IconButton
+          icon={theme === 'dark' ? 'sun' : 'moon'}
+          iconSize="md"
           onClick={toggleTheme}
-          className="w-10 h-10 rounded-lg theme-surface border theme-border hover:border-primary-500 transition-all flex items-center justify-center group"
-          title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-        >
-          {theme === 'dark' ? (
-            <SunIcon />
-          ) : (
-            <MoonIcon />
-          )}
-        </button>
+          tooltip={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          className="w-10 h-10 theme-surface border theme-border hover:border-primary-500"
+        />
         
         {/* 1. Settings Button */}
-        <button
+        <IconButton
+          icon="settings"
+          iconSize="md"
           onClick={() => setShowCLIModal(true)}
-          className="w-10 h-10 rounded-lg theme-surface border theme-border hover:border-primary-500 transition-all flex items-center justify-center group"
-          title={t.toolbar.settings}
-        >
-          <SettingsIcon />
-        </button>
+          tooltip={t.toolbar.settings}
+          className="w-10 h-10 theme-surface border theme-border hover:border-primary-500"
+        />
       </div>
       
       {/* CLI Installation Modal */}
@@ -660,39 +553,34 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
                   </p>
                   
                   <div className="flex flex-col gap-2">
-                    <button
+                    <Button
                       onClick={handleInstallCLI}
                       disabled={isInstallingCLI}
-                      className="w-full px-4 py-3 btn-primary flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {isInstallingCLI ? (
-                        <>
+                      variant="primary"
+                      className="w-full py-3"
+                      leftIcon={
+                        isInstallingCLI ? (
                           <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
-                          {t.settings.installing}
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                          {t.settings.installAutomatically}
-                        </>
-                      )}
-                    </button>
+                        ) : (
+                          <Icon name="download" size="sm" />
+                        )
+                      }
+                    >
+                      {isInstallingCLI ? t.settings.installing : t.settings.installAutomatically}
+                    </Button>
                     
-                    <button
+                    <Button
                       onClick={handleInstallCLIFromFile}
                       disabled={isInstallingCLI}
-                      className="w-full px-4 py-3 btn-secondary flex items-center justify-center gap-2 disabled:opacity-50"
+                      variant="secondary"
+                      className="w-full py-3"
+                      leftIcon={<Icon name="file-text" size="sm" />}
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
                       {t.settings.selectJarFile}
-                    </button>
+                    </Button>
                   </div>
                   
                   <p className="text-xs theme-text-muted">
@@ -767,18 +655,18 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
             
             {/* Footer */}
             <div className="px-6 py-4 border-t theme-border flex justify-end gap-3">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => checkCLIStatus()}
-                className="px-4 py-2 btn-secondary"
               >
                 {t.settings.refreshStatus}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 onClick={() => setShowCLIModal(false)}
-                className="px-4 py-2 btn-primary"
               >
                 {t.common.close}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -261,6 +261,8 @@ const en: Translations = {
     missingElements: 'Missing "elements" or "pageElements" field.',
     invalidJson: 'Invalid JSON format.',
     validTemplate: 'Template is valid.',
+    templateValidationFailed: 'The selected file is not a valid PDF template. Please check if the file follows the correct format.',
+    selectAnotherFile: 'Would you like to select another file?',
   },
 
   confirmations: {

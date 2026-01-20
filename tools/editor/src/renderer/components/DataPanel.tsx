@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 're
 import { useTemplateStore } from '../store/templateStore'
 import { usePreviewStore } from '../store/previewStore'
 import { useTranslation } from '../i18n'
+import { Button, Input, Icon } from './atoms'
 
 interface DataPanelProps {
   onClose: () => void
@@ -386,37 +387,33 @@ export default function DataPanel({ onClose }: DataPanelProps) {
           </p>
 
           <div className="flex gap-2 mb-4 flex-wrap flex-shrink-0">
-            <button
+            <Button
               onClick={handleLoadFromFile}
-              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+              variant="primary"
+              size="sm"
+              className="bg-green-600 hover:bg-green-700"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
-              </svg>
+              <Icon name="folder" size="sm" />
               {t.dataPanel.loadFile}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleFormat}
               disabled={!isValid}
-              className="px-3 py-1.5 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              title={t.dataPanel.format}
+              variant="secondary"
+              size="sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-              </svg>
+              <Icon name="settings" size="sm" />
               {t.dataPanel.format}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleMinify}
               disabled={!isValid}
-              className="px-3 py-1.5 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              title={t.dataPanel.minify}
+              variant="secondary"
+              size="sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
+              <Icon name="code" size="sm" />
               {t.dataPanel.minify}
-            </button>
+            </Button>
           </div>
 
           {/* Editor container with line numbers - altura fixa */}
@@ -579,18 +576,18 @@ export default function DataPanel({ onClose }: DataPanelProps) {
         </div>
 
         <div className="px-6 py-4 border-t theme-border flex justify-end space-x-2">
-          <button
+          <Button
             onClick={onClose}
-            className="btn-secondary"
+            variant="secondary"
           >
             {t.common.cancel}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleApply}
-            className="btn-primary"
+            variant="primary"
           >
             {t.common.apply}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

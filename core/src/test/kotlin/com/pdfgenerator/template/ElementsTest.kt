@@ -88,18 +88,56 @@ class ElementsTest {
     }
     
     @Test
-    fun `should create LineElement with coordinates`() {
+    fun `should create LineElement with width and height`() {
         val element = LineElement(
             id = "line1",
             x = 50f,
             y = 50f,
+            width = 150f,
+            height = 50f
+        )
+        
+        assertEquals("line1", element.id)
+        assertEquals(150f, element.resolveWidth(500f))
+        assertEquals(50f, element.resolveHeight(500f))
+        // End coordinates are calculated: x + width, y + height
+        assertEquals(200f, element.getEndX(500f))
+        assertEquals(100f, element.getEndY(500f))
+    }
+    
+    @Test
+    fun `should support legacy x2 y2 format for LineElement`() {
+        @Suppress("DEPRECATION")
+        val element = LineElement(
+            id = "line1",
+            x = 50f,
+            y = 50f,
+            width = 0f,
             x2 = 200f,
             y2 = 100f
         )
         
-        assertEquals("line1", element.id)
-        assertEquals(200f, element.x2)
-        assertEquals(100f, element.y2)
+        // When legacy x2/y2 are provided, they take precedence
+        assertEquals(200f, element.getEndX(500f))
+        assertEquals(100f, element.getEndY(500f))
+    }
+    
+    @Test
+    fun `should support 100% width and height for LineElement`() {
+        val element = LineElement(
+            id = "line1",
+            x = 0f,
+            y = 0f,
+            width = "100%",
+            height = "100%"
+        )
+        
+        // 100% of 500px container = 500px
+        assertEquals(500f, element.resolveWidth(500f))
+        assertEquals(500f, element.resolveHeight(500f))
+        // End coordinates: x + resolved width, y + resolved height
+        assertEquals(500f, element.getEndX(500f))
+        assertEquals(500f, element.getEndY(500f))
     }
     
     @Test

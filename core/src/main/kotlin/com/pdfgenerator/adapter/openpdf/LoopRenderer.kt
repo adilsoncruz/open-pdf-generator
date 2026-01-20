@@ -99,8 +99,8 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                     }
                 }
                 is LineElement -> {
-                    val lineHeight = kotlin.math.abs(element.y2 - element.y)
-                    if (lineHeight > 0) lineHeight else 1f
+                    val lineHeight = element.resolveHeight(loopHeight)
+                    if (lineHeight > 0) kotlin.math.abs(lineHeight) else 1f
                 }
                 else -> 20f
             }
@@ -142,12 +142,16 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                 width = resolveDimension(element.width, loopWidth),
                 height = resolveDimension(element.height, itemHeight)
             )
-            is LineElement -> element.copy(
-                x = loopX + element.x,
-                y = currentY + element.y,
-                x2 = loopX + element.x2,
-                y2 = currentY + element.y2
-            )
+            is LineElement -> {
+                val resolvedWidth = element.resolveWidth(loopWidth)
+                val resolvedHeight = element.resolveHeight(itemHeight)
+                element.copy(
+                    x = loopX + element.x,
+                    y = currentY + element.y,
+                    width = resolvedWidth,
+                    height = resolvedHeight
+                )
+            }
             is BarcodeElement -> element.copy(
                 x = loopX + element.x,
                 y = currentY + element.y

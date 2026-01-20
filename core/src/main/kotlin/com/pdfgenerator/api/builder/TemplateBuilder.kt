@@ -164,14 +164,14 @@ class LineElementBuilder {
     var id: String = ""
     var x: Float = 0f
     var y: Float = 0f
-    var x2: Float = 100f
-    var y2: Float = 0f
+    var width: Any = 100f  // Can be Float or String ("100%")
+    var height: Any = 0f   // Can be Float or String ("100%")
     var color: String = "#000000"
-    var width: Float = 1f
+    var strokeWidth: Float = 1f
     var dashPattern: List<Float>? = null
 
-    fun build() = LineElement(id = id, x = x, y = y, x2 = x2, y2 = y2,
-        style = LineStyle(color = color, width = width, dashPattern = dashPattern))
+    fun build() = LineElement(id = id, x = x, y = y, width = width, height = height,
+        style = LineStyle(color = color, width = strokeWidth, dashPattern = dashPattern))
 }
 
 class BarcodeElementBuilder {

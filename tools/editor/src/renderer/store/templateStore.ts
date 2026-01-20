@@ -100,6 +100,7 @@ interface TemplateStore {
   history: Template[]
   historyIndex: number
   copiedElements: { elements: Element[]; location: ElementLocation } | null
+  isPropertiesPanelPinned: boolean  // Whether the properties panel is pinned
 
   // Actions
   setTemplate: (template: Template) => void
@@ -162,6 +163,9 @@ interface TemplateStore {
   clearLoopChildSelection: () => void
   toggleLoopExpanded: (loopId: string) => void
   reorderLoopChildren: (loopId: string, fromIndex: number, toIndex: number, location?: ElementLocation) => void
+  
+  // UI State Actions
+  togglePropertiesPanelPinned: () => void
 }
 
 const defaultTemplate: Template = {
@@ -223,6 +227,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   history: [JSON.parse(JSON.stringify(defaultTemplate))],
   historyIndex: 0,
   copiedElements: null,
+  isPropertiesPanelPinned: true,  // Default: pinned
 
   setTemplate: (template) =>
     set(() => ({
@@ -2109,5 +2114,11 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         isDirty: true,
       }
     }),
+
+  // UI State Actions
+  togglePropertiesPanelPinned: () =>
+    set((state) => ({
+      isPropertiesPanelPinned: !state.isPropertiesPanelPinned,
+    })),
 }))
 
