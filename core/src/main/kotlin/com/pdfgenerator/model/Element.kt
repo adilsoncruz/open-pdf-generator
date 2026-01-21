@@ -294,12 +294,7 @@ data class LineElement(
     val width: Any,  // Can be Float or String ("100%")
     val height: Any = 0f,  // Can be Float or String ("100%")
     val style: LineStyle? = null,
-    val printCondition: String? = null,
-    // Legacy support for old x2/y2 format
-    @Deprecated("Use width instead")
-    val x2: Float? = null,
-    @Deprecated("Use height instead")
-    val y2: Float? = null
+    val printCondition: String? = null
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {
@@ -331,16 +326,11 @@ data class LineElement(
         }
     }
     
-    // Calculate end coordinates from width/height or legacy x2/y2
-    @Suppress("DEPRECATION")
     fun getEndX(containerWidth: Float = 0f): Float {
-        if (x2 != null) return x2
         return x + resolveWidth(containerWidth)
     }
     
-    @Suppress("DEPRECATION")
     fun getEndY(containerHeight: Float = 0f): Float {
-        if (y2 != null) return y2
         return y + resolveHeight(containerHeight)
     }
     

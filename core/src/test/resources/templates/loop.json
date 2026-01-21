@@ -59,8 +59,8 @@
           "id": "line-1764708514994",
           "x": 9,
           "y": 32,
-          "x2": 274,
-          "y2": 33,
+          "width": 265,
+          "height": 1,
           "style": {
             "strokeColor": "#000000",
             "strokeWidth": 1
