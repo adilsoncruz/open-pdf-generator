@@ -3,6 +3,8 @@ plugins {
     `maven-publish`
     id("java-library")
     jacoco
+    id("io.gitlab.arturbosch.detekt") version "1.23.5"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
 
 group = "com.pdfgenerator"
@@ -205,4 +207,10 @@ tasks.register("printVersion") {
     doLast {
         println(project.version)
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
 }

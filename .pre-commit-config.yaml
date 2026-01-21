@@ -1,0 +1,14 @@
+repos:
+  - repo: local
+    hooks:
+      - id: kotlin-quality
+        name: Kotlin Detekt + Ktlint
+        entry: ./gradlew detekt ktlintCheck
+        language: system
+        files: \.kt$
+
+      - id: ts-quality
+        name: TypeScript ESLint
+        entry: cd apps/frontend-react && npm run lint && npm run knip
+        language: system
+        files: \.(ts|tsx)$

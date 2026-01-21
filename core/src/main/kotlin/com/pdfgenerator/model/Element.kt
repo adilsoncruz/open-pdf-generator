@@ -332,11 +332,13 @@ data class LineElement(
     }
     
     // Calculate end coordinates from width/height or legacy x2/y2
+    @Suppress("DEPRECATION")
     fun getEndX(containerWidth: Float = 0f): Float {
         if (x2 != null) return x2
         return x + resolveWidth(containerWidth)
     }
     
+    @Suppress("DEPRECATION")
     fun getEndY(containerHeight: Float = 0f): Float {
         if (y2 != null) return y2
         return y + resolveHeight(containerHeight)

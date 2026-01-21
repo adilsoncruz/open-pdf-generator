@@ -6,10 +6,11 @@ import java.util.*
 
 object Formatter {
     
-    private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
-    private val numberFormat = NumberFormat.getNumberInstance(Locale("pt", "BR"))
-    private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
-    private val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+    private val ptBrLocale: Locale = Locale.forLanguageTag("pt-BR")
+    private val currencyFormat = NumberFormat.getCurrencyInstance(ptBrLocale)
+    private val numberFormat = NumberFormat.getNumberInstance(ptBrLocale)
+    private val dateFormat = SimpleDateFormat("dd/MM/yyyy", ptBrLocale)
+    private val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", ptBrLocale)
     
     fun format(value: Any?, format: String? = "text"): String {
         if (value == null) return ""

@@ -118,7 +118,7 @@ class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElem
         }
 
         if (source.startsWith("http://") || source.startsWith("https://")) {
-            return Image.getInstance(URL(source))
+            return Image.getInstance(java.net.URI(source).toURL())
         }
 
         if (config.enableImageCache) {

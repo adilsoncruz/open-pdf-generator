@@ -1,0 +1,24 @@
+style:
+  UnusedPrivateMember:
+    active: true
+
+  UnusedImports:
+    active: true
+
+  UnusedParameter:
+    active: true
+
+  UnusedVariable:
+    active: true
+
+comments:
+  CommentOverPrivateFunction:
+    active: true
+
+  CommentOverPrivateProperty:
+    active: true
+
+complexity:
+  TooManyFunctions:
+    active: true
+    threshold: 15

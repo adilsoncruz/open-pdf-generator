@@ -271,7 +271,7 @@ object ExpressionProcessor {
         }
         
         return try {
-            val symbols = DecimalFormatSymbols(Locale("pt", "BR"))
+            val symbols = DecimalFormatSymbols(Locale.forLanguageTag("pt-BR"))
             val formatter = DecimalFormat(pattern, symbols)
             formatter.format(number)
         } catch (e: Exception) {
@@ -288,11 +288,11 @@ object ExpressionProcessor {
         
         return try {
             val locale = when (currencyCode.uppercase()) {
-                "BRL" -> Locale("pt", "BR")
+                "BRL" -> Locale.forLanguageTag("pt-BR")
                 "USD" -> Locale.US
                 "EUR" -> Locale.GERMANY
-                "ARS" -> Locale("es", "AR")
-                "MXN" -> Locale("es", "MX")
+                "ARS" -> Locale.forLanguageTag("es-AR")
+                "MXN" -> Locale.forLanguageTag("es-MX")
                 else -> Locale.getDefault()
             }
             val formatter = NumberFormat.getCurrencyInstance(locale)
@@ -312,10 +312,10 @@ object ExpressionProcessor {
         
         return try {
             val loc = when (locale.lowercase()) {
-                "pt-br", "pt_br" -> Locale("pt", "BR")
+                "pt-br", "pt_br" -> Locale.forLanguageTag("pt-BR")
                 "en-us", "en_us" -> Locale.US
-                "es-ar", "es_ar" -> Locale("es", "AR")
-                "es-mx", "es_mx" -> Locale("es", "MX")
+                "es-ar", "es_ar" -> Locale.forLanguageTag("es-AR")
+                "es-mx", "es_mx" -> Locale.forLanguageTag("es-MX")
                 else -> Locale.getDefault()
             }
             NumberFormat.getNumberInstance(loc).format(number)
@@ -393,7 +393,7 @@ object ExpressionProcessor {
                 else -> return valueToString(value)
             }
             
-            SimpleDateFormat(pattern, Locale("pt", "BR")).format(date)
+            SimpleDateFormat(pattern, Locale.forLanguageTag("pt-BR")).format(date)
         } catch (e: Exception) {
             valueToString(value)
         }

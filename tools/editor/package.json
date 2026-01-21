@@ -13,7 +13,9 @@
     "start": "node node_modules/electron/cli.js .",
     "package": "npm run build && node node_modules/electron-builder/out/cli/cli.js",
     "lint": "node node_modules/eslint/bin/eslint.js src --ext .ts,.tsx",
-    "type-check": "node node_modules/typescript/bin/tsc --noEmit"
+    "lint:fix": "node node_modules/eslint/bin/eslint.js src --ext .ts,.tsx --fix",
+    "type-check": "node node_modules/typescript/bin/tsc --noEmit",
+    "knip": "knip"
   },
   "keywords": [
     "pdf",
@@ -47,6 +49,7 @@
     "eslint": "^8.57.1",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "^5.1.0",
+    "knip": "^5.80.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
@@ -82,11 +85,15 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["universal"]
+          "arch": [
+            "universal"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["universal"]
+          "arch": [
+            "universal"
+          ]
         }
       ],
       "icon": "resources/icon.icns"
@@ -95,7 +102,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "resources/icon.ico"
@@ -104,7 +113,9 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "Office",
@@ -116,4 +127,3 @@
     }
   }
 }
-
