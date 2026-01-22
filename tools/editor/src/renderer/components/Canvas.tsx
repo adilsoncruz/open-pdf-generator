@@ -1185,6 +1185,8 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     elementX: 0, elementY: 0,
     elementWidth: 0, elementHeight: 0 
   })
+  const [isEditingText, setIsEditingText] = useState(false)
+  const [editingValue, setEditingValue] = useState('')
   
   const isMultiSelection = selectedElementIds.length > 1
   
@@ -1274,6 +1276,33 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     }
 
     return { x: snappedX, y: snappedY }
+  }
+
+  const handleDoubleClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    if (element.type === 'text' || element.type === 'static_text') {
+      const currentValue = element.value || ''
+      setEditingValue(currentValue)
+      setIsEditingText(true)
+    }
+  }
+
+  const handleTextEditBlur = () => {
+    if (isEditingText) {
+      saveSnapshot()
+      onUpdate({ value: editingValue })
+      setIsEditingText(false)
+    }
+  }
+
+  const handleTextEditKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      setIsEditingText(false)
+      setEditingValue(element.value || '')
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleTextEditBlur()
+    }
   }
 
   const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -1547,52 +1576,71 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         const textBorderStyle = element.style?.borderStyle || 'solid'
         const textBgColor = element.style?.backgroundColor || 'transparent'
 
+        const textStyles: CSSProperties = {
+          width: element.width || 'auto',
+          height: element.height || 'auto',
+          fontSize: element.style?.fontSize || 12,
+          fontWeight: element.style?.fontWeight || 'normal',
+          fontStyle: element.style?.fontStyle || 'normal',
+          fontFamily: getFontFamily(element.style?.fontFamily),
+          textDecoration: element.style?.textDecoration || 'none',
+          color: element.style?.color || '#000000',
+          textDecorationColor: element.style?.color || '#000000',
+          backgroundColor: textBgColor,
+          overflow: isMultiline ? 'auto' : 'hidden',
+          textOverflow: isMultiline ? 'clip' : 'ellipsis',
+          whiteSpace: isMultiline ? 'pre-wrap' : 'nowrap',
+          boxSizing: 'border-box',
+          display: isMultiline ? 'block' : 'flex',
+          alignItems: isMultiline ? undefined : getVerticalAlign(element.style?.verticalAlignment),
+          justifyContent: isMultiline ? undefined : getHorizontalAlign(element.style?.alignment),
+          textAlign: isMultiline ? getTextAlign(element.style?.alignment) : undefined,
+          textIndent: isMultiline && firstLineIndent > 0 ? `${firstLineIndent}px` : undefined,
+          lineHeight: element.style?.lineHeight || 'normal',
+          borderTopWidth: `${element.style?.borderTopWidth ?? textBorderWidth}px`,
+          borderTopStyle: textBorderStyle,
+          borderTopColor: textBorderColor,
+          borderRightWidth: `${element.style?.borderRightWidth ?? textBorderWidth}px`,
+          borderRightStyle: textBorderStyle,
+          borderRightColor: textBorderColor,
+          borderBottomWidth: `${element.style?.borderBottomWidth ?? textBorderWidth}px`,
+          borderBottomStyle: textBorderStyle,
+          borderBottomColor: textBorderColor,
+          borderLeftWidth: `${element.style?.borderLeftWidth ?? textBorderWidth}px`,
+          borderLeftStyle: textBorderStyle,
+          borderLeftColor: textBorderColor,
+          borderRadius: `${element.style?.cornerRadius || 0}px`,
+          paddingTop: `${element.style?.paddingTop ?? element.style?.paddingY ?? 0}px`,
+          paddingRight: `${element.style?.paddingRight ?? element.style?.paddingX ?? 0}px`,
+          paddingBottom: `${element.style?.paddingBottom ?? element.style?.paddingY ?? 0}px`,
+          paddingLeft: `${element.style?.paddingLeft ?? element.style?.paddingX ?? 0}px`,
+        }
+
+        if (isEditingText) {
+          return (
+            <textarea
+              autoFocus
+              value={editingValue}
+              onChange={(e) => setEditingValue(e.target.value)}
+              onBlur={handleTextEditBlur}
+              onKeyDown={handleTextEditKeyDown}
+              className="resize-none outline-none ring-2 ring-blue-500"
+              style={{
+                ...textStyles,
+                cursor: 'text',
+                background: textBgColor === 'transparent' ? 'white' : textBgColor,
+              }}
+            />
+          )
+        }
+
         return (
           <div
             className={`cursor-move select-none ${isSelected ? 'ring-2 ring-primary-500' : ''}`}
-            style={{
-              width: element.width || 'auto',
-              height: element.height || 'auto',
-              fontSize: element.style?.fontSize || 12,
-              fontWeight: element.style?.fontWeight || 'normal',
-              fontStyle: element.style?.fontStyle || 'normal',
-              fontFamily: getFontFamily(element.style?.fontFamily),
-              textDecoration: element.style?.textDecoration || 'none',
-              color: element.style?.color || '#000000',
-              textDecorationColor: element.style?.color || '#000000',
-              backgroundColor: textBgColor,
-              overflow: isMultiline ? 'auto' : 'hidden',
-              textOverflow: isMultiline ? 'clip' : 'ellipsis',
-              whiteSpace: isMultiline ? 'pre-wrap' : 'nowrap',
-              boxSizing: 'border-box',
-              // Alinhamento usando flexbox (single-line) ou text-align (multiline)
-              display: isMultiline ? 'block' : 'flex',
-              alignItems: isMultiline ? undefined : getVerticalAlign(element.style?.verticalAlignment),
-              justifyContent: isMultiline ? undefined : getHorizontalAlign(element.style?.alignment),
-              textAlign: isMultiline ? getTextAlign(element.style?.alignment) : undefined,
-              textIndent: isMultiline && firstLineIndent > 0 ? `${firstLineIndent}px` : undefined,
-              lineHeight: element.style?.lineHeight || 'normal',
-              // Bordas individuais
-              borderTopWidth: `${element.style?.borderTopWidth ?? textBorderWidth}px`,
-              borderTopStyle: textBorderStyle,
-              borderTopColor: textBorderColor,
-              borderRightWidth: `${element.style?.borderRightWidth ?? textBorderWidth}px`,
-              borderRightStyle: textBorderStyle,
-              borderRightColor: textBorderColor,
-              borderBottomWidth: `${element.style?.borderBottomWidth ?? textBorderWidth}px`,
-              borderBottomStyle: textBorderStyle,
-              borderBottomColor: textBorderColor,
-              borderLeftWidth: `${element.style?.borderLeftWidth ?? textBorderWidth}px`,
-              borderLeftStyle: textBorderStyle,
-              borderLeftColor: textBorderColor,
-              borderRadius: `${element.style?.cornerRadius || 0}px`,
-              // Padding individual
-              paddingTop: `${element.style?.paddingTop ?? element.style?.paddingY ?? 0}px`,
-              paddingRight: `${element.style?.paddingRight ?? element.style?.paddingX ?? 0}px`,
-              paddingBottom: `${element.style?.paddingBottom ?? element.style?.paddingY ?? 0}px`,
-              paddingLeft: `${element.style?.paddingLeft ?? element.style?.paddingX ?? 0}px`,
-            }}
+            style={textStyles}
             onMouseDown={handleMouseDown}
+            onDoubleClick={handleDoubleClick}
+            title="Double-click to edit"
           >
             {resolveDisplayText(element, 'Texto')}
           </div>
