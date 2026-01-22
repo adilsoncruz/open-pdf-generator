@@ -52,7 +52,10 @@ class TableRenderer : Renderer<TableElement> {
         }
     }
 
-    override fun render(element: TableElement, context: RenderContext) {
+    override fun render(
+        element: TableElement,
+        context: RenderContext,
+    ) {
         if (!ConditionEvaluator.evaluate(element.printCondition, context.data, context.loopContext)) {
             return
         }
@@ -76,12 +79,13 @@ class TableRenderer : Renderer<TableElement> {
 
         val totalWidth = resolvedTableWidth
 
-        val adjustedWidths = if (specifiedWidth != resolvedTableWidth) {
-            val ratio = resolvedTableWidth / specifiedWidth
-            columnWidths.map { it * ratio }.toFloatArray()
-        } else {
-            columnWidths.toFloatArray()
-        }
+        val adjustedWidths =
+            if (specifiedWidth != resolvedTableWidth) {
+                val ratio = resolvedTableWidth / specifiedWidth
+                columnWidths.map { it * ratio }.toFloatArray()
+            } else {
+                columnWidths.toFloatArray()
+            }
 
         table.setWidths(adjustedWidths)
         table.totalWidth = totalWidth
@@ -99,8 +103,7 @@ class TableRenderer : Renderer<TableElement> {
 
             try {
                 val pageHeight = context.document.pageSize.height
-                
-                // Helper to calculate header height for a specific page
+
                 fun getHeaderHeightForPage(pageNum: Int): Float {
                     val condition = context.headerPrintCondition
                     if (condition == null) return context.templateHeaderHeight
@@ -111,8 +114,7 @@ class TableRenderer : Renderer<TableElement> {
                         0f
                     }
                 }
-                
-                // Helper to calculate footer height for a specific page
+
                 fun getFooterHeightForPage(pageNum: Int): Float {
                     val condition = context.footerPrintCondition
                     if (condition == null) return context.templateFooterHeight
@@ -123,49 +125,33 @@ class TableRenderer : Renderer<TableElement> {
                         0f
                     }
                 }
-                
+
                 var currentPage = context.writer.pageNumber
-                
-                // Calculate bounds for first page
                 val footerHeightPage1 = getFooterHeightForPage(currentPage)
-                
-                // Starting Y position (from top, converted to PDF coordinates)
                 val startY = pageHeight - element.y
-                
-                // Bottom boundary for first page
                 val bottomY = margins.bottom + footerHeightPage1
-                
-                // Use ColumnText for pagination with positioned start
                 val ct = ColumnText(context.writer.directContent)
                 ct.addElement(table)
-                
-                // Set initial column bounds
                 val leftX = element.x
                 val rightX = element.x + totalWidth
                 ct.setSimpleColumn(leftX, bottomY, rightX, startY)
-                
+
                 var status = ct.go()
                 var totalRenderedHeight = startY - ct.yLine
-                
-                // Continue on new pages if needed
                 while (ColumnText.hasMoreText(status)) {
                     context.document.newPage()
                     currentPage++
-                    
-                    // Calculate header/footer heights for this page
+
                     val headerHeight = getHeaderHeightForPage(currentPage)
                     val footerHeight = getFooterHeightForPage(currentPage)
-                    
-                    // On new pages, start from top (below header if visible on this page)
                     val newPageStartY = pageHeight - margins.top - headerHeight
                     val newPageBottomY = margins.bottom + footerHeight
-                    
+
                     ct.setSimpleColumn(leftX, newPageBottomY, rightX, newPageStartY)
                     status = ct.go()
                     totalRenderedHeight += newPageStartY - ct.yLine
                 }
-                
-                // Update render state with the height used on the first page
+
                 if (context.renderState != null) {
                     val elementY = element.y - context.bodyOffsetY
                     val firstPageHeight = startY - ct.yLine
@@ -181,13 +167,15 @@ class TableRenderer : Renderer<TableElement> {
             val pageHeight = context.document.pageSize.height
             val yPosition = pageHeight - element.y
 
-            val tableHeight = table.writeSelectedRows(
-                0, -1,
-                element.x, yPosition,
-                context.writer.directContent
-            )
-            
-            // Update render state with the actual table height
+            val tableHeight =
+                table.writeSelectedRows(
+                    0,
+                    -1,
+                    element.x,
+                    yPosition,
+                    context.writer.directContent,
+                )
+
             if (context.renderState != null) {
                 val actualHeight = kotlin.math.abs(tableHeight)
                 val elementY = element.y - context.bodyOffsetY
@@ -196,39 +184,49 @@ class TableRenderer : Renderer<TableElement> {
         }
     }
 
-    private fun resolveTableData(element: TableElement, context: RenderContext): List<Map<String, Any?>> {
+    private fun resolveTableData(
+        element: TableElement,
+        context: RenderContext,
+    ): List<Map<String, Any?>> {
         val data = DataBindingResolver.resolve(element.dataBinding, context.data, context.loopContext)
 
         return when (data) {
-            is List<*> -> data.mapNotNull { item ->
-                when (item) {
-                    is Map<*, *> -> item.mapKeys { it.key.toString() }
-                    else -> null
+            is List<*> ->
+                data.mapNotNull { item ->
+                    when (item) {
+                        is Map<*, *> -> item.mapKeys { it.key.toString() }
+                        else -> null
+                    }
                 }
-            }
             else -> emptyList()
         }
     }
 
-    private fun addHeaders(table: PdfPTable, element: TableElement, hasDataRows: Boolean = true) {
+    private fun addHeaders(
+        table: PdfPTable,
+        element: TableElement,
+        hasDataRows: Boolean = true,
+    ) {
         val style = element.style
         val headerFontSize = style?.headerFontSize ?: 12f
         val headerFontFamily = style?.headerFontFamily ?: "Helvetica"
         val headerBorderType = style?.headerBorderType
 
         element.columns.forEachIndexed { colIndex, column ->
-            val baseFontName = when (headerFontFamily.lowercase()) {
-                "helvetica-bold" -> BaseFont.HELVETICA_BOLD
-                "times" -> BaseFont.TIMES_ROMAN
-                "courier" -> BaseFont.COURIER
-                else -> BaseFont.HELVETICA
-            }
+            val baseFontName =
+                when (headerFontFamily.lowercase()) {
+                    "helvetica-bold" -> BaseFont.HELVETICA_BOLD
+                    "times" -> BaseFont.TIMES_ROMAN
+                    "courier" -> BaseFont.COURIER
+                    else -> BaseFont.HELVETICA
+                }
 
-            val headerFont = Font(
-                FontCache.getFont(baseFontName),
-                headerFontSize,
-                if (style?.headerFontWeight == "bold") Font.BOLD else Font.NORMAL
-            )
+            val headerFont =
+                Font(
+                    FontCache.getFont(baseFontName),
+                    headerFontSize,
+                    if (style?.headerFontWeight == "bold") Font.BOLD else Font.NORMAL,
+                )
             headerFont.color = style?.headerColor?.let { ColorUtil.hexToColor(it) }
 
             val cell = PdfPCell(Phrase(column.header, headerFont))
@@ -286,7 +284,11 @@ class TableRenderer : Renderer<TableElement> {
         }
     }
 
-    private fun addDataRows(table: PdfPTable, element: TableElement, data: List<Map<String, Any?>>) {
+    private fun addDataRows(
+        table: PdfPTable,
+        element: TableElement,
+        data: List<Map<String, Any?>>,
+    ) {
         val style = element.style
         val cellFontSize = style?.getEffectiveCellFontSize() ?: 10f
         val cellFontFamily = style?.fontFamily ?: "Helvetica"
@@ -294,38 +296,41 @@ class TableRenderer : Renderer<TableElement> {
         val totalRows = data.size
 
         data.forEachIndexed { rowIndex, row ->
-            val isFirstRow = rowIndex == 0
             val isLastRow = rowIndex == totalRows - 1
 
             element.columns.forEachIndexed { colIndex, column ->
-                val value = if (ExpressionProcessor.hasTransformations(column.field)) {
-                    ExpressionProcessor.process(column.field, row.mapKeys { it.key }, null)
-                } else {
-                    row[column.field]
-                }
+                val value =
+                    if (ExpressionProcessor.hasTransformations(column.field)) {
+                        ExpressionProcessor.process(column.field, row.mapKeys { it.key }, null)
+                    } else {
+                        row[column.field]
+                    }
                 val formattedValue = Formatter.format(value, column.format)
 
-                val baseFontName = when (cellFontFamily.lowercase()) {
-                    "helvetica-bold" -> BaseFont.HELVETICA_BOLD
-                    "times" -> BaseFont.TIMES_ROMAN
-                    "courier" -> BaseFont.COURIER
-                    else -> BaseFont.HELVETICA
-                }
+                val baseFontName =
+                    when (cellFontFamily.lowercase()) {
+                        "helvetica-bold" -> BaseFont.HELVETICA_BOLD
+                        "times" -> BaseFont.TIMES_ROMAN
+                        "courier" -> BaseFont.COURIER
+                        else -> BaseFont.HELVETICA
+                    }
 
-                val cellFont = Font(
-                    FontCache.getFont(baseFontName),
-                    cellFontSize,
-                    Font.NORMAL
-                )
+                val cellFont =
+                    Font(
+                        FontCache.getFont(baseFontName),
+                        cellFontSize,
+                        Font.NORMAL,
+                    )
                 cellFont.color = ColorUtil.hexToColor(style?.getEffectiveCellColor() ?: "#000000")
 
                 val cell = PdfPCell(Phrase(formattedValue, cellFont))
 
-                val cellBg = if (rowIndex % 2 == 1 && style?.alternateRowBackground != null) {
-                    style.alternateRowBackground
-                } else {
-                    style?.cellBackground
-                }
+                val cellBg =
+                    if (rowIndex % 2 == 1 && style?.alternateRowBackground != null) {
+                        style.alternateRowBackground
+                    } else {
+                        style?.cellBackground
+                    }
 
                 if (cellBg != null && cellBg != "transparent") {
                     cell.backgroundColor = ColorUtil.hexToColor(cellBg)
@@ -394,4 +399,3 @@ class TableRenderer : Renderer<TableElement> {
         }
     }
 }
-

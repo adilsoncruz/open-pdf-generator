@@ -3,7 +3,6 @@ import { Icon } from '../../atoms'
 import type { TreeItemProps } from './TreeItem.types'
 
 export function TreeItem({
-  id,
   label,
   icon,
   isSelected = false,

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 're
 import { useTemplateStore } from '../store/templateStore'
 import { usePreviewStore } from '../store/previewStore'
 import { useTranslation } from '../i18n'
-import { Button, Input, Icon } from './atoms'
+import { Button, Icon } from './atoms'
 
 interface DataPanelProps {
   onClose: () => void
@@ -340,7 +340,7 @@ export default function DataPanel({ onClose }: DataPanelProps) {
       const parsed = JSON.parse(jsonInput)
       setJsonInput(JSON.stringify(parsed, null, 2))
       setError(null)
-    } catch (e) {
+    } catch {
       setError(t.dataPanel.cannotFormat)
     }
   }
@@ -351,7 +351,7 @@ export default function DataPanel({ onClose }: DataPanelProps) {
       const parsed = JSON.parse(jsonInput)
       setJsonInput(JSON.stringify(parsed))
       setError(null)
-    } catch (e) {
+    } catch {
       setError(t.dataPanel.cannotMinify)
     }
   }

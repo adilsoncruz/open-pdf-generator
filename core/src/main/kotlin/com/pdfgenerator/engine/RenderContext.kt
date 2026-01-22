@@ -31,11 +31,10 @@ data class RenderContext(
     val headerPrintCondition: String? = null,
     val footerPrintCondition: String? = null,
     val templateHeaderHeight: Float = 0f,
-    val templateFooterHeight: Float = 0f
+    val templateFooterHeight: Float = 0f,
 )
 
 data class LoopContext(
     val item: Any?,
-    val index: Int
+    val index: Int,
 )
-

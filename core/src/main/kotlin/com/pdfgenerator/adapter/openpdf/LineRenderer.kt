@@ -10,39 +10,38 @@ import org.slf4j.LoggerFactory
 class LineRenderer : Renderer<LineElement> {
     private val logger = LoggerFactory.getLogger(LineRenderer::class.java)
 
-    override fun render(element: LineElement, context: RenderContext) {
+    override fun render(
+        element: LineElement,
+        context: RenderContext,
+    ) {
         if (!ConditionEvaluator.evaluate(element.printCondition, context.data, context.loopContext)) {
             return
         }
 
-        val cb = if (context.useContentUnder) {
-            context.writer.directContentUnder
-        } else {
-            context.writer.directContent
-        }
+        val cb =
+            if (context.useContentUnder) {
+                context.writer.directContentUnder
+            } else {
+                context.writer.directContent
+            }
 
         val pageHeight = context.document.pageSize.height
         val pageWidth = context.document.pageSize.width
         val margins = context.template.pageSettings.margins
-        
-        // Get container dimensions for resolving "100%"
+
         val containerWidth = context.containerWidth ?: (pageWidth - margins.left - margins.right)
         val containerHeight = context.containerHeight ?: (pageHeight - margins.top - margins.bottom)
-        
-        // Resolve width and height first
         val resolvedWidth = element.resolveWidth(containerWidth)
         val resolvedHeight = element.resolveHeight(containerHeight)
-        
-        // Calculate end coordinates: start position + resolved dimensions
         val endX = element.x + resolvedWidth
         val endY = element.y + resolvedHeight
-        
+
         logger.debug("LineRenderer - id: ${element.id}, x: ${element.x}, y: ${element.y}")
         logger.debug("LineRenderer - width raw: ${element.width}, height raw: ${element.height}")
         logger.debug("LineRenderer - containerWidth: $containerWidth, containerHeight: $containerHeight")
         logger.debug("LineRenderer - resolvedWidth: $resolvedWidth, resolvedHeight: $resolvedHeight")
         logger.debug("LineRenderer - endX: $endX, endY: $endY")
-        
+
         val y1Position = pageHeight - element.y
         val y2Position = pageHeight - endY
 
@@ -72,4 +71,3 @@ class LineRenderer : Renderer<LineElement> {
         cb.restoreState()
     }
 }
-

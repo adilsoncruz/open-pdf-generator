@@ -7,31 +7,36 @@ import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.ConditionEvaluator
 
 class RectangleRenderer : Renderer<RectangleElement> {
-
-    override fun render(element: RectangleElement, context: RenderContext) {
+    override fun render(
+        element: RectangleElement,
+        context: RenderContext,
+    ) {
         if (!ConditionEvaluator.evaluate(element.printCondition, context.data, context.loopContext)) {
             return
         }
 
-        val cb = if (context.useContentUnder) {
-            context.writer.directContentUnder
-        } else {
-            context.writer.directContent
-        }
+        val cb =
+            if (context.useContentUnder) {
+                context.writer.directContentUnder
+            } else {
+                context.writer.directContent
+            }
 
-        val resolvedWidth = if (context.containerWidth != null) {
-            element.resolveWidth(context.containerWidth)
-        } else {
-            val margins = context.template.pageSettings.margins
-            element.resolveWidth(context.document.pageSize.width - margins.left - margins.right)
-        }
+        val resolvedWidth =
+            if (context.containerWidth != null) {
+                element.resolveWidth(context.containerWidth)
+            } else {
+                val margins = context.template.pageSettings.margins
+                element.resolveWidth(context.document.pageSize.width - margins.left - margins.right)
+            }
 
-        val resolvedHeight = if (context.containerHeight != null) {
-            element.resolveHeight(context.containerHeight)
-        } else {
-            val margins = context.template.pageSettings.margins
-            element.resolveHeight(context.document.pageSize.height - margins.top - margins.bottom)
-        }
+        val resolvedHeight =
+            if (context.containerHeight != null) {
+                element.resolveHeight(context.containerHeight)
+            } else {
+                val margins = context.template.pageSettings.margins
+                element.resolveHeight(context.document.pageSize.height - margins.top - margins.bottom)
+            }
 
         val pageHeight = context.document.pageSize.height
         val yPosition = pageHeight - element.y - resolvedHeight
@@ -43,9 +48,11 @@ class RectangleRenderer : Renderer<RectangleElement> {
 
             if (element.style.cornerRadius > 0) {
                 cb.roundRectangle(
-                    element.x, yPosition,
-                    resolvedWidth, resolvedHeight,
-                    element.style.cornerRadius
+                    element.x,
+                    yPosition,
+                    resolvedWidth,
+                    resolvedHeight,
+                    element.style.cornerRadius,
                 )
                 cb.fill()
             } else {
@@ -68,9 +75,11 @@ class RectangleRenderer : Renderer<RectangleElement> {
 
                 if (style.cornerRadius > 0) {
                     cb.roundRectangle(
-                        element.x, yPosition,
-                        resolvedWidth, resolvedHeight,
-                        style.cornerRadius
+                        element.x,
+                        yPosition,
+                        resolvedWidth,
+                        resolvedHeight,
+                        style.cornerRadius,
                     )
                     cb.stroke()
                 } else {
@@ -83,4 +92,3 @@ class RectangleRenderer : Renderer<RectangleElement> {
         cb.restoreState()
     }
 }
-

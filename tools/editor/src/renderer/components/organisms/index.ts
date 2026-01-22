@@ -5,6 +5,7 @@ export * from './Modal'
 
 // Legacy components (to be refactored progressively)
 export { default as Toolbar } from '../Toolbar'
+export type { ToolbarRef } from '../Toolbar'
 export { default as Sidebar } from '../Sidebar'
 export { default as Canvas } from '../Canvas'
 export { default as PropertiesPanel } from '../PropertiesPanel'

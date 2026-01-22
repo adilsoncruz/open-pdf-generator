@@ -1,0 +1,25 @@
+{
+    "appId": "com.example.electronvite",
+    "productName": "Electron Vite Minimal",
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/main.js",
+      "package.json"
+    ],
+    "asar": true,
+    "compression": "maximum",
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+  

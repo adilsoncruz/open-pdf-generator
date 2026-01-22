@@ -1,11 +1,13 @@
 package com.pdfgenerator.model
 
-import com.google.gson.*
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
 import java.lang.reflect.Type
 
 enum class PositionMode {
     ABSOLUTE,
-    RELATIVE
+    RELATIVE,
 }
 
 sealed interface Element {
@@ -31,7 +33,7 @@ data class TextElement(
     val dataBinding: String? = null,
     val value: String? = null,
     val style: TextStyle? = null,
-    val printCondition: String? = null
+    val printCondition: String? = null,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
@@ -52,7 +54,7 @@ data class StaticTextElement(
     val width: Float? = null,
     val height: Float? = null,
     val value: String,
-    val style: TextStyle? = null
+    val style: TextStyle? = null,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
@@ -79,7 +81,7 @@ data class TextStyle(
     val paddingBottom: Float = 0f,
     val paddingLeft: Float = 0f,
     val paddingRight: Float = 0f,
-    val overflow: String = "visible"
+    val overflow: String = "visible",
 )
 
 data class ImageElement(
@@ -95,9 +97,10 @@ data class ImageElement(
     val source: String? = null,
     val fit: String? = null,
     val alignment: String? = null,
-    val printCondition: String? = null
+    val printCondition: String? = null,
 ) : Element {
     fun getEffectiveFit(): String = fit ?: "contain"
+
     fun getEffectiveAlignment(): String = alignment ?: "center"
 
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
@@ -121,7 +124,7 @@ data class TableElement(
     val columns: List<TableColumn>,
     val style: TableStyle? = null,
     val paginated: Boolean? = null,
-    val printCondition: String? = null
+    val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {
@@ -156,7 +159,7 @@ data class TableColumn(
     val verticalAlignment: String? = null,
     val headerAlignment: String? = null,
     val headerVerticalAlignment: String? = null,
-    val format: String? = "text"
+    val format: String? = "text",
 )
 
 data class TableStyle(
@@ -196,27 +199,46 @@ data class TableStyle(
     val cellPaddingTop: Float? = null,
     val cellPaddingRight: Float? = null,
     val cellPaddingBottom: Float? = null,
-    val cellPaddingLeft: Float? = null
+    val cellPaddingLeft: Float? = null,
 ) {
     fun getEffectiveCellFontSize(): Float = fontSize ?: rowFontSize ?: 10f
+
     fun getEffectiveCellColor(): String = cellColor ?: rowColor ?: "#000000"
+
     fun getEffectiveHeaderTopBorderWidth(): Float = headerTopBorderWidth ?: headerBorderWidth ?: borderTopWidth ?: borderWidth
+
     fun getEffectiveHeaderRightBorderWidth(): Float = headerRightBorderWidth ?: headerBorderWidth ?: borderRightWidth ?: borderWidth
+
     fun getEffectiveHeaderBottomBorderWidth(): Float = headerBottomBorderWidth ?: headerBorderWidth ?: borderBottomWidth ?: borderWidth
+
     fun getEffectiveHeaderLeftBorderWidth(): Float = headerLeftBorderWidth ?: headerBorderWidth ?: borderLeftWidth ?: borderWidth
+
     fun getEffectiveHeaderBorderColor(): String = headerBorderColor ?: borderColor
+
     fun getEffectiveHeaderPadding(): Float = headerPadding ?: cellPadding
+
     fun getEffectiveHeaderPaddingTop(): Float = headerPaddingTop ?: headerPadding ?: cellPaddingTop ?: cellPadding
+
     fun getEffectiveHeaderPaddingRight(): Float = headerPaddingRight ?: headerPadding ?: cellPaddingRight ?: cellPadding
+
     fun getEffectiveHeaderPaddingBottom(): Float = headerPaddingBottom ?: headerPadding ?: cellPaddingBottom ?: cellPadding
+
     fun getEffectiveHeaderPaddingLeft(): Float = headerPaddingLeft ?: headerPadding ?: cellPaddingLeft ?: cellPadding
+
     fun getEffectiveCellTopBorderWidth(): Float = borderTopWidth ?: borderWidth
+
     fun getEffectiveCellRightBorderWidth(): Float = borderRightWidth ?: borderWidth
+
     fun getEffectiveCellBottomBorderWidth(): Float = borderBottomWidth ?: borderWidth
+
     fun getEffectiveCellLeftBorderWidth(): Float = borderLeftWidth ?: borderWidth
+
     fun getEffectiveCellPaddingTop(): Float = cellPaddingTop ?: cellPadding
+
     fun getEffectiveCellPaddingRight(): Float = cellPaddingRight ?: cellPadding
+
     fun getEffectiveCellPaddingBottom(): Float = cellPaddingBottom ?: cellPadding
+
     fun getEffectiveCellPaddingLeft(): Float = cellPaddingLeft ?: cellPadding
 }
 
@@ -230,7 +252,7 @@ data class RectangleElement(
     val width: Any,
     val height: Any,
     val style: RectangleStyle? = null,
-    val printCondition: String? = null
+    val printCondition: String? = null,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> = emptyList()
 
@@ -271,7 +293,7 @@ data class RectangleStyle(
     val borderWidth: Float = 1f,
     val cornerRadius: Float = 0f,
     val penStyle: String? = null,
-    val borderStyle: String? = null
+    val borderStyle: String? = null,
 ) {
     fun getEffectivePenStyle(): String? = penStyle ?: borderStyle
 
@@ -291,10 +313,10 @@ data class LineElement(
     override val y: Float,
     override val positionMode: PositionMode? = null,
     override val relativeOffsetY: Float? = null,
-    val width: Any,  // Can be Float or String ("100%")
-    val height: Any = 0f,  // Can be Float or String ("100%")
+    val width: Any,
+    val height: Any = 0f,
     val style: LineStyle? = null,
-    val printCondition: String? = null
+    val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {
@@ -325,15 +347,15 @@ data class LineElement(
             else -> 0f
         }
     }
-    
+
     fun getEndX(containerWidth: Float = 0f): Float {
         return x + resolveWidth(containerWidth)
     }
-    
+
     fun getEndY(containerHeight: Float = 0f): Float {
         return y + resolveHeight(containerHeight)
     }
-    
+
     override fun validate(pageSettings: PageSettings): List<ValidationError> = emptyList()
 }
 
@@ -344,10 +366,12 @@ data class LineStyle(
     val strokeWidth: Float? = null,
     val dashPattern: List<Float>? = null,
     val penStyle: String? = null,
-    val borderStyle: String? = null
+    val borderStyle: String? = null,
 ) {
     fun getEffectivePenStyle(): String? = penStyle ?: borderStyle
+
     fun getEffectiveColor(): String = strokeColor ?: color ?: "#000000"
+
     fun getEffectiveWidth(): Float = strokeWidth ?: width ?: 1f
 }
 
@@ -363,33 +387,39 @@ data class BarcodeElement(
     val barcodeType: String = "qrcode",
     val dataBinding: String,
     val style: BarcodeStyle? = null,
-    val printCondition: String? = null
+    val printCondition: String? = null,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
         if (dataBinding.isBlank()) {
             errors.add(ValidationError(id, "BarcodeElement deve ter dataBinding"))
         }
-        val supportedTypes = listOf(
-            "qrcode", "qr_code",
-            "barcode", "code128", "code_128",
-            "code39", "code_39",
-            "ean13", "ean_13",
-            "ean8", "ean_8",
-            "upc_a", "upca",
-            "upc_e", "upce",
-            "pdf417",
-            "datamatrix", "data_matrix"
-        )
+        val supportedTypes =
+            listOf(
+                "qrcode", "qr_code",
+                "barcode", "code128", "code_128",
+                "code39", "code_39",
+                "ean13", "ean_13",
+                "ean8", "ean_8",
+                "upc_a", "upca",
+                "upc_e", "upce",
+                "pdf417",
+                "datamatrix", "data_matrix",
+            )
         if (barcodeType.lowercase() !in supportedTypes) {
-            errors.add(ValidationError(id, "barcodeType deve ser um dos tipos suportados: qrcode, code128, code39, ean13, ean8, upc_a, upc_e, pdf417, datamatrix"))
+            errors.add(
+                ValidationError(
+                    id,
+                    "barcodeType deve ser um dos tipos suportados: qrcode, code128, code39, ean13, ean8, upc_a, upc_e, pdf417, datamatrix",
+                ),
+            )
         }
         return errors
     }
 }
 
 data class BarcodeStyle(
-    val errorCorrection: String = "M"
+    val errorCorrection: String = "M",
 )
 
 data class ConditionalElement(
@@ -400,7 +430,7 @@ data class ConditionalElement(
     override val positionMode: PositionMode? = null,
     override val relativeOffsetY: Float? = null,
     val condition: String,
-    val elements: List<Element>
+    val elements: List<Element>,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
@@ -423,7 +453,7 @@ data class LoopElement(
     val dataBinding: String,
     val startY: Float? = null,
     val itemSpacing: Float = 0f,
-    val elements: List<Element>
+    val elements: List<Element>,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
@@ -438,7 +468,7 @@ class PositionModeTypeAdapter : JsonDeserializer<PositionMode?> {
     override fun deserialize(
         json: JsonElement?,
         typeOfT: Type?,
-        context: JsonDeserializationContext?
+        context: JsonDeserializationContext?,
     ): PositionMode? {
         if (json == null || json.isJsonNull) return null
         val value = json.asString.uppercase()
@@ -463,11 +493,12 @@ class ElementDeserializer : JsonDeserializer<Element> {
     override fun deserialize(
         json: JsonElement,
         typeOfT: Type,
-        context: JsonDeserializationContext
+        context: JsonDeserializationContext,
     ): Element {
         val jsonObject = json.asJsonObject
-        val type = jsonObject.get("type")?.asString
-            ?: throw IllegalArgumentException("Element must have a 'type' field")
+        val type =
+            jsonObject.get("type")?.asString
+                ?: throw IllegalArgumentException("Element must have a 'type' field")
 
         return when (type) {
             "text" -> gson.fromJson(json, TextElement::class.java)
@@ -483,4 +514,3 @@ class ElementDeserializer : JsonDeserializer<Element> {
         }
     }
 }
-

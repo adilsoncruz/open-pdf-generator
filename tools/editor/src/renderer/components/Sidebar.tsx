@@ -2,7 +2,7 @@ import { useState, type DragEvent } from 'react'
 import { useTemplateStore, type Element, type ElementGroup } from '../store/templateStore'
 import { useTranslation } from '../i18n'
 import { Icon, Input, Select, Button, type IconName } from './atoms'
-import { NumberField, IconButton } from './molecules'
+import { NumberField } from './molecules'
 
 export default function Sidebar() {
   const { t } = useTranslation()
@@ -384,23 +384,6 @@ function GroupButton() {
   const [showGroupDialog, setShowGroupDialog] = useState(false)
   const [groupNameInput, setGroupNameInput] = useState('')
 
-  const getElements = (): Element[] => {
-    const { template } = useTemplateStore.getState()
-    if (currentSection === 'header') {
-      return template.pageSettings.header?.elements || []
-    } else if (currentSection === 'footer') {
-      return template.pageSettings.footer?.elements || []
-    } else if (currentSection === 'bodyBackground') {
-      return template.pageSettings.bodyBackground?.elements || []
-    } else if (currentSection === 'summary') {
-      const backgroundElements = template.pageSettings.bodyBackground?.elements || []
-      const summaryElements = template.summaryPage?.elements || []
-      return [...backgroundElements, ...summaryElements]
-    } else {
-      return template.pageElements
-    }
-  }
-
   const getGroups = (): ElementGroup[] => {
     const { template } = useTemplateStore.getState()
     if (currentSection === 'header') {
@@ -418,7 +401,6 @@ function GroupButton() {
     }
   }
 
-  const elements = getElements()
   const groups = getGroups()
 
   
@@ -526,16 +508,10 @@ function ElementsList() {
     selectElement,
     toggleElementSelection, 
     deleteElement,
-    moveElementUp,
-    moveElementDown,
-    moveElementToTop,
-    moveElementToBottom,
     reorderElement,
     toggleElementVisibility,
-    deleteGroup,
     toggleGroupCollapse,
     toggleGroupVisibility,
-    updateGroup,
     selectGroup,
     reorderGroup
   } = useTemplateStore()
@@ -869,7 +845,7 @@ interface LoopElementItemProps {
   currentSection: 'body' | 'header' | 'footer' | 'bodyBackground' | 'summary'
 }
 
-function LoopElementItem({ element, index, currentSection }: LoopElementItemProps) {
+function LoopElementItem({ element, index: _index, currentSection }: LoopElementItemProps) {
   const { t } = useTranslation()
   const {
     selectedElementIds,
@@ -907,7 +883,7 @@ function LoopElementItem({ element, index, currentSection }: LoopElementItemProp
   
   const handleAddChildElement = (type: string) => {
     const id = `${type}-${Date.now()}`
-    let newElement: any = { type, id, x: 0, y: 0 }
+    let newElement: Partial<Element> = { type, id, x: 0, y: 0 }
     
     if (type === 'text' || type === 'static_text') {
       newElement = {

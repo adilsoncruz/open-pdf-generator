@@ -1,6 +1,22 @@
 package com.pdfgenerator.api.builder
 
-import com.pdfgenerator.model.*
+import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.BarcodeStyle
+import com.pdfgenerator.model.CustomSize
+import com.pdfgenerator.model.Element
+import com.pdfgenerator.model.ImageElement
+import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LineStyle
+import com.pdfgenerator.model.Margins
+import com.pdfgenerator.model.PageSettings
+import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.RectangleStyle
+import com.pdfgenerator.model.TableColumn
+import com.pdfgenerator.model.TableElement
+import com.pdfgenerator.model.Template
+import com.pdfgenerator.model.TemplateMetadata
+import com.pdfgenerator.model.TextElement
+import com.pdfgenerator.model.TextStyle
 
 class TemplateBuilder {
     private var version: String = "1.0"
@@ -13,60 +29,76 @@ class TemplateBuilder {
 
     fun version(version: String) = apply { this.version = version }
 
-    fun metadata(block: MetadataBuilder.() -> Unit) = apply {
-        this.metadata = MetadataBuilder().apply(block).build()
-    }
+    fun metadata(block: MetadataBuilder.() -> Unit) =
+        apply {
+            this.metadata = MetadataBuilder().apply(block).build()
+        }
 
     fun pageSize(size: String) = apply { this.pageSize = size }
 
     fun orientation(orientation: String) = apply { this.orientation = orientation }
 
-    fun margins(top: Float, right: Float, bottom: Float, left: Float) = apply {
+    fun margins(
+        top: Float,
+        right: Float,
+        bottom: Float,
+        left: Float,
+    ) = apply {
         this.margins = Margins(top, right, bottom, left)
     }
 
-    fun customSize(width: Float, height: Float) = apply {
+    fun customSize(
+        width: Float,
+        height: Float,
+    ) = apply {
         this.pageSize = "CUSTOM"
         this.customSize = CustomSize(width, height)
     }
 
-    fun addText(block: TextElementBuilder.() -> Unit) = apply {
-        elements.add(TextElementBuilder().apply(block).build())
-    }
+    fun addText(block: TextElementBuilder.() -> Unit) =
+        apply {
+            elements.add(TextElementBuilder().apply(block).build())
+        }
 
-    fun addImage(block: ImageElementBuilder.() -> Unit) = apply {
-        elements.add(ImageElementBuilder().apply(block).build())
-    }
+    fun addImage(block: ImageElementBuilder.() -> Unit) =
+        apply {
+            elements.add(ImageElementBuilder().apply(block).build())
+        }
 
-    fun addTable(block: TableElementBuilder.() -> Unit) = apply {
-        elements.add(TableElementBuilder().apply(block).build())
-    }
+    fun addTable(block: TableElementBuilder.() -> Unit) =
+        apply {
+            elements.add(TableElementBuilder().apply(block).build())
+        }
 
-    fun addRectangle(block: RectangleElementBuilder.() -> Unit) = apply {
-        elements.add(RectangleElementBuilder().apply(block).build())
-    }
+    fun addRectangle(block: RectangleElementBuilder.() -> Unit) =
+        apply {
+            elements.add(RectangleElementBuilder().apply(block).build())
+        }
 
-    fun addLine(block: LineElementBuilder.() -> Unit) = apply {
-        elements.add(LineElementBuilder().apply(block).build())
-    }
+    fun addLine(block: LineElementBuilder.() -> Unit) =
+        apply {
+            elements.add(LineElementBuilder().apply(block).build())
+        }
 
-    fun addBarcode(block: BarcodeElementBuilder.() -> Unit) = apply {
-        elements.add(BarcodeElementBuilder().apply(block).build())
-    }
+    fun addBarcode(block: BarcodeElementBuilder.() -> Unit) =
+        apply {
+            elements.add(BarcodeElementBuilder().apply(block).build())
+        }
 
     fun build(): Template {
-        val pageSettings = PageSettings(
-            size = pageSize,
-            orientation = orientation,
-            margins = margins,
-            customSize = customSize
-        )
+        val pageSettings =
+            PageSettings(
+                size = pageSize,
+                orientation = orientation,
+                margins = margins,
+                customSize = customSize,
+            )
 
         return Template(
             version = version,
             metadata = metadata,
             pageSettings = pageSettings,
-            pageElements = elements
+            pageElements = elements,
         )
     }
 }
@@ -101,16 +133,34 @@ class TextElementBuilder {
     var multiline: Boolean = false
     var firstLineIndent: Float = 0f
 
-    fun build() = TextElement(
-        id = id,
-        x = x,
-        y = y,
-        width = width,
-        height = height,
-        dataBinding = dataBinding,
-        value = value,
-        style = TextStyle(fontSize, fontFamily, fontWeight, fontStyle, color, null, alignment, verticalAlignment, lineHeight, multiline, firstLineIndent, 0f, 0f, 0f, 0f)
-    )
+    fun build() =
+        TextElement(
+            id = id,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            dataBinding = dataBinding,
+            value = value,
+            style =
+                TextStyle(
+                    fontSize = fontSize,
+                    fontFamily = fontFamily,
+                    fontWeight = fontWeight,
+                    fontStyle = fontStyle,
+                    color = color,
+                    backgroundColor = null,
+                    alignment = alignment,
+                    verticalAlignment = verticalAlignment,
+                    lineHeight = lineHeight,
+                    multiline = multiline,
+                    firstLineIndent = firstLineIndent,
+                    paddingTop = 0f,
+                    paddingRight = 0f,
+                    paddingBottom = 0f,
+                    paddingLeft = 0f,
+                ),
+        )
 }
 
 class ImageElementBuilder {
@@ -124,8 +174,11 @@ class ImageElementBuilder {
     var fit: String = "contain"
     var alignment: String = "center"
 
-    fun build() = ImageElement(id = id, x = x, y = y, width = width, height = height,
-        dataBinding = dataBinding, source = source, fit = fit, alignment = alignment)
+    fun build() =
+        ImageElement(
+            id = id, x = x, y = y, width = width, height = height,
+            dataBinding = dataBinding, source = source, fit = fit, alignment = alignment,
+        )
 }
 
 class TableElementBuilder {
@@ -137,12 +190,26 @@ class TableElementBuilder {
     private val columns = mutableListOf<TableColumn>()
     var style: TableStyle? = null
 
-    fun column(header: String, field: String, width: Float? = null, alignment: String = "left", format: String = "text") {
+    fun column(
+        header: String,
+        field: String,
+        width: Float? = null,
+        alignment: String = "left",
+        format: String = "text",
+    ) {
         columns.add(TableColumn(header, field, width, alignment, format = format))
     }
 
-    fun build() = TableElement(id = id, x = x, y = y, width = width,
-        dataBinding = dataBinding, columns = columns, style = style)
+    fun build() =
+        TableElement(
+            id = id,
+            x = x,
+            y = y,
+            width = width,
+            dataBinding = dataBinding,
+            columns = columns,
+            style = style,
+        )
 }
 
 class RectangleElementBuilder {
@@ -156,22 +223,36 @@ class RectangleElementBuilder {
     var borderWidth: Float = 1f
     var cornerRadius: Float = 0f
 
-    fun build() = RectangleElement(id = id, x = x, y = y, width = width, height = height,
-        style = RectangleStyle(fillColor, borderColor, borderWidth, cornerRadius))
+    fun build() =
+        RectangleElement(
+            id = id,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            style = RectangleStyle(fillColor, borderColor, borderWidth, cornerRadius),
+        )
 }
 
 class LineElementBuilder {
     var id: String = ""
     var x: Float = 0f
     var y: Float = 0f
-    var width: Any = 100f  // Can be Float or String ("100%")
-    var height: Any = 0f   // Can be Float or String ("100%")
+    var width: Any = 100f
+    var height: Any = 0f
     var color: String = "#000000"
     var strokeWidth: Float = 1f
     var dashPattern: List<Float>? = null
 
-    fun build() = LineElement(id = id, x = x, y = y, width = width, height = height,
-        style = LineStyle(color = color, width = strokeWidth, dashPattern = dashPattern))
+    fun build() =
+        LineElement(
+            id = id,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            style = LineStyle(color = color, width = strokeWidth, dashPattern = dashPattern),
+        )
 }
 
 class BarcodeElementBuilder {
@@ -184,15 +265,15 @@ class BarcodeElementBuilder {
     var dataBinding: String = ""
     var errorCorrection: String = "M"
 
-    fun build() = BarcodeElement(
-        id = id,
-        x = x,
-        y = y,
-        width = width,
-        height = height,
-        barcodeType = barcodeType,
-        dataBinding = dataBinding,
-        style = BarcodeStyle(errorCorrection)
-    )
+    fun build() =
+        BarcodeElement(
+            id = id,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            barcodeType = barcodeType,
+            dataBinding = dataBinding,
+            style = BarcodeStyle(errorCorrection),
+        )
 }
-

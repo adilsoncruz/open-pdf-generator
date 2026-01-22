@@ -1,4 +1,4 @@
-import { useState, useEffect, type MouseEvent, type CSSProperties } from 'react'
+import { useState, useEffect, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
 import { useTemplateStore, type Element, type ElementLocation } from '../store/templateStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
 import { Select, Button, Divider } from './atoms'
@@ -6,7 +6,7 @@ import { IconButton } from './molecules'
 
 // Component to render Loop child elements
 interface LoopChildElementProps {
-  child: any
+  child: Element
   loopId: string
   location: ElementLocation
   loopWidth: number
@@ -27,19 +27,19 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   
   // Resolve dimensions (support for "100%")
-  const resolveWidth = (value: any): number => {
+  const resolveWidth = (value: string | number | undefined): number => {
     if (value === '100%') return loopWidth
     if (typeof value === 'number') return value
     return 100 // default
   }
   
-  const resolveHeight = (value: any): number => {
+  const resolveHeight = (value: string | number | undefined): number => {
     if (value === '100%') return loopHeight
     if (typeof value === 'number') return value
     return 20 // default
   }
   
-  const handleMouseDown = (e: MouseEvent) => {
+  const handleMouseDown = (e: ReactMouseEvent) => {
     e.stopPropagation()
     selectLoopChild(loopId, child.id, location)
     setIsDragging(true)
@@ -73,7 +73,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
   const renderContent = () => {
     switch (child.type) {
       case 'text':
-      case 'static_text':
+      case 'static_text': {
         const textWidth = child.width ? resolveWidth(child.width) : undefined
         const textHeight = child.height ? resolveHeight(child.height) : undefined
         return (
@@ -93,7 +93,8 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
             {child.value || (child.type === 'text' ? 'campo' : 'Texto')}
           </div>
         )
-      case 'image':
+      }
+      case 'image': {
         const imgWidth = resolveWidth(child.width || 50)
         const imgHeight = resolveHeight(child.height || 50)
         return (
@@ -111,7 +112,8 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
             </svg>
           </div>
         )
-      case 'rectangle':
+      }
+      case 'rectangle': {
         const rectWidth = resolveWidth(child.width)
         const rectHeight = resolveHeight(child.height)
         return (
@@ -125,7 +127,8 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
             }}
           />
         )
-      case 'line':
+      }
+      case 'line': {
         // Support both new (width/height) and legacy (x2/y2) formats, including "100%"
         const lineChildWidthRaw = child.width ?? (child.x2 ? child.x2 - child.x : 100)
         const lineChildHeightRaw = child.height ?? (child.y2 ? child.y2 - child.y : 0)
@@ -160,6 +163,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
             />
           </svg>
         )
+      }
       default:
         return <div className="w-10 h-10 bg-gray-300" />
     }
@@ -186,7 +190,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
 }
 
 export default function Canvas() {
-  const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, updateSelectedElements, currentSection } = useTemplateStore()
+  const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, currentSection, setCurrentSection, clearSelection } = useTemplateStore()
   const [zoom, setZoom] = useState(100) // Zoom em porcentagem
 
   const pageSize = template.pageSettings.size === 'A4' 
@@ -221,8 +225,8 @@ export default function Canvas() {
         snapped.left = true
       }
 
-      // Check right margin (only if width is set)
-      if (width && Math.abs((x + width) - (pageSize.width - margins.right)) <= snapTolerance) {
+      // Check right margin (only if width is set and is a number)
+      if (typeof width === 'number' && Math.abs((x + width) - (pageSize.width - margins.right)) <= snapTolerance) {
         snapped.right = true
       }
 
@@ -231,8 +235,8 @@ export default function Canvas() {
         snapped.top = true
       }
 
-      // Check bottom margin (only if height is set)
-      if (height && Math.abs((y + height) - (pageSize.height - margins.bottom)) <= snapTolerance) {
+      // Check bottom margin (only if height is set and is a number)
+      if (typeof height === 'number' && Math.abs((y + height) - (pageSize.height - margins.bottom)) <= snapTolerance) {
         snapped.bottom = true
       }
     })
@@ -400,7 +404,7 @@ export default function Canvas() {
                   }}
                 >
                   {/* Elementos do Background */}
-                  {template.pageSettings.bodyBackground.elements
+                  {(template.pageSettings.bodyBackground?.elements ?? [])
                     .filter((element) => !element.hidden)
                     .map((element) => (
                       <CanvasElement
@@ -413,8 +417,8 @@ export default function Canvas() {
                         pageSize={pageSize}
                         selectedElementIds={selectedElementIds}
                         selectedElementLocation={selectedElementLocation}
-                        allElements={template.pageSettings.bodyBackground.elements}
-                        onUpdateMultiple={(deltaX, deltaY) => {}}
+                        allElements={template.pageSettings.bodyBackground?.elements ?? []}
+                        onUpdateMultiple={() => {}}
                         updateElement={updateElement}
                       />
                     ))}
@@ -549,8 +553,8 @@ export default function Canvas() {
                       pageSize={pageSize}
                       selectedElementIds={selectedElementIds}
                       selectedElementLocation={selectedElementLocation}
-                      allElements={template.summaryPage.background?.elements || []}
-                      onUpdateMultiple={(deltaX, deltaY) => {}}
+                      allElements={template.summaryPage?.background?.elements ?? []}
+                      onUpdateMultiple={() => {}}
                       updateElement={updateElement}
                     />
                   ))}
@@ -579,8 +583,8 @@ export default function Canvas() {
                         pageSize={pageSize}
                         selectedElementIds={selectedElementIds}
                         selectedElementLocation={selectedElementLocation}
-                        allElements={template.summaryPage.elements}
-                        onUpdateMultiple={(deltaX, deltaY) => {}}
+                        allElements={template.summaryPage?.elements ?? []}
+                        onUpdateMultiple={() => {}}
                         updateElement={updateElement}
                       />
                     ))}
@@ -774,8 +778,8 @@ export default function Canvas() {
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
                     selectedElementLocation={selectedElementLocation}
-                    allElements={template.pageSettings.header.elements}
-                    onUpdateMultiple={(deltaX, deltaY) => {}}
+                    allElements={template.pageSettings.header?.elements ?? []}
+                    onUpdateMultiple={() => {}}
                     updateElement={updateElement}
                   />
                 ))}
@@ -814,8 +818,8 @@ export default function Canvas() {
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
                     selectedElementLocation={selectedElementLocation}
-                    allElements={template.pageSettings.footer.elements}
-                    onUpdateMultiple={(deltaX, deltaY) => {}}
+                    allElements={template.pageSettings.footer?.elements ?? []}
+                    onUpdateMultiple={() => {}}
                     updateElement={updateElement}
                   />
                 ))}
@@ -841,8 +845,8 @@ export default function Canvas() {
             }}
             onClick={(e) => {
               if (e.target === e.currentTarget) {
-                setCurrentSection('body');
-                set({ selectedElementIds: [], selectedGroupId: null });
+                setCurrentSection('body')
+                clearSelection()
               }
             }}
           >
@@ -860,7 +864,7 @@ export default function Canvas() {
                   selectedElementIds={selectedElementIds}
                   selectedElementLocation={selectedElementLocation}
                   allElements={template.pageElements}
-                  onUpdateMultiple={(deltaX, deltaY) => {}}
+                  onUpdateMultiple={() => {}}
                   updateElement={updateElement}
                 />
               ))}
@@ -1147,9 +1151,9 @@ interface CanvasElementProps {
   margins: { top: number; right: number; bottom: number; left: number }
   pageSize: { width: number; height: number }
   selectedElementIds: string[]
-  selectedElementLocation: string
+  selectedElementLocation: ElementLocation | null
   allElements: Element[]
-  onUpdateMultiple: (deltaX: number, deltaY: number) => void
+  onUpdateMultiple: () => void
   updateElement: (id: string, updates: Partial<Element>, location?: ElementLocation) => void
 }
 
@@ -1272,7 +1276,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     return { x: snappedX, y: snappedY }
   }
 
-  const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+  const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
     if (e.button !== 0) return 
     
     e.stopPropagation()
@@ -1309,7 +1313,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     })
   }
 
-  const handleResizeMouseDown = (e: MouseEvent<HTMLDivElement>, direction: string) => {
+  const handleResizeMouseDown = (e: ReactMouseEvent<HTMLDivElement>, direction: string) => {
     if (e.button !== 0) return
     
     e.stopPropagation()
@@ -1321,15 +1325,15 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
       y: e.clientY,
       elementX: element.x || 0,
       elementY: element.y || 0,
-      elementWidth: element.width || 100,
-      elementHeight: element.height || 100,
+      elementWidth: typeof element.width === 'number' ? element.width : 100,
+      elementHeight: typeof element.height === 'number' ? element.height : 100,
     })
   }
 
   useEffect(() => {
     if (!isDragging) return
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
       // Calcular delta do movimento
       const deltaX = e.clientX - dragStart.x
       const deltaY = e.clientY - dragStart.y
@@ -1341,7 +1345,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
           const initialPos = dragStart.initialPositions[id]
           const newX = initialPos.x + deltaX
           const newY = initialPos.y + deltaY
-          updateElement(id, { x: newX, y: newY }, selectedElementLocation)
+          updateElement(id, { x: newX, y: newY }, selectedElementLocation ?? undefined)
         })
       } else {
         
@@ -1364,7 +1368,9 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         
         
         if (element.width !== '100%' || element.height !== '100%') {
-        const snapped = applySnapToMargins(newX, newY, element.width || 0, element.height || 0)
+          const width = typeof element.width === 'number' ? element.width : 0
+          const height = typeof element.height === 'number' ? element.height : 0
+          const snapped = applySnapToMargins(newX, newY, width, height)
           if (element.width !== '100%') newX = snapped.x
           if (element.height !== '100%') newY = snapped.y
         }
@@ -1390,7 +1396,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
   useEffect(() => {
     if (!isResizing) return
 
-    const handleMouseMove = (e: MouseEvent): void => {
+    const handleMouseMove = (e: globalThis.MouseEvent): void => {
       const deltaX = e.clientX - resizeStart.x
       const deltaY = e.clientY - resizeStart.y
       
@@ -1454,7 +1460,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
   }, [isResizing, resizeStart, onUpdate, saveSnapshot])
 
   // Helper to calculate border values dynamically
-  const getHeaderBorderValues = (style: any) => {
+  const getHeaderBorderValues = (style: Record<string, unknown> | undefined) => {
     const borderWidth = style?.headerBorderWidth ?? style?.borderWidth ?? 1
     const borderType = style?.headerBorderType
     
@@ -1475,7 +1481,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     }
   }
   
-  const getCellBorderValues = (style: any) => {
+  const getCellBorderValues = (style: Record<string, unknown> | undefined) => {
     const borderWidth = style?.borderWidth ?? 1
     const borderType = style?.cellBorderType
     
@@ -1499,7 +1505,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
   const renderElement = () => {
     switch (element.type) {
       case 'text':
-      case 'static_text':
+      case 'static_text': {
         // Mapear verticalAlignment para CSS
         const getVerticalAlign = (vAlign: string | undefined) => {
           switch (vAlign) {
@@ -1591,8 +1597,9 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             {resolveDisplayText(element, 'Texto')}
           </div>
         )
+      }
 
-      case 'rectangle':
+      case 'rectangle': {
         const borderWidth = element.style?.borderWidth ?? 1
         const borderColor = element.style?.borderColor || '#000000'
         const borderStyle = element.style?.borderStyle || 'solid'
@@ -1643,7 +1650,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         }
         
         // Resolver width e height (suporte para "100%")
-        const resolveDimension = (value: any, containerSize: number) => {
+        const resolveDimension = (value: string | number | undefined, containerSize: number) => {
           if (typeof value === 'string' && value.endsWith('%')) {
             const percentage = parseFloat(value)
             return (containerSize * percentage) / 100
@@ -1679,8 +1686,9 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             onMouseDown={handleMouseDown}
           />
         )
+      }
 
-      case 'line':
+      case 'line': {
         // Get container dimensions for resolving "100%"
         const getLineElementLocation = () => {
           if (template.pageSettings.header?.elements.some(e => e.id === element.id)) return 'header'
@@ -1709,7 +1717,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
           }
         }
         
-        const resolveLineDimension = (value: any, containerSize: number, defaultValue: number = 100) => {
+        const resolveLineDimension = (value: string | number | undefined, containerSize: number, defaultValue: number = 100) => {
           if (typeof value === 'string' && value.endsWith('%')) {
             const percentage = parseFloat(value)
             return (containerSize * percentage) / 100
@@ -1759,6 +1767,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             />
           </svg>
         )
+      }
 
       case 'image':
         return (
@@ -1780,7 +1789,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
           </div>
         )
 
-      case 'table':
+      case 'table': {
         try {
           console.log('🔍 Renderizando tabela:', element.id, {
             hasColumns: !!element.columns,
@@ -1791,7 +1800,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
           })
           
           const columns = Array.isArray(element.columns) ? element.columns : []
-          const hasValidColumns = columns.length > 0 && columns.every((col: any) => col && typeof col === 'object')
+          const hasValidColumns = columns.length > 0 && columns.every((col: unknown) => col && typeof col === 'object')
           
           console.log('  ✅ Colunas validadas:', hasValidColumns, columns)
           
@@ -1822,7 +1831,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
           const cellPaddingLeft = tableStyle.cellPaddingLeft ?? tableStyle.cellPadding ?? 5
           
           // Calcular larguras proporcionais das colunas
-          const columnWidths = columns.map((col: any) => col.width || 100)
+          const columnWidths = columns.map((col: Record<string, unknown>) => (col.width as number) || 100)
           const totalWidth = columnWidths.reduce((sum: number, w: number) => sum + w, 0)
           const tableWidth = element.width || 400
           const proportionalWidths = columnWidths.map((w: number) => (w / totalWidth) * tableWidth)
@@ -1858,7 +1867,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                         fontSize: `${headerFontSize}px`,
                       }}
                     >
-                      {columns.map((col: any, i: number) => {
+                      {columns.map((col: Record<string, unknown>, i: number) => {
                         const isFirstColumn = i === 0
                         const isLastColumn = i === columns.length - 1
                         const headerBorderType = tableStyle.headerBorderType
@@ -1922,7 +1931,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                         color: cellColor,
                       }}
                     >
-                      {columns.map((col: any, i: number) => {
+                      {columns.map((col: Record<string, unknown>, i: number) => {
                         const isFirstColumn = i === 0
                         const isLastColumn = i === columns.length - 1
                         const cellBorderType = tableStyle.cellBorderType
@@ -2003,8 +2012,9 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             </div>
           )
         }
+      }
 
-      case 'barcode':
+      case 'barcode': {
         const barcodeType = element.barcodeType || 'qrcode'
         
         
@@ -2032,8 +2042,9 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             </span>
           </div>
         )
+      }
 
-      case 'loop':
+      case 'loop': {
         const loopElements = element.elements || []
         const loopBinding = element.dataBinding || ''
         const loopItemSpacing = element.itemSpacing || 20
@@ -2091,7 +2102,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
               ) : (
                 <>
                   
-                  {loopElements.map((child: any) => (
+                  {loopElements.map((child: Element) => (
                     <LoopChildElement 
                       key={child.id} 
                       child={child} 
@@ -2113,6 +2124,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             </div>
           </div>
         )
+      }
 
       default:
         return null

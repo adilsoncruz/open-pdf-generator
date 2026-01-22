@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useTemplateStore, type Element, type ElementGroup } from '../store/templateStore'
+import { useTemplateStore, type Element, type ElementGroup, type ElementLocation } from '../store/templateStore'
 import { Icon, Input, Select, Checkbox, Divider, ColorInput, Button, TextArea } from './atoms'
+import type { IconName } from './atoms/Icon/Icon.types'
 import { NumberField, ColorField, PropertyGroup, PropertyRow, TabBar, IconButton } from './molecules'
 
 /**
@@ -45,11 +46,7 @@ export default function PropertiesPanel() {
   const selectedLoopParentId = store.selectedLoopParentId
   const updateElement = store.updateElement
   const updateSelectedElements = store.updateSelectedElements
-  const updateGroup = store.updateGroup
-  const deleteGroup = store.deleteGroup
   const addElementToLoop = store.addElementToLoop
-  const deleteLoopChildElement = store.deleteLoopChildElement
-  const updateLoopChildElement = store.updateLoopChildElement
   const saveSnapshot = store.saveSnapshot
   
   
@@ -94,7 +91,7 @@ export default function PropertiesPanel() {
     }
     
     if (loopElement && loopElement.elements) {
-      const childElement = loopElement.elements.find((c: any) => c.id === selectedLoopChildId)
+      const childElement = loopElement.elements.find((c: Element) => c.id === selectedLoopChildId)
       if (childElement) {
         return (
           <LoopChildPropertiesPanel
@@ -163,7 +160,7 @@ export default function PropertiesPanel() {
   const isMultiSelection = selectedElements.length > 1
   const selectedElement = selectedElements[0] 
 
-  const handleUpdate = (field: string, value: any) => {
+  const handleUpdate = (field: string, value: string | number | boolean | object | null) => {
     if (isMultiSelection) {
       updateSelectedElements({ [field]: value })
     } else {
@@ -171,7 +168,7 @@ export default function PropertiesPanel() {
     }
   }
 
-  const handleStyleUpdate = (field: string, value: any) => {
+  const handleStyleUpdate = (field: string, value: string | number | boolean | null) => {
     if (isMultiSelection) {
       updateSelectedElements({
         style: { ...selectedElement.style, [field]: value },
@@ -278,7 +275,7 @@ export default function PropertiesPanel() {
         tabs={tabs.map((tab) => ({
           id: tab.id,
           label: tab.label,
-          icon: <Icon name={getTabIcon(tab.id) as any} size="sm" />,
+          icon: <Icon name={getTabIcon(tab.id) as IconName} size="sm" />,
         }))}
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -2167,7 +2164,7 @@ export default function PropertiesPanel() {
                         size="sm"
                         onClick={() => {
                           const id = `${item.type}-${Date.now()}`
-                          let newElement: any = { type: item.type, id, x: 0, y: 0 }
+                          let newElement: Partial<Element> = { type: item.type, id, x: 0, y: 0 }
                           
                           if (item.type === 'text' || item.type === 'static_text') {
                             newElement = {
@@ -2202,7 +2199,7 @@ export default function PropertiesPanel() {
                         Elements ({(selectedElement.elements || []).length})
                       </label>
                       <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
-                        {(selectedElement.elements || []).map((child: any, idx: number) => (
+                        {(selectedElement.elements || []).map((child: Element, idx: number) => (
                           <LoopChildEditor
                             key={child.id}
                             child={child}
@@ -2249,9 +2246,9 @@ export default function PropertiesPanel() {
 
 
 interface TableEditorProps {
-  element: any
-  onUpdate: (field: string, value: any) => void
-  onStyleUpdate: (field: string, value: any) => void
+  element: Element
+  onUpdate: (field: string, value: string | number | boolean | object | null) => void
+  onStyleUpdate: (field: string, value: string | number | boolean | null) => void
   activeTab: 'general' | 'columns' | 'styles'
 }
 
@@ -2312,7 +2309,7 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
   }
 
   
-  const updateColumn = (index: number, field: string, value: any) => {
+  const updateColumn = (index: number, field: string, value: string | number | boolean | null) => {
     if (!element.columns || !element.columns[index]) return
     
     
@@ -2470,7 +2467,7 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
 
             <div className="flex-1 overflow-y-auto px-4 py-4">
               <div className="space-y-3">
-              {(element.columns || []).map((column: any, index: number) => {
+              {(element.columns || []).map((column: Record<string, unknown>, index: number) => {
                 
                 const normalizedColumn = {
                   alignment: 'left',
@@ -3694,10 +3691,10 @@ function BackgroundPropertiesPanel(): JSX.Element {
 
 // Componente para editar elementos filhos do Loop
 interface LoopChildEditorProps {
-  child: any
+  child: Element
   index: number
   loopId: string
-  location: any
+  location: ElementLocation | null
 }
 
 function LoopChildEditor({ child, index, loopId, location }: LoopChildEditorProps) {
@@ -3727,7 +3724,7 @@ function LoopChildEditor({ child, index, loopId, location }: LoopChildEditorProp
       >
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 font-mono">{index + 1}</span>
-          <span className="text-primary-500"><Icon name={getElementIcon(child.type) as any} size="sm" /></span>
+          <span className="text-primary-500"><Icon name={getElementIcon(child.type) as IconName} size="sm" /></span>
           <span className="text-xs font-medium text-gray-700 capitalize">{child.type.replace('_', ' ')}</span>
           {child.value && (
             <span className="text-xs text-gray-400 truncate max-w-[80px]">
@@ -3848,9 +3845,9 @@ function LoopChildEditor({ child, index, loopId, location }: LoopChildEditorProp
 // Painel de propriedades completo para elementos filhos do loop
 interface LoopChildPropertiesPanelProps {
   loopId: string
-  child: any
-  location: any
-  loopElement: any 
+  child: Element
+  location: ElementLocation | null
+  loopElement: Element
 }
 
 function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: LoopChildPropertiesPanelProps) {
@@ -3861,17 +3858,17 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
   const loopWidth = loopElement?.width || 400
   const loopHeight = loopElement?.height || 50
   
-  const handleUpdate = (field: string, value: any) => {
+  const handleUpdate = (field: string, value: string | number | boolean | object | null) => {
     updateLoopChildElement(loopId, child.id, { [field]: value }, location)
   }
   
-  const handleStyleUpdate = (field: string, value: any) => {
+  const handleStyleUpdate = (field: string, value: string | number | boolean | null) => {
     updateLoopChildElement(loopId, child.id, { 
       style: { ...child.style, [field]: value } 
     }, location)
   }
 
-  const handleFullUpdate = (updates: any) => {
+  const handleFullUpdate = (updates: Partial<Element>) => {
     updateLoopChildElement(loopId, child.id, updates, location)
   }
   

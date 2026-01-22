@@ -29,6 +29,7 @@ export interface ToolbarRef {
   handleSave: () => void
   handleSaveAs: () => void
   handleExport: () => void
+  handleGeneratePDF: () => void
 }
 
 const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTogglePreview, previewMode = 'hidden' }, ref) => {
@@ -37,7 +38,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     template,
     currentFilePath,
     isDirty,
-    testData,
     setTemplate,
     setCurrentFilePath,
     markClean,
@@ -55,8 +55,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   const [isInstallingCLI, setIsInstallingCLI] = useState(false)
   const [installError, setInstallError] = useState<string | null>(null)
   
-  // Check if test data exists
-  const hasTestData = testData && Object.keys(testData).length > 0
+
   
   // Check CLI status on mount
   const checkCLIStatus = useCallback(async () => {
@@ -153,7 +152,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         orientation: 'portrait',
         margins: { top: 30, right: 30, bottom: 30, left: 30 },
       },
-      elements: [],
+      pageElements: [],
     })
     setCurrentFilePath(null)
   }
@@ -209,7 +208,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         setTemplate(loadedTemplate)
         setCurrentFilePath(result.path)
         keepTrying = false
-      } catch (error) {
+      } catch {
         // JSON parse error - show friendly message and ask to try again
         keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${t.validation.invalidJson}\n\n${t.validation.selectAnotherFile}`)
       }
@@ -338,7 +337,8 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     handleOpen,
     handleSave,
     handleSaveAs,
-    handleExport
+    handleExport,
+    handleGeneratePDF
   }))
 
   return (

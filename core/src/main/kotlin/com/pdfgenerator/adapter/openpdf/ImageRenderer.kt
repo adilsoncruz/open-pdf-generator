@@ -9,8 +9,6 @@ import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.net.URL
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElement> {
@@ -61,8 +59,9 @@ class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElem
             val paths = listOf(resourcePath, "/$resourcePath", resourcePath.removePrefix("/"))
 
             for (path in paths) {
-                val stream = ImageRenderer::class.java.classLoader.getResourceAsStream(path)
-                    ?: ImageRenderer::class.java.getResourceAsStream(path)
+                val stream =
+                    ImageRenderer::class.java.classLoader.getResourceAsStream(path)
+                        ?: ImageRenderer::class.java.getResourceAsStream(path)
 
                 if (stream != null) {
                     return stream.use { it.readBytes() }
@@ -73,7 +72,10 @@ class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElem
         }
     }
 
-    override fun render(element: ImageElement, context: RenderContext) {
+    override fun render(
+        element: ImageElement,
+        context: RenderContext,
+    ) {
         if (!ConditionEvaluator.evaluate(element.printCondition, context.data, context.loopContext)) {
             return
         }
@@ -100,7 +102,10 @@ class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElem
         }
     }
 
-    private fun resolveImageSource(element: ImageElement, context: RenderContext): String? {
+    private fun resolveImageSource(
+        element: ImageElement,
+        context: RenderContext,
+    ): String? {
         return when {
             element.dataBinding != null -> {
                 val value = DataBindingResolver.resolve(element.dataBinding, context.data, context.loopContext)
@@ -161,7 +166,10 @@ class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElem
         return Image.getInstance(file.absolutePath)
     }
 
-    private fun scaleImage(image: Image, element: ImageElement) {
+    private fun scaleImage(
+        image: Image,
+        element: ImageElement,
+    ) {
         val targetWidth = element.width
         val targetHeight = element.height
 
@@ -189,4 +197,3 @@ class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElem
         }
     }
 }
-

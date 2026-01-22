@@ -14,14 +14,15 @@ data class Template(
     val pageSettings: PageSettings,
     val pageElements: List<Element> = emptyList(),
     val groups: List<ElementGroup>? = null,
-    val summaryPage: SummaryPage? = null
+    val summaryPage: SummaryPage? = null,
 ) {
     companion object {
-        private val gson: Gson = GsonBuilder()
-            .registerTypeAdapter(Element::class.java, ElementDeserializer())
-            .registerTypeAdapter(PositionMode::class.java, PositionModeTypeAdapter())
-            .setPrettyPrinting()
-            .create()
+        private val gson: Gson =
+            GsonBuilder()
+                .registerTypeAdapter(Element::class.java, ElementDeserializer())
+                .registerTypeAdapter(PositionMode::class.java, PositionModeTypeAdapter())
+                .setPrettyPrinting()
+                .create()
 
         fun fromFile(file: File): Template {
             return file.inputStream().use { fromInputStream(it) }
@@ -77,7 +78,7 @@ data class TemplateMetadata(
     val author: String = "",
     val created: String = "",
     val modified: String = "",
-    val tags: List<String> = emptyList()
+    val tags: List<String> = emptyList(),
 )
 
 data class PageSettings(
@@ -87,19 +88,21 @@ data class PageSettings(
     val customSize: CustomSize? = null,
     val header: HeaderFooter? = null,
     val footer: HeaderFooter? = null,
-    val bodyBackground: BodyBackground? = null
+    val bodyBackground: BodyBackground? = null,
 ) {
     fun getPageSize(): Rectangle {
-        val baseSize = when (size.uppercase()) {
-            "A4" -> PageSize.A4
-            "A3" -> PageSize.A3
-            "A5" -> PageSize.A5
-            "LETTER" -> PageSize.LETTER
-            "LEGAL" -> PageSize.LEGAL
-            "CUSTOM" -> customSize?.let { Rectangle(it.width, it.height) }
-                ?: throw IllegalArgumentException("Custom size required when size is CUSTOM")
-            else -> throw IllegalArgumentException("Unknown page size: $size")
-        }
+        val baseSize =
+            when (size.uppercase()) {
+                "A4" -> PageSize.A4
+                "A3" -> PageSize.A3
+                "A5" -> PageSize.A5
+                "LETTER" -> PageSize.LETTER
+                "LEGAL" -> PageSize.LEGAL
+                "CUSTOM" ->
+                    customSize?.let { Rectangle(it.width, it.height) }
+                        ?: throw IllegalArgumentException("Custom size required when size is CUSTOM")
+                else -> throw IllegalArgumentException("Unknown page size: $size")
+            }
 
         return when (orientation.lowercase()) {
             "portrait" -> baseSize
@@ -113,28 +116,27 @@ data class Margins(
     val top: Float,
     val right: Float,
     val bottom: Float,
-    val left: Float
+    val left: Float,
 )
 
 data class CustomSize(
     val width: Float,
-    val height: Float
+    val height: Float,
 )
 
 data class SummaryPage(
     val elements: List<Element> = emptyList(),
     val groups: List<ElementGroup>? = null,
     val background: BodyBackground? = null,
-    val printCondition: String? = null
+    val printCondition: String? = null,
 )
 
 data class ValidationResult(
     val isValid: Boolean,
-    val errors: List<ValidationError>
+    val errors: List<ValidationError>,
 )
 
 data class ValidationError(
     val path: String,
-    val message: String
+    val message: String,
 )
-

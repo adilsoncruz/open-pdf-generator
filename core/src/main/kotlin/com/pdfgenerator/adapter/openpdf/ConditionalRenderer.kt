@@ -7,8 +7,10 @@ import com.pdfgenerator.model.ConditionalElement
 import com.pdfgenerator.util.ExpressionEvaluator
 
 class ConditionalRenderer(private val renderEngine: RenderEngine) : Renderer<ConditionalElement> {
-
-    override fun render(element: ConditionalElement, context: RenderContext) {
+    override fun render(
+        element: ConditionalElement,
+        context: RenderContext,
+    ) {
         val conditionResult = ExpressionEvaluator.evaluate(element.condition, context.data, context.loopContext)
 
         if (conditionResult == true) {
@@ -18,4 +20,3 @@ class ConditionalRenderer(private val renderEngine: RenderEngine) : Renderer<Con
         }
     }
 }
-

@@ -10,8 +10,10 @@ import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.FontCache
 
 class StaticTextRenderer : Renderer<StaticTextElement> {
-
-    override fun render(element: StaticTextElement, context: RenderContext) {
+    override fun render(
+        element: StaticTextElement,
+        context: RenderContext,
+    ) {
         val text = element.value
         if (text.isBlank()) return
 
@@ -24,24 +26,30 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         }
     }
 
-    private fun renderSingleLine(element: StaticTextElement, text: String, context: RenderContext) {
+    private fun renderSingleLine(
+        element: StaticTextElement,
+        text: String,
+        context: RenderContext,
+    ) {
         val font = createFont(element)
         val fontSize = element.style?.fontSize ?: 12f
 
-        val alignment = when (element.style?.alignment?.lowercase()) {
-            "center" -> Element.ALIGN_CENTER
-            "right" -> Element.ALIGN_RIGHT
-            else -> Element.ALIGN_LEFT
-        }
+        val alignment =
+            when (element.style?.alignment?.lowercase()) {
+                "center" -> Element.ALIGN_CENTER
+                "right" -> Element.ALIGN_RIGHT
+                else -> Element.ALIGN_LEFT
+            }
 
         val pageHeight = context.document.pageSize.height
         val yTop = pageHeight - element.y
 
-        val contentByte = if (context.useContentUnder) {
-            context.writer.directContentUnder
-        } else {
-            context.writer.directContent
-        }
+        val contentByte =
+            if (context.useContentUnder) {
+                context.writer.directContentUnder
+            } else {
+                context.writer.directContent
+            }
 
         val backgroundColor = element.style?.backgroundColor
         if (backgroundColor != null && backgroundColor != "transparent") {
@@ -63,14 +71,15 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         val textBoxHeight = fontSize * lineHeightMultiplier
         val availableHeight = boxHeight - paddingTop - paddingBottom
 
-        val textY = when (verticalAlign) {
-            "top" -> yTop - paddingTop - (textBoxHeight * 0.8f)
-            "bottom" -> yTop - boxHeight + paddingBottom + (textBoxHeight * 0.2f)
-            else -> {
-                val spaceAbove = (availableHeight - textBoxHeight) / 2f
-                yTop - paddingTop - spaceAbove - (textBoxHeight * 0.8f)
+        val textY =
+            when (verticalAlign) {
+                "top" -> yTop - paddingTop - (textBoxHeight * 0.8f)
+                "bottom" -> yTop - boxHeight + paddingBottom + (textBoxHeight * 0.2f)
+                else -> {
+                    val spaceAbove = (availableHeight - textBoxHeight) / 2f
+                    yTop - paddingTop - spaceAbove - (textBoxHeight * 0.8f)
+                }
             }
-        }
 
         contentByte.beginText()
         contentByte.setFontAndSize(font.baseFont, fontSize)
@@ -98,7 +107,11 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         contentByte.endText()
     }
 
-    private fun renderMultiline(element: StaticTextElement, text: String, context: RenderContext) {
+    private fun renderMultiline(
+        element: StaticTextElement,
+        text: String,
+        context: RenderContext,
+    ) {
         val font = createFont(element)
         val fontSize = element.style?.fontSize ?: 12f
         val pageHeight = context.document.pageSize.height
@@ -114,11 +127,12 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         val lineHeight = element.style?.lineHeight ?: 1f
         val lineSpacing = fontSize * lineHeight
 
-        val contentByte = if (context.useContentUnder) {
-            context.writer.directContentUnder
-        } else {
-            context.writer.directContent
-        }
+        val contentByte =
+            if (context.useContentUnder) {
+                context.writer.directContentUnder
+            } else {
+                context.writer.directContent
+            }
 
         val backgroundColor = element.style?.backgroundColor
         if (backgroundColor != null && backgroundColor != "transparent") {
@@ -181,11 +195,12 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
             val xStart = element.x + paddingLeft + indent
             val lineWidth = font.baseFont.getWidthPoint(line, fontSize)
 
-            val xPos = when (alignment) {
-                "center" -> element.x + paddingLeft + (availableBoxWidth - indent - lineWidth) / 2f + indent
-                "right" -> element.x + boxWidth - paddingRight - lineWidth
-                else -> xStart
-            }
+            val xPos =
+                when (alignment) {
+                    "center" -> element.x + paddingLeft + (availableBoxWidth - indent - lineWidth) / 2f + indent
+                    "right" -> element.x + boxWidth - paddingRight - lineWidth
+                    else -> xStart
+                }
 
             contentByte.setTextMatrix(xPos, yPos)
             contentByte.showText(line)
@@ -199,38 +214,44 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         val fontSize = style?.fontSize ?: 12f
 
         val fontFamilyLower = style?.fontFamily?.lowercase() ?: "helvetica"
-        val normalizedFamily = fontFamilyLower
-            .replace("-bold", "")
-            .replace("-roman", "")
-            .replace("-oblique", "")
-            .trim()
+        val normalizedFamily =
+            fontFamilyLower
+                .replace("-bold", "")
+                .replace("-roman", "")
+                .replace("-oblique", "")
+                .trim()
 
-        val baseFontName = when {
-            normalizedFamily.contains("times") -> when {
-                style?.fontWeight == "bold" && style.fontStyle == "italic" -> BaseFont.TIMES_BOLDITALIC
-                style?.fontWeight == "bold" -> BaseFont.TIMES_BOLD
-                style?.fontStyle == "italic" -> BaseFont.TIMES_ITALIC
-                else -> BaseFont.TIMES_ROMAN
+        val baseFontName =
+            when {
+                normalizedFamily.contains("times") ->
+                    when {
+                        style?.fontWeight == "bold" && style.fontStyle == "italic" -> BaseFont.TIMES_BOLDITALIC
+                        style?.fontWeight == "bold" -> BaseFont.TIMES_BOLD
+                        style?.fontStyle == "italic" -> BaseFont.TIMES_ITALIC
+                        else -> BaseFont.TIMES_ROMAN
+                    }
+                normalizedFamily.contains("courier") ->
+                    when {
+                        style?.fontWeight == "bold" && style.fontStyle == "italic" -> BaseFont.COURIER_BOLDOBLIQUE
+                        style?.fontWeight == "bold" -> BaseFont.COURIER_BOLD
+                        style?.fontStyle == "italic" -> BaseFont.COURIER_OBLIQUE
+                        else -> BaseFont.COURIER
+                    }
+                else ->
+                    when {
+                        style?.fontWeight == "bold" && style.fontStyle == "italic" -> BaseFont.HELVETICA_BOLDOBLIQUE
+                        style?.fontWeight == "bold" -> BaseFont.HELVETICA_BOLD
+                        style?.fontStyle == "italic" -> BaseFont.HELVETICA_OBLIQUE
+                        else -> BaseFont.HELVETICA
+                    }
             }
-            normalizedFamily.contains("courier") -> when {
-                style?.fontWeight == "bold" && style.fontStyle == "italic" -> BaseFont.COURIER_BOLDOBLIQUE
-                style?.fontWeight == "bold" -> BaseFont.COURIER_BOLD
-                style?.fontStyle == "italic" -> BaseFont.COURIER_OBLIQUE
-                else -> BaseFont.COURIER
-            }
-            else -> when {
-                style?.fontWeight == "bold" && style.fontStyle == "italic" -> BaseFont.HELVETICA_BOLDOBLIQUE
-                style?.fontWeight == "bold" -> BaseFont.HELVETICA_BOLD
-                style?.fontStyle == "italic" -> BaseFont.HELVETICA_OBLIQUE
-                else -> BaseFont.HELVETICA
-            }
-        }
 
-        val font = Font(
-            FontCache.getFont(baseFontName),
-            fontSize,
-            Font.NORMAL
-        )
+        val font =
+            Font(
+                FontCache.getFont(baseFontName),
+                fontSize,
+                Font.NORMAL,
+            )
 
         style?.color?.let { colorHex ->
             font.color = ColorUtil.hexToColor(colorHex)
@@ -239,4 +260,3 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         return font
     }
 }
-

@@ -17,7 +17,6 @@ const CLI_DIR = path.join(os.homedir(), '.pdf-generator')
 const CLI_JAR_PATH = path.join(CLI_DIR, 'pdf-generator.jar')
 const CLI_VERSION_FILE = path.join(CLI_DIR, 'version.txt')
 
-// URL para download do JAR (pode ser configurado para GitHub Releases ou outro servidor)
 const CLI_DOWNLOAD_URL = `https://github.com/adilsoncruz/open-pdf-generator/releases/download/v${CLI_VERSION}/open-pdf-generator-${CLI_VERSION}-standalone.jar`
 
 interface CLIStatus {
@@ -49,13 +48,9 @@ const JAVA_PATHS = [
 
 let cachedJavaPath: string | null = null
 
-/**
- * Encontra o caminho do Java no sistema
- */
 async function findJavaPath(): Promise<string | null> {
   if (cachedJavaPath) return cachedJavaPath
   
-  // Primeiro tenta o JAVA_HOME
   const javaHome = process.env.JAVA_HOME
   if (javaHome) {
     const javaPath = path.join(javaHome, 'bin', 'java')
@@ -68,7 +63,6 @@ async function findJavaPath(): Promise<string | null> {
     }
   }
   
-  // Tenta caminhos conhecidos
   for (const javaPath of JAVA_PATHS) {
     try {
       await fs.access(javaPath)
@@ -79,7 +73,6 @@ async function findJavaPath(): Promise<string | null> {
     }
   }
   
-  // Tenta usar /usr/libexec/java_home (macOS)
   try {
     const javaHomePath = execSync('/usr/libexec/java_home 2>/dev/null', { encoding: 'utf-8' }).trim()
     if (javaHomePath) {
@@ -804,7 +797,6 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
       ])
 
       let stdout = ''
-      let stderr = ''
 
       java.stdout.on('data', (data) => {
         const text = data.toString()
@@ -813,9 +805,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
       })
 
       java.stderr.on('data', (data) => {
-        const text = data.toString()
-        stderr += text
-        console.error('[CLI STDERR]', text.trim())
+        console.error('[CLI STDERR]', data.toString().trim())
       })
 
       java.on('close', async (code) => {
@@ -847,18 +837,17 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
           }
         } else {
           console.error('❌ [Preview] CLI failed with code:', code)
-          console.error('❌ [Preview] STDERR:', stderr)
           console.error('❌ [Preview] STDOUT:', stdout)
-          
+
           await fs.unlink(pdfFile).catch(() => {})
           await fs.rmdir(tmpDir).catch(() => {})
-          
+
           resolve({
             success: false,
             errorCode: ErrorCodes.ERROR_GENERATING_PDF,
             code,
             // Include CLI output for debugging
-            cliError: stderr || stdout,
+            cliError: stdout,
           })
         }
       })
@@ -939,7 +928,6 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
       ])
 
       let stdout = ''
-      let stderr = ''
 
       java.stdout.on('data', (data) => {
         const text = data.toString()
@@ -948,9 +936,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
       })
 
       java.stderr.on('data', (data) => {
-        const text = data.toString()
-        stderr += text
-        console.error('[JAR STDERR]', text)
+        console.error('[JAR STDERR]', data.toString())
       })
 
       java.on('close', async (code) => {
@@ -996,7 +982,6 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
 // Open generated PDF
 ipcMain.handle('pdf:open', async (_, pdfPath: string) => {
   try {
-    const { shell } = require('electron')
     await shell.openPath(pdfPath)
     return { success: true }
   } catch (error) {

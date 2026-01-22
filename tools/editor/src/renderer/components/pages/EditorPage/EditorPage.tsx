@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useTemplateStore } from '../../../store/templateStore'
+import { useTemplateStore, type Element } from '../../../store/templateStore'
 import { useUIStore } from '../../../store/uiStore'
 import { usePreviewStore } from '../../../store/previewStore'
-import { EditorLayout } from '../../templates'
 import {
   Toolbar,
   Sidebar,
@@ -13,7 +12,7 @@ import {
   HelpModal,
   ElementsToolbar,
 } from '../../organisms'
-import type { ToolbarRef } from '../../Toolbar'
+import type { ToolbarRef } from '../../organisms'
 
 /**
  * EditorPage - Main page component for the PDF Template Editor
@@ -120,7 +119,7 @@ export function EditorPage() {
           e.preventDefault()
           const increment = e.shiftKey ? 10 : 1
           const { updateElement } = useTemplateStore.getState()
-          let allElements: any[] = []
+          let allElements: Element[] = []
 
           if (selectedElementLocation === 'header' && template.pageSettings.header) {
             allElements = template.pageSettings.header.elements
@@ -138,7 +137,7 @@ export function EditorPage() {
           selectedElementIds.forEach((id) => {
             const currentElement = allElements.find((el) => el.id === id)
             if (currentElement) {
-              const updates: any = {}
+              const updates: Partial<Element> = {}
               switch (e.key) {
                 case 'ArrowUp':
                   updates.y = (currentElement.y || 0) - increment

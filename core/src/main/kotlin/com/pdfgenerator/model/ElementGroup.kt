@@ -4,6 +4,5 @@ data class ElementGroup(
     val id: String,
     val name: String? = null,
     val elementIds: List<String>,
-    val printCondition: String? = null
+    val printCondition: String? = null,
 )
-

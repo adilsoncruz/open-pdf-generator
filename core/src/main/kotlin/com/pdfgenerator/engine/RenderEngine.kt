@@ -1,13 +1,27 @@
 package com.pdfgenerator.engine
 
-import com.pdfgenerator.adapter.openpdf.*
+import com.pdfgenerator.adapter.openpdf.BarcodeRenderer
+import com.pdfgenerator.adapter.openpdf.ConditionalRenderer
+import com.pdfgenerator.adapter.openpdf.ImageRenderer
+import com.pdfgenerator.adapter.openpdf.LineRenderer
+import com.pdfgenerator.adapter.openpdf.LoopRenderer
+import com.pdfgenerator.adapter.openpdf.RectangleRenderer
+import com.pdfgenerator.adapter.openpdf.StaticTextRenderer
+import com.pdfgenerator.adapter.openpdf.TableRenderer
+import com.pdfgenerator.adapter.openpdf.TextRenderer
 import com.pdfgenerator.api.PDFGeneratorConfig
-import com.pdfgenerator.model.*
-import org.slf4j.LoggerFactory
+import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.ConditionalElement
+import com.pdfgenerator.model.Element
+import com.pdfgenerator.model.ImageElement
+import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LoopElement
+import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.TableElement
+import com.pdfgenerator.model.TextElement
 
 class RenderEngine(private val config: PDFGeneratorConfig) {
-    private val logger = LoggerFactory.getLogger(RenderEngine::class.java)
-
     private val textRenderer = TextRenderer()
     private val staticTextRenderer = StaticTextRenderer()
     private val imageRenderer = ImageRenderer(config)
@@ -18,7 +32,10 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
     private val conditionalRenderer = ConditionalRenderer(this)
     private val loopRenderer = LoopRenderer(this)
 
-    fun render(element: Element, context: RenderContext) {
+    fun render(
+        element: Element,
+        context: RenderContext,
+    ) {
         when (element) {
             is TextElement -> textRenderer.render(element, context)
             is StaticTextElement -> staticTextRenderer.render(element, context)
@@ -32,4 +49,3 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
         }
     }
 }
-

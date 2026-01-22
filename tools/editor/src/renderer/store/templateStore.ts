@@ -11,16 +11,15 @@ export interface Element {
   id: string
   x: number
   y: number
-  groupId?: string  // ID do grupo ao qual pertence
+  groupId?: string 
   hidden?: boolean  
   width?: number | string
   height?: number | string
   style?: Record<string, unknown>  
-  value?: string  // Valor do elemento (texto, etc)
-  dataBinding?: string  // Binding de dados
+  value?: string
+  dataBinding?: string
   printCondition?: string  
-  // Loop element properties
-  elements?: Element[]  // Elementos filhos (usado em loop)
+  elements?: Element[]
   itemSpacing?: number  
   startY?: number  
   [key: string]: unknown  
@@ -1540,7 +1539,8 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       const removeGroupFromElements = (elements: Element[]) =>
         elements.map(el => {
           if (el.groupId === groupId) {
-            const { groupId: _, ...rest } = el
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { groupId: _removed, ...rest } = el
             return rest as Element
           }
           return el
@@ -1605,7 +1605,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     }),
 
   ungroupElements: (groupId, location) =>
-    set((state) => {
+    set(() => {
       // Alias para deleteGroup - apenas desagrupa sem deletar elementos
       return get().deleteGroup(groupId, location)
     }),

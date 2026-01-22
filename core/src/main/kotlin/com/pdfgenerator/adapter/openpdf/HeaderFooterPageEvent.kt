@@ -6,16 +6,16 @@ import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
-import com.pdfgenerator.model.*
+import com.pdfgenerator.model.Element
+import com.pdfgenerator.model.Template
 import com.pdfgenerator.util.ConditionEvaluator
 import org.slf4j.LoggerFactory
 
 class HeaderFooterPageEvent(
     private val template: Template,
     private val data: Map<String, Any?>,
-    private val config: PDFGeneratorConfig
+    private val config: PDFGeneratorConfig,
 ) : PdfPageEventHelper() {
-
     private val logger = LoggerFactory.getLogger(HeaderFooterPageEvent::class.java)
     private val renderEngine = RenderEngine(config)
 
@@ -29,25 +29,31 @@ class HeaderFooterPageEvent(
 
     private var initialized = false
 
-    private fun shouldRenderElement(element: Element, groups: List<ElementGroup>?): Boolean {
+    private fun shouldRenderElement(
+        element: Element,
+        groups: List<ElementGroup>?,
+    ): Boolean {
         if (groups.isNullOrEmpty()) return true
         val group = groups.find { it.elementIds.contains(element.id) } ?: return true
         return ConditionEvaluator.evaluate(group.printCondition, data)
     }
 
-    override fun onStartPage(writer: PdfWriter, document: Document) {
+    override fun onStartPage(
+        writer: PdfWriter,
+        document: Document,
+    ) {
         try {
             if (!initialized) {
                 initializeTemplates(writer, document)
                 initialized = true
             }
 
-            // Enrich data with system variables
-            val pageData = data.toMutableMap().apply {
-                put("_pageNumber", writer.pageNumber)
-                put("_date", java.time.LocalDate.now().toString())
-                put("_dateTime", java.time.LocalDateTime.now().toString())
-            }
+            val pageData =
+                data.toMutableMap().apply {
+                    put("_pageNumber", writer.pageNumber)
+                    put("_date", java.time.LocalDate.now().toString())
+                    put("_dateTime", java.time.LocalDateTime.now().toString())
+                }
 
             template.pageSettings.bodyBackground?.let { bodyBackground ->
                 val bgCondition = bodyBackground.printCondition
@@ -63,14 +69,17 @@ class HeaderFooterPageEvent(
         }
     }
 
-    override fun onEndPage(writer: PdfWriter, document: Document) {
+    override fun onEndPage(
+        writer: PdfWriter,
+        document: Document,
+    ) {
         try {
-            // Enrich data with system variables
-            val pageData = data.toMutableMap().apply {
-                put("_pageNumber", writer.pageNumber)
-                put("_date", java.time.LocalDate.now().toString())
-                put("_dateTime", java.time.LocalDateTime.now().toString())
-            }
+            val pageData =
+                data.toMutableMap().apply {
+                    put("_pageNumber", writer.pageNumber)
+                    put("_date", java.time.LocalDate.now().toString())
+                    put("_dateTime", java.time.LocalDateTime.now().toString())
+                }
 
             template.pageSettings.header?.let { header ->
                 val headerCondition = header.printCondition
@@ -93,73 +102,85 @@ class HeaderFooterPageEvent(
         }
     }
 
-    private fun initializeTemplates(writer: PdfWriter, document: Document) {
+    private fun initializeTemplates(
+        writer: PdfWriter,
+        document: Document,
+    ) {
         val margins = template.pageSettings.margins
         val containerWidth = document.pageSize.width - margins.left - margins.right
 
         template.pageSettings.header?.let { header ->
-            headerAdjustedElements = header.elements
-                .filter { shouldRenderElement(it, header.groups) }
-                .map { adjustElementForHeader(it, document) }
+            headerAdjustedElements =
+                header.elements
+                    .filter { shouldRenderElement(it, header.groups) }
+                    .map { adjustElementForHeader(it, document) }
 
-            headerContext = RenderContext(
-                document = document,
-                writer = writer,
-                template = template,
-                data = data,
-                config = config,
-                useContentUnder = false,
-                containerWidth = containerWidth,
-                containerHeight = header.height
-            )
+            headerContext =
+                RenderContext(
+                    document = document,
+                    writer = writer,
+                    template = template,
+                    data = data,
+                    config = config,
+                    useContentUnder = false,
+                    containerWidth = containerWidth,
+                    containerHeight = header.height,
+                )
         }
 
         template.pageSettings.footer?.let { footer ->
-            footerAdjustedElements = footer.elements
-                .filter { shouldRenderElement(it, footer.groups) }
-                .map { adjustElementForFooter(it, document, footer) }
+            footerAdjustedElements =
+                footer.elements
+                    .filter { shouldRenderElement(it, footer.groups) }
+                    .map { adjustElementForFooter(it, document, footer) }
 
-            footerContext = RenderContext(
-                document = document,
-                writer = writer,
-                template = template,
-                data = data,
-                config = config,
-                useContentUnder = false,
-                containerWidth = containerWidth,
-                containerHeight = footer.height
-            )
+            footerContext =
+                RenderContext(
+                    document = document,
+                    writer = writer,
+                    template = template,
+                    data = data,
+                    config = config,
+                    useContentUnder = false,
+                    containerWidth = containerWidth,
+                    containerHeight = footer.height,
+                )
         }
 
         template.pageSettings.bodyBackground?.let { bodyBackground ->
             val containerHeight = document.pageSize.height - margins.top - margins.bottom
 
-            bodyBackgroundAdjustedElements = bodyBackground.elements
-                .filter { shouldRenderElement(it, bodyBackground.groups) }
-                .map { adjustElementForBackground(it, document) }
+            bodyBackgroundAdjustedElements =
+                bodyBackground.elements
+                    .filter { shouldRenderElement(it, bodyBackground.groups) }
+                    .map { adjustElementForBackground(it, document) }
 
-            bodyBackgroundContext = RenderContext(
-                document = document,
-                writer = writer,
-                template = template,
-                data = data,
-                config = config,
-                useContentUnder = true,
-                containerWidth = containerWidth,
-                containerHeight = containerHeight
-            )
+            bodyBackgroundContext =
+                RenderContext(
+                    document = document,
+                    writer = writer,
+                    template = template,
+                    data = data,
+                    config = config,
+                    useContentUnder = true,
+                    containerWidth = containerWidth,
+                    containerHeight = containerHeight,
+                )
         }
     }
 
-    private fun renderHeaderOptimized(writer: PdfWriter, document: Document, header: HeaderFooter, pageData: Map<String, Any?>) {
+    private fun renderHeaderOptimized(
+        writer: PdfWriter,
+        document: Document,
+        header: HeaderFooter,
+        pageData: Map<String, Any?>,
+    ) {
         val cb = writer.directContent
         cb.saveState()
 
         try {
             val elements = headerAdjustedElements ?: return
             val baseContext = headerContext ?: return
-            
-            // Create context with page-enriched data (includes pageNumber)
             val context = baseContext.copy(data = pageData)
 
             elements.forEach { element ->
@@ -170,15 +191,18 @@ class HeaderFooterPageEvent(
         }
     }
 
-    private fun renderFooterOptimized(writer: PdfWriter, document: Document, footer: HeaderFooter, pageData: Map<String, Any?>) {
+    private fun renderFooterOptimized(
+        writer: PdfWriter,
+        document: Document,
+        footer: HeaderFooter,
+        pageData: Map<String, Any?>,
+    ) {
         val cb = writer.directContent
         cb.saveState()
 
         try {
             val elements = footerAdjustedElements ?: return
             val baseContext = footerContext ?: return
-            
-            // Create context with page-enriched data (includes pageNumber)
             val context = baseContext.copy(data = pageData)
 
             elements.forEach { element ->
@@ -189,7 +213,11 @@ class HeaderFooterPageEvent(
         }
     }
 
-    private fun renderBodyBackgroundOptimized(writer: PdfWriter, document: Document, bodyBackground: BodyBackground) {
+    private fun renderBodyBackgroundOptimized(
+        writer: PdfWriter,
+        document: Document,
+        bodyBackground: BodyBackground,
+    ) {
         val elements = bodyBackgroundAdjustedElements ?: return
         val context = bodyBackgroundContext ?: return
 
@@ -198,7 +226,10 @@ class HeaderFooterPageEvent(
         }
     }
 
-    private fun adjustElementForHeader(element: Element, document: Document): Element {
+    private fun adjustElementForHeader(
+        element: Element,
+        document: Document,
+    ): Element {
         val leftMargin = template.pageSettings.margins.left
         val topMargin = template.pageSettings.margins.top
         val adjustedX = leftMargin + element.x
@@ -215,7 +246,11 @@ class HeaderFooterPageEvent(
         }
     }
 
-    private fun adjustElementForFooter(element: Element, document: Document, footer: HeaderFooter): Element {
+    private fun adjustElementForFooter(
+        element: Element,
+        document: Document,
+        footer: HeaderFooter,
+    ): Element {
         val pageHeight = document.pageSize.height
         val leftMargin = template.pageSettings.margins.left
         val bottomMargin = template.pageSettings.margins.bottom
@@ -234,7 +269,10 @@ class HeaderFooterPageEvent(
         }
     }
 
-    private fun adjustElementForBackground(element: Element, document: Document): Element {
+    private fun adjustElementForBackground(
+        element: Element,
+        document: Document,
+    ): Element {
         val leftMargin = template.pageSettings.margins.left
         val topMargin = template.pageSettings.margins.top
         val adjustedX = leftMargin + element.x
@@ -251,4 +289,3 @@ class HeaderFooterPageEvent(
         }
     }
 }
-

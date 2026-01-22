@@ -4,14 +4,25 @@ import com.pdfgenerator.engine.LoopContext
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.Renderer
-import com.pdfgenerator.model.*
+import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.Element
+import com.pdfgenerator.model.ImageElement
+import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LoopElement
+import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.TableElement
+import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.DataBindingResolver
 import org.slf4j.LoggerFactory
 
 class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElement> {
     private val logger = LoggerFactory.getLogger(LoopRenderer::class.java)
 
-    override fun render(element: LoopElement, context: RenderContext) {
+    override fun render(
+        element: LoopElement,
+        context: RenderContext,
+    ) {
         val loopData = DataBindingResolver.resolve(element.dataBinding, context.data, context.loopContext)
 
         if (loopData !is List<*>) {
@@ -74,36 +85,41 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
     }
 
-    private fun calculateItemHeight(elements: List<Element>, loopWidth: Float, loopHeight: Float): Float {
+    private fun calculateItemHeight(
+        elements: List<Element>,
+        loopWidth: Float,
+        loopHeight: Float,
+    ): Float {
         if (elements.isEmpty()) return 0f
 
         return elements.maxOfOrNull { element ->
             val y = element.y
-            val height = when (element) {
-                is TextElement -> element.height ?: 20f
-                is StaticTextElement -> element.height ?: 20f
-                is ImageElement -> {
-                    if (element.height.toString() == "100%" || element.height.toString() == "100.0%") {
-                        loopHeight
-                    } else {
-                        element.height
-                    }
-                }
-                is RectangleElement -> {
-                    when (val h = element.height) {
-                        is String -> {
-                            if (h == "100%" || h == "100.0%") loopHeight else 20f
+            val height =
+                when (element) {
+                    is TextElement -> element.height ?: 20f
+                    is StaticTextElement -> element.height ?: 20f
+                    is ImageElement -> {
+                        if (element.height.toString() == "100%" || element.height.toString() == "100.0%") {
+                            loopHeight
+                        } else {
+                            element.height
                         }
-                        is Number -> h.toFloat()
-                        else -> 20f
                     }
+                    is RectangleElement -> {
+                        when (val h = element.height) {
+                            is String -> {
+                                if (h == "100%" || h == "100.0%") loopHeight else 20f
+                            }
+                            is Number -> h.toFloat()
+                            else -> 20f
+                        }
+                    }
+                    is LineElement -> {
+                        val lineHeight = element.resolveHeight(loopHeight)
+                        if (lineHeight > 0) kotlin.math.abs(lineHeight) else 1f
+                    }
+                    else -> 20f
                 }
-                is LineElement -> {
-                    val lineHeight = element.resolveHeight(loopHeight)
-                    if (lineHeight > 0) kotlin.math.abs(lineHeight) else 1f
-                }
-                else -> 20f
-            }
             y + height
         } ?: 20f
     }
@@ -113,35 +129,47 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         loopX: Float,
         currentY: Float,
         loopWidth: Float,
-        itemHeight: Float
+        itemHeight: Float,
     ): Element {
         return when (element) {
-            is TextElement -> element.copy(
-                x = loopX + element.x,
-                y = currentY + element.y,
-                width = resolveWidth(element.width, loopWidth)
-            )
-            is StaticTextElement -> element.copy(
-                x = loopX + element.x,
-                y = currentY + element.y,
-                width = resolveWidth(element.width, loopWidth)
-            )
-            is ImageElement -> element.copy(
-                x = loopX + element.x,
-                y = currentY + element.y,
-                width = resolveFloatDimension(element.width, loopWidth),
-                height = resolveFloatDimension(element.height, itemHeight)
-            )
-            is TableElement -> element.copy(
-                x = loopX + element.x,
-                y = currentY + element.y
-            )
-            is RectangleElement -> element.copy(
-                x = if (element.width.toString() == "100%" || element.width.toString() == "100.0%") loopX else loopX + element.x,
-                y = if (element.height.toString() == "100%" || element.height.toString() == "100.0%") currentY else currentY + element.y,
-                width = resolveDimension(element.width, loopWidth),
-                height = resolveDimension(element.height, itemHeight)
-            )
+            is TextElement ->
+                element.copy(
+                    x = loopX + element.x,
+                    y = currentY + element.y,
+                    width = resolveWidth(element.width, loopWidth),
+                )
+            is StaticTextElement ->
+                element.copy(
+                    x = loopX + element.x,
+                    y = currentY + element.y,
+                    width = resolveWidth(element.width, loopWidth),
+                )
+            is ImageElement ->
+                element.copy(
+                    x = loopX + element.x,
+                    y = currentY + element.y,
+                    width = resolveFloatDimension(element.width, loopWidth),
+                    height = resolveFloatDimension(element.height, itemHeight),
+                )
+            is TableElement ->
+                element.copy(
+                    x = loopX + element.x,
+                    y = currentY + element.y,
+                )
+            is RectangleElement -> {
+                val isFullWidth =
+                    element.width.toString() == "100%" ||
+                        element.width.toString() == "100.0%"
+                val isFullHeight =
+                    element.height.toString() == "100%" ||
+                        element.height.toString() == "100.0%"
+                element.copy(
+                    x = if (isFullWidth) loopX else loopX + element.x,
+                    y = if (isFullHeight) currentY else currentY + element.y,
+                    width = resolveDimension(element.width, loopWidth),
+                    height = resolveDimension(element.height, itemHeight),
+                )
+            }
             is LineElement -> {
                 val resolvedWidth = element.resolveWidth(loopWidth)
                 val resolvedHeight = element.resolveHeight(itemHeight)
@@ -149,18 +177,22 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                     x = loopX + element.x,
                     y = currentY + element.y,
                     width = resolvedWidth,
-                    height = resolvedHeight
+                    height = resolvedHeight,
                 )
             }
-            is BarcodeElement -> element.copy(
-                x = loopX + element.x,
-                y = currentY + element.y
-            )
+            is BarcodeElement ->
+                element.copy(
+                    x = loopX + element.x,
+                    y = currentY + element.y,
+                )
             else -> element
         }
     }
 
-    private fun resolveDimension(value: Any?, loopDimension: Float): Any {
+    private fun resolveDimension(
+        value: Any?,
+        loopDimension: Float,
+    ): Any {
         return when (value) {
             is String -> {
                 if (value == "100%" || value == "100.0%") {
@@ -174,7 +206,10 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
     }
 
-    private fun resolveFloatDimension(value: Float, loopDimension: Float): Float {
+    private fun resolveFloatDimension(
+        value: Float,
+        loopDimension: Float,
+    ): Float {
         return if (value.toString().endsWith("%")) {
             loopDimension
         } else {
@@ -182,7 +217,10 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
     }
 
-    private fun resolveWidth(value: Float?, loopWidth: Float): Float? {
+    private fun resolveWidth(
+        value: Float?,
+        loopWidth: Float,
+    ): Float? {
         return if (value == null) {
             null
         } else if (value.toString().endsWith("%") || value == -1f) {
@@ -192,4 +230,3 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
     }
 }
-

@@ -19,7 +19,10 @@ import javax.imageio.ImageIO
 class BarcodeRenderer : Renderer<BarcodeElement> {
     private val logger = LoggerFactory.getLogger(BarcodeRenderer::class.java)
 
-    override fun render(element: BarcodeElement, context: RenderContext) {
+    override fun render(
+        element: BarcodeElement,
+        context: RenderContext,
+    ) {
         if (!ConditionEvaluator.evaluate(element.printCondition, context.data, context.loopContext)) {
             return
         }
@@ -47,37 +50,46 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
         }
     }
 
-    private fun resolveData(element: BarcodeElement, context: RenderContext): String? {
+    private fun resolveData(
+        element: BarcodeElement,
+        context: RenderContext,
+    ): String? {
         return DataBindingResolver.resolve(
             element.dataBinding,
             context.data,
-            context.loopContext
+            context.loopContext,
         )?.toString()
     }
 
-    private fun generateBarcodeImage(element: BarcodeElement, data: String, scaleFactor: Int = 1): Image {
-        val format = when (element.barcodeType.lowercase()) {
-            "qrcode", "qr_code" -> BarcodeFormat.QR_CODE
-            "barcode", "code128", "code_128" -> BarcodeFormat.CODE_128
-            "code39", "code_39" -> BarcodeFormat.CODE_39
-            "ean13", "ean_13" -> BarcodeFormat.EAN_13
-            "ean8", "ean_8" -> BarcodeFormat.EAN_8
-            "upc_a", "upca" -> BarcodeFormat.UPC_A
-            "upc_e", "upce" -> BarcodeFormat.UPC_E
-            "pdf417" -> BarcodeFormat.PDF_417
-            "datamatrix", "data_matrix" -> BarcodeFormat.DATA_MATRIX
-            else -> throw IllegalArgumentException("Unsupported barcode type: ${element.barcodeType}")
-        }
+    private fun generateBarcodeImage(
+        element: BarcodeElement,
+        data: String,
+        scaleFactor: Int = 1,
+    ): Image {
+        val format =
+            when (element.barcodeType.lowercase()) {
+                "qrcode", "qr_code" -> BarcodeFormat.QR_CODE
+                "barcode", "code128", "code_128" -> BarcodeFormat.CODE_128
+                "code39", "code_39" -> BarcodeFormat.CODE_39
+                "ean13", "ean_13" -> BarcodeFormat.EAN_13
+                "ean8", "ean_8" -> BarcodeFormat.EAN_8
+                "upc_a", "upca" -> BarcodeFormat.UPC_A
+                "upc_e", "upce" -> BarcodeFormat.UPC_E
+                "pdf417" -> BarcodeFormat.PDF_417
+                "datamatrix", "data_matrix" -> BarcodeFormat.DATA_MATRIX
+                else -> throw IllegalArgumentException("Unsupported barcode type: ${element.barcodeType}")
+            }
 
         val hints = mutableMapOf<EncodeHintType, Any>()
         if (format == BarcodeFormat.QR_CODE) {
-            val errorCorrection = when (element.style?.errorCorrection) {
-                "L" -> ErrorCorrectionLevel.L
-                "M" -> ErrorCorrectionLevel.M
-                "Q" -> ErrorCorrectionLevel.Q
-                "H" -> ErrorCorrectionLevel.H
-                else -> ErrorCorrectionLevel.M
-            }
+            val errorCorrection =
+                when (element.style?.errorCorrection) {
+                    "L" -> ErrorCorrectionLevel.L
+                    "M" -> ErrorCorrectionLevel.M
+                    "Q" -> ErrorCorrectionLevel.Q
+                    "H" -> ErrorCorrectionLevel.H
+                    else -> ErrorCorrectionLevel.M
+                }
             hints[EncodeHintType.ERROR_CORRECTION] = errorCorrection
             hints[EncodeHintType.MARGIN] = 0
         }
@@ -86,13 +98,14 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
         val height = element.height.toInt() * scaleFactor
 
         val writer = MultiFormatWriter()
-        val bitMatrix: BitMatrix = writer.encode(
-            data,
-            format,
-            width,
-            height,
-            hints
-        )
+        val bitMatrix: BitMatrix =
+            writer.encode(
+                data,
+                format,
+                width,
+                height,
+                hints,
+            )
 
         val bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix)
 
@@ -103,4 +116,3 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
         return Image.getInstance(imageBytes)
     }
 }
-
