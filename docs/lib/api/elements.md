@@ -270,8 +270,8 @@ Renders horizontal, vertical or diagonal lines.
   "id": "divider",
   "x": 50,
   "y": 200,
-  "x2": 545,
-  "y2": 200,
+  "width": 545,
+  "height": 200,
   "color": "#d1d5db",
   "width": 1,
   "dashPattern": [5, 3]
@@ -280,8 +280,8 @@ Renders horizontal, vertical or diagonal lines.
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `x2` | number | - | End X |
-| `y2` | number | - | End Y |
+| `width` | number | - | End X |
+| `height` | number | - | End Y |
 | `color` | string | #000000 | Line color |
 | `width` | number | 1 | Thickness |
 | `dashPattern` | array | - | Dash pattern [dash, space] |

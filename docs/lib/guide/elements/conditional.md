@@ -184,8 +184,8 @@ Show tax section only if there are taxes:
       "id": "taxes-line",
       "x1": 50,
       "y1": 420,
-      "x2": 550,
-      "y2": 420,
+      "width": 550,
+      "height": 420,
       "style": {
         "strokeColor": "#000000",
         "strokeWidth": 1

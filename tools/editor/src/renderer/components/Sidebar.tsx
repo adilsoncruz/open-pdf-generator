@@ -1,8 +1,8 @@
 import { useState, type DragEvent } from 'react'
 import { useTemplateStore, type Element, type ElementGroup } from '../store/templateStore'
 import { useTranslation } from '../i18n'
-import { Icon, Input, Select, Button, type IconName } from './atoms'
-import { NumberField } from './molecules'
+import { Icon, Input, Select, Button, Divider, type IconName } from './atoms'
+import { NumberField, IconButton, SidebarButton } from './molecules'
 
 export default function Sidebar() {
   const { t } = useTranslation()
@@ -17,13 +17,170 @@ export default function Sidebar() {
     addBodyBackground,
     removeBodyBackground,
     addSummaryPage,
-    removeSummaryPage
+    removeSummaryPage,
+    isSidebarPinned,
+    isSidebarMinimized,
+    toggleSidebarPinned,
+    toggleSidebarMinimized,
   } = useTemplateStore()
 
   const [pageSettingsExpanded, setPageSettingsExpanded] = useState(false)
 
+  if (isSidebarMinimized && !isSidebarPinned) {
+    return (
+      <div className="w-14 theme-bg-secondary border-r theme-border flex flex-col items-center py-2 gap-1">
+        {/* Expand Button */}
+        <IconButton
+          icon="chevron-right"
+          onClick={toggleSidebarMinimized}
+          tooltip={t.sidebar.expand}
+          size="sm"
+        />
+        
+        <Divider orientation="horizontal" className="w-8 my-1" />
+        
+        {/* Page Settings */}
+        <SidebarButton
+          icon="settings"
+          label={t.sidebar.settings}
+          tooltip={t.sidebar.pageSettings}
+          onClick={() => {
+            toggleSidebarMinimized()
+            setPageSettingsExpanded(true)
+          }}
+          variant="primary"
+        />
+
+        {/* Section Buttons */}
+        <div className="flex flex-col items-center gap-1">
+          {/* Header */}
+          {template.pageSettings.header ? (
+            <SidebarButton
+              icon="arrow-up"
+              label={t.sidebar.header}
+              tooltip={t.sidebar.header}
+              onClick={() => setCurrentSection('header')}
+              isActive={currentSection === 'header'}
+              variant="blue"
+            />
+          ) : (
+            <SidebarButton
+              icon="plus"
+              label={t.sidebar.header}
+              tooltip={t.sidebar.addHeader}
+              onClick={addHeader}
+              variant="add"
+            />
+          )}
+
+          {/* Page/Body */}
+          <SidebarButton
+            icon="page"
+            label={t.sidebar.page}
+            tooltip={t.sidebar.page}
+            onClick={() => setCurrentSection('body')}
+            isActive={currentSection === 'body'}
+            variant="primary"
+          />
+
+          {/* Footer */}
+          {template.pageSettings.footer ? (
+            <SidebarButton
+              icon="arrow-down"
+              label={t.sidebar.footer}
+              tooltip={t.sidebar.footer}
+              onClick={() => setCurrentSection('footer')}
+              isActive={currentSection === 'footer'}
+              variant="blue"
+            />
+          ) : (
+            <SidebarButton
+              icon="plus"
+              label={t.sidebar.footer}
+              tooltip={t.sidebar.addFooter}
+              onClick={addFooter}
+              variant="add"
+            />
+          )}
+
+          <Divider orientation="horizontal" className="w-8 my-1" />
+
+          {/* Summary */}
+          {template.summaryPage ? (
+            <SidebarButton
+              icon="layers"
+              label={t.sidebar.summary}
+              tooltip={t.sidebar.summary}
+              onClick={() => setCurrentSection('summary')}
+              isActive={currentSection === 'summary'}
+              variant="green"
+            />
+          ) : (
+            <SidebarButton
+              icon="plus"
+              label={t.sidebar.summary}
+              tooltip={t.sidebar.addSummary}
+              onClick={addSummaryPage}
+              variant="add"
+            />
+          )}
+
+          {/* Background */}
+          {template.pageSettings.bodyBackground ? (
+            <SidebarButton
+              icon="rectangle"
+              label={t.sidebar.background}
+              tooltip={t.sidebar.background}
+              onClick={() => setCurrentSection('bodyBackground')}
+              isActive={currentSection === 'bodyBackground'}
+              variant="purple"
+            />
+          ) : (
+            <SidebarButton
+              icon="plus"
+              label={t.sidebar.background}
+              tooltip={t.sidebar.addBackground}
+              onClick={addBodyBackground}
+              variant="add"
+            />
+          )}
+        </div>
+
+        <Divider orientation="horizontal" className="w-8 my-1" />
+
+        {/* Elements */}
+        <SidebarButton
+          icon="layers"
+          label={t.sidebar.elementsTitle}
+          tooltip={t.sidebar.elementsTitle}
+          onClick={toggleSidebarMinimized}
+          variant="primary"
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="w-64 theme-bg-secondary border-r theme-border flex flex-col h-full">
+      <div className="p-3 border-b theme-border flex items-center justify-between shrink-0">
+        <h2 className="text-sm font-semibold theme-text">Navigator</h2>
+        <div className="flex items-center gap-1">
+          <IconButton
+            icon={isSidebarPinned ? 'pin' : 'pin-off'}
+            onClick={toggleSidebarPinned}
+            tooltip={isSidebarPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+            variant={isSidebarPinned ? 'default' : 'ghost'}
+            size="sm"
+            className={isSidebarPinned ? 'text-blue-500' : ''}
+          />
+          <IconButton
+            icon="chevron-left"
+            onClick={toggleSidebarMinimized}
+            tooltip="Minimize sidebar"
+            size="sm"
+          />
+        </div>
+      </div>
       <div className="p-4 flex-shrink-0">
         {/* Page Settings */}
         <div className="mb-4 p-3 theme-bg-tertiary border theme-border rounded-xl">

@@ -20,8 +20,8 @@ The `LineElement` draws straight lines (horizontal, vertical, or diagonal) for d
 | `id` | string | ✅ | Unique identifier |
 | `x` | number | ✅ | Start X position |
 | `y` | number | ✅ | Start Y position |
-| `x2` | number | ✅ | End X position |
-| `y2` | number | ✅ | End Y position |
+| `width` | number | ✅ | End X position |
+| `height` | number | ✅ | End Y position |
 | `style` | object | ❌ | Line styles |
 | `printCondition` | string | ❌ | Condition to render |
 
@@ -63,8 +63,8 @@ The `LineElement` draws straight lines (horizontal, vertical, or diagonal) for d
   "id": "divider",
   "x": 50,
   "y": 300,
-  "x2": 545,
-  "y2": 300,
+  "width": 545,
+  "height": 300,
   "style": {
     "color": "#d1d5db",
     "width": 1
@@ -80,8 +80,8 @@ The `LineElement` draws straight lines (horizontal, vertical, or diagonal) for d
   "id": "separator",
   "x": 300,
   "y": 100,
-  "x2": 300,
-  "y2": 700,
+  "width": 300,
+  "height": 700,
   "style": {
     "color": "#9ca3af",
     "width": 0.5
@@ -97,8 +97,8 @@ The `LineElement` draws straight lines (horizontal, vertical, or diagonal) for d
   "id": "diagonal",
   "x": 50,
   "y": 50,
-  "x2": 200,
-  "y2": 150,
+  "width": 200,
+  "height": 150,
   "style": {
     "color": "#ef4444",
     "width": 2
@@ -116,12 +116,12 @@ The `LineElement` draws straight lines (horizontal, vertical, or diagonal) for d
 {
   "x": 50,
   "y": 300,
-  "x2": 545,
-  "y2": 300
+  "width": 545,
+  "height": 300
 }
 ```
 
-`y` equal, `x2 > x`
+`y` equal, `width > x`
 
 ---
 
@@ -131,12 +131,12 @@ The `LineElement` draws straight lines (horizontal, vertical, or diagonal) for d
 {
   "x": 300,
   "y": 100,
-  "x2": 300,
-  "y2": 700
+  "width": 300,
+  "height": 700
 }
 ```
 
-`x` equal, `y2 > y`
+`x` equal, `height > y`
 
 ---
 
@@ -146,12 +146,12 @@ The `LineElement` draws straight lines (horizontal, vertical, or diagonal) for d
 {
   "x": 50,
   "y": 50,
-  "x2": 200,
-  "y2": 200
+  "width": 200,
+  "height": 200
 }
 ```
 
-`x2 > x` and `y2 > y`
+`width > x` and `height > y`
 
 ---
 
@@ -161,12 +161,12 @@ The `LineElement` draws straight lines (horizontal, vertical, or diagonal) for d
 {
   "x": 200,
   "y": 50,
-  "x2": 50,
-  "y2": 200
+  "width": 50,
+  "height": 200
 }
 ```
 
-`x2 < x` and `y2 > y`
+`width < x` and `height > y`
 
 ---
 
@@ -396,8 +396,8 @@ The array defines the pattern of dashes and gaps.
   "id": "section-divider",
   "x": 50,
   "y": 250,
-  "x2": 545,
-  "y2": 250,
+  "width": 545,
+  "height": 250,
   "style": {
     "color": "#e5e7eb",
     "width": 1
@@ -415,8 +415,8 @@ The array defines the pattern of dashes and gaps.
   "id": "cut-line",
   "x": 20,
   "y": 750,
-  "x2": 575,
-  "y2": 750,
+  "width": 575,
+  "height": 750,
   "style": {
     "color": "#9ca3af",
     "width": 0.5,
@@ -461,8 +461,8 @@ With text:
   "id": "underline",
   "x": 50,
   "y": 122,
-  "x2": 250,
-  "y2": 122,
+  "width": 250,
+  "height": 122,
   "style": {
     "color": "#2563eb",
     "width": 2
@@ -482,40 +482,40 @@ With text:
       "id": "line-h1",
       "x": 50,
       "y": 200,
-      "x2": 545,
-      "y2": 200
+      "width": 545,
+      "height": 200
     },
     {
       "type": "line",
       "id": "line-h2",
       "x": 50,
       "y": 230,
-      "x2": 545,
-      "y2": 230
+      "width": 545,
+      "height": 230
     },
     {
       "type": "line",
       "id": "line-v1",
       "x": 50,
       "y": 200,
-      "x2": 50,
-      "y2": 230
+      "width": 50,
+      "height": 230
     },
     {
       "type": "line",
       "id": "line-v2",
       "x": 250,
       "y": 200,
-      "x2": 250,
-      "y2": 230
+      "width": 250,
+      "height": 230
     },
     {
       "type": "line",
       "id": "line-v3",
       "x": 545,
       "y": 200,
-      "x2": 545,
-      "y2": 230
+      "width": 545,
+      "height": 230
     }
   ]
 }
@@ -537,32 +537,32 @@ For tables, use [`TableElement`](/lib/guide/elements/table) which is easier!
       "id": "top",
       "x": 50,
       "y": 100,
-      "x2": 250,
-      "y2": 100
+      "width": 250,
+      "height": 100
     },
     {
       "type": "line",
       "id": "bottom",
       "x": 50,
       "y": 200,
-      "x2": 250,
-      "y2": 200
+      "width": 250,
+      "height": 200
     },
     {
       "type": "line",
       "id": "left",
       "x": 50,
       "y": 100,
-      "x2": 50,
-      "y2": 200
+      "width": 50,
+      "height": 200
     },
     {
       "type": "line",
       "id": "right",
       "x": 250,
       "y": 100,
-      "x2": 250,
-      "y2": 200
+      "width": 250,
+      "height": 200
     }
   ]
 }
@@ -584,8 +584,8 @@ For rectangles, use [`RectangleElement`](/lib/guide/elements/rectangle) which is
       "id": "arrow-body",
       "x": 100,
       "y": 200,
-      "x2": 300,
-      "y2": 200,
+      "width": 300,
+      "height": 200,
       "style": {
         "color": "#2563eb",
         "width": 2
@@ -596,8 +596,8 @@ For rectangles, use [`RectangleElement`](/lib/guide/elements/rectangle) which is
       "id": "arrow-tip-1",
       "x": 300,
       "y": 200,
-      "x2": 285,
-      "y2": 190,
+      "width": 285,
+      "height": 190,
       "style": {
         "color": "#2563eb",
         "width": 2
@@ -608,8 +608,8 @@ For rectangles, use [`RectangleElement`](/lib/guide/elements/rectangle) which is
       "id": "arrow-tip-2",
       "x": 300,
       "y": 200,
-      "x2": 285,
-      "y2": 210,
+      "width": 285,
+      "height": 210,
       "style": {
         "color": "#2563eb",
         "width": 2
@@ -630,8 +630,8 @@ Show line only under conditions:
   "type": "line",
   "x": 50,
   "y": 500,
-  "x2": 545,
-  "y2": 500,
+  "width": 545,
+  "height": 500,
   "printCondition": "showDivider == true"
 }
 ```
@@ -656,8 +656,8 @@ Show line only under conditions:
       "type": "line",
       "x": 50,
       "y": 25,
-      "x2": 545,
-      "y2": 25,
+      "width": 545,
+      "height": 25,
       "style": {
         "color": "#e5e7eb",
         "width": 0.5
@@ -700,8 +700,8 @@ Creates a dividing line after each item.
 {
   "x": 30,
   "y": 300,
-  "x2": 565,  // 595 (A4) - 30 (margin)
-  "y2": 300
+  "width": 565,  // 595 (A4) - 30 (margin)
+  "height": 300
 }
 ```
 
@@ -711,8 +711,8 @@ Creates a dividing line after each item.
 {
   "x": 300,
   "y": 30,
-  "x2": 300,
-  "y2": 812  // 842 (A4) - 30 (margin)
+  "width": 300,
+  "height": 812  // 842 (A4) - 30 (margin)
 }
 ```
 

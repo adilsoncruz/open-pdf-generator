@@ -444,10 +444,13 @@ function createMenu() {
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
-        { type: 'separator' },
+        // Dev tools only in development
+        ...((!app.isPackaged || process.env.NODE_ENV === 'development') ? [
+          { role: 'reload' as const },
+          { role: 'forceReload' as const },
+          { role: 'toggleDevTools' as const },
+          { type: 'separator' as const },
+        ] : []),
         { role: 'resetZoom' },
         { role: 'zoomIn' },
         { role: 'zoomOut' },
@@ -541,6 +544,7 @@ function createWindow() {
       splashWindow = null
     }
     mainWindow?.show()
+    mainWindow?.maximize()
     mainWindow?.focus()
     
     // Inicializar auto-updater
@@ -553,7 +557,7 @@ function createWindow() {
   // Em desenvolvimento, carrega do Vite dev server
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools()
+    // DevTools starts closed in dev, can be opened via View menu (Cmd+Option+I)
   } else {
     // In production, load from build
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))

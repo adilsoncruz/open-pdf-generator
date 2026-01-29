@@ -314,6 +314,16 @@ class TextRenderer : Renderer<TextElement> {
                     value?.toString()
                 }
             }
+            !element.value.isNullOrBlank() && context.loopContext != null -> {
+                // Inside a loop, try to resolve value as a field from the loop item
+                // Also supports transformations like "name | uppercase"
+                if (ExpressionProcessor.hasTransformations(element.value)) {
+                    ExpressionProcessor.process(element.value, context.data, context.loopContext)
+                } else {
+                    val fieldValue = DataBindingResolver.resolve(element.value, context.data, context.loopContext)
+                    fieldValue?.toString() ?: element.value
+                }
+            }
             else -> element.value
         }
     }

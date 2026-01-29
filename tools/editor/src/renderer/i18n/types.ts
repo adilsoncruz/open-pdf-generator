@@ -50,6 +50,7 @@ export interface Translations {
 
   // Sidebar
   sidebar: {
+    settings: string
     pageSettings: string
     size: string
     margins: string

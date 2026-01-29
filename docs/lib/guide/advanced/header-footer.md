@@ -7,14 +7,14 @@ Fixed headers and footers are elements that repeat on all pages of the document,
 ```
 ┌─────────────────────────────────────────┐
 │  ┌───────────────────────────────────┐  │
-│  │         FIXED HEADER             │  │ ← Repeats on all pages
+│  │         FIXED HEADER              │  │ ← Repeats on all pages
 │  └───────────────────────────────────┘  │
 │                                         │
 │           PAGE CONTENT                  │
 │           (Body / Elements)             │
 │                                         │
 │  ┌───────────────────────────────────┐  │
-│  │         FIXED FOOTER             │  │ ← Repeats on all pages
+│  │         FIXED FOOTER              │  │ ← Repeats on all pages
 │  └───────────────────────────────────┘  │
 └─────────────────────────────────────────┘
 ```
@@ -138,8 +138,8 @@ Fixed headers and footers are elements that repeat on all pages of the document,
         "id": "footer-line",
         "x": 30,
         "y": 0,
-        "x2": 565,
-        "y2": 0,
+        "width": 565,
+        "height": 0,
         "style": {
           "color": "#d1d5db",
           "width": 1
@@ -431,8 +431,8 @@ The rectangle will occupy the entire available width (page - margins).
         "id": "footer-line",
         "x": 0,
         "y": 5,
-        "x2": 535,
-        "y2": 5,
+        "width": 535,
+        "height": 5,
         "style": {
           "color": "#d1d5db",
           "width": 0.5
@@ -592,8 +592,8 @@ A4 Portrait:
   "type": "line",
   "x": 0,
   "y": 79,
-  "x2": 535,
-  "y2": 79,
+  "width": 535,
+  "height": 79,
   "style": {
     "color": "#e5e7eb",
     "width": 1

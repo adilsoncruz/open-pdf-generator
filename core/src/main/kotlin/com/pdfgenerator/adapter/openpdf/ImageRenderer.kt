@@ -9,6 +9,7 @@ import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 
 class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElement> {

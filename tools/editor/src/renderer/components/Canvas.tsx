@@ -19,10 +19,98 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
     selectedLoopParentId, 
     selectLoopChild, 
     updateLoopChildElement,
-    saveSnapshot
+    saveSnapshot,
+    testData
   } = useTemplateStore()
   
   const isSelected = selectedLoopChildId === child.id && selectedLoopParentId === loopId
+  
+  // Find loop element in all sections
+  const findLoopElement = (loopElementId: string): Element | undefined => {
+    const template = useTemplateStore.getState().template
+    
+    // Search in all possible locations
+    const allElements: Element[] = [
+      ...(template.pageElements || []),
+      ...(template.pageSettings.header?.elements || []),
+      ...(template.pageSettings.footer?.elements || []),
+      ...(template.pageSettings.bodyBackground?.elements || []),
+      ...(template.summaryPage?.elements || [])
+    ]
+    
+    return allElements.find(e => e.id === loopElementId)
+  }
+  
+  // Resolve display text for loop child elements
+  // In loops, child elements use 'value' as the field name to get from each item
+  const resolveChildDisplayText = (el: { value?: string; dataBinding?: string }, fallback: string = ''): string => {
+    // The field to resolve - could be in value or dataBinding (trim whitespace)
+    const rawFieldName = el.dataBinding || el.value
+    const fieldName = rawFieldName?.trim()
+    
+    if (!fieldName) {
+      return fallback
+    }
+    
+    // Try to resolve the field from the loop's data array
+    if (testData && Object.keys(testData).length > 0) {
+      const loopElement = findLoopElement(loopId)
+      const loopDataBinding = loopElement?.dataBinding?.trim()
+      
+      if (loopDataBinding) {
+        // Get the array from test data
+        const parts = loopDataBinding.split('.')
+        let arrayData: unknown = testData
+        for (const part of parts) {
+          const trimmedPart = part.trim()
+          if (arrayData && typeof arrayData === 'object' && trimmedPart in arrayData) {
+            arrayData = (arrayData as Record<string, unknown>)[trimmedPart]
+          } else {
+            arrayData = null
+            break
+          }
+        }
+        
+        // If we found an array, try to get the field from the first item
+        if (Array.isArray(arrayData) && arrayData.length > 0) {
+          const firstItem = arrayData[0]
+          
+          // Check for transformations
+          if (hasTransformations(fieldName)) {
+            const result = processExpression(fieldName, firstItem as Record<string, unknown>)
+            if (result) return result
+          }
+          
+          // Simple field resolution - direct property access first
+          if (firstItem && typeof firstItem === 'object' && fieldName in firstItem) {
+            const directValue = (firstItem as Record<string, unknown>)[fieldName]
+            if (directValue !== null && directValue !== undefined) {
+              return String(directValue)
+            }
+          }
+          
+          // Nested field resolution (for paths like "address.city")
+          const fieldParts = fieldName.split('.')
+          let value: unknown = firstItem
+          for (const part of fieldParts) {
+            const trimmedPart = part.trim()
+            if (value && typeof value === 'object' && trimmedPart in value) {
+              value = (value as Record<string, unknown>)[trimmedPart]
+            } else {
+              value = null
+              break
+            }
+          }
+          if (value !== null && value !== undefined) {
+            return String(value)
+          }
+        }
+      }
+    }
+    
+    // Fallback: show the field name between braces
+    return `{${fieldName}}`
+  }
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   
@@ -76,6 +164,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
       case 'static_text': {
         const textWidth = child.width ? resolveWidth(child.width) : undefined
         const textHeight = child.height ? resolveHeight(child.height) : undefined
+        const displayText = resolveChildDisplayText(child, child.type === 'text' ? 'campo' : 'Texto')
         return (
           <div
             style={{
@@ -90,7 +179,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
               textOverflow: 'ellipsis',
             }}
           >
-            {child.value || (child.type === 'text' ? 'campo' : 'Texto')}
+            {displayText}
           </div>
         )
       }

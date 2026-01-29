@@ -18,7 +18,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Library', link: '/lib/' },
       { text: 'CLI', link: '/cli/' },
-      { text: 'Editor', link: '/editor-redirect' },
+      { text: 'Editor', link: '/editor/' },
       {
         text: 'GitHub',
         link: 'https://github.com/adilsoncruz/open-pdf-generator'
@@ -85,6 +85,14 @@ export default defineConfig({
             { text: 'Installation', link: '/cli/installation' },
             { text: 'Commands', link: '/cli/commands' },
             { text: 'Examples', link: '/cli/examples' }
+          ]
+        }
+      ],
+      '/editor/': [
+        {
+          text: 'Editor',
+          items: [
+            { text: 'Overview & Download', link: '/editor/' }
           ]
         }
       ]

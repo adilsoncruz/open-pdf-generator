@@ -181,7 +181,7 @@ For more details, see [JAR_INTEGRATION.md](./JAR_INTEGRATION.md).
 ## 📁 File Structure
 
 ```
-desktop-app/
+editor/
 ├── src/
 │   ├── main/              # Electron main process
 │   │   ├── index.ts       # Entry point

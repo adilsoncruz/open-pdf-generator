@@ -13,6 +13,7 @@ import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.RectangleStyle
 import com.pdfgenerator.model.TableColumn
 import com.pdfgenerator.model.TableElement
+import com.pdfgenerator.model.TableStyle
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TemplateMetadata
 import com.pdfgenerator.model.TextElement

@@ -99,7 +99,9 @@ interface TemplateStore {
   history: Template[]
   historyIndex: number
   copiedElements: { elements: Element[]; location: ElementLocation } | null
-  isPropertiesPanelPinned: boolean  // Whether the properties panel is pinned
+  isPropertiesPanelPinned: boolean
+  isSidebarPinned: boolean
+  isSidebarMinimized: boolean
 
   // Actions
   setTemplate: (template: Template) => void
@@ -165,6 +167,8 @@ interface TemplateStore {
   
   // UI State Actions
   togglePropertiesPanelPinned: () => void
+  toggleSidebarPinned: () => void
+  toggleSidebarMinimized: () => void
 }
 
 const defaultTemplate: Template = {
@@ -226,7 +230,9 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   history: [JSON.parse(JSON.stringify(defaultTemplate))],
   historyIndex: 0,
   copiedElements: null,
-  isPropertiesPanelPinned: true,  // Default: pinned
+  isPropertiesPanelPinned: true,
+  isSidebarPinned: true,
+  isSidebarMinimized: false,
 
   setTemplate: (template) =>
     set(() => ({
@@ -2119,6 +2125,16 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   togglePropertiesPanelPinned: () =>
     set((state) => ({
       isPropertiesPanelPinned: !state.isPropertiesPanelPinned,
+    })),
+
+  toggleSidebarPinned: () =>
+    set((state) => ({
+      isSidebarPinned: !state.isSidebarPinned,
+    })),
+
+  toggleSidebarMinimized: () =>
+    set((state) => ({
+      isSidebarMinimized: !state.isSidebarMinimized,
     })),
 }))
 

@@ -42,6 +42,7 @@ const en: Translations = {
   },
 
   sidebar: {
+    settings: 'Settings',
     pageSettings: 'Page Settings',
     size: 'Size',
     margins: 'Margins (pt)',

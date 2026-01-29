@@ -701,8 +701,8 @@ Draws horizontal, vertical, or diagonal lines.
   "id": "section-divider",
   "x": 50,
   "y": 300,
-  "x2": 545,
-  "y2": 300,
+  "width": 545,
+  "height": 300,
   "style": {
     "color": "#d1d5db",
     "width": 1
@@ -718,8 +718,8 @@ Draws horizontal, vertical, or diagonal lines.
   "id": "dashed-line",
   "x": 50,
   "y": 400,
-  "x2": 545,
-  "y2": 400,
+  "width": 545,
+  "height": 400,
   "style": {
     "color": "#9ca3af",
     "width": 1,
@@ -731,7 +731,7 @@ Draws horizontal, vertical, or diagonal lines.
 | Property | Type | Description |
 |----------|------|-------------|
 | `x`, `y` | number | Start point |
-| `x2`, `y2` | number | End point |
+| `width`, `height` | number | End point |
 | `color` | hex | Line color |
 | `width` | number | Thickness |
 | `dashPattern` | array | Dash pattern [dash, gap] |
@@ -1016,8 +1016,8 @@ Headers and footers are automatically rendered on all pages.
           "id": "footer-line",
           "x": 30,
           "y": 10,
-          "x2": 565,
-          "y2": 10,
+          "width": 565,
+          "height": 10,
           "style": {
             "color": "#d1d5db",
             "width": 1

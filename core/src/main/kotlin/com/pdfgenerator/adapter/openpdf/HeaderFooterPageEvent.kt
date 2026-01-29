@@ -6,8 +6,17 @@ import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
+import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.BodyBackground
 import com.pdfgenerator.model.Element
+import com.pdfgenerator.model.ElementGroup
+import com.pdfgenerator.model.HeaderFooter
+import com.pdfgenerator.model.ImageElement
+import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.Template
+import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ConditionEvaluator
 import org.slf4j.LoggerFactory
 

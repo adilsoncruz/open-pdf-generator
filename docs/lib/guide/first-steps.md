@@ -237,8 +237,8 @@ The generated PDF will have:
       "id": "divider1",
       "x": 30,
       "y": 140,
-      "x2": 565,
-      "y2": 140,
+      "width": 565,
+      "height": 140,
       "style": {
         "color": "#e5e7eb",
         "width": 1
@@ -282,8 +282,8 @@ The generated PDF will have:
       "id": "divider2",
       "x": 30,
       "y": 230,
-      "x2": 565,
-      "y2": 230,
+      "width": 565,
+      "height": 230,
       "style": {
         "color": "#e5e7eb",
         "width": 1

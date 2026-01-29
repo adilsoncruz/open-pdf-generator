@@ -103,8 +103,8 @@ A common case is having loop items followed by a total:
       "id": "separator",
       "x": 50,
       "y": 0,
-      "x2": 550,
-      "y2": 0,
+      "width": 550,
+      "height": 0,
       "positionMode": "RELATIVE",
       "relativeOffsetY": 10
     },
