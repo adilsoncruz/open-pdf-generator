@@ -12,7 +12,7 @@ let splashWindow: BrowserWindow | null = null
 
 // ============ CLI Management ============
 
-const CORE_LIBRARY_VERSION = '0.1.0'
+const CORE_LIBRARY_VERSION = '1.0.0'
 const CLI_VERSION = CORE_LIBRARY_VERSION
 const CLI_DIR = path.join(os.homedir(), '.pdf-generator')
 const CLI_JAR_PATH = path.join(CLI_DIR, 'pdf-generator.jar')

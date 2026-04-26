@@ -17,7 +17,7 @@ interface CLIStatus {
   javaVersion: string | null
 }
 
-const CORE_LIBRARY_VERSION = '0.1.0'
+const CORE_LIBRARY_VERSION = '1.0.0'
 
 interface ToolbarProps {
   onToggleDataPanel: () => void

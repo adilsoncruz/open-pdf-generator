@@ -2181,6 +2181,74 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         )
       }
 
+      case 'list': {
+        const listWidth = typeof element.width === 'number' ? element.width : 220
+        const listHeight = typeof element.height === 'number' ? element.height : 100
+        const listBinding = element.dataBinding || 'items'
+        const listStyle = element.listStyle || 'BULLETED'
+        const color = element.style?.color || '#1f2937'
+        const fontSize = element.style?.fontSize || 12
+
+        const getPrefix = (index: number) => {
+          switch (listStyle) {
+            case 'NUMBERED': return `${index + 1}.`
+            case 'DASH': return '–'
+            case 'DIAMOND': return '◆'
+            case 'START': return '★'
+            case 'BULLETED':
+            default: return '•'
+          }
+        }
+
+        return (
+          <div
+            className={`cursor-move select-none border border-dashed border-gray-300 rounded-sm bg-white/80 ${
+              isSelected ? 'ring-2 ring-primary-500' : ''
+            }`}
+            style={{ width: listWidth, height: listHeight, padding: 8 }}
+            onMouseDown={handleMouseDown}
+          >
+            <div className="text-[10px] text-gray-500 mb-1 truncate">list: {`{${listBinding}}`}</div>
+            <div className="space-y-1">
+              {[0, 1, 2].map((idx) => (
+                <div key={idx} className="flex items-center gap-2" style={{ color, fontSize }}>
+                  <span>{getPrefix(idx)}</span>
+                  <span className="truncate">{`{${listBinding}}`}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      }
+
+      case 'check_list': {
+        const listWidth = typeof element.width === 'number' ? element.width : 240
+        const listHeight = typeof element.height === 'number' ? element.height : 110
+        const listBinding = element.dataBinding || 'checklist'
+        const color = element.style?.color || '#1f2937'
+        const fontSize = element.style?.fontSize || 12
+
+        return (
+          <div
+            className={`cursor-move select-none border border-dashed border-gray-300 rounded-sm bg-white/80 ${
+              isSelected ? 'ring-2 ring-primary-500' : ''
+            }`}
+            style={{ width: listWidth, height: listHeight, padding: 8 }}
+            onMouseDown={handleMouseDown}
+          >
+            <div className="text-[10px] text-gray-500 mb-1 truncate">check_list: {`{${listBinding}}`}</div>
+            <div className="space-y-1">
+              {[0, 1, 2].map((idx) => (
+                <div key={idx} className="flex items-center gap-2" style={{ color, fontSize }}>
+                  <span className="inline-flex w-3 h-3 border border-gray-600 rounded-sm" />
+                  <span className="truncate">{`{${listBinding}}`}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      }
+
       case 'loop': {
         const loopElements = element.elements || []
         const loopBinding = element.dataBinding || ''
@@ -2377,4 +2445,3 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     </div>
   )
 }
-
