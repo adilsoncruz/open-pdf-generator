@@ -1204,6 +1204,30 @@ export default function PropertiesPanel() {
                       onValueChange={(value) => handleUpdate('y', value)}
                     />
                   </div>
+                  <div className="mt-3">
+                    <Select
+                      value={selectedElement.positionMode || 'ABSOLUTE'}
+                      onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
+                      options={[
+                        { value: 'ABSOLUTE', label: 'Absolute (fixed on canvas)' },
+                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                      ]}
+                    />
+                    {selectedElement.positionMode === 'RELATIVE' && (
+                      <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={selectedElement.relativeOffsetY ?? 10}
+                            onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                            size="sm"
+                            className="w-20"
+                          />
+                          <span className="text-[10px] theme-text-muted">px</span>
+                        </div>
+                      </PropertyRow>
+                    )}
+                  </div>
                 </PropertyGroup>
 
                 <PropertyGroup title="Size" collapsible={false}>
@@ -2280,6 +2304,30 @@ export default function PropertiesPanel() {
                       onValueChange={(value) => handleUpdate('y', value)}
                     />
                   </div>
+                  <div className="mt-3">
+                    <Select
+                      value={selectedElement.positionMode || 'ABSOLUTE'}
+                      onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
+                      options={[
+                        { value: 'ABSOLUTE', label: 'Absolute (fixed on canvas)' },
+                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                      ]}
+                    />
+                    {selectedElement.positionMode === 'RELATIVE' && (
+                      <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={selectedElement.relativeOffsetY ?? 10}
+                            onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                            size="sm"
+                            className="w-20"
+                          />
+                          <span className="text-[10px] theme-text-muted">px</span>
+                        </div>
+                      </PropertyRow>
+                    )}
+                  </div>
                 </PropertyGroup>
 
                 <PropertyGroup title="Size" collapsible={false}>
@@ -2312,6 +2360,18 @@ export default function PropertiesPanel() {
                       />
                     </div>
                   </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Print Condition" collapsible={false}>
+                  <Input
+                    value={selectedElement.printCondition || ''}
+                    onChange={(e) => handleUpdate('printCondition', e.target.value || null)}
+                    placeholder="Ex: items.length > 0"
+                    size="sm"
+                  />
+                  <p className="text-xs theme-text-muted mt-1">
+                    Leave empty to always print
+                  </p>
                 </PropertyGroup>
               </>
             )}
@@ -2386,6 +2446,30 @@ export default function PropertiesPanel() {
                       onValueChange={(value) => handleUpdate('y', value)}
                     />
                   </div>
+                  <div className="mt-3">
+                    <Select
+                      value={selectedElement.positionMode || 'ABSOLUTE'}
+                      onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
+                      options={[
+                        { value: 'ABSOLUTE', label: 'Absolute (fixed on canvas)' },
+                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                      ]}
+                    />
+                    {selectedElement.positionMode === 'RELATIVE' && (
+                      <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={selectedElement.relativeOffsetY ?? 10}
+                            onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                            size="sm"
+                            className="w-20"
+                          />
+                          <span className="text-[10px] theme-text-muted">px</span>
+                        </div>
+                      </PropertyRow>
+                    )}
+                  </div>
                 </PropertyGroup>
 
                 <PropertyGroup title="Size" collapsible={false}>
@@ -2418,6 +2502,18 @@ export default function PropertiesPanel() {
                       />
                     </div>
                   </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Print Condition" collapsible={false}>
+                  <Input
+                    value={selectedElement.printCondition || ''}
+                    onChange={(e) => handleUpdate('printCondition', e.target.value || null)}
+                    placeholder="Ex: items.length > 0"
+                    size="sm"
+                  />
+                  <p className="text-xs theme-text-muted mt-1">
+                    Leave empty to always print
+                  </p>
                 </PropertyGroup>
               </>
             )}

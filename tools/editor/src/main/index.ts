@@ -731,6 +731,24 @@ function normalizeElementTypes(elements: unknown[]): unknown[] {
       normalized.type = 'check_list'
     }
 
+    if ((normalized.type === 'list' || normalized.type === 'check_list') && !normalized.style) {
+      normalized.style = {
+        fontSize: 12,
+        fontFamily: 'Helvetica',
+        fontWeight: 'normal',
+        color: '#000000',
+        alignment: 'left',
+      }
+    }
+
+    if (normalized.type === 'list' && !normalized.listStyle) {
+      normalized.listStyle = 'BULLETED'
+    }
+
+    if (normalized.type === 'check_list' && !normalized.checkStyle) {
+      normalized.checkStyle = 'RECTANGLE'
+    }
+
     if (Array.isArray(normalized.elements)) {
       normalized.elements = normalizeElementTypes(normalized.elements)
     }
