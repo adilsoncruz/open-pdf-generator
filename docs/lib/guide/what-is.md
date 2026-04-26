@@ -71,6 +71,8 @@ You define the visual structure in a JSON file (template) and provide dynamic da
 | **Rectangle** | Rectangles for backgrounds and borders |
 | **Line** | Horizontal, vertical, or diagonal lines |
 | **Barcode** | QR Codes and barcodes |
+| **List** | Bulleted and numbered lists from arrays |
+| **Check List** | Checkbox lists from object/map values |
 | **Conditional** | Conditional rendering |
 | **Loop** | Element repetition |
 
@@ -214,5 +216,4 @@ Tables automatically break between pages with repeated headers.
 - [Installation](/lib/guide/installation) - Add to your project
 - [First Steps](/lib/guide/first-steps) - Create your first PDF
 - [Templates](/lib/guide/templates) - Understand the structure
-
 

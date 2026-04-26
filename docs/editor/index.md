@@ -120,6 +120,7 @@ On first launch, you may need to allow the app in **System Preferences → Secur
 - ✓ Built-in PDF generation library
 - ✓ Header and footer support
 - ✓ Loop elements with auto-pagination
+- ✓ List and check list elements
 - ✓ Relative positioning for dynamic layouts
 - ✓ Data binding with JSON
 - ✓ No internet required

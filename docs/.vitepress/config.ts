@@ -45,6 +45,8 @@ export default defineConfig({
             { text: 'Rectangle', link: '/lib/guide/elements/rectangle' },
             { text: 'Line', link: '/lib/guide/elements/line' },
             { text: 'Barcode', link: '/lib/guide/elements/barcode' },
+            { text: 'List', link: '/lib/guide/elements/list' },
+            { text: 'Check List', link: '/lib/guide/elements/check-list' },
             { text: 'Loop', link: '/lib/guide/elements/loop' },
             { text: 'Conditional', link: '/lib/guide/elements/conditional' }
           ]

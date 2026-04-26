@@ -46,7 +46,7 @@ features:
   - icon:
       src: /icons/grid.svg
     title: Rich Elements
-    details: Text, images, tables, rectangles, lines, barcodes, QR codes, and more with customizable properties.
+    details: Text, images, tables, rectangles, lines, barcodes, lists, check lists, and more with customizable properties.
 
   - icon:
       src: /icons/plug.svg
@@ -160,4 +160,3 @@ dependencies {
 | [Examples](/lib/examples/) | Real-world template examples |
 
 </div>
-

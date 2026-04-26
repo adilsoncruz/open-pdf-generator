@@ -67,7 +67,7 @@ npm run package
 ## 🎯 Features
 
 ### Visual Editor
-- ✅ Add elements (text, image, table, rectangle, line)
+- ✅ Add elements (text, image, table, rectangle, line, list, check list, loop)
 - ✅ Drag and position elements
 - ✅ Edit properties in real-time
 - ✅ Template preview on canvas

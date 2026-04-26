@@ -76,6 +76,8 @@ dependencies {
 | [Rectangle](./guide/elements/rectangle.md) | Shapes with borders and fill colors |
 | [Line](./guide/elements/line.md) | Horizontal, vertical, or diagonal lines |
 | [Barcode](./guide/elements/barcode.md) | QR codes and various barcode formats |
+| [List](./guide/elements/list.md) | Bulleted/numbered lists from array data |
+| [Check List](./guide/elements/check-list.md) | Check lists from object/map data |
 | [Loop](./guide/elements/loop.md) | Repeat elements for each item in an array |
 | [Conditional](./guide/elements/conditional.md) | Show/hide elements based on conditions |
 
