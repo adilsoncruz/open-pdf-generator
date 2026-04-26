@@ -48,22 +48,7 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
         val checkStyle = buildCheckStyle(element)
         listData.entries.forEachIndexed { index, entry ->
             val w = element.style!!.fontSize
-            var currentCheckStyle: RectangleStyle = checkStyle
-
-            if (entry.value == true) {
-                currentCheckStyle = checkStyle.copy(fillColor = element.style.color)
-            }
-            val prefixElement =
-                RectangleElement(
-                    id = "check-${element.id}-item-$index",
-                    x = listX,
-                    y = currentY,
-                    width = w,
-                    height = w,
-                    positionMode = PositionMode.RELATIVE,
-                    style = currentCheckStyle,
-                )
-            val textElement =
+            val measurementTextElement =
                 StaticTextElement(
                     id = "${element.id}-item-$index",
                     x = listX + w + 3f,
@@ -80,13 +65,33 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
                             paddingLeft = 0f,
                         ) ?: TextStyle(multiline = true),
                 )
-            val itemHeight = getTextHeight(textElement)
+            val itemHeight = getTextHeight(measurementTextElement)
             val itemEndY = currentY + itemHeight
             if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
                 currentY = listStartY
                 itemsRenderedOnCurrentPage = 0
             }
+
+            val currentCheckStyle =
+                if (entry.value == true) {
+                    checkStyle.copy(fillColor = element.style.color)
+                } else {
+                    checkStyle
+                }
+
+            val prefixElement =
+                RectangleElement(
+                    id = "check-${element.id}-item-$index",
+                    x = listX,
+                    y = currentY,
+                    width = w,
+                    height = w,
+                    positionMode = PositionMode.RELATIVE,
+                    style = currentCheckStyle,
+                )
+            val textElement = measurementTextElement.copy(y = currentY)
+
             renderEngine.render(prefixElement, context)
             renderEngine.render(textElement, context)
             itemsRenderedOnCurrentPage++

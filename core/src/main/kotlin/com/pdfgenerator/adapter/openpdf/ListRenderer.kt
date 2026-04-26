@@ -45,6 +45,31 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
 
         listData.forEachIndexed { index, item ->
             val prefix = buildPrefix(element, index)
+            val measurementTextElement =
+                StaticTextElement(
+                    id = "${element.id}-item-$index",
+                    x = listX + 10f,
+                    y = currentY,
+                    width = element.width - 10f,
+                    height = element.itemSpacing + (element.style?.fontSize ?: 10f),
+                    value = "$item",
+                    positionMode = PositionMode.RELATIVE,
+                    style =
+                        element.style?.copy(
+                            firstLineIndent = 0f,
+                            multiline = true,
+                            overflow = "auto",
+                            paddingLeft = 0f,
+                        ) ?: TextStyle(multiline = true),
+                )
+            val itemHeight = getTextHeight(measurementTextElement)
+            val itemEndY = currentY + itemHeight
+            if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
+                context.document.newPage()
+                currentY = listStartY
+                itemsRenderedOnCurrentPage = 0
+            }
+
             val prefixElement =
                 StaticTextElement(
                     id = "$prefix-{element.id}-item-$index",
@@ -62,30 +87,8 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
                             paddingLeft = 0f,
                         ) ?: TextStyle(multiline = true),
                 )
-            val textElement =
-                StaticTextElement(
-                    id = "${element.id}-item-$index",
-                    x = listX + 10f,
-                    y = currentY,
-                    width = element.width - 10f,
-                    height = element.itemSpacing + (element.style?.fontSize ?: 10f),
-                    value = "$item",
-                    positionMode = PositionMode.RELATIVE,
-                    style =
-                        element.style?.copy(
-                            firstLineIndent = 0f,
-                            multiline = true,
-                            overflow = "auto",
-                            paddingLeft = 0f,
-                        ) ?: TextStyle(multiline = true),
-                )
-            val itemHeight = getTextHeight(textElement)
-            val itemEndY = currentY + itemHeight
-            if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
-                context.document.newPage()
-                currentY = listStartY
-                itemsRenderedOnCurrentPage = 0
-            }
+            val textElement = measurementTextElement.copy(y = currentY)
+
             renderEngine.render(prefixElement, context)
             renderEngine.render(textElement, context)
             itemsRenderedOnCurrentPage++
