@@ -30,20 +30,18 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
         }
 
         val listX = element.x
+        val listStartY = element.startY ?: element.y
 
         val pageHeight = context.document.pageSize.height
         val margins = context.template.pageSettings.margins
-        val headerHeight = context.template.pageSettings.header?.height ?: 0f
         val footerHeight = context.template.pageSettings.footer?.height ?: 0f
 
-        val contentAreaTop = margins.top + headerHeight
         val contentAreaBottom = pageHeight - margins.bottom - footerHeight
-        val availableContentHeight = contentAreaBottom - contentAreaTop
 
-        val maxYInTemplate = availableContentHeight
+        val maxYInTemplate = contentAreaBottom
 
         var itemsRenderedOnCurrentPage = 0
-        var currentY = element.y
+        var currentY = listStartY
 
         listData.forEachIndexed { index, item ->
             val prefix = buildPrefix(element, index)
@@ -85,7 +83,7 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
             val itemEndY = currentY + itemHeight
             if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
-                currentY = contentAreaTop
+                currentY = listStartY
                 itemsRenderedOnCurrentPage = 0
             }
             renderEngine.render(prefixElement, context)

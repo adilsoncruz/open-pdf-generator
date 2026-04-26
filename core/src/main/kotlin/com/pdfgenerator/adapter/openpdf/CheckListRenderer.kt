@@ -23,7 +23,7 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
         val listData = DataBindingResolver.resolve(element.dataBinding, context.data, context.loopContext)
 
         if (listData !is Map<*, *>) {
-            logger.warn("Data binding ${element.dataBinding} did not return a list for list ${element.id}")
+            logger.warn("Data binding ${element.dataBinding} did not return a map for check list ${element.id}")
             return
         }
 
@@ -32,20 +32,18 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
         }
 
         val listX = element.x
+        val listStartY = element.startY ?: element.y
 
         val pageHeight = context.document.pageSize.height
         val margins = context.template.pageSettings.margins
-        val headerHeight = context.template.pageSettings.header?.height ?: 0f
         val footerHeight = context.template.pageSettings.footer?.height ?: 0f
 
-        val contentAreaTop = margins.top + headerHeight
         val contentAreaBottom = pageHeight - margins.bottom - footerHeight
-        val availableContentHeight = contentAreaBottom - contentAreaTop
 
-        val maxYInTemplate = availableContentHeight
+        val maxYInTemplate = contentAreaBottom
 
         var itemsRenderedOnCurrentPage = 0
-        var currentY = element.y
+        var currentY = listStartY
 
         val checkStyle = buildCheckStyle(element)
         listData.entries.forEachIndexed { index, entry ->
@@ -86,7 +84,7 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
             val itemEndY = currentY + itemHeight
             if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
-                currentY = contentAreaTop
+                currentY = listStartY
                 itemsRenderedOnCurrentPage = 0
             }
             renderEngine.render(prefixElement, context)
