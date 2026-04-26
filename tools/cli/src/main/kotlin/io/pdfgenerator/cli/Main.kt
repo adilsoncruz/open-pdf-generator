@@ -90,7 +90,7 @@ class GenerateCommand : CliktCommand(
 
     override fun run() {
         if (verbose) {
-            echo("PDF Generator CLI v1.0.0")
+            echo("PDF Generator CLI v0.1.0")
             echo("========================")
         }
 
@@ -272,7 +272,7 @@ class VersionCommand : CliktCommand(
     help = "Show version information",
 ) {
     override fun run() {
-        echo("PDF Generator CLI v1.0.0")
+        echo("PDF Generator CLI v0.1.0")
         echo("Core Library: ${Version.FULL_NAME}")
         echo()
         echo("Java: ${System.getProperty("java.version")}")

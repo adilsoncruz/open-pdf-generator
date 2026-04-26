@@ -10,7 +10,7 @@ const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
   { type: 'line', label: 'Line', icon: 'line' },
   { type: 'barcode', label: 'Barcode/QR', icon: 'barcode' },
   { type: 'list', label: 'List', icon: 'list' },
-  { type: 'checklist', label: 'CheckList', icon: 'check-list' },
+  { type: 'check_list', label: 'CheckList', icon: 'checklist' },
   { type: 'loop', label: 'Loop', icon: 'loop' },
 ]
 
@@ -134,6 +134,17 @@ export default function ElementsToolbar() {
           style: {
 
           },
+        }
+        break
+      case 'check_list':
+        element = {
+          ...baseElement,
+          width: 300,
+          height: 120,
+          checkStyle: 'RECTANGLE',
+          dataBinding: '',
+          itemSpacing: 10,
+          style: {},
         }
         break
       case 'loop':

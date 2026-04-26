@@ -17,6 +17,8 @@ interface CLIStatus {
   javaVersion: string | null
 }
 
+const CORE_LIBRARY_VERSION = '0.1.0'
+
 interface ToolbarProps {
   onToggleDataPanel: () => void
   onTogglePreview?: () => void
@@ -626,7 +628,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
                 <h3 className="text-sm font-medium theme-text mb-2">{t.settings.versionInfo}</h3>
                 <div className="space-y-1 text-xs theme-text-secondary">
                   <p><span className="font-medium">{t.settings.editor}:</span> v1.0.0</p>
-                  <p><span className="font-medium">{t.settings.coreLibrary}:</span> v1.0.0</p>
+                  <p><span className="font-medium">{t.settings.coreLibrary}:</span> v{CORE_LIBRARY_VERSION}</p>
                   {cliStatus?.version && <p><span className="font-medium">{t.settings.cli}:</span> {cliStatus.version}</p>}
                 </div>
               </div>

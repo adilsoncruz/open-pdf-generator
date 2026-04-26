@@ -12,12 +12,13 @@ let splashWindow: BrowserWindow | null = null
 
 // ============ CLI Management ============
 
-const CLI_VERSION = '1.0.0'
+const CORE_LIBRARY_VERSION = '0.1.0'
+const CLI_VERSION = CORE_LIBRARY_VERSION
 const CLI_DIR = path.join(os.homedir(), '.pdf-generator')
 const CLI_JAR_PATH = path.join(CLI_DIR, 'pdf-generator.jar')
 const CLI_VERSION_FILE = path.join(CLI_DIR, 'version.txt')
 
-const CLI_DOWNLOAD_URL = `https://github.com/adilsoncruz/open-pdf-generator/releases/download/v${CLI_VERSION}/open-pdf-generator-${CLI_VERSION}-standalone.jar`
+const CLI_DOWNLOAD_URL = `https://github.com/adilsoncruz/open-pdf-generator/releases/download/v${CLI_VERSION}/open-pdf-generator-${CORE_LIBRARY_VERSION}-standalone.jar`
 
 interface CLIStatus {
   installed: boolean
@@ -180,7 +181,7 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
       
       if (isDev) {
         // Em desenvolvimento, tentar pegar do build da library
-        const libJar = path.join(__dirname, '..', '..', '..', 'library', 'build', 'libs', `open-pdf-generator-${CLI_VERSION}-standalone.jar`)
+        const libJar = path.join(__dirname, '..', '..', '..', 'library', 'build', 'libs', `open-pdf-generator-${CORE_LIBRARY_VERSION}-standalone.jar`)
         try {
           await fs.access(libJar)
           fallbackJar = libJar
@@ -720,6 +721,54 @@ ipcMain.handle('cli:getInstallPath', () => {
 
 // Gerar PDF e retornar como base64 (para preview)
 // Error codes for i18n translation in renderer
+
+function normalizeElementTypes(elements: unknown[]): unknown[] {
+  return elements.map((element) => {
+    if (!element || typeof element !== 'object') return element
+
+    const normalized = { ...(element as Record<string, unknown>) }
+    if (normalized.type === 'checklist') {
+      normalized.type = 'check_list'
+    }
+
+    if (Array.isArray(normalized.elements)) {
+      normalized.elements = normalizeElementTypes(normalized.elements)
+    }
+
+    return normalized
+  })
+}
+
+function normalizeTemplateJson(templateJson: string): string {
+  const template = JSON.parse(templateJson) as Record<string, unknown>
+
+  if (Array.isArray(template.pageElements)) {
+    template.pageElements = normalizeElementTypes(template.pageElements)
+  }
+
+  const pageSettings = template.pageSettings as Record<string, unknown> | undefined
+  const sections = ['header', 'footer', 'bodyBackground'] as const
+
+  sections.forEach((section) => {
+    const sectionData = pageSettings?.[section] as Record<string, unknown> | undefined
+    if (sectionData && Array.isArray(sectionData.elements)) {
+      sectionData.elements = normalizeElementTypes(sectionData.elements)
+    }
+  })
+
+  const summaryPage = template.summaryPage as Record<string, unknown> | undefined
+  if (summaryPage && Array.isArray(summaryPage.elements)) {
+    summaryPage.elements = normalizeElementTypes(summaryPage.elements)
+  }
+
+  const summaryBackground = summaryPage?.background as Record<string, unknown> | undefined
+  if (summaryBackground && Array.isArray(summaryBackground.elements)) {
+    summaryBackground.elements = normalizeElementTypes(summaryBackground.elements)
+  }
+
+  return JSON.stringify(template)
+}
+
 const ErrorCodes = {
   JAVA_NOT_INSTALLED: 'JAVA_NOT_INSTALLED',
   CLI_NOT_INSTALLED: 'CLI_NOT_INSTALLED',
@@ -768,12 +817,13 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
 
     console.log('📄 [Preview] Temp files:', { templateFile, dataFile, pdfFile })
 
-    await fs.writeFile(templateFile, templateJson)
+    const normalizedTemplateJson = normalizeTemplateJson(templateJson)
+    await fs.writeFile(templateFile, normalizedTemplateJson)
     await fs.writeFile(dataFile, dataJson)
     
     // Log template summary
     try {
-      const template = JSON.parse(templateJson)
+      const template = JSON.parse(normalizedTemplateJson)
       console.log('📄 [Preview] Template:', {
         version: template.version,
         name: template.metadata?.name,
@@ -912,7 +962,8 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
     const dataFile = path.join(tmpDir, 'data.json')
     const pdfFile = outputPath || path.join(tmpDir, 'output.pdf')
 
-    await fs.writeFile(templateFile, templateJson)
+    const normalizedTemplateJson = normalizeTemplateJson(templateJson)
+    await fs.writeFile(templateFile, normalizedTemplateJson)
     await fs.writeFile(dataFile, dataJson)
 
     const javaPath = cliStatus.javaPath || 'java'
