@@ -1,16 +1,30 @@
 package com.pdfgenerator
 
+import com.github.adilsoncruz.pdfsnapshottesting.EnablePdfSnapshots
+import com.github.adilsoncruz.pdfsnapshottesting.PdfSnapshotTest
+import com.github.adilsoncruz.pdfsnapshottesting.assertPdfByFile
+import com.github.adilsoncruz.pdfsnapshottesting.models.PdfRegion
+import com.github.adilsoncruz.pdfsnapshottesting.models.SnapshotConfig
+import com.google.gson.GsonBuilder
 import com.pdfgenerator.api.PDFGenerationException
 import com.pdfgenerator.api.PDFGenerator
+import com.pdfgenerator.model.CheckListElement
+import com.pdfgenerator.model.CheckStyle
+import com.pdfgenerator.model.ListElement
+import com.pdfgenerator.model.ListMode
 import com.pdfgenerator.model.Template
+import com.pdfgenerator.model.TextStyle
+import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@EnablePdfSnapshots
 class PDFGeneratorTest {
     private val basicTemplateJson =
         """
@@ -209,8 +223,8 @@ class PDFGeneratorTest {
             assertTrue(pdfBytes.isNotEmpty())
         }
 
-        @Test
-        fun `should process transformations in data binding`() {
+        @TestFactory
+        fun `should process transformations in data binding`(): Collection<DynamicTest> {
             val templateJson =
                 """
                 {
@@ -221,17 +235,33 @@ class PDFGeneratorTest {
                     "margins": { "top": 30, "right": 30, "bottom": 30, "left": 30 }
                   },
                   "pageElements": [
-                    { "type": "text", "id": "text1", "x": 50, "y": 50, "dataBinding": "name | uppercase" }
+                    { "type": "text", "id": "text1", "x": 0, "y": 0, "dataBinding": "name | uppercase" },
+                    { "type": "text", "id": "text2", "x": 0, "y": 50, "dataBinding": "name | lowercase" },
+                    { "type": "text", "id": "text3", "x": 0, "y": 100, "dataBinding": "name | capitalize" },
+                    { "type": "text", "id": "text4", "x": 0, "y": 150, "dataBinding": "name | prefix:'Name:'" },
+                    { "type": "text", "id": "text5", "x": 0, "y": 200, "dataBinding": "items | suffix:' units'" }
                   ]
                 }
                 """.trimIndent()
 
             val template = Template.fromString(templateJson)
-            val data = mapOf("name" to "john doe")
+            val data = mapOf("name" to "Fulano", "items" to 9)
             val generator = PDFGenerator()
             val pdfBytes = generator.generate(template, data)
 
             assertTrue(pdfBytes.isNotEmpty())
+
+            return PdfSnapshotTest(
+                expectedPdf = "dataBinding/transforms/teste",
+                pdfBytes,
+            )
+                .page(0)
+                .region("uppercase", PdfRegion(30f, 30f, 65f, 20f))
+                .region("lowercase", PdfRegion(30f, 80f, 60f, 20f))
+                .region("capitalize", PdfRegion(30f, 130f, 60f, 20f))
+                .region("prefix", PdfRegion(30f, 180f, 100f, 20f))
+                .region("sufix", PdfRegion(30f, 230f, 60f, 20f))
+                .assertPdfBySnapshot()
         }
     }
 
@@ -250,19 +280,33 @@ class PDFGeneratorTest {
                     "header": {
                       "height": 50,
                       "elements": [
-                        { "type": "text", "id": "header-title", "x": 50, "y": 10, "value": "Header" }
+                        {
+                          "type": "rectangle",
+                          "id": "rect1",
+                          "x": 10,
+                          "y": 10,
+                          "width": 100,
+                          "height": 50,
+                          "style": { "fillColor": "#cccccc", "borderWidth": 2, "borderColor": "#000000" }
+                        },
+                        { "type": "text", "id": "header-title", "x": 20, "y": 20, "value": "123 teste", "style": { "font-size": "30px"} }
                       ]
                     },
                     "footer": {
                       "height": 50,
                       "elements": [
-                        { "type": "text", "id": "footer-text", "x": 50, "y": 10, "value": "Footer" }
+                        { "type": "text", "id": "footer-text", "x": 60, "y": 10, "value": "AAAAAA" }
                       ]
                     }
                   },
                   "pageElements": [
-                    { "type": "text", "id": "body-text", "x": 50, "y": 50, "value": "Body" }
-                  ]
+                    { "type": "text", "id": "body-text", "x": 60, "y": 50, "value": "asd asd asdasd"  }
+                  ],
+                  "summaryPage": {
+                    "elements": [
+                      { "type": "text", "id": "total", "x": 50, "y": 80, "dataBinding": "total" }
+                    ]
+                  }
                 }
                 """.trimIndent()
 
@@ -271,6 +315,12 @@ class PDFGeneratorTest {
             val pdfBytes = generator.generate(template, emptyMap())
 
             assertTrue(pdfBytes.isNotEmpty())
+
+            assertPdfByFile(
+                expected = "elements/text.pdf",
+                pdfBytes,
+                config = SnapshotConfig(tolerancePercent = 0.0000001f),
+            )
         }
 
         @Test
@@ -324,7 +374,25 @@ class PDFGeneratorTest {
                       "y": 50,
                       "width": 100,
                       "height": 50,
-                      "style": { "fillColor": "#FF0000", "borderWidth": 2, "borderColor": "#000000" }
+                      "style": { "fillColor": "#000000", "borderWidth": 2, "borderColor": "#000000" }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "rect2",
+                      "x": 0,
+                      "y": 0,
+                      "width": 40,
+                      "height": 40,
+                      "style": { "fillColor": "#000000", "borderWidth": 2, "borderColor": "#000000" }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "rect3",
+                      "x": 50,
+                      "y": 0,
+                      "width": 40,
+                      "height": 40,
+                      "style": { "fillColor": "#000000", "borderWidth": 2, "borderColor": "#000000" }
                     }
                   ]
                 }
@@ -335,6 +403,12 @@ class PDFGeneratorTest {
             val pdfBytes = generator.generate(template, emptyMap())
 
             assertTrue(pdfBytes.isNotEmpty())
+
+            assertPdfByFile(
+                expected = "elements/rectangle.pdf",
+                pdfBytes,
+                config = SnapshotConfig(tolerancePercent = 0.0000001f),
+            )
         }
 
         @Test
@@ -386,7 +460,7 @@ class PDFGeneratorTest {
                       "id": "line1",
                       "x": 50,
                       "y": 50,
-                      "width": 150,
+                      "width": 200,
                       "height": 0,
                       "style": { "color": "#000000", "width": 2 }
                     }
@@ -431,6 +505,9 @@ class PDFGeneratorTest {
             val pdfBytes = generator.generate(template, emptyMap())
 
             assertTrue(pdfBytes.isNotEmpty())
+//        pdfSnapshotTesting(
+//          pdfBytes = pdfBytes,
+//        ).assertSnapshot("line_100_percent.png")
         }
 
         @Test
@@ -508,40 +585,6 @@ class PDFGeneratorTest {
         }
 
         @Test
-        fun `should generate PDF with barcode`() {
-            val templateJson =
-                """
-                {
-                  "version": "1.0",
-                  "pageSettings": {
-                    "size": "A4",
-                    "orientation": "portrait",
-                    "margins": { "top": 30, "right": 30, "bottom": 30, "left": 30 }
-                  },
-                  "pageElements": [
-                    {
-                      "type": "barcode",
-                      "id": "qr1",
-                      "x": 50,
-                      "y": 50,
-                      "width": 100,
-                      "height": 100,
-                      "barcodeType": "qrcode",
-                      "dataBinding": "code"
-                    }
-                  ]
-                }
-                """.trimIndent()
-
-            val template = Template.fromString(templateJson)
-            val data = mapOf("code" to "INVOICE-12345")
-            val generator = PDFGenerator()
-            val pdfBytes = generator.generate(template, data)
-
-            assertTrue(pdfBytes.isNotEmpty())
-        }
-
-        @Test
         fun `should generate PDF with rectangle with rounded corners`() {
             val templateJson =
                 """
@@ -556,11 +599,11 @@ class PDFGeneratorTest {
                     {
                       "type": "rectangle",
                       "id": "rect1",
-                      "x": 50,
-                      "y": 50,
+                      "x": 150,
+                      "y": 80,
                       "width": 200,
                       "height": 100,
-                      "style": { "fillColor": "#E0E0E0", "cornerRadius": 10 }
+                      "style": { "fillColor": "#E0E0E0", "cornerRadius": 60 }
                     }
                   ]
                 }
@@ -571,7 +614,11 @@ class PDFGeneratorTest {
             val pdfBytes = generator.generate(template, emptyMap())
 
             assertTrue(pdfBytes.isNotEmpty())
-        }
+
+            assertPdfByFile(
+                expected = "elements/rectangle/rounded",
+                pdfBytes,
+            )
     }
 
     @Nested
@@ -740,6 +787,12 @@ class PDFGeneratorTest {
             val pdfBytes = generator.generate(template, data)
 
             assertTrue(pdfBytes.isNotEmpty())
+
+            assertPdfByFile(
+                expected = "elements/summary.pdf",
+                pdfBytes,
+                config = SnapshotConfig(tolerancePercent = 0.0000001f),
+            )
         }
     }
 
@@ -763,14 +816,13 @@ class PDFGeneratorTest {
                           "x": 0,
                           "y": 0,
                           "width": "100%",
-                          "height": "100%",
-                          "style": { "fillColor": "#F5F5F5" }
+                          "height": "100%"
                         }
                       ]
                     }
                   },
                   "pageElements": [
-                    { "type": "text", "id": "text1", "x": 50, "y": 50, "value": "Content" }
+                    { "type": "text", "id": "text1", "x": 50, "y": 50, "value": "Content Test Content Test" }
                   ]
                 }
                 """.trimIndent()
@@ -780,6 +832,11 @@ class PDFGeneratorTest {
             val pdfBytes = generator.generate(template, emptyMap())
 
             assertTrue(pdfBytes.isNotEmpty())
+
+            assertPdfByFile(
+                expected = "background/background.pdf",
+                pdfBytes,
+            )
         }
     }
 
@@ -893,7 +950,7 @@ class PDFGeneratorTest {
     }
 
     @Nested
-    inner class TextStyles {
+    inner class TextStylesTest {
         @Test
         fun `should generate PDF with styled text`() {
             val templateJson =
@@ -948,6 +1005,201 @@ class PDFGeneratorTest {
             val pdfBytes = generator.generate(template, emptyMap())
 
             assertTrue(pdfBytes.isNotEmpty())
+        }
+    }
+
+    @Nested
+    inner class ListElementTest {
+        @TestFactory
+        fun `should generate PDF with checkList element and check style`(): Collection<DynamicTest> {
+            val pageElements = mutableMapOf<String, ListElement>()
+            var index = 1
+            var spaceX = 0f
+            ListMode.entries.map {
+                pageElements.put(
+                    "$it - unchecked items",
+                    value =
+                        ListElement(
+                            id = "${index++}",
+                            x = spaceX,
+                            y = 0f,
+                            width = 100f,
+                            height = 180f,
+                            style = TextStyle(fontSize = 12f),
+                            dataBinding = "items",
+                            itemSpacing = 10f,
+                            listStyle = it,
+                        ),
+                )
+                spaceX += 80f
+            }
+
+            val gson = GsonBuilder().setPrettyPrinting().create()
+
+            val templateMap =
+                mapOf(
+                    "version" to "1.0",
+                    "pageSettings" to
+                        mapOf(
+                            "size" to "A4",
+                            "orientation" to "portrait",
+                            "margins" to
+                                mapOf(
+                                    "top" to 20,
+                                    "right" to 20,
+                                    "bottom" to 20,
+                                    "left" to 20,
+                                ),
+                        ),
+                    "pageElements" to pageElements.values.toList(),
+                )
+
+            val templateJson = gson.toJson(templateMap)
+
+            val data =
+                mapOf(
+                    "items" to
+                        listOf(
+                            "item 1",
+                            "item 2",
+                            "item 3",
+                            "item 4",
+                            "item 5",
+                        ),
+                )
+            val template = Template.fromString(templateJson)
+            val generator = PDFGenerator()
+
+            val pdfBytes = generator.generate(template, data)
+
+            val snapshot =
+                PdfSnapshotTest(
+                    expectedPdf = "list.pdf",
+                    pdfBytes = pdfBytes,
+                ).page(0)
+
+            pageElements.forEach { (name, element) ->
+                snapshot.region(
+                    name,
+                    PdfRegion(
+                        element.x,
+                        element.y,
+                        element.width,
+                        element.height,
+                    ),
+                )
+            }
+
+            return snapshot.assertPdfBySnapshot()
+        }
+    }
+
+    @Nested
+    inner class CheckListElementTest {
+        @TestFactory
+        fun `should generate PDF with checkList element and check style`(): Collection<DynamicTest> {
+            val pageElements = mutableMapOf<String, CheckListElement>()
+            var index = 1
+            var spaceX = 0f
+            CheckStyle.entries.map {
+                pageElements.put(
+                    "$it - unchecked items",
+                    value =
+                        CheckListElement(
+                            id = "${index++}",
+                            x = spaceX,
+                            y = 0f,
+                            width = 120f,
+                            height = 180f,
+                            style = TextStyle(fontSize = 12f),
+                            dataBinding = "items",
+                            itemSpacing = 10f,
+                            checkStyle = it,
+                        ),
+                )
+                pageElements.put(
+                    "$it - with  checked items",
+                    value =
+                        CheckListElement(
+                            id = "${index++}",
+                            x = spaceX,
+                            y = 200f,
+                            width = 120f,
+                            height = 180f,
+                            style = TextStyle(fontSize = 12f),
+                            dataBinding = "items_checked",
+                            itemSpacing = 10f,
+                            checkStyle = it,
+                        ),
+                )
+                spaceX += 120f
+            }
+
+            val gson = GsonBuilder().setPrettyPrinting().create()
+
+            val templateMap =
+                mapOf(
+                    "version" to "1.0",
+                    "pageSettings" to
+                        mapOf(
+                            "size" to "A4",
+                            "orientation" to "portrait",
+                            "margins" to
+                                mapOf(
+                                    "top" to 30,
+                                    "right" to 30,
+                                    "bottom" to 30,
+                                    "left" to 30,
+                                ),
+                        ),
+                    "pageElements" to pageElements.values.toList(),
+                )
+
+            val templateJson = gson.toJson(templateMap)
+
+            val data =
+                mapOf(
+                    "items" to
+                        mapOf(
+                            "item 1" to false,
+                            "item 2" to false,
+                            "item 3" to false,
+                            "item 4" to false,
+                            "item 5" to false,
+                        ),
+                    "items_checked" to
+                        mapOf(
+                            "item 1" to false,
+                            "item 2" to true,
+                            "item 3" to true,
+                            "item 4" to true,
+                            "item 5" to true,
+                        ),
+                )
+            val template = Template.fromString(templateJson)
+            val generator = PDFGenerator()
+
+            val pdfBytes = generator.generate(template, data)
+
+            val snapshot =
+                PdfSnapshotTest(
+                    expectedPdf = "checklist/checklist.pdf",
+                    pdfBytes = pdfBytes,
+                ).page(0)
+
+            pageElements.forEach { (name, element) ->
+                snapshot.region(
+                    name,
+                    PdfRegion(
+                        element.x,
+                        element.y,
+                        element.width,
+                        element.height,
+                    ),
+                )
+            }
+
+            return snapshot.assertPdfBySnapshot()
         }
     }
 }

@@ -73,6 +73,8 @@ export type IconName =
   | 'refresh'
   | 'pin'
   | 'pin-off'
+  | 'list'
+  | 'checklist'
 
 export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 

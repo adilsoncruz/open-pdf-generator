@@ -8,11 +8,13 @@ import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.RenderState
 import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.CheckListElement
 import com.pdfgenerator.model.ConditionalElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.ListElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
@@ -517,6 +519,8 @@ class PDFGenerator(
             is TableElement -> element.copy(x = adjustedX, y = adjustedY)
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ListElement -> element.copy(x = adjustedX, y = adjustedY)
+            is CheckListElement -> element.copy(x = adjustedX, y = adjustedY)
         }
     }
 
@@ -539,6 +543,8 @@ class PDFGenerator(
             is TableElement -> element.copy(x = adjustedX, y = adjustedY)
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ListElement -> element.copy(x = adjustedX, y = adjustedY)
+            is CheckListElement -> element.copy(x = adjustedX, y = adjustedY)
         }
     }
 
@@ -628,6 +634,13 @@ class PDFGenerator(
             }
             is ConditionalElement -> {
                 element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: 0f
+            }
+            is ListElement -> {
+                0f
+            }
+
+            is CheckListElement -> {
+                0f
             }
         }
     }

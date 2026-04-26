@@ -9,6 +9,8 @@ const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
   { type: 'rectangle', label: 'Rectangle', icon: 'rectangle' },
   { type: 'line', label: 'Line', icon: 'line' },
   { type: 'barcode', label: 'Barcode/QR', icon: 'barcode' },
+  { type: 'list', label: 'List', icon: 'list' },
+  { type: 'checklist', label: 'CheckList', icon: 'check-list' },
   { type: 'loop', label: 'Loop', icon: 'loop' },
 ]
 
@@ -100,10 +102,13 @@ export default function ElementsToolbar() {
         element = {
           ...baseElement,
           width: 200,
-          height: 0,
+          height: 60,
           style: {
-            strokeColor: '#000000',
-            strokeWidth: 1,
+            fontSize: 12,
+            fontFamily: 'Helvetica',
+            fontWeight: 'normal',
+            color: '#000000',
+            alignment: 'left',
           },
         }
         break
@@ -116,6 +121,18 @@ export default function ElementsToolbar() {
           dataBinding: '', 
           style: {
             errorCorrection: 'M', // L, M, Q, H (para QR Code)
+          },
+        }
+        break
+      case 'list':
+        element = {
+          ...baseElement,
+          width: 100,
+          height: 100,
+          listStyle: 'BULLETED', // 'qrcode' ou 'barcode'
+          dataBinding: '',
+          style: {
+
           },
         }
         break

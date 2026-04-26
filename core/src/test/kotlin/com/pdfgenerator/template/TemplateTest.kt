@@ -1,6 +1,14 @@
 package com.pdfgenerator.template
 
+import com.pdfgenerator.model.ConditionalElement
+import com.pdfgenerator.model.CustomSize
+import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LoopElement
+import com.pdfgenerator.model.Margins
+import com.pdfgenerator.model.PageSettings
+import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.Template
+import com.pdfgenerator.model.TemplateMetadata
 import com.pdfgenerator.model.TextElement
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

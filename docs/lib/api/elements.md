@@ -408,6 +408,67 @@ Repeats elements for each item in a list.
 
 ---
 
+## ListElement
+
+### Properties
+
+```json
+{
+  "type": "list",
+  "id": "product-list",
+  "dataBinding": "order.products",
+  "x": 50,
+  "y": 200,
+  "listStyle": "ordened",
+  "style": {
+    "fontSize": 14,
+    "fontFamily": "Helvetica",
+    "fontWeight": "bold",
+    "fontStyle": "normal",
+    "color": "#2563eb",
+    "alignment": "left",
+    "lineHeight": 1.5
+  }
+}
+```
+| Property      | Type   | Description                   |
+|---------------|--------|-------------------------------|
+| `dataBinding` | string | Path to array                 |
+| `listStyle`   | string | list style(ordenead, default) |
+| `style`       | object | font style like TextElement   |
+|               |        |                               |
+
+---
+
+## CheckListElement
+
+### Properties
+
+```json
+{
+  "type": "check_list",
+  "id": "product-list",
+  "dataBinding": "order.products",
+  "x": 50,
+  "y": 200,
+  "checkStyle": "bordered",
+  "style": {
+    "fontSize": 14,
+    "fontFamily": "Helvetica",
+    "fontWeight": "bold",
+    "fontStyle": "normal",
+    "color": "#2563eb",
+    "alignment": "left",
+    "lineHeight": 1.5
+  }
+}
+```
+| Property      | Type   | Description                              |
+|---------------|--------|------------------------------------------|
+| `dataBinding` | string | Path to array                            |
+| `checkStyle`  | string | check style(rectangle, circle, bordered) |
+| `style`       | object | font style like TextElement              |
+
 ## Next Steps
 
 - [JSON Templates](/lib/guide/templates) - Complete structure

@@ -1,13 +1,17 @@
 package com.pdfgenerator.template
 
 import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.BarcodeStyle
 import com.pdfgenerator.model.ConditionalElement
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LineStyle
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.RectangleStyle
 import com.pdfgenerator.model.TableColumn
 import com.pdfgenerator.model.TableElement
+import com.pdfgenerator.model.TableStyle
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.model.TextStyle
 import org.junit.jupiter.api.Test

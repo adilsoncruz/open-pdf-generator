@@ -31,7 +31,6 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
 
         if (loopData.isEmpty()) {
-            logger.debug("Loop ${element.id} com lista vazia, nada a renderizar")
             return
         }
 

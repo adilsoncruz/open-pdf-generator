@@ -8,15 +8,16 @@ plugins {
 }
 
 group = "com.pdfgenerator"
-version = "1.0.1"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
+    mavenLocal()
+    gradlePluginPortal()
 }
 
 dependencies {
     implementation("com.github.librepdf:openpdf:2.0.3")
-
     implementation("com.google.code.gson:gson:2.11.0")
 
     implementation("com.google.zxing:core:3.5.3")
@@ -34,6 +35,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
     testImplementation("io.mockk:mockk:1.13.13")
     testImplementation("org.assertj:assertj-core:3.26.3")
+    testImplementation("org.apache.pdfbox:pdfbox:2.0.30")
 }
 
 tasks.test {
