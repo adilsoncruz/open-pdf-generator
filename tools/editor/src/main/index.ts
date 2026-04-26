@@ -49,6 +49,38 @@ const JAVA_PATHS = [
 
 let cachedJavaPath: string | null = null
 
+
+async function findLocalDevCliJar(): Promise<string | null> {
+  const localCliLibsDir = path.join(__dirname, '..', '..', '..', 'cli', 'build', 'libs')
+
+  try {
+    const files = await fs.readdir(localCliLibsDir)
+    const jars = files
+      .filter((file) => file.startsWith('pdf-generator-cli-') && file.endsWith('.jar') && !file.includes('sources'))
+      .map((file) => path.join(localCliLibsDir, file))
+
+    if (jars.length === 0) return null
+
+    const jarStats = await Promise.all(
+      jars.map(async (jarPath) => ({
+        jarPath,
+        stat: await fs.stat(jarPath),
+      })),
+    )
+
+    jarStats.sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs)
+    return jarStats[0].jarPath
+  } catch {
+    return null
+  }
+}
+
+async function resolveCliJarPath(): Promise<string> {
+  const localDevJar = await findLocalDevCliJar()
+  if (localDevJar) return localDevJar
+  return CLI_JAR_PATH
+}
+
 async function findJavaPath(): Promise<string | null> {
   if (cachedJavaPath) return cachedJavaPath
   
@@ -130,9 +162,10 @@ async function checkJavaInstalled(): Promise<{ installed: boolean; version: stri
  */
 async function checkCLIStatus(): Promise<CLIStatus> {
   const javaCheck = await checkJavaInstalled()
+  const resolvedJarPath = await resolveCliJarPath()
   
   try {
-    await fs.access(CLI_JAR_PATH)
+    await fs.access(resolvedJarPath)
     
     let installedVersion: string | null = null
     try {
@@ -144,7 +177,7 @@ async function checkCLIStatus(): Promise<CLIStatus> {
     return {
       installed: true,
       version: installedVersion,
-      jarPath: CLI_JAR_PATH,
+      jarPath: resolvedJarPath,
       needsUpdate: installedVersion !== CLI_VERSION,
       javaInstalled: javaCheck.installed,
       javaVersion: javaCheck.version,
@@ -154,7 +187,7 @@ async function checkCLIStatus(): Promise<CLIStatus> {
     return {
       installed: false,
       version: null,
-      jarPath: CLI_JAR_PATH,
+      jarPath: resolvedJarPath,
       needsUpdate: false,
       javaInstalled: javaCheck.installed,
       javaVersion: javaCheck.version,
@@ -180,13 +213,12 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
       let fallbackJar: string | null = null
       
       if (isDev) {
-        // Em desenvolvimento, tentar pegar do build da library
-        const libJar = path.join(__dirname, '..', '..', '..', 'library', 'build', 'libs', `open-pdf-generator-${CORE_LIBRARY_VERSION}-standalone.jar`)
-        try {
-          await fs.access(libJar)
-          fallbackJar = libJar
-        } catch {
-          // Tentar o JAR antigo do resources
+        const localCliJar = await findLocalDevCliJar()
+        if (localCliJar) {
+          fallbackJar = localCliJar
+        }
+
+        if (!fallbackJar) {
           const resourceJar = path.join(__dirname, '..', '..', 'resources', 'pdf-generator.jar')
           try {
             await fs.access(resourceJar)
@@ -854,12 +886,13 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
     }
 
     const javaPath = cliStatus.javaPath || 'java'
-    console.log('📄 [Preview] Executing:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '-o', pdfFile)
+    const cliJarPath = cliStatus.jarPath || (await resolveCliJarPath())
+    console.log('📄 [Preview] Executing:', javaPath, '-jar', cliJarPath, 'generate', templateFile, '-d', dataFile, '-o', pdfFile)
     
     return new Promise((resolve) => {
       const java = spawn(javaPath, [
         '-jar',
-        CLI_JAR_PATH,
+        cliJarPath,
         'generate',
         templateFile,
         '-d',
@@ -966,13 +999,14 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
         success: false,
         errorCode: ErrorCodes.CLI_NOT_INSTALLED,
         cliNotInstalled: true,
-        jarPath: CLI_JAR_PATH
+        jarPath: cliStatus.jarPath
       }
     }
 
     console.log('🔍 PDF Generation Debug Info:')
     console.log('  CLI Version:', cliStatus.version)
-    console.log('  JAR Path:', CLI_JAR_PATH)
+    const cliJarPath = cliStatus.jarPath || (await resolveCliJarPath())
+    console.log('  JAR Path:', cliJarPath)
     console.log('  Java Version:', cliStatus.javaVersion)
 
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-gen-'))
@@ -986,12 +1020,12 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
 
     const javaPath = cliStatus.javaPath || 'java'
     console.log('  Java Path:', javaPath)
-    console.log('  Command:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '-o', pdfFile)
+    console.log('  Command:', javaPath, '-jar', cliJarPath, 'generate', templateFile, '-d', dataFile, '-o', pdfFile)
 
     return new Promise((resolve) => {
       const java = spawn(javaPath, [
         '-jar',
-        CLI_JAR_PATH,
+        cliJarPath,
         'generate',
         templateFile,
         '-d',
@@ -1087,11 +1121,12 @@ ipcMain.handle('template:validate', async (_, templatePath: string) => {
     }
 
     const javaPath = cliStatus.javaPath || 'java'
+    const cliJarPath = cliStatus.jarPath || (await resolveCliJarPath())
     
     return new Promise((resolve) => {
       const java = spawn(javaPath, [
         '-jar',
-        CLI_JAR_PATH,
+        cliJarPath,
         'validate',
         templatePath,
       ])
