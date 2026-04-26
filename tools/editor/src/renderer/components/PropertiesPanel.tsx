@@ -193,6 +193,8 @@ export default function PropertiesPanel() {
       columns: 'columns',
       styles: 'styles',
       loop: 'loop',
+      list: 'list',
+      checklist: 'checklist',
     }
     return iconMap[id] || 'settings'
   }
@@ -229,6 +231,16 @@ export default function PropertiesPanel() {
       return [
         { id: 'appearance', label: 'Appearance' },
         { id: 'loop', label: 'Loop' },
+      ]
+    } else if (selectedElement.type === 'list') {
+      return [
+        { id: 'appearance', label: 'Appearance' },
+        { id: 'list', label: 'List' },
+      ]
+    } else if (selectedElement.type === 'check_list') {
+      return [
+        { id: 'appearance', label: 'Appearance' },
+        { id: 'checklist', label: 'Check List' },
       ]
     } else if (selectedElement.type === 'table') {
       return [
@@ -2232,6 +2244,216 @@ export default function PropertiesPanel() {
                       <div>• name → item name</div>
                       <div>• price → price</div>
                       <div>• qty → quantity</div>
+                    </div>
+                  </div>
+                </PropertyGroup>
+              </>
+            )}
+          </>
+        )}
+
+        {/* LIST ELEMENT TABS */}
+        {selectedElement.type === 'list' && (
+          <>
+            {activeTab === 'appearance' && (
+              <>
+                {!isMultiSelection && (
+                  <>
+                    <div className="space-y-1 mb-3">
+                      <label className="text-xs font-medium theme-text-muted">ID</label>
+                      <Input value={selectedElement.id} disabled size="sm" />
+                    </div>
+                    <Divider className="my-3" />
+                  </>
+                )}
+
+                <PropertyGroup title="Location" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="X"
+                      value={selectedElement.x}
+                      onValueChange={(value) => handleUpdate('x', value)}
+                    />
+                    <NumberField
+                      label="Y"
+                      value={selectedElement.y}
+                      onValueChange={(value) => handleUpdate('y', value)}
+                    />
+                  </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Size" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="W (Width)"
+                      value={selectedElement.width}
+                      onValueChange={(value) => handleUpdate('width', value)}
+                    />
+                    <NumberField
+                      label="H (Height)"
+                      value={selectedElement.height}
+                      onValueChange={(value) => handleUpdate('height', value)}
+                    />
+                  </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Text Style" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="Font Size"
+                      value={selectedElement.style?.fontSize || 12}
+                      onValueChange={(value) => handleStyleUpdate('fontSize', value)}
+                    />
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Color</label>
+                      <ColorField
+                        value={selectedElement.style?.color || '#000000'}
+                        onChange={(value) => handleStyleUpdate('color', value)}
+                      />
+                    </div>
+                  </div>
+                </PropertyGroup>
+              </>
+            )}
+
+            {activeTab === 'list' && (
+              <>
+                <PropertyGroup title="List Configuration" collapsible={false}>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Data Binding</label>
+                      <Input
+                        value={selectedElement.dataBinding || ''}
+                        onChange={(e) => handleUpdate('dataBinding', e.target.value)}
+                        placeholder="Ex: invoice.items"
+                        size="sm"
+                        className="font-mono"
+                      />
+                    </div>
+
+                    <NumberField
+                      label="Item Spacing (px)"
+                      value={selectedElement.itemSpacing || 10}
+                      onValueChange={(value) => handleUpdate('itemSpacing', value)}
+                    />
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">List Style</label>
+                      <Select
+                        value={selectedElement.listStyle || 'BULLETED'}
+                        onChange={(e) => handleUpdate('listStyle', e.target.value)}
+                        options={[
+                          { value: 'BULLETED', label: 'Bulleted (•)' },
+                          { value: 'NUMBERED', label: 'Numbered (1.)' },
+                          { value: 'DASH', label: 'Dash (-)' },
+                          { value: 'DIAMOND', label: 'Diamond (◆)' },
+                          { value: 'START', label: 'Star (★)' },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </PropertyGroup>
+              </>
+            )}
+          </>
+        )}
+
+        {/* CHECK LIST ELEMENT TABS */}
+        {selectedElement.type === 'check_list' && (
+          <>
+            {activeTab === 'appearance' && (
+              <>
+                {!isMultiSelection && (
+                  <>
+                    <div className="space-y-1 mb-3">
+                      <label className="text-xs font-medium theme-text-muted">ID</label>
+                      <Input value={selectedElement.id} disabled size="sm" />
+                    </div>
+                    <Divider className="my-3" />
+                  </>
+                )}
+
+                <PropertyGroup title="Location" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="X"
+                      value={selectedElement.x}
+                      onValueChange={(value) => handleUpdate('x', value)}
+                    />
+                    <NumberField
+                      label="Y"
+                      value={selectedElement.y}
+                      onValueChange={(value) => handleUpdate('y', value)}
+                    />
+                  </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Size" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="W (Width)"
+                      value={selectedElement.width}
+                      onValueChange={(value) => handleUpdate('width', value)}
+                    />
+                    <NumberField
+                      label="H (Height)"
+                      value={selectedElement.height}
+                      onValueChange={(value) => handleUpdate('height', value)}
+                    />
+                  </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Text Style" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="Font Size"
+                      value={selectedElement.style?.fontSize || 12}
+                      onValueChange={(value) => handleStyleUpdate('fontSize', value)}
+                    />
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Color</label>
+                      <ColorField
+                        value={selectedElement.style?.color || '#000000'}
+                        onChange={(value) => handleStyleUpdate('color', value)}
+                      />
+                    </div>
+                  </div>
+                </PropertyGroup>
+              </>
+            )}
+
+            {activeTab === 'checklist' && (
+              <>
+                <PropertyGroup title="Check List Configuration" collapsible={false}>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Data Binding</label>
+                      <Input
+                        value={selectedElement.dataBinding || ''}
+                        onChange={(e) => handleUpdate('dataBinding', e.target.value)}
+                        placeholder="Ex: invoice.statusChecks"
+                        size="sm"
+                        className="font-mono"
+                      />
+                    </div>
+
+                    <NumberField
+                      label="Item Spacing (px)"
+                      value={selectedElement.itemSpacing || 10}
+                      onValueChange={(value) => handleUpdate('itemSpacing', value)}
+                    />
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Check Style</label>
+                      <Select
+                        value={selectedElement.checkStyle || 'RECTANGLE'}
+                        onChange={(e) => handleUpdate('checkStyle', e.target.value)}
+                        options={[
+                          { value: 'RECTANGLE', label: 'Rectangle' },
+                          { value: 'CIRCLE', label: 'Circle' },
+                          { value: 'BORDERED', label: 'Bordered' },
+                        ]}
+                      />
                     </div>
                   </div>
                 </PropertyGroup>
