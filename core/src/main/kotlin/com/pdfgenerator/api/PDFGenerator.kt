@@ -385,9 +385,11 @@ class PDFGenerator(
                     templateFooterHeight = templateFooterHeight,
                 )
 
+            val pageGroupIndex = buildGroupIndex(template.groups)
+
             template.pageElements.forEach { element ->
                 try {
-                    if (shouldRenderElement(element, template.groups, data)) {
+                    if (shouldRenderElement(element, pageGroupIndex, data)) {
                         val effectiveY =
                             if (element.positionMode == PositionMode.RELATIVE) {
                                 val offsetY = element.relativeOffsetY ?: 10f
@@ -439,9 +441,10 @@ class PDFGenerator(
                         )
 
                     template.summaryPage.background?.let { bg ->
+                        val summaryBackgroundGroupIndex = buildGroupIndex(bg.groups)
                         bg.elements.forEach { element ->
                             try {
-                                if (shouldRenderElement(element, bg.groups, data)) {
+                                if (shouldRenderElement(element, summaryBackgroundGroupIndex, data)) {
                                     val adjustedElement = adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
                                     renderEngine.render(adjustedElement, summaryContext.copy(useContentUnder = true))
                                 }
@@ -451,9 +454,10 @@ class PDFGenerator(
                         }
                     }
 
+                    val summaryGroupIndex = buildGroupIndex(template.summaryPage.groups)
                     template.summaryPage.elements.forEach { element ->
                         try {
-                            if (shouldRenderElement(element, template.summaryPage.groups, data)) {
+                            if (shouldRenderElement(element, summaryGroupIndex, data)) {
                                 val adjustedElement = adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
                                 renderEngine.render(adjustedElement, summaryContext)
                             }
@@ -475,16 +479,31 @@ class PDFGenerator(
         }
     }
 
+    private fun buildGroupIndex(groups: List<ElementGroup>?): Map<String, ElementGroup> {
+        if (groups.isNullOrEmpty()) {
+            return emptyMap()
+        }
+
+        val groupIndex = HashMap<String, ElementGroup>()
+        groups.forEach { group ->
+            group.elementIds.forEach { elementId ->
+                groupIndex.putIfAbsent(elementId, group)
+            }
+        }
+
+        return groupIndex
+    }
+
     private fun shouldRenderElement(
         element: Element,
-        groups: List<ElementGroup>?,
+        groupIndex: Map<String, ElementGroup>,
         data: Map<String, Any?>,
     ): Boolean {
-        if (groups.isNullOrEmpty()) {
+        if (groupIndex.isEmpty()) {
             return true
         }
 
-        val group = groups.find { it.elementIds.contains(element.id) }
+        val group = groupIndex[element.id]
 
         if (group == null) {
             return true
