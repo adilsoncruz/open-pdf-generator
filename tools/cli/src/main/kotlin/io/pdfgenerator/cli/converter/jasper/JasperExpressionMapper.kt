@@ -1,4 +1,4 @@
-package com.pdfgenerator.converter.jasper
+package io.pdfgenerator.cli.converter.jasper
 
 object JasperExpressionMapper {
     private val fieldRegex = Regex("""^${'$'}F\{([A-Za-z0-9_.]+)}$""")

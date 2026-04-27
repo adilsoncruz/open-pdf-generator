@@ -12,8 +12,8 @@ import com.pdfgenerator.adapter.openpdf.ImageRenderer
 import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.api.Version
-import com.pdfgenerator.converter.jasper.JasperConversionOptions
-import com.pdfgenerator.converter.jasper.JasperTemplateConverter
+import io.pdfgenerator.cli.converter.jasper.JasperConversionOptions
+import io.pdfgenerator.cli.converter.jasper.JasperTemplateConverter
 import com.pdfgenerator.model.Template
 import java.io.File
 

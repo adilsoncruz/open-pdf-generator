@@ -1,4 +1,4 @@
-package com.pdfgenerator.converter.jasper
+package io.pdfgenerator.cli.converter.jasper
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
