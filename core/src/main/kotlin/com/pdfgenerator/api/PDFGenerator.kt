@@ -2,6 +2,7 @@ package com.pdfgenerator.api
 
 import com.lowagie.text.Document
 import com.lowagie.text.pdf.PdfWriter
+import com.google.gson.Gson
 import com.pdfgenerator.adapter.openpdf.HeaderFooterPageEvent
 import com.pdfgenerator.adapter.openpdf.TextRenderer
 import com.pdfgenerator.engine.RenderContext
@@ -34,6 +35,7 @@ class PDFGenerator(
 ) {
     private val logger = LoggerFactory.getLogger(PDFGenerator::class.java)
     private val renderEngine = RenderEngine(config)
+    private val gson = Gson()
 
     companion object {
         private val templateCache = ConcurrentHashMap<String, Template>()
@@ -218,7 +220,6 @@ class PDFGenerator(
 
     private fun minifyJson(json: String): String {
         return try {
-            val gson = com.google.gson.Gson()
             val jsonElement = gson.fromJson(json, com.google.gson.JsonElement::class.java)
             gson.toJson(jsonElement)
         } catch (e: Exception) {
@@ -246,7 +247,6 @@ class PDFGenerator(
     @Suppress("UNCHECKED_CAST")
     private fun parseDataJson(dataJson: String): Map<String, Any?> {
         try {
-            val gson = com.google.gson.Gson()
             val jsonElement = gson.fromJson(dataJson, com.google.gson.JsonElement::class.java)
             val result = jsonToMap(jsonElement)
             if (result !is Map<*, *>) {
