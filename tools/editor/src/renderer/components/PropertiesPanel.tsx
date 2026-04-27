@@ -2359,6 +2359,19 @@ export default function PropertiesPanel() {
                         onChange={(value) => handleStyleUpdate('color', value)}
                       />
                     </div>
+                    <div className="col-span-2 space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Font Family</label>
+                      <Select
+                        value={selectedElement.style?.fontFamily || 'Helvetica'}
+                        onChange={(e) => handleStyleUpdate('fontFamily', e.target.value)}
+                        options={[
+                          { value: 'Helvetica', label: 'Helvetica' },
+                          { value: 'Helvetica-Bold', label: 'Helvetica Bold' },
+                          { value: 'Times', label: 'Times New Roman' },
+                          { value: 'Courier', label: 'Courier New' },
+                        ]}
+                      />
+                    </div>
                   </div>
                 </PropertyGroup>
 
@@ -2499,6 +2512,19 @@ export default function PropertiesPanel() {
                       <ColorField
                         value={selectedElement.style?.color || '#000000'}
                         onChange={(value) => handleStyleUpdate('color', value)}
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <label className="text-xs font-medium theme-text-muted">Font Family</label>
+                      <Select
+                        value={selectedElement.style?.fontFamily || 'Helvetica'}
+                        onChange={(e) => handleStyleUpdate('fontFamily', e.target.value)}
+                        options={[
+                          { value: 'Helvetica', label: 'Helvetica' },
+                          { value: 'Helvetica-Bold', label: 'Helvetica Bold' },
+                          { value: 'Times', label: 'Times New Roman' },
+                          { value: 'Courier', label: 'Courier New' },
+                        ]}
                       />
                     </div>
                   </div>
