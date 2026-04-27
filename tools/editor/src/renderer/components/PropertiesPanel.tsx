@@ -2346,13 +2346,13 @@ export default function PropertiesPanel() {
                 </PropertyGroup>
 
                 <PropertyGroup title="Text Style" collapsible={false}>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 items-end">
                     <NumberField
                       label="Font Size"
                       value={selectedElement.style?.fontSize || 12}
                       onValueChange={(value) => handleStyleUpdate('fontSize', value)}
                     />
-                    <div className="space-y-1">
+                    <div className="space-y-1 self-end">
                       <label className="text-xs font-medium theme-text-muted">Color</label>
                       <ColorField
                         value={selectedElement.style?.color || '#000000'}
@@ -2501,13 +2501,13 @@ export default function PropertiesPanel() {
                 </PropertyGroup>
 
                 <PropertyGroup title="Text Style" collapsible={false}>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 items-end">
                     <NumberField
                       label="Font Size"
                       value={selectedElement.style?.fontSize || 12}
                       onValueChange={(value) => handleStyleUpdate('fontSize', value)}
                     />
-                    <div className="space-y-1">
+                    <div className="space-y-1 self-end">
                       <label className="text-xs font-medium theme-text-muted">Color</label>
                       <ColorField
                         value={selectedElement.style?.color || '#000000'}
