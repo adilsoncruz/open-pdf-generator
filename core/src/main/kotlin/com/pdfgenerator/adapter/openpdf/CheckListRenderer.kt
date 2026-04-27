@@ -52,23 +52,6 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
         var currentY = listStartY + paddingTop
 
         val backgroundColor = element.style?.backgroundColor
-        if (!backgroundColor.isNullOrBlank() && backgroundColor.lowercase() != "transparent") {
-            val backgroundElement =
-                RectangleElement(
-                    id = "${element.id}-background",
-                    x = element.x,
-                    y = listStartY,
-                    width = element.width,
-                    height = element.height,
-                    positionMode = PositionMode.RELATIVE,
-                    style =
-                        RectangleStyle(
-                            borderWidth = 0f,
-                            fillColor = backgroundColor,
-                        ),
-                )
-            renderEngine.render(backgroundElement, context)
-        }
 
         val checkStyle = buildCheckStyle(element)
         listData.entries.forEachIndexed { index, entry ->
@@ -117,6 +100,27 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
                     style = currentCheckStyle,
                 )
             val textElement = measurementTextElement.copy(y = currentY)
+
+            if (!backgroundColor.isNullOrBlank() && backgroundColor.lowercase() != "transparent") {
+                val isFirstItemOnPage = itemsRenderedOnCurrentPage == 0
+                val rowBackgroundY = if (isFirstItemOnPage) listStartY else currentY
+                val rowBackgroundHeight = itemHeight + element.itemSpacing + if (isFirstItemOnPage) paddingTop else 0f
+                val rowBackground =
+                    RectangleElement(
+                        id = "${element.id}-background-$index",
+                        x = element.x,
+                        y = rowBackgroundY,
+                        width = element.width,
+                        height = rowBackgroundHeight,
+                        positionMode = PositionMode.RELATIVE,
+                        style =
+                            RectangleStyle(
+                                borderWidth = 0f,
+                                fillColor = backgroundColor,
+                            ),
+                    )
+                renderEngine.render(rowBackground, context)
+            }
 
             renderEngine.render(prefixElement, context)
             renderEngine.render(textElement, context)
