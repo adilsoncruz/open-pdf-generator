@@ -9,6 +9,8 @@ import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TextStyle
 import com.pdfgenerator.util.DataBindingResolver
+import com.pdfgenerator.util.FontCache
+import com.lowagie.text.pdf.BaseFont
 import org.slf4j.LoggerFactory
 
 class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElement> {
@@ -45,12 +47,13 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
 
         listData.forEachIndexed { index, item ->
             val prefix = buildPrefix(element, index)
+            val prefixOffset = getPrefixOffset(prefix, element)
             val measurementTextElement =
                 StaticTextElement(
                     id = "${element.id}-item-$index",
-                    x = listX + 10f,
+                    x = listX + prefixOffset,
                     y = currentY,
-                    width = element.width - 10f,
+                    width = kotlin.math.max(10f, element.width - prefixOffset),
                     height = element.itemSpacing + (element.style?.fontSize ?: 10f),
                     value = "$item",
                     positionMode = PositionMode.RELATIVE,
@@ -72,7 +75,7 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
 
             val prefixElement =
                 StaticTextElement(
-                    id = "$prefix-{element.id}-item-$index",
+                    id = "${element.id}-prefix-$index",
                     x = listX,
                     y = currentY,
                     width = element.width,
@@ -137,5 +140,23 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
             ListMode.DASH -> "– "
             ListMode.DIAMOND -> "◆ "
         }
+    }
+
+    private fun getPrefixOffset(
+        prefix: String,
+        element: ListElement,
+    ): Float {
+        val fontSize = element.style?.fontSize ?: 12f
+        val fontFamily = element.style?.fontFamily ?: "Helvetica"
+        val baseFontName =
+            when {
+                fontFamily.lowercase().contains("times") -> BaseFont.TIMES_ROMAN
+                fontFamily.lowercase().contains("courier") -> BaseFont.COURIER
+                else -> BaseFont.HELVETICA
+            }
+        val baseFont = FontCache.getFont(baseFontName)
+        val prefixWidth = baseFont.getWidthPoint(prefix, fontSize)
+        val minGap = 4f
+        return prefixWidth + minGap
     }
 }
