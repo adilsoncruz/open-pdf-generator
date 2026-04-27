@@ -2345,33 +2345,26 @@ export default function PropertiesPanel() {
                   </div>
                 </PropertyGroup>
 
-                <PropertyGroup title="Text Style" collapsible={false}>
-                  <div className="grid grid-cols-2 gap-3 items-end">
-                    <NumberField
-                      label="Font Size"
-                      value={selectedElement.style?.fontSize || 12}
-                      onValueChange={(value) => handleStyleUpdate('fontSize', value)}
+                <PropertyGroup title="Color" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <ColorField
+                      label="Text"
+                      value={selectedElement.style?.color || '#000000'}
+                      onValueChange={(color) => handleStyleUpdate('color', color)}
                     />
-                    <div className="space-y-1 self-end">
-                      <label className="text-xs font-medium theme-text-muted">Color</label>
-                      <ColorField
-                        value={selectedElement.style?.color || '#000000'}
-                        onChange={(value) => handleStyleUpdate('color', value)}
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-1">
-                      <label className="text-xs font-medium theme-text-muted">Font Family</label>
-                      <Select
-                        value={selectedElement.style?.fontFamily || 'Helvetica'}
-                        onChange={(e) => handleStyleUpdate('fontFamily', e.target.value)}
-                        options={[
-                          { value: 'Helvetica', label: 'Helvetica' },
-                          { value: 'Helvetica-Bold', label: 'Helvetica Bold' },
-                          { value: 'Times', label: 'Times New Roman' },
-                          { value: 'Courier', label: 'Courier New' },
-                        ]}
-                      />
-                    </div>
+                    <ColorField
+                      label="Background"
+                      value={selectedElement.style?.backgroundColor && selectedElement.style?.backgroundColor !== 'transparent' ? selectedElement.style?.backgroundColor : '#FFFFFF'}
+                      onValueChange={(color) => handleStyleUpdate('backgroundColor', color)}
+                      disabled={!selectedElement.style?.backgroundColor || selectedElement.style?.backgroundColor === 'transparent'}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs theme-text-secondary">Transparent Background</span>
+                    <Checkbox
+                      checked={!selectedElement.style?.backgroundColor || selectedElement.style?.backgroundColor === 'transparent'}
+                      onChange={(e) => handleStyleUpdate('backgroundColor', e.target.checked ? 'transparent' : '#FFFFFF')}
+                    />
                   </div>
                 </PropertyGroup>
 
@@ -2421,6 +2414,29 @@ export default function PropertiesPanel() {
                           { value: 'DASH', label: 'Dash (-)' },
                           { value: 'DIAMOND', label: 'Diamond (◆)' },
                           { value: 'START', label: 'Star (★)' },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Font" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3 items-end">
+                    <NumberField
+                      label="Font Size"
+                      value={selectedElement.style?.fontSize || 12}
+                      onValueChange={(value) => handleStyleUpdate('fontSize', value)}
+                    />
+                    <div className="space-y-1 self-end">
+                      <label className="text-xs font-medium theme-text-muted">Font Family</label>
+                      <Select
+                        value={selectedElement.style?.fontFamily || 'Helvetica'}
+                        onChange={(e) => handleStyleUpdate('fontFamily', e.target.value)}
+                        options={[
+                          { value: 'Helvetica', label: 'Helvetica' },
+                          { value: 'Helvetica-Bold', label: 'Helvetica Bold' },
+                          { value: 'Times', label: 'Times New Roman' },
+                          { value: 'Courier', label: 'Courier New' },
                         ]}
                       />
                     </div>
@@ -2500,33 +2516,26 @@ export default function PropertiesPanel() {
                   </div>
                 </PropertyGroup>
 
-                <PropertyGroup title="Text Style" collapsible={false}>
-                  <div className="grid grid-cols-2 gap-3 items-end">
-                    <NumberField
-                      label="Font Size"
-                      value={selectedElement.style?.fontSize || 12}
-                      onValueChange={(value) => handleStyleUpdate('fontSize', value)}
+                <PropertyGroup title="Color" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <ColorField
+                      label="Text"
+                      value={selectedElement.style?.color || '#000000'}
+                      onValueChange={(color) => handleStyleUpdate('color', color)}
                     />
-                    <div className="space-y-1 self-end">
-                      <label className="text-xs font-medium theme-text-muted">Color</label>
-                      <ColorField
-                        value={selectedElement.style?.color || '#000000'}
-                        onChange={(value) => handleStyleUpdate('color', value)}
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-1">
-                      <label className="text-xs font-medium theme-text-muted">Font Family</label>
-                      <Select
-                        value={selectedElement.style?.fontFamily || 'Helvetica'}
-                        onChange={(e) => handleStyleUpdate('fontFamily', e.target.value)}
-                        options={[
-                          { value: 'Helvetica', label: 'Helvetica' },
-                          { value: 'Helvetica-Bold', label: 'Helvetica Bold' },
-                          { value: 'Times', label: 'Times New Roman' },
-                          { value: 'Courier', label: 'Courier New' },
-                        ]}
-                      />
-                    </div>
+                    <ColorField
+                      label="Background"
+                      value={selectedElement.style?.backgroundColor && selectedElement.style?.backgroundColor !== 'transparent' ? selectedElement.style?.backgroundColor : '#FFFFFF'}
+                      onValueChange={(color) => handleStyleUpdate('backgroundColor', color)}
+                      disabled={!selectedElement.style?.backgroundColor || selectedElement.style?.backgroundColor === 'transparent'}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs theme-text-secondary">Transparent Background</span>
+                    <Checkbox
+                      checked={!selectedElement.style?.backgroundColor || selectedElement.style?.backgroundColor === 'transparent'}
+                      onChange={(e) => handleStyleUpdate('backgroundColor', e.target.checked ? 'transparent' : '#FFFFFF')}
+                    />
                   </div>
                 </PropertyGroup>
 
@@ -2574,6 +2583,29 @@ export default function PropertiesPanel() {
                           { value: 'RECTANGLE', label: 'Rectangle' },
                           { value: 'CIRCLE', label: 'Circle' },
                           { value: 'BORDERED', label: 'Bordered' },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Font" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3 items-end">
+                    <NumberField
+                      label="Font Size"
+                      value={selectedElement.style?.fontSize || 12}
+                      onValueChange={(value) => handleStyleUpdate('fontSize', value)}
+                    />
+                    <div className="space-y-1 self-end">
+                      <label className="text-xs font-medium theme-text-muted">Font Family</label>
+                      <Select
+                        value={selectedElement.style?.fontFamily || 'Helvetica'}
+                        onChange={(e) => handleStyleUpdate('fontFamily', e.target.value)}
+                        options={[
+                          { value: 'Helvetica', label: 'Helvetica' },
+                          { value: 'Helvetica-Bold', label: 'Helvetica Bold' },
+                          { value: 'Times', label: 'Times New Roman' },
+                          { value: 'Courier', label: 'Courier New' },
                         ]}
                       />
                     </div>
