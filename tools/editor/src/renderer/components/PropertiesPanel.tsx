@@ -2345,6 +2345,99 @@ export default function PropertiesPanel() {
                   </div>
                 </PropertyGroup>
 
+                <PropertyGroup title="Paddings" collapsible={false}>
+                  <div className="flex items-center mb-2">
+                    <Checkbox
+                      id="same-padding-list"
+                      checked={selectedElement.style?.samePadding || false}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        if (checked) {
+                          const value = selectedElement.style?.paddingLeft || 0
+                          const newStyle = {
+                            ...selectedElement.style,
+                            samePadding: true,
+                            paddingLeft: value,
+                            paddingRight: value,
+                            paddingTop: value,
+                            paddingBottom: value,
+                          }
+                          if (isMultiSelection) {
+                            updateSelectedElements({ style: newStyle })
+                          } else {
+                            updateElement(selectedElement.id, { style: newStyle }, selectedElementLocation)
+                          }
+                        } else {
+                          const newStyle = {
+                            ...selectedElement.style,
+                            samePadding: false,
+                          }
+                          if (isMultiSelection) {
+                            updateSelectedElements({ style: newStyle })
+                          } else {
+                            updateElement(selectedElement.id, { style: newStyle }, selectedElementLocation)
+                          }
+                        }
+                      }}
+                    />
+                    <label htmlFor="same-padding-list" className="ml-2 text-xs theme-text">
+                      Use the same value for every padding
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="Left"
+                      value={selectedElement.style?.paddingLeft || selectedElement.style?.paddingX || 0}
+                      onValueChange={(value) => {
+                        if (selectedElement.style?.samePadding) {
+                          const newStyle = {
+                            ...selectedElement.style,
+                            paddingLeft: value,
+                            paddingRight: value,
+                            paddingTop: value,
+                            paddingBottom: value,
+                          }
+                          if (isMultiSelection) {
+                            updateSelectedElements({ style: newStyle })
+                          } else {
+                            updateElement(selectedElement.id, { style: newStyle }, selectedElementLocation)
+                          }
+                        } else {
+                          handleStyleUpdate('paddingLeft', value)
+                        }
+                      }}
+                      min={0}
+                      step={1}
+                    />
+                    <NumberField
+                      label="Right"
+                      value={selectedElement.style?.paddingRight || selectedElement.style?.paddingX || 0}
+                      onValueChange={(value) => handleStyleUpdate('paddingRight', value)}
+                      min={0}
+                      step={1}
+                      disabled={selectedElement.style?.samePadding || false}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <NumberField
+                      label="Top"
+                      value={selectedElement.style?.paddingTop || selectedElement.style?.paddingY || 0}
+                      onValueChange={(value) => handleStyleUpdate('paddingTop', value)}
+                      min={0}
+                      step={1}
+                      disabled={selectedElement.style?.samePadding || false}
+                    />
+                    <NumberField
+                      label="Bottom"
+                      value={selectedElement.style?.paddingBottom || selectedElement.style?.paddingY || 0}
+                      onValueChange={(value) => handleStyleUpdate('paddingBottom', value)}
+                      min={0}
+                      step={1}
+                      disabled={selectedElement.style?.samePadding || false}
+                    />
+                  </div>
+                </PropertyGroup>
+
                 <PropertyGroup title="Color" collapsible={false}>
                   <div className="grid grid-cols-2 gap-3">
                     <ColorField
@@ -2512,6 +2605,99 @@ export default function PropertiesPanel() {
                       label="H (Height)"
                       value={selectedElement.height}
                       onValueChange={(value) => handleUpdate('height', value)}
+                    />
+                  </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Paddings" collapsible={false}>
+                  <div className="flex items-center mb-2">
+                    <Checkbox
+                      id="same-padding-checklist"
+                      checked={selectedElement.style?.samePadding || false}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        if (checked) {
+                          const value = selectedElement.style?.paddingLeft || 0
+                          const newStyle = {
+                            ...selectedElement.style,
+                            samePadding: true,
+                            paddingLeft: value,
+                            paddingRight: value,
+                            paddingTop: value,
+                            paddingBottom: value,
+                          }
+                          if (isMultiSelection) {
+                            updateSelectedElements({ style: newStyle })
+                          } else {
+                            updateElement(selectedElement.id, { style: newStyle }, selectedElementLocation)
+                          }
+                        } else {
+                          const newStyle = {
+                            ...selectedElement.style,
+                            samePadding: false,
+                          }
+                          if (isMultiSelection) {
+                            updateSelectedElements({ style: newStyle })
+                          } else {
+                            updateElement(selectedElement.id, { style: newStyle }, selectedElementLocation)
+                          }
+                        }
+                      }}
+                    />
+                    <label htmlFor="same-padding-checklist" className="ml-2 text-xs theme-text">
+                      Use the same value for every padding
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="Left"
+                      value={selectedElement.style?.paddingLeft || selectedElement.style?.paddingX || 0}
+                      onValueChange={(value) => {
+                        if (selectedElement.style?.samePadding) {
+                          const newStyle = {
+                            ...selectedElement.style,
+                            paddingLeft: value,
+                            paddingRight: value,
+                            paddingTop: value,
+                            paddingBottom: value,
+                          }
+                          if (isMultiSelection) {
+                            updateSelectedElements({ style: newStyle })
+                          } else {
+                            updateElement(selectedElement.id, { style: newStyle }, selectedElementLocation)
+                          }
+                        } else {
+                          handleStyleUpdate('paddingLeft', value)
+                        }
+                      }}
+                      min={0}
+                      step={1}
+                    />
+                    <NumberField
+                      label="Right"
+                      value={selectedElement.style?.paddingRight || selectedElement.style?.paddingX || 0}
+                      onValueChange={(value) => handleStyleUpdate('paddingRight', value)}
+                      min={0}
+                      step={1}
+                      disabled={selectedElement.style?.samePadding || false}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <NumberField
+                      label="Top"
+                      value={selectedElement.style?.paddingTop || selectedElement.style?.paddingY || 0}
+                      onValueChange={(value) => handleStyleUpdate('paddingTop', value)}
+                      min={0}
+                      step={1}
+                      disabled={selectedElement.style?.samePadding || false}
+                    />
+                    <NumberField
+                      label="Bottom"
+                      value={selectedElement.style?.paddingBottom || selectedElement.style?.paddingY || 0}
+                      onValueChange={(value) => handleStyleUpdate('paddingBottom', value)}
+                      min={0}
+                      step={1}
+                      disabled={selectedElement.style?.samePadding || false}
                     />
                   </div>
                 </PropertyGroup>
