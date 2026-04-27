@@ -2188,6 +2188,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         const listStyle = element.listStyle || 'BULLETED'
         const color = element.style?.color || '#1f2937'
         const fontSize = element.style?.fontSize || 12
+        const fontFamily = getFontFamily(element.style?.fontFamily)
 
         const getPrefix = (index: number) => {
           switch (listStyle) {
@@ -2211,7 +2212,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             <div className="text-[10px] text-gray-500 mb-1 truncate">list: {`{${listBinding}}`}</div>
             <div className="space-y-1">
               {[0, 1, 2].map((idx) => (
-                <div key={idx} className="flex items-center gap-2" style={{ color, fontSize }}>
+                <div key={idx} className="flex items-center gap-2" style={{ color, fontSize, fontFamily }}>
                   <span>{getPrefix(idx)}</span>
                   <span className="truncate">{`{${listBinding}}`}</span>
                 </div>
@@ -2227,6 +2228,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         const listBinding = element.dataBinding || 'checklist'
         const color = element.style?.color || '#1f2937'
         const fontSize = element.style?.fontSize || 12
+        const fontFamily = getFontFamily(element.style?.fontFamily)
 
         return (
           <div
@@ -2239,7 +2241,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             <div className="text-[10px] text-gray-500 mb-1 truncate">check_list: {`{${listBinding}}`}</div>
             <div className="space-y-1">
               {[0, 1, 2].map((idx) => (
-                <div key={idx} className="flex items-center gap-2" style={{ color, fontSize }}>
+                <div key={idx} className="flex items-center gap-2" style={{ color, fontSize, fontFamily }}>
                   <span className="inline-flex w-3 h-3 border border-gray-600 rounded-sm" />
                   <span className="truncate">{`{${listBinding}}`}</span>
                 </div>
