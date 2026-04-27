@@ -51,6 +51,25 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
         var itemsRenderedOnCurrentPage = 0
         var currentY = listStartY + paddingTop
 
+        val backgroundColor = element.style?.backgroundColor
+        if (!backgroundColor.isNullOrBlank() && backgroundColor.lowercase() != "transparent") {
+            val backgroundElement =
+                RectangleElement(
+                    id = "${element.id}-background",
+                    x = element.x,
+                    y = listStartY,
+                    width = element.width,
+                    height = element.height,
+                    positionMode = PositionMode.RELATIVE,
+                    style =
+                        RectangleStyle(
+                            borderWidth = 0f,
+                            fillColor = backgroundColor,
+                        ),
+                )
+            renderEngine.render(backgroundElement, context)
+        }
+
         val checkStyle = buildCheckStyle(element)
         listData.entries.forEachIndexed { index, entry ->
             val w = element.style!!.fontSize
@@ -69,6 +88,7 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
                             multiline = true,
                             overflow = "auto",
                             paddingLeft = 0f,
+                            backgroundColor = "transparent",
                         ) ?: TextStyle(multiline = true),
                 )
             val itemHeight = getTextHeight(measurementTextElement)

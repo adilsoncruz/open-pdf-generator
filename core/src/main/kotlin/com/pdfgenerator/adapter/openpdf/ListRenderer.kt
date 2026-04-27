@@ -7,6 +7,8 @@ import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.ListElement
 import com.pdfgenerator.model.ListMode
 import com.pdfgenerator.model.PositionMode
+import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.RectangleStyle
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TextStyle
 import com.pdfgenerator.util.DataBindingResolver
@@ -51,6 +53,25 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
         var itemsRenderedOnCurrentPage = 0
         var currentY = listStartY + paddingTop
 
+        val backgroundColor = element.style?.backgroundColor
+        if (!backgroundColor.isNullOrBlank() && backgroundColor.lowercase() != "transparent") {
+            val backgroundElement =
+                RectangleElement(
+                    id = "${element.id}-background",
+                    x = element.x,
+                    y = listStartY,
+                    width = element.width,
+                    height = element.height,
+                    positionMode = PositionMode.RELATIVE,
+                    style =
+                        RectangleStyle(
+                            borderWidth = 0f,
+                            fillColor = backgroundColor,
+                        ),
+                )
+            renderEngine.render(backgroundElement, context)
+        }
+
         listData.forEachIndexed { index, item ->
             val prefix = getRenderablePrefix(buildPrefix(element, index), element)
             val prefixOffset = getPrefixOffset(prefix, element)
@@ -69,6 +90,7 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
                             multiline = true,
                             overflow = "auto",
                             paddingLeft = 0f,
+                            backgroundColor = "transparent",
                         ) ?: TextStyle(multiline = true),
                 )
             val itemHeight = getTextHeight(measurementTextElement)
@@ -94,6 +116,7 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
                             multiline = true,
                             overflow = "auto",
                             paddingLeft = 0f,
+                            backgroundColor = "transparent",
                         ) ?: TextStyle(multiline = true),
                 )
             val textElement = measurementTextElement.copy(y = currentY)
