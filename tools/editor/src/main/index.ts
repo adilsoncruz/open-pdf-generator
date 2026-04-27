@@ -767,38 +767,69 @@ async function convertJrxmlToJson(filePath: string): Promise<{ success: boolean;
 
   const javaPath = cliStatus.javaPath || 'java'
 
-  return new Promise((resolve) => {
-    const java = spawn(javaPath, [
-      '-jar',
-      CLI_JAR_PATH,
-      'convert',
-      filePath,
-      '--stdout',
-    ])
+  const runConvertCommand = (args: string[]) =>
+    new Promise<{ success: boolean; stdout: string; stderr: string; spawnError?: string }>((resolve) => {
+      const java = spawn(javaPath, ['-jar', CLI_JAR_PATH, ...args])
+      let stdout = ''
+      let stderr = ''
 
-    let stdout = ''
-    let stderr = ''
+      java.stdout.on('data', (data) => {
+        stdout += data.toString()
+      })
 
-    java.stdout.on('data', (data) => {
-      stdout += data.toString()
+      java.stderr.on('data', (data) => {
+        stderr += data.toString()
+      })
+
+      java.on('close', (code) => {
+        resolve({ success: code === 0, stdout, stderr })
+      })
+
+      java.on('error', (error) => {
+        resolve({ success: false, stdout, stderr, spawnError: error.message })
+      })
     })
 
-    java.stderr.on('data', (data) => {
-      stderr += data.toString()
-    })
+  // Fluxo principal para CLIs mais novos.
+  const stdoutResult = await runConvertCommand(['convert', filePath, '--stdout'])
+  if (stdoutResult.success) {
+    return { success: true, content: stdoutResult.stdout }
+  }
 
-    java.on('close', (code) => {
-      if (code === 0) {
-        resolve({ success: true, content: stdout })
-      } else {
-        resolve({ success: false, error: (stderr || stdout).trim(), errorCode: ErrorCodes.UNKNOWN_ERROR })
+  // Fallback para CLIs antigos (sem --stdout) ou variantes de opções.
+  let tmpDir: string | null = null
+  try {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'jrxml-convert-'))
+    const outputPath = path.join(tmpDir, `${path.basename(filePath, path.extname(filePath))}.json`)
+
+    let fileResult = await runConvertCommand(['convert', filePath, '--output', outputPath])
+    if (!fileResult.success) {
+      fileResult = await runConvertCommand(['convert', filePath, '-o', outputPath])
+    }
+
+    if (!fileResult.success) {
+      const fallbackError = (fileResult.spawnError || `${fileResult.stderr}\n${fileResult.stdout}`).trim()
+      const stdoutError = (stdoutResult.spawnError || `${stdoutResult.stderr}\n${stdoutResult.stdout}`).trim()
+      return {
+        success: false,
+        error: fallbackError || stdoutError,
+        errorCode: fileResult.spawnError || stdoutResult.spawnError ? ErrorCodes.ERROR_EXECUTING_JAVA : ErrorCodes.UNKNOWN_ERROR,
       }
-    })
+    }
 
-    java.on('error', (error) => {
-      resolve({ success: false, error: error.message, errorCode: ErrorCodes.ERROR_EXECUTING_JAVA })
-    })
-  })
+    const content = await fs.readFile(outputPath, 'utf-8')
+    return { success: true, content }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to convert JRXML template',
+      errorCode: ErrorCodes.UNKNOWN_ERROR,
+    }
+  } finally {
+    if (tmpDir) {
+      await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => undefined)
+    }
+  }
 }
 
 ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: string) => {
