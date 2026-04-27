@@ -46,7 +46,7 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
         var currentY = listStartY
 
         listData.forEachIndexed { index, item ->
-            val prefix = buildPrefix(element, index)
+            val prefix = getRenderablePrefix(buildPrefix(element, index), element)
             val prefixOffset = getPrefixOffset(prefix, element)
             val measurementTextElement =
                 StaticTextElement(
@@ -146,7 +146,33 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
         prefix: String,
         element: ListElement,
     ): Float {
+        val baseFont = getBaseFont(element)
         val fontSize = element.style?.fontSize ?: 12f
+        val prefixWidth = baseFont.getWidthPoint(prefix, fontSize)
+        val minGap = 4f
+        return prefixWidth + minGap
+    }
+
+    private fun getRenderablePrefix(
+        prefix: String,
+        element: ListElement,
+    ): String {
+        val baseFont = getBaseFont(element)
+        val isRenderable =
+            prefix.all { char ->
+                char.isWhitespace() || baseFont.charExists(char.code)
+            }
+
+        if (isRenderable) return prefix
+
+        return when (element.listStyle) {
+            ListMode.START -> "* "
+            ListMode.DIAMOND -> "+ "
+            else -> prefix
+        }
+    }
+
+    private fun getBaseFont(element: ListElement): BaseFont {
         val fontFamily = element.style?.fontFamily ?: "Helvetica"
         val baseFontName =
             when {
@@ -154,9 +180,6 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
                 fontFamily.lowercase().contains("courier") -> BaseFont.COURIER
                 else -> BaseFont.HELVETICA
             }
-        val baseFont = FontCache.getFont(baseFontName)
-        val prefixWidth = baseFont.getWidthPoint(prefix, fontSize)
-        val minGap = 4f
-        return prefixWidth + minGap
+        return FontCache.getFont(baseFontName)
     }
 }
