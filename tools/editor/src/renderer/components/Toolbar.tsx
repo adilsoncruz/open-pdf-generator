@@ -206,7 +206,10 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         
         // Valid template - load it and exit loop
         setTemplate(loadedTemplate)
-        setCurrentFilePath(result.path)
+        setCurrentFilePath(result.convertedFromJasper ? null : result.path)
+        if (result.convertedFromJasper) {
+          alert('Template JASPER (.jrxml) convertido para JSON. Use "Save As" para salvar o template convertido.')
+        }
         keepTrying = false
       } catch {
         // JSON parse error - show friendly message and ask to try again

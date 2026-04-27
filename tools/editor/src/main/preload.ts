@@ -107,7 +107,7 @@ export interface UpdateStatus {
 }
 
 export interface ElectronAPI {
-  openFile: () => Promise<{ path: string; content: string } | null>
+  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean } | null>
   openDataFile: () => Promise<{ path: string; content: string } | null>
   saveFile: (content: string, defaultPath?: string) => Promise<string | null>
   readFile: (filePath: string) => Promise<{ success: boolean; content?: string; error?: string }>
@@ -185,4 +185,3 @@ declare global {
     electronAPI: ElectronAPI
   }
 }
-

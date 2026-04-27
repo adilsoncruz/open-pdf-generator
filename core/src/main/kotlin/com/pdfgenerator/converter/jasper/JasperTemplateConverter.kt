@@ -1,0 +1,307 @@
+package com.pdfgenerator.converter.jasper
+
+import com.pdfgenerator.model.ImageElement
+import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LineStyle
+import com.pdfgenerator.model.Margins
+import com.pdfgenerator.model.PageSettings
+import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.RectangleStyle
+import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.Template
+import com.pdfgenerator.model.TemplateMetadata
+import com.pdfgenerator.model.TextElement
+import com.pdfgenerator.model.TextStyle
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import javax.xml.parsers.DocumentBuilderFactory
+
+/**
+ * Converts JasperReports JRXML templates into this project's [Template] format.
+ *
+ * Current scope intentionally focuses on the most common base components:
+ * - staticText
+ * - textField
+ * - line
+ * - rectangle
+ * - image
+ */
+object JasperTemplateConverter {
+    fun fromString(
+        jrxml: String,
+        options: JasperConversionOptions = JasperConversionOptions(),
+    ): Template {
+        val document = buildDocument(jrxml.byteInputStream())
+        return convertDocument(document, options)
+    }
+
+    fun fromFile(
+        path: String,
+        options: JasperConversionOptions = JasperConversionOptions(),
+    ): Template {
+        val document = buildDocument(java.io.File(path).inputStream())
+        return convertDocument(document, options)
+    }
+
+    fun fromInputStream(
+        input: java.io.InputStream,
+        options: JasperConversionOptions = JasperConversionOptions(),
+    ): Template {
+        val document = buildDocument(input)
+        return convertDocument(document, options)
+    }
+
+    private fun buildDocument(input: java.io.InputStream): Document {
+        return input.use {
+            val factory = DocumentBuilderFactory.newInstance().apply {
+                isNamespaceAware = false
+                setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+                setFeature("http://xml.org/sax/features/external-general-entities", false)
+                setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+            }
+            val builder = factory.newDocumentBuilder()
+            builder.parse(it).apply { documentElement.normalize() }
+        }
+    }
+
+    private fun convertDocument(
+        document: Document,
+        options: JasperConversionOptions,
+    ): Template {
+        val root = document.documentElement
+        if (root == null || root.tagName != "jasperReport") {
+            throw JasperTemplateConversionException("JRXML inválido: raiz <jasperReport> não encontrada")
+        }
+
+        val pageWidth = root.getIntAttribute("pageWidth", 595)
+        val pageHeight = root.getIntAttribute("pageHeight", 842)
+        val orientation = root.getAttribute("orientation").ifBlank { "Portrait" }
+
+        val margins =
+            Margins(
+                top = root.getIntAttribute("topMargin", 20).toFloat(),
+                right = root.getIntAttribute("rightMargin", 20).toFloat(),
+                bottom = root.getIntAttribute("bottomMargin", 20).toFloat(),
+                left = root.getIntAttribute("leftMargin", 20).toFloat(),
+            )
+
+        val pageSettings =
+            PageSettings(
+                size = "CUSTOM",
+                orientation = if (orientation.equals("landscape", ignoreCase = true)) "landscape" else "portrait",
+                margins = margins,
+                customSize = com.pdfgenerator.model.CustomSize(pageWidth.toFloat(), pageHeight.toFloat()),
+            )
+
+        val metadata =
+            TemplateMetadata(
+                name = root.getAttribute("name"),
+                description = "Converted from JasperReports JRXML",
+                author = options.author,
+                created = java.time.LocalDate.now().toString(),
+                tags = listOf("jasper", "jrxml", "converted"),
+            )
+
+        val elements = mutableListOf<com.pdfgenerator.model.Element>()
+        val sectionOrder = listOf("background", "title", "pageHeader", "columnHeader", "detail", "columnFooter", "pageFooter", "summary")
+        var yOffset = 0f
+
+        for (sectionTag in sectionOrder) {
+            val sectionNodes = root.getElementsByTagName(sectionTag)
+            for (sectionIdx in 0 until sectionNodes.length) {
+                val sectionNode = sectionNodes.item(sectionIdx)
+                if (sectionNode is Element) {
+                    val bands = sectionNode.getElementsByTagName("band")
+                    for (bandIdx in 0 until bands.length) {
+                        val bandNode = bands.item(bandIdx)
+                        if (bandNode is Element) {
+                            val bandHeight = bandNode.getIntAttribute("height", 0).toFloat()
+                            elements += parseBandElements(bandNode, yOffset, options)
+                            yOffset += bandHeight
+                        }
+                    }
+                }
+            }
+        }
+
+        return Template(
+            version = "1.0",
+            metadata = metadata,
+            pageSettings = pageSettings,
+            pageElements = elements,
+        )
+    }
+
+    private fun parseBandElements(
+        band: Element,
+        sectionYOffset: Float,
+        options: JasperConversionOptions,
+    ): List<com.pdfgenerator.model.Element> {
+        val out = mutableListOf<com.pdfgenerator.model.Element>()
+
+        val children = band.childNodes
+        for (idx in 0 until children.length) {
+            val child = children.item(idx)
+            if (child !is Element) continue
+
+            when (child.tagName) {
+                "staticText" -> parseStaticText(child, sectionYOffset)?.let(out::add)
+                "textField" -> parseTextField(child, sectionYOffset)?.let(out::add)
+                "line" -> parseLine(child, sectionYOffset)?.let(out::add)
+                "rectangle" -> parseRectangle(child, sectionYOffset)?.let(out::add)
+                "image" -> parseImage(child, sectionYOffset)?.let(out::add)
+                else -> {
+                    if (options.failOnUnsupportedElement) {
+                        throw JasperTemplateConversionException("Elemento Jasper não suportado: <${child.tagName}>")
+                    }
+                }
+            }
+        }
+
+        return out
+    }
+
+    private fun parseStaticText(
+        node: Element,
+        sectionYOffset: Float,
+    ): StaticTextElement? {
+        val reportElement = node.firstDirectChild("reportElement") ?: return null
+        val textValue = node.firstDirectChild("text")?.textContent?.trim().orEmpty()
+        if (textValue.isBlank()) return null
+
+        return StaticTextElement(
+            id = reportElement.getAttribute("key").ifBlank { "static-${reportElement.positionSuffix()}" },
+            x = reportElement.getIntAttribute("x", 0).toFloat(),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            width = reportElement.getIntAttribute("width", 100).toFloat(),
+            height = reportElement.getIntAttribute("height", 16).toFloat(),
+            value = textValue,
+            style = parseTextStyle(node),
+        )
+    }
+
+    private fun parseTextField(
+        node: Element,
+        sectionYOffset: Float,
+    ): TextElement? {
+        val reportElement = node.firstDirectChild("reportElement") ?: return null
+        val expression = node.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
+        val dataBinding = JasperExpressionMapper.toDataBinding(expression)
+
+        return TextElement(
+            id = reportElement.getAttribute("key").ifBlank { "text-${reportElement.positionSuffix()}" },
+            x = reportElement.getIntAttribute("x", 0).toFloat(),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            width = reportElement.getIntAttribute("width", 100).toFloat(),
+            height = reportElement.getIntAttribute("height", 16).toFloat(),
+            dataBinding = dataBinding,
+            value = if (dataBinding == null) expression else null,
+            style = parseTextStyle(node),
+        )
+    }
+
+    private fun parseLine(
+        node: Element,
+        sectionYOffset: Float,
+    ): LineElement? {
+        val reportElement = node.firstDirectChild("reportElement") ?: return null
+        val pen = node.firstDirectChild("graphicElement")?.firstDirectChild("pen")
+
+        return LineElement(
+            id = reportElement.getAttribute("key").ifBlank { "line-${reportElement.positionSuffix()}" },
+            x = reportElement.getIntAttribute("x", 0).toFloat(),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            width = reportElement.getIntAttribute("width", 100).toFloat(),
+            height = reportElement.getIntAttribute("height", 0).toFloat(),
+            style =
+                LineStyle(
+                    color = pen?.getAttribute("lineColor")?.ifBlank { null } ?: "#000000",
+                    width = pen?.getAttribute("lineWidth")?.toFloatOrNull() ?: 1f,
+                ),
+        )
+    }
+
+    private fun parseRectangle(
+        node: Element,
+        sectionYOffset: Float,
+    ): RectangleElement? {
+        val reportElement = node.firstDirectChild("reportElement") ?: return null
+        val pen = node.firstDirectChild("graphicElement")?.firstDirectChild("pen")
+
+        return RectangleElement(
+            id = reportElement.getAttribute("key").ifBlank { "rect-${reportElement.positionSuffix()}" },
+            x = reportElement.getIntAttribute("x", 0).toFloat(),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            width = reportElement.getIntAttribute("width", 100).toFloat(),
+            height = reportElement.getIntAttribute("height", 100).toFloat(),
+            style =
+                RectangleStyle(
+                    borderColor = pen?.getAttribute("lineColor")?.ifBlank { "#000000" },
+                    borderWidth = pen?.getAttribute("lineWidth")?.toFloatOrNull() ?: 1f,
+                ),
+        )
+    }
+
+    private fun parseImage(
+        node: Element,
+        sectionYOffset: Float,
+    ): ImageElement? {
+        val reportElement = node.firstDirectChild("reportElement") ?: return null
+        val expression = node.firstDirectChild("imageExpression")?.textContent?.trim().orEmpty()
+        val dataBinding = JasperExpressionMapper.toDataBinding(expression)
+
+        return ImageElement(
+            id = reportElement.getAttribute("key").ifBlank { "img-${reportElement.positionSuffix()}" },
+            x = reportElement.getIntAttribute("x", 0).toFloat(),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            width = reportElement.getIntAttribute("width", 120).toFloat(),
+            height = reportElement.getIntAttribute("height", 80).toFloat(),
+            dataBinding = dataBinding,
+            source = if (dataBinding == null) expression.trim('"') else null,
+            fit = "contain",
+            alignment = "center",
+        )
+    }
+
+    private fun parseTextStyle(node: Element): TextStyle {
+        val textElement = node.firstDirectChild("textElement")
+        val font = textElement?.firstDirectChild("font")
+
+        val isBold = font?.getAttribute("isBold")?.toBooleanStrictOrNull() ?: false
+        val isItalic = font?.getAttribute("isItalic")?.toBooleanStrictOrNull() ?: false
+
+        return TextStyle(
+            fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: 12f,
+            fontFamily = font?.getAttribute("fontName")?.ifBlank { "Helvetica" } ?: "Helvetica",
+            fontWeight = if (isBold) "bold" else "normal",
+            fontStyle = if (isItalic) "italic" else "normal",
+            alignment = textElement?.getAttribute("textAlignment")?.ifBlank { "left" }?.lowercase() ?: "left",
+            verticalAlignment = textElement?.getAttribute("verticalAlignment")?.ifBlank { "center" }?.lowercase() ?: "center",
+        )
+    }
+
+    private fun Element.getIntAttribute(
+        name: String,
+        default: Int,
+    ): Int =
+        getAttribute(name)
+            .toIntOrNull()
+            ?: default
+
+    private fun Element.firstDirectChild(tag: String): Element? {
+        val children = childNodes
+        for (idx in 0 until children.length) {
+            val child = children.item(idx)
+            if (child is Element && child.tagName == tag) {
+                return child
+            }
+        }
+        return null
+    }
+
+    private fun Element.positionSuffix(): String {
+        val x = getIntAttribute("x", 0)
+        val y = getIntAttribute("y", 0)
+        return "$x-$y"
+    }
+}

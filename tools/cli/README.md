@@ -43,6 +43,16 @@ pdf-generator generate template.json -d data.json -o invoice.pdf
 pdf-generator validate template.json
 ```
 
+### Convert Jasper (JRXML -> JSON)
+
+```bash
+# Save converted template to file
+pdf-generator convert invoice.jrxml -o invoice-template.json
+
+# Print converted template to stdout
+pdf-generator convert invoice.jrxml --stdout
+```
+
 ### Version
 
 ```bash
@@ -88,6 +98,5 @@ pdf-generator generate examples/report-template.json \
 ## License
 
 LGPL-3.0
-
 
 

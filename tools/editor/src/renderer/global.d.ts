@@ -23,7 +23,7 @@ export interface UpdateStatus {
 
 export interface ElectronAPI {
   // Dialog APIs
-  openFile: () => Promise<{ path: string; content: string } | null>
+  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean } | null>
   openDataFile: () => Promise<{ path: string; content: string } | null>
   saveFile: (content: string, defaultPath?: string) => Promise<string | null>
   
@@ -100,6 +100,5 @@ declare global {
     electronAPI: ElectronAPI
   }
 }
-
 
 

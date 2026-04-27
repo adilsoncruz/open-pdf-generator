@@ -29,6 +29,12 @@ interface CLIStatus {
   javaPath: string | null
 }
 
+interface OpenFileResult {
+  path: string
+  content: string
+  convertedFromJasper?: boolean
+}
+
 /**
  * Caminhos comuns do Java no macOS
  */
@@ -612,6 +618,7 @@ ipcMain.handle('dialog:openFile', async () => {
     properties: ['openFile'],
     filters: [
       { name: 'JSON Templates', extensions: ['json'] },
+      { name: 'Jasper Templates', extensions: ['jrxml'] },
       { name: 'All Files', extensions: ['*'] },
     ],
   })
@@ -621,12 +628,28 @@ ipcMain.handle('dialog:openFile', async () => {
   }
 
   const filePath = result.filePaths[0]
+  const extension = path.extname(filePath).toLowerCase()
+
+  if (extension === '.jrxml') {
+    const conversion = await convertJrxmlToJson(filePath)
+    if (!conversion.success || !conversion.content) {
+      throw new Error(conversion.error || 'Failed to convert JRXML template')
+    }
+
+    const openResult: OpenFileResult = {
+      path: filePath,
+      content: conversion.content,
+      convertedFromJasper: true,
+    }
+    return openResult
+  }
+
   const content = await fs.readFile(filePath, 'utf-8')
 
   return {
     path: filePath,
     content,
-  }
+  } as OpenFileResult
 })
 
 // Abrir arquivo de dados JSON
@@ -730,6 +753,53 @@ const ErrorCodes = {
   MAIN_WINDOW_NOT_FOUND: 'MAIN_WINDOW_NOT_FOUND',
   OPERATION_CANCELLED: 'OPERATION_CANCELLED',
 } as const
+
+async function convertJrxmlToJson(filePath: string): Promise<{ success: boolean; content?: string; error?: string; errorCode?: string }> {
+  const cliStatus = await checkCLIStatus()
+
+  if (!cliStatus.javaInstalled) {
+    return { success: false, errorCode: ErrorCodes.JAVA_NOT_INSTALLED, error: 'Java not installed' }
+  }
+
+  if (!cliStatus.installed) {
+    return { success: false, errorCode: ErrorCodes.CLI_NOT_INSTALLED, error: 'CLI not installed' }
+  }
+
+  const javaPath = cliStatus.javaPath || 'java'
+
+  return new Promise((resolve) => {
+    const java = spawn(javaPath, [
+      '-jar',
+      CLI_JAR_PATH,
+      'convert',
+      filePath,
+      '--stdout',
+    ])
+
+    let stdout = ''
+    let stderr = ''
+
+    java.stdout.on('data', (data) => {
+      stdout += data.toString()
+    })
+
+    java.stderr.on('data', (data) => {
+      stderr += data.toString()
+    })
+
+    java.on('close', (code) => {
+      if (code === 0) {
+        resolve({ success: true, content: stdout })
+      } else {
+        resolve({ success: false, error: (stderr || stdout).trim(), errorCode: ErrorCodes.UNKNOWN_ERROR })
+      }
+    })
+
+    java.on('error', (error) => {
+      resolve({ success: false, error: error.message, errorCode: ErrorCodes.ERROR_EXECUTING_JAVA })
+    })
+  })
+}
 
 ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: string) => {
   console.log('📄 [Preview] Starting PDF preview generation...')
