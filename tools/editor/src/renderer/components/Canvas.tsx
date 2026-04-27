@@ -2194,6 +2194,19 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         const paddingRight = element.style?.paddingRight ?? element.style?.paddingX ?? 0
         const paddingBottom = element.style?.paddingBottom ?? element.style?.paddingY ?? 0
         const paddingLeft = element.style?.paddingLeft ?? element.style?.paddingX ?? 0
+        const resolvedList =
+          listBinding && testData && Object.keys(testData).length > 0
+            ? listBinding.split('.').reduce<unknown>((acc, part) => {
+                if (acc && typeof acc === 'object' && part in (acc as Record<string, unknown>)) {
+                  return (acc as Record<string, unknown>)[part]
+                }
+                return null
+              }, testData as unknown)
+            : null
+        const listItems =
+          Array.isArray(resolvedList) && resolvedList.length > 0
+            ? resolvedList.slice(0, 5).map((item) => String(item))
+            : [0, 1, 2].map(() => `{${listBinding}}`)
 
         const getPrefix = (index: number) => {
           switch (listStyle) {
@@ -2222,12 +2235,11 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             }}
             onMouseDown={handleMouseDown}
           >
-            <div className="text-[10px] text-gray-500 mb-1 truncate">list: {`{${listBinding}}`}</div>
             <div className="space-y-1">
-              {[0, 1, 2].map((idx) => (
-                <div key={idx} className="flex items-center gap-2" style={{ color, fontSize, fontFamily }}>
+              {listItems.map((item, idx) => (
+                <div key={`${item}-${idx}`} className="flex items-center gap-2" style={{ color, fontSize, fontFamily }}>
                   <span>{getPrefix(idx)}</span>
-                  <span className="truncate">{`{${listBinding}}`}</span>
+                  <span className="truncate">{item}</span>
                 </div>
               ))}
             </div>
@@ -2247,6 +2259,22 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         const paddingRight = element.style?.paddingRight ?? element.style?.paddingX ?? 0
         const paddingBottom = element.style?.paddingBottom ?? element.style?.paddingY ?? 0
         const paddingLeft = element.style?.paddingLeft ?? element.style?.paddingX ?? 0
+        const resolvedCheckList =
+          listBinding && testData && Object.keys(testData).length > 0
+            ? listBinding.split('.').reduce<unknown>((acc, part) => {
+                if (acc && typeof acc === 'object' && part in (acc as Record<string, unknown>)) {
+                  return (acc as Record<string, unknown>)[part]
+                }
+                return null
+              }, testData as unknown)
+            : null
+        const checkItems: Array<{ label: string; checked: boolean }> =
+          resolvedCheckList && typeof resolvedCheckList === 'object' && !Array.isArray(resolvedCheckList)
+            ? Object.entries(resolvedCheckList as Record<string, unknown>).slice(0, 5).map(([key, value]) => ({
+                label: key,
+                checked: value === true,
+              }))
+            : [0, 1, 2].map(() => ({ label: `{${listBinding}}`, checked: false }))
 
         return (
           <div
@@ -2264,12 +2292,14 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             }}
             onMouseDown={handleMouseDown}
           >
-            <div className="text-[10px] text-gray-500 mb-1 truncate">check_list: {`{${listBinding}}`}</div>
             <div className="space-y-1">
-              {[0, 1, 2].map((idx) => (
-                <div key={idx} className="flex items-center gap-2" style={{ color, fontSize, fontFamily }}>
-                  <span className="inline-flex w-3 h-3 border border-gray-600 rounded-sm" />
-                  <span className="truncate">{`{${listBinding}}`}</span>
+              {checkItems.map((item, idx) => (
+                <div key={`${item.label}-${idx}`} className="flex items-center gap-2" style={{ color, fontSize, fontFamily }}>
+                  <span
+                    className="inline-flex w-3 h-3 border border-gray-600 rounded-sm"
+                    style={{ backgroundColor: item.checked ? color : 'transparent' }}
+                  />
+                  <span className="truncate">{item.label}</span>
                 </div>
               ))}
             </div>
