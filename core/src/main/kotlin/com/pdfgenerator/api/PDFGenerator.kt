@@ -555,18 +555,22 @@ class PDFGenerator(
                 if (overflow == "auto" && element.style?.multiline == true && element.width != null) {
                     val text = resolveTextForHeight(element.dataBinding, element.value, data)
                     if (text != null) {
-                        TextRenderer.calculateContentHeight(
-                            text = text,
-                            boxWidth = element.width,
-                            fontSize = element.style?.fontSize ?: 12f,
-                            lineHeight = element.style?.lineHeight,
-                            paddingTop = element.style?.paddingTop ?: 0f,
-                            paddingBottom = element.style?.paddingBottom ?: 0f,
-                            paddingLeft = element.style?.paddingLeft ?: 0f,
-                            paddingRight = element.style?.paddingRight ?: 0f,
-                            firstLineIndent = element.style?.firstLineIndent ?: 0f,
-                            fontFamily = element.style?.fontFamily ?: "Helvetica",
-                        )
+                        TextRenderer
+                            .getOrMeasureMultilineLayout(
+                                elementId = element.id,
+                                resolvedText = text,
+                                styleHash = element.style?.hashCode() ?: 0,
+                                boxWidth = element.width,
+                                fontSize = element.style?.fontSize ?: 12f,
+                                lineHeight = element.style?.lineHeight,
+                                paddingTop = element.style?.paddingTop ?: 0f,
+                                paddingBottom = element.style?.paddingBottom ?: 0f,
+                                paddingLeft = element.style?.paddingLeft ?: 0f,
+                                paddingRight = element.style?.paddingRight ?: 0f,
+                                firstLineIndent = element.style?.firstLineIndent ?: 0f,
+                                fontFamily = element.style?.fontFamily ?: "Helvetica",
+                                cache = context.textLayoutCache,
+                            ).contentHeight
                     } else {
                         definedHeight
                     }
@@ -579,18 +583,22 @@ class PDFGenerator(
                 val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
 
                 if (overflow == "auto" && element.style?.multiline == true && element.width != null) {
-                    TextRenderer.calculateContentHeight(
-                        text = element.value,
-                        boxWidth = element.width,
-                        fontSize = element.style?.fontSize ?: 12f,
-                        lineHeight = element.style?.lineHeight,
-                        paddingTop = element.style?.paddingTop ?: 0f,
-                        paddingBottom = element.style?.paddingBottom ?: 0f,
-                        paddingLeft = element.style?.paddingLeft ?: 0f,
-                        paddingRight = element.style?.paddingRight ?: 0f,
-                        firstLineIndent = element.style?.firstLineIndent ?: 0f,
-                        fontFamily = element.style?.fontFamily ?: "Helvetica",
-                    )
+                    TextRenderer
+                        .getOrMeasureMultilineLayout(
+                            elementId = element.id,
+                            resolvedText = element.value,
+                            styleHash = element.style?.hashCode() ?: 0,
+                            boxWidth = element.width,
+                            fontSize = element.style?.fontSize ?: 12f,
+                            lineHeight = element.style?.lineHeight,
+                            paddingTop = element.style?.paddingTop ?: 0f,
+                            paddingBottom = element.style?.paddingBottom ?: 0f,
+                            paddingLeft = element.style?.paddingLeft ?: 0f,
+                            paddingRight = element.style?.paddingRight ?: 0f,
+                            firstLineIndent = element.style?.firstLineIndent ?: 0f,
+                            fontFamily = element.style?.fontFamily ?: "Helvetica",
+                            cache = context.textLayoutCache,
+                        ).contentHeight
                 } else {
                     definedHeight
                 }
