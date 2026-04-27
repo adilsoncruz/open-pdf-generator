@@ -37,4 +37,5 @@ data class RenderContext(
 data class LoopContext(
     val item: Any?,
     val index: Int,
+    val normalizedItemMap: Map<String, Any?>? = null,
 )
