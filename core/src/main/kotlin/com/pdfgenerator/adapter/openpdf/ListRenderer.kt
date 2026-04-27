@@ -1,5 +1,6 @@
 package com.pdfgenerator.adapter.openpdf
 
+import com.lowagie.text.pdf.BaseFont
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.Renderer
@@ -10,7 +11,6 @@ import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TextStyle
 import com.pdfgenerator.util.DataBindingResolver
 import com.pdfgenerator.util.FontCache
-import com.lowagie.text.pdf.BaseFont
 import org.slf4j.LoggerFactory
 
 class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElement> {
