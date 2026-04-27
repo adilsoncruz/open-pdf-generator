@@ -103,7 +103,7 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
 
             if (!backgroundColor.isNullOrBlank() && backgroundColor.lowercase() != "transparent") {
                 val isFirstItemOnPage = itemsRenderedOnCurrentPage == 0
-                val rowBackgroundY = if (isFirstItemOnPage) listStartY else currentY
+                val rowBackgroundY = if (isFirstItemOnPage) listStartY else currentY - 0.25f
                 val rowBackgroundHeight = itemHeight + element.itemSpacing + if (isFirstItemOnPage) paddingTop else 0f
                 val rowBackground =
                     RectangleElement(
@@ -111,7 +111,7 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
                         x = element.x,
                         y = rowBackgroundY,
                         width = element.width,
-                        height = rowBackgroundHeight,
+                        height = rowBackgroundHeight + if (isFirstItemOnPage) 0f else 0.5f,
                         positionMode = PositionMode.RELATIVE,
                         style =
                             RectangleStyle(
