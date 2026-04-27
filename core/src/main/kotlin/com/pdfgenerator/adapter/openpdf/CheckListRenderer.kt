@@ -33,6 +33,12 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
 
         val listX = element.x
         val listStartY = element.startY ?: element.y
+        val paddingLeft = element.style?.paddingLeft ?: element.style?.paddingX ?: 0f
+        val paddingRight = element.style?.paddingRight ?: element.style?.paddingX ?: 0f
+        val paddingTop = element.style?.paddingTop ?: element.style?.paddingY ?: 0f
+        val paddingBottom = element.style?.paddingBottom ?: element.style?.paddingY ?: 0f
+        val contentStartX = listX + paddingLeft
+        val contentWidth = kotlin.math.max(10f, element.width - paddingLeft - paddingRight)
 
         val pageHeight = context.document.pageSize.height
         val margins = context.template.pageSettings.margins
@@ -40,10 +46,10 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
 
         val contentAreaBottom = pageHeight - margins.bottom - footerHeight
 
-        val maxYInTemplate = contentAreaBottom
+        val maxYInTemplate = contentAreaBottom - paddingBottom
 
         var itemsRenderedOnCurrentPage = 0
-        var currentY = listStartY
+        var currentY = listStartY + paddingTop
 
         val checkStyle = buildCheckStyle(element)
         listData.entries.forEachIndexed { index, entry ->
@@ -51,9 +57,9 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
             val measurementTextElement =
                 StaticTextElement(
                     id = "${element.id}-item-$index",
-                    x = listX + w + 3f,
+                    x = contentStartX + w + 3f,
                     y = currentY,
-                    width = element.width - 10f,
+                    width = kotlin.math.max(10f, contentWidth - w - 3f),
                     height = element.itemSpacing + (element.style?.fontSize ?: 10f),
                     value = "${entry.key}",
                     positionMode = PositionMode.RELATIVE,
@@ -69,7 +75,7 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
             val itemEndY = currentY + itemHeight
             if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
-                currentY = listStartY
+                currentY = listStartY + paddingTop
                 itemsRenderedOnCurrentPage = 0
             }
 
@@ -83,7 +89,7 @@ class CheckListRenderer(private val renderEngine: RenderEngine) : Renderer<Check
             val prefixElement =
                 RectangleElement(
                     id = "check-${element.id}-item-$index",
-                    x = listX,
+                    x = contentStartX,
                     y = currentY,
                     width = w,
                     height = w,

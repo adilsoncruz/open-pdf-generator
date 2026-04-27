@@ -33,6 +33,12 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
 
         val listX = element.x
         val listStartY = element.startY ?: element.y
+        val paddingLeft = element.style?.paddingLeft ?: element.style?.paddingX ?: 0f
+        val paddingRight = element.style?.paddingRight ?: element.style?.paddingX ?: 0f
+        val paddingTop = element.style?.paddingTop ?: element.style?.paddingY ?: 0f
+        val paddingBottom = element.style?.paddingBottom ?: element.style?.paddingY ?: 0f
+        val contentStartX = listX + paddingLeft
+        val contentWidth = kotlin.math.max(10f, element.width - paddingLeft - paddingRight)
 
         val pageHeight = context.document.pageSize.height
         val margins = context.template.pageSettings.margins
@@ -40,10 +46,10 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
 
         val contentAreaBottom = pageHeight - margins.bottom - footerHeight
 
-        val maxYInTemplate = contentAreaBottom
+        val maxYInTemplate = contentAreaBottom - paddingBottom
 
         var itemsRenderedOnCurrentPage = 0
-        var currentY = listStartY
+        var currentY = listStartY + paddingTop
 
         listData.forEachIndexed { index, item ->
             val prefix = getRenderablePrefix(buildPrefix(element, index), element)
@@ -51,9 +57,9 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
             val measurementTextElement =
                 StaticTextElement(
                     id = "${element.id}-item-$index",
-                    x = listX + prefixOffset,
+                    x = contentStartX + prefixOffset,
                     y = currentY,
-                    width = kotlin.math.max(10f, element.width - prefixOffset),
+                    width = kotlin.math.max(10f, contentWidth - prefixOffset),
                     height = element.itemSpacing + (element.style?.fontSize ?: 10f),
                     value = "$item",
                     positionMode = PositionMode.RELATIVE,
@@ -69,16 +75,16 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
             val itemEndY = currentY + itemHeight
             if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
-                currentY = listStartY
+                currentY = listStartY + paddingTop
                 itemsRenderedOnCurrentPage = 0
             }
 
             val prefixElement =
                 StaticTextElement(
                     id = "${element.id}-prefix-$index",
-                    x = listX,
+                    x = contentStartX,
                     y = currentY,
-                    width = element.width,
+                    width = contentWidth,
                     height = element.itemSpacing + (element.style?.fontSize ?: 10f),
                     value = prefix,
                     positionMode = PositionMode.RELATIVE,

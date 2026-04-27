@@ -2187,8 +2187,13 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         const listBinding = element.dataBinding || 'items'
         const listStyle = element.listStyle || 'BULLETED'
         const color = element.style?.color || '#1f2937'
+        const backgroundColor = element.style?.backgroundColor || 'transparent'
         const fontSize = element.style?.fontSize || 12
         const fontFamily = getFontFamily(element.style?.fontFamily)
+        const paddingTop = element.style?.paddingTop ?? element.style?.paddingY ?? 0
+        const paddingRight = element.style?.paddingRight ?? element.style?.paddingX ?? 0
+        const paddingBottom = element.style?.paddingBottom ?? element.style?.paddingY ?? 0
+        const paddingLeft = element.style?.paddingLeft ?? element.style?.paddingX ?? 0
 
         const getPrefix = (index: number) => {
           switch (listStyle) {
@@ -2206,7 +2211,15 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             className={`cursor-move select-none border border-dashed border-gray-300 rounded-sm bg-white/80 ${
               isSelected ? 'ring-2 ring-primary-500' : ''
             }`}
-            style={{ width: listWidth, height: listHeight, padding: 8 }}
+            style={{
+              width: listWidth,
+              height: listHeight,
+              backgroundColor,
+              paddingTop,
+              paddingRight,
+              paddingBottom,
+              paddingLeft,
+            }}
             onMouseDown={handleMouseDown}
           >
             <div className="text-[10px] text-gray-500 mb-1 truncate">list: {`{${listBinding}}`}</div>
@@ -2227,15 +2240,28 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         const listHeight = typeof element.height === 'number' ? element.height : 110
         const listBinding = element.dataBinding || 'checklist'
         const color = element.style?.color || '#1f2937'
+        const backgroundColor = element.style?.backgroundColor || 'transparent'
         const fontSize = element.style?.fontSize || 12
         const fontFamily = getFontFamily(element.style?.fontFamily)
+        const paddingTop = element.style?.paddingTop ?? element.style?.paddingY ?? 0
+        const paddingRight = element.style?.paddingRight ?? element.style?.paddingX ?? 0
+        const paddingBottom = element.style?.paddingBottom ?? element.style?.paddingY ?? 0
+        const paddingLeft = element.style?.paddingLeft ?? element.style?.paddingX ?? 0
 
         return (
           <div
             className={`cursor-move select-none border border-dashed border-gray-300 rounded-sm bg-white/80 ${
               isSelected ? 'ring-2 ring-primary-500' : ''
             }`}
-            style={{ width: listWidth, height: listHeight, padding: 8 }}
+            style={{
+              width: listWidth,
+              height: listHeight,
+              backgroundColor,
+              paddingTop,
+              paddingRight,
+              paddingBottom,
+              paddingLeft,
+            }}
             onMouseDown={handleMouseDown}
           >
             <div className="text-[10px] text-gray-500 mb-1 truncate">check_list: {`{${listBinding}}`}</div>
