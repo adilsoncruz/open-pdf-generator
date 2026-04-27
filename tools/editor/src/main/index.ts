@@ -848,8 +848,99 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
         success: false,
         errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
         javaNotInstalled: true
-      }
+  }
+}
+
+interface ListBindingInfo {
+  path: string
+  type: 'list' | 'check_list'
+}
+
+function collectListBindings(elements: unknown[], bindings: ListBindingInfo[]): void {
+  elements.forEach((element) => {
+    if (!element || typeof element !== 'object') return
+    const el = element as Record<string, unknown>
+
+    if ((el.type === 'list' || el.type === 'check_list') && typeof el.dataBinding === 'string' && el.dataBinding.trim()) {
+      bindings.push({ path: el.dataBinding.trim(), type: el.type as 'list' | 'check_list' })
     }
+
+    if (Array.isArray(el.elements)) {
+      collectListBindings(el.elements, bindings)
+    }
+  })
+}
+
+function getNestedValue(obj: Record<string, unknown>, pathValue: string): unknown {
+  return pathValue.split('.').reduce<unknown>((acc, key) => {
+    if (acc && typeof acc === 'object' && key in (acc as Record<string, unknown>)) {
+      return (acc as Record<string, unknown>)[key]
+    }
+    return undefined
+  }, obj)
+}
+
+function setNestedValue(obj: Record<string, unknown>, pathValue: string, value: unknown): void {
+  const keys = pathValue.split('.').filter(Boolean)
+  if (keys.length === 0) return
+
+  let current: Record<string, unknown> = obj
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i]
+    const next = current[key]
+    if (!next || typeof next !== 'object' || Array.isArray(next)) {
+      current[key] = {}
+    }
+    current = current[key] as Record<string, unknown>
+  }
+
+  current[keys[keys.length - 1]] = value
+}
+
+function enrichPreviewDataWithListPlaceholders(templateJson: string, dataJson: string): string {
+  try {
+    const template = JSON.parse(templateJson) as Record<string, unknown>
+    const data = JSON.parse(dataJson || '{}') as Record<string, unknown>
+    const bindings: ListBindingInfo[] = []
+
+    if (Array.isArray(template.pageElements)) {
+      collectListBindings(template.pageElements, bindings)
+    }
+
+    const pageSettings = template.pageSettings as Record<string, unknown> | undefined
+    ;['header', 'footer', 'bodyBackground'].forEach((section) => {
+      const sectionData = pageSettings?.[section] as Record<string, unknown> | undefined
+      if (sectionData && Array.isArray(sectionData.elements)) {
+        collectListBindings(sectionData.elements, bindings)
+      }
+    })
+
+    const summaryPage = template.summaryPage as Record<string, unknown> | undefined
+    if (summaryPage && Array.isArray(summaryPage.elements)) {
+      collectListBindings(summaryPage.elements, bindings)
+    }
+
+    const summaryBackground = template.summaryBackground as Record<string, unknown> | undefined
+    if (summaryBackground && Array.isArray(summaryBackground.elements)) {
+      collectListBindings(summaryBackground.elements, bindings)
+    }
+
+    bindings.forEach((binding) => {
+      const currentValue = getNestedValue(data, binding.path)
+      if (currentValue !== undefined && currentValue !== null) return
+
+      if (binding.type === 'list') {
+        setNestedValue(data, binding.path, ['item A', 'item B', 'item C'])
+      } else {
+        setNestedValue(data, binding.path, { 'item A': false, 'item B': false, 'item C': false })
+      }
+    })
+
+    return JSON.stringify(data)
+  } catch {
+    return dataJson || '{}'
+  }
+}
     
     if (!cliStatus.installed) {
       console.error('❌ [Preview] CLI not installed')
@@ -869,7 +960,8 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
 
     const normalizedTemplateJson = normalizeTemplateJson(templateJson)
     await fs.writeFile(templateFile, normalizedTemplateJson)
-    await fs.writeFile(dataFile, dataJson)
+    const previewDataJson = enrichPreviewDataWithListPlaceholders(normalizedTemplateJson, dataJson)
+    await fs.writeFile(dataFile, previewDataJson)
     
     // Log template summary
     try {
