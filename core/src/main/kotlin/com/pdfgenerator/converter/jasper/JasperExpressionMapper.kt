@@ -1,8 +1,8 @@
 package com.pdfgenerator.converter.jasper
 
 object JasperExpressionMapper {
-    private val fieldRegex = Regex("^\\$F\\{([A-Za-z0-9_.]+)}$")
-    private val parameterRegex = Regex("^\\$P\\{([A-Za-z0-9_.]+)}$")
+    private val fieldRegex = Regex("""^\$F\{([A-Za-z0-9_.]+)}$""")
+    private val parameterRegex = Regex("""^\$P\{([A-Za-z0-9_.]+)}$""")
 
     /**
      * Converts the most common Jasper expressions into our dataBinding format.
