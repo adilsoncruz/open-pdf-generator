@@ -378,6 +378,8 @@ class PDFGenerator(
                     containerWidth = bodyContainerWidth,
                     containerHeight = bodyContainerHeight,
                     renderState = renderState,
+                    offsetX = bodyOffsetX,
+                    offsetY = bodyOffsetY,
                     bodyOffsetY = bodyOffsetY,
                     headerPrintCondition = headerCondition,
                     footerPrintCondition = footerCondition,
@@ -396,8 +398,13 @@ class PDFGenerator(
                                 element.y
                             }
 
-                        val adjustedElement = adjustElementForBodyWithY(element, bodyOffsetX, bodyOffsetY, effectiveY)
-                        renderEngine.render(adjustedElement, context)
+                        val renderContext =
+                            if (element.positionMode == PositionMode.RELATIVE) {
+                                context.copy(offsetY = bodyOffsetY + (effectiveY - element.y))
+                            } else {
+                                context
+                            }
+                        renderEngine.render(element, renderContext)
 
                         if (element !is LoopElement && element !is TableElement) {
                             val elementHeight = getElementHeight(element, data, context)
@@ -435,6 +442,8 @@ class PDFGenerator(
                             isSummaryPage = true,
                             containerWidth = summaryContainerWidth,
                             containerHeight = summaryContainerHeight,
+                            offsetX = summaryOffsetX,
+                            offsetY = summaryOffsetY,
                             bodyOffsetY = summaryOffsetY,
                         )
 
@@ -442,8 +451,7 @@ class PDFGenerator(
                         bg.elements.forEach { element ->
                             try {
                                 if (shouldRenderElement(element, bg.groups, data)) {
-                                    val adjustedElement = adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
-                                    renderEngine.render(adjustedElement, summaryContext.copy(useContentUnder = true))
+                                    renderEngine.render(element, summaryContext.copy(useContentUnder = true))
                                 }
                             } catch (e: Exception) {
                                 logger.error("Erro ao renderizar background da summary ${element.id}: ${e.message}", e)
@@ -454,8 +462,7 @@ class PDFGenerator(
                     template.summaryPage.elements.forEach { element ->
                         try {
                             if (shouldRenderElement(element, template.summaryPage.groups, data)) {
-                                val adjustedElement = adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
-                                renderEngine.render(adjustedElement, summaryContext)
+                                renderEngine.render(element, summaryContext)
                             }
                         } catch (e: Exception) {
                             logger.error("Erro ao renderizar elemento da summary ${element.id}: ${e.message}", e)
@@ -497,49 +504,6 @@ class PDFGenerator(
         }
 
         return shouldRender
-    }
-
-    private fun adjustElementForBody(
-        element: Element,
-        bodyOffsetX: Float,
-        bodyOffsetY: Float,
-    ): Element {
-        val adjustedX = bodyOffsetX + element.x
-        val adjustedY = bodyOffsetY + element.y
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            is TableElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
-        }
-    }
-
-    private fun adjustElementForBodyWithY(
-        element: Element,
-        bodyOffsetX: Float,
-        bodyOffsetY: Float,
-        effectiveY: Float,
-    ): Element {
-        val adjustedX = bodyOffsetX + element.x
-        val adjustedY = bodyOffsetY + effectiveY
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            is TableElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
-        }
     }
 
     private fun getElementHeight(

@@ -33,16 +33,18 @@ class LineRenderer : Renderer<LineElement> {
         val containerHeight = context.containerHeight ?: (pageHeight - margins.top - margins.bottom)
         val resolvedWidth = element.resolveWidth(containerWidth)
         val resolvedHeight = element.resolveHeight(containerHeight)
-        val endX = element.x + resolvedWidth
-        val endY = element.y + resolvedHeight
+        val startX = context.resolveX(element.x)
+        val startY = context.resolveY(element.y)
+        val endX = startX + resolvedWidth
+        val endY = startY + resolvedHeight
 
-        logger.debug("LineRenderer - id: ${element.id}, x: ${element.x}, y: ${element.y}")
+        logger.debug("LineRenderer - id: ${element.id}, x: $startX, y: $startY")
         logger.debug("LineRenderer - width raw: ${element.width}, height raw: ${element.height}")
         logger.debug("LineRenderer - containerWidth: $containerWidth, containerHeight: $containerHeight")
         logger.debug("LineRenderer - resolvedWidth: $resolvedWidth, resolvedHeight: $resolvedHeight")
         logger.debug("LineRenderer - endX: $endX, endY: $endY")
 
-        val y1Position = pageHeight - element.y
+        val y1Position = pageHeight - startY
         val y2Position = pageHeight - endY
 
         cb.saveState()
@@ -64,7 +66,7 @@ class LineRenderer : Renderer<LineElement> {
             }
         }
 
-        cb.moveTo(element.x, y1Position)
+        cb.moveTo(startX, y1Position)
         cb.lineTo(endX, y2Position)
         cb.stroke()
 

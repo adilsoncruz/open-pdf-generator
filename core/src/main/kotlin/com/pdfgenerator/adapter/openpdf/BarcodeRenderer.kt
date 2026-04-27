@@ -35,10 +35,12 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
             val image = generateBarcodeImage(element, data, scaleFactor)
 
             val pageHeight = context.document.pageSize.height
-            val yPosition = pageHeight - element.y - element.height
+            val x = context.resolveX(element.x)
+            val y = context.resolveY(element.y)
+            val yPosition = pageHeight - y - element.height
 
             image.scaleAbsolute(element.width, element.height)
-            image.setAbsolutePosition(element.x, yPosition)
+            image.setAbsolutePosition(x, yPosition)
 
             if (context.useContentUnder) {
                 context.writer.directContentUnder.addImage(image)

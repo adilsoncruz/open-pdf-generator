@@ -110,7 +110,9 @@ class TextRenderer : Renderer<TextElement> {
             }
 
         val pageHeight = context.document.pageSize.height
-        val yTop = pageHeight - element.y
+        val x = context.resolveX(element.x)
+        val y = context.resolveY(element.y)
+        val yTop = pageHeight - y
 
         val contentByte =
             if (context.useContentUnder) {
@@ -126,7 +128,7 @@ class TextRenderer : Renderer<TextElement> {
             val bgColor = ColorUtil.hexToColor(backgroundColor)
             contentByte.saveState()
             contentByte.setColorFill(bgColor)
-            contentByte.rectangle(element.x, yTop - boxHeight, boxWidth, boxHeight)
+            contentByte.rectangle(x, yTop - boxHeight, boxWidth, boxHeight)
             contentByte.fill()
             contentByte.restoreState()
         }
@@ -167,17 +169,17 @@ class TextRenderer : Renderer<TextElement> {
             Element.ALIGN_CENTER -> {
                 val textWidth = font.baseFont.getWidthPoint(text, fontSize)
                 val boxWidth = element.width ?: textWidth
-                val xPos = element.x + (boxWidth - textWidth) / 2f
+                val xPos = x + (boxWidth - textWidth) / 2f
                 contentByte.setTextMatrix(xPos, textY)
             }
             Element.ALIGN_RIGHT -> {
                 val textWidth = font.baseFont.getWidthPoint(text, fontSize)
                 val boxWidth = element.width ?: textWidth
-                val xPos = element.x + boxWidth - textWidth
+                val xPos = x + boxWidth - textWidth
                 contentByte.setTextMatrix(xPos, textY)
             }
             else -> {
-                contentByte.setTextMatrix(element.x, textY)
+                contentByte.setTextMatrix(x, textY)
             }
         }
 
@@ -194,7 +196,9 @@ class TextRenderer : Renderer<TextElement> {
         val fontSize = element.style?.fontSize ?: 12f
         val pageHeight = context.document.pageSize.height
 
-        val yTop = pageHeight - element.y
+        val x = context.resolveX(element.x)
+        val y = context.resolveY(element.y)
+        val yTop = pageHeight - y
         val boxWidth = (element.width as? Number)?.toFloat() ?: 100f
         val boxHeight = (element.height as? Number)?.toFloat() ?: 100f
 
@@ -219,7 +223,7 @@ class TextRenderer : Renderer<TextElement> {
             val bgColor = ColorUtil.hexToColor(backgroundColor)
             contentByte.saveState()
             contentByte.setColorFill(bgColor)
-            contentByte.rectangle(element.x, yTop - boxHeight, boxWidth, boxHeight)
+            contentByte.rectangle(x, yTop - boxHeight, boxWidth, boxHeight)
             contentByte.fill()
             contentByte.restoreState()
         }
@@ -284,13 +288,13 @@ class TextRenderer : Renderer<TextElement> {
             val yPos = yTop - baselineOffset
 
             val indent = if (lineIndex == 0) firstLineIndent else 0f
-            val xStart = element.x + paddingLeft + indent
+            val xStart = x + paddingLeft + indent
             val lineWidth = font.baseFont.getWidthPoint(line, fontSize)
 
             val xPos =
                 when (alignment) {
-                    "center" -> element.x + paddingLeft + (availableBoxWidth - indent - lineWidth) / 2f + indent
-                    "right" -> element.x + boxWidth - paddingRight - lineWidth
+                    "center" -> x + paddingLeft + (availableBoxWidth - indent - lineWidth) / 2f + indent
+                    "right" -> x + boxWidth - paddingRight - lineWidth
                     else -> xStart
                 }
 

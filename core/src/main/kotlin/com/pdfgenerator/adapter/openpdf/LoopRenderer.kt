@@ -4,15 +4,10 @@ import com.pdfgenerator.engine.LoopContext
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.Renderer
-import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.Element
-import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.RectangleElement
-import com.pdfgenerator.model.StaticTextElement
-import com.pdfgenerator.model.TableElement
-import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.DataBindingResolver
 import org.slf4j.LoggerFactory
 
@@ -67,11 +62,17 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
             }
 
             val loopContext = LoopContext(item, index)
-            val newContext = context.copy(loopContext = loopContext)
+            val itemContext =
+                context.copy(
+                    loopContext = loopContext,
+                    offsetX = context.offsetX + loopX,
+                    offsetY = context.offsetY + currentY,
+                    containerWidth = loopWidth,
+                    containerHeight = itemHeight,
+                )
 
             element.elements.forEach { childElement ->
-                val adjustedElement = adjustElementPosition(childElement, loopX, currentY, loopWidth, itemHeight)
-                renderEngine.render(adjustedElement, newContext)
+                renderEngine.render(childElement, itemContext)
             }
 
             itemsRenderedOnCurrentPage++
@@ -79,7 +80,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
 
         context.renderState?.let { state ->
-            val finalYAbsolute = currentY - element.itemSpacing
+            val finalYAbsolute = context.offsetY + (currentY - element.itemSpacing)
             val finalYRelative = finalYAbsolute - context.bodyOffsetY
             state.currentY = finalYRelative
         }
@@ -124,109 +125,4 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         } ?: 20f
     }
 
-    private fun adjustElementPosition(
-        element: Element,
-        loopX: Float,
-        currentY: Float,
-        loopWidth: Float,
-        itemHeight: Float,
-    ): Element {
-        return when (element) {
-            is TextElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                    width = resolveWidth(element.width, loopWidth),
-                )
-            is StaticTextElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                    width = resolveWidth(element.width, loopWidth),
-                )
-            is ImageElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                    width = resolveFloatDimension(element.width, loopWidth),
-                    height = resolveFloatDimension(element.height, itemHeight),
-                )
-            is TableElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                )
-            is RectangleElement -> {
-                val isFullWidth =
-                    element.width.toString() == "100%" ||
-                        element.width.toString() == "100.0%"
-                val isFullHeight =
-                    element.height.toString() == "100%" ||
-                        element.height.toString() == "100.0%"
-                element.copy(
-                    x = if (isFullWidth) loopX else loopX + element.x,
-                    y = if (isFullHeight) currentY else currentY + element.y,
-                    width = resolveDimension(element.width, loopWidth),
-                    height = resolveDimension(element.height, itemHeight),
-                )
-            }
-            is LineElement -> {
-                val resolvedWidth = element.resolveWidth(loopWidth)
-                val resolvedHeight = element.resolveHeight(itemHeight)
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                    width = resolvedWidth,
-                    height = resolvedHeight,
-                )
-            }
-            is BarcodeElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                )
-            else -> element
-        }
-    }
-
-    private fun resolveDimension(
-        value: Any?,
-        loopDimension: Float,
-    ): Any {
-        return when (value) {
-            is String -> {
-                if (value == "100%" || value == "100.0%") {
-                    loopDimension
-                } else {
-                    value.toFloatOrNull() ?: value
-                }
-            }
-            is Number -> value
-            else -> value ?: 0f
-        }
-    }
-
-    private fun resolveFloatDimension(
-        value: Float,
-        loopDimension: Float,
-    ): Float {
-        return if (value.toString().endsWith("%")) {
-            loopDimension
-        } else {
-            value
-        }
-    }
-
-    private fun resolveWidth(
-        value: Float?,
-        loopWidth: Float,
-    ): Float? {
-        return if (value == null) {
-            null
-        } else if (value.toString().endsWith("%") || value == -1f) {
-            loopWidth
-        } else {
-            value
-        }
-    }
 }
