@@ -33,10 +33,10 @@ class ListRenderer(private val renderEngine: RenderEngine) : Renderer<ListElemen
 
         val listX = element.x
         val listStartY = element.startY ?: element.y
-        val paddingLeft = element.style?.paddingLeft ?: element.style?.paddingX ?: 0f
-        val paddingRight = element.style?.paddingRight ?: element.style?.paddingX ?: 0f
-        val paddingTop = element.style?.paddingTop ?: element.style?.paddingY ?: 0f
-        val paddingBottom = element.style?.paddingBottom ?: element.style?.paddingY ?: 0f
+        val paddingLeft = element.style?.paddingLeft ?: 0f
+        val paddingRight = element.style?.paddingRight ?: 0f
+        val paddingTop = element.style?.paddingTop ?: 0f
+        val paddingBottom = element.style?.paddingBottom ?: 0f
         val contentStartX = listX + paddingLeft
         val contentWidth = kotlin.math.max(10f, element.width - paddingLeft - paddingRight)
 
