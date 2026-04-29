@@ -296,8 +296,14 @@ async function ensureCLIReady(): Promise<{ ok: true; status: CLIStatus } | { ok:
   }
 
   if (!cliStatus.installed || cliStatus.needsUpdate) {
+    const wasInstalledBeforeUpdate = cliStatus.installed
     const installResult = await installCLI()
     if (!installResult.success) {
+      if (wasInstalledBeforeUpdate) {
+        console.warn('⚠️ CLI update failed, continuing with currently installed CLI.')
+        return { ok: true, status: cliStatus }
+      }
+
       return {
         ok: false,
         error: {
