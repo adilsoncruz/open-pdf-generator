@@ -179,17 +179,40 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
       let fallbackJar: string | null = null
       
       if (isDev) {
-        // Em desenvolvimento, tentar pegar do build da library
-        const libJar = path.join(__dirname, '..', '..', '..', 'library', 'build', 'libs', `open-pdf-generator-${CLI_VERSION}-standalone.jar`)
-        try {
-          await fs.access(libJar)
-          fallbackJar = libJar
-        } catch {
-          // Tentar o JAR antigo do resources
-          const resourceJar = path.join(__dirname, '..', '..', 'resources', 'pdf-generator.jar')
+        const cliBuildDir = path.join(__dirname, '..', '..', '..', 'tools', 'cli', 'build', 'libs')
+        const coreBuildDir = path.join(__dirname, '..', '..', '..', 'core', 'build', 'libs')
+        const legacyLibraryBuildDir = path.join(__dirname, '..', '..', '..', 'library', 'build', 'libs')
+        const resourcesJar = path.join(__dirname, '..', '..', 'resources', 'pdf-generator.jar')
+
+        const tryFindLocalJar = async (dir: string): Promise<string | null> => {
           try {
-            await fs.access(resourceJar)
-            fallbackJar = resourceJar
+            const files = await fs.readdir(dir)
+            const jarCandidates = files.filter(file => file.endsWith("-standalone.jar"))
+            if (jarCandidates.length === 0) return null
+
+            jarCandidates.sort((a, b) => {
+              const aVersionMatch = a.match(/open-pdf-generator-(.+)-standalone\.jar/)
+              const bVersionMatch = b.match(/open-pdf-generator-(.+)-standalone\.jar/)
+              const aVersion = aVersionMatch?.[1] || ""
+              const bVersion = bVersionMatch?.[1] || ""
+              return bVersion.localeCompare(aVersion, undefined, { numeric: true, sensitivity: 'base' })
+            })
+
+            return path.join(dir, jarCandidates[0])
+          } catch {
+            return null
+          }
+        }
+
+        fallbackJar =
+          (await tryFindLocalJar(cliBuildDir)) ||
+          (await tryFindLocalJar(coreBuildDir)) ||
+          (await tryFindLocalJar(legacyLibraryBuildDir))
+
+        if (!fallbackJar) {
+          try {
+            await fs.access(resourcesJar)
+            fallbackJar = resourcesJar
           } catch {
             // Nenhum JAR encontrado localmente
           }
