@@ -29,6 +29,12 @@ interface CLIStatus {
   javaPath: string | null
 }
 
+interface VersionInfo {
+  editor: string
+  core: string | null
+  cli: string | null
+}
+
 /**
  * Caminhos comuns do Java no macOS
  */
@@ -320,6 +326,16 @@ async function installCLIFromFile(): Promise<{ success: boolean; error?: string;
   }
   
   return await installCLI(result.filePaths[0])
+}
+
+async function readGradleProjectVersion(gradleFilePath: string): Promise<string | null> {
+  try {
+    const content = await fs.readFile(gradleFilePath, 'utf-8')
+    const match = content.match(/version\s*=\s*\"([^\"]+)\"/)
+    return match?.[1] || null
+  } catch {
+    return null
+  }
 }
 
 function createSplashWindow() {
@@ -739,6 +755,20 @@ ipcMain.handle('cli:installFromFile', async () => {
 // Get installation directory path
 ipcMain.handle('cli:getInstallPath', () => {
   return CLI_DIR
+})
+
+ipcMain.handle('app:getVersions', async (): Promise<VersionInfo> => {
+  const editorVersion = app.getVersion()
+  const rootDir = path.join(__dirname, '..', '..', '..')
+
+  const coreVersion = await readGradleProjectVersion(path.join(rootDir, 'core', 'build.gradle.kts'))
+  const cliVersion = await readGradleProjectVersion(path.join(rootDir, 'tools', 'cli', 'build.gradle.kts'))
+
+  return {
+    editor: editorVersion,
+    core: coreVersion,
+    cli: cliVersion,
+  }
 })
 
 // Gerar PDF e retornar como base64 (para preview)
