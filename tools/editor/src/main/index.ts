@@ -13,7 +13,27 @@ let splashWindow: BrowserWindow | null = null
 
 // ============ CLI Management ============
 
-const PROJECT_ROOT_DIR = path.join(__dirname, '..', '..', '..')
+function resolveProjectRootDir(): string {
+  const candidates = [
+    process.cwd(),
+    path.join(__dirname, '..', '..', '..'),
+    path.join(__dirname, '..', '..', '..', '..'),
+    path.join(__dirname, '..', '..', '..', '..', '..'),
+  ]
+
+  for (const candidate of candidates) {
+    if (
+      fsSync.existsSync(path.join(candidate, 'core', 'build.gradle.kts')) &&
+      fsSync.existsSync(path.join(candidate, 'tools', 'cli', 'build.gradle.kts'))
+    ) {
+      return candidate
+    }
+  }
+
+  return process.cwd()
+}
+
+const PROJECT_ROOT_DIR = resolveProjectRootDir()
 const DEFAULT_CLI_VERSION = '1.0.0'
 
 function readGradleVersionSync(gradleFilePath: string): string | null {
@@ -355,14 +375,17 @@ async function readGradleProjectVersion(gradleFilePath: string): Promise<string 
 
 async function readJarVersionFromBuildLibs(
   libsDir: string,
-  prefix: string,
+  prefixes: string[],
 ): Promise<string | null> {
   try {
     const files = await fs.readdir(libsDir)
     const candidates =
       files
         .map(file => {
-          const match = file.match(new RegExp(`^${prefix}-(.+)\\.jar$`))
+          const matchedPrefix = prefixes.find(prefix => file.startsWith(`${prefix}-`) && file.endsWith('.jar'))
+          if (!matchedPrefix) return null
+
+          const match = file.match(new RegExp(`^${matchedPrefix}-(.+)\\.jar$`))
           return match ? { file, version: match[1] } : null
         })
         .filter((item): item is { file: string; version: string } => item !== null)
@@ -803,8 +826,14 @@ ipcMain.handle('cli:getInstallPath', () => {
 
 ipcMain.handle('app:getVersions', async (): Promise<VersionInfo> => {
   const editorVersion = app.getVersion()
-  const coreVersionFromJar = await readJarVersionFromBuildLibs(path.join(PROJECT_ROOT_DIR, 'core', 'build', 'libs'), 'open-pdf-generator')
-  const cliVersionFromJar = await readJarVersionFromBuildLibs(path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build', 'libs'), 'pdf-generator-cli')
+  const coreVersionFromJar = await readJarVersionFromBuildLibs(
+    path.join(PROJECT_ROOT_DIR, 'core', 'build', 'libs'),
+    ['open-pdf-generator'],
+  )
+  const cliVersionFromJar = await readJarVersionFromBuildLibs(
+    path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build', 'libs'),
+    ['pdf-generator-cli', 'open-pdf-generator'],
+  )
 
   const coreVersion =
     coreVersionFromJar ||
