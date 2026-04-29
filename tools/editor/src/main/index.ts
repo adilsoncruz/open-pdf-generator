@@ -1024,7 +1024,7 @@ ipcMain.handle('template:validate', async (_, templatePath: string) => {
   console.log('🔍 [Validate] Validating template:', templatePath)
   
   try {
-    const cliStatus = await checkCLIStatus()
+    let cliStatus = await checkCLIStatus()
     
     if (!cliStatus.javaInstalled) {
       return {
@@ -1033,11 +1033,15 @@ ipcMain.handle('template:validate', async (_, templatePath: string) => {
       }
     }
     
-    if (!cliStatus.installed) {
-      return {
-        valid: false,
-        errorCode: ErrorCodes.CLI_NOT_INSTALLED,
+    if (!cliStatus.installed || cliStatus.needsUpdate) {
+      const installResult = await installCLI()
+      if (!installResult.success) {
+        return {
+          valid: false,
+          errorCode: ErrorCodes.CLI_NOT_INSTALLED,
+        }
       }
+      cliStatus = await checkCLIStatus()
     }
 
     const javaPath = cliStatus.javaPath || 'java'
