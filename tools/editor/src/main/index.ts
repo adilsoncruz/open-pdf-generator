@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
 import * as path from 'path'
 import * as fs from 'fs/promises'
+import * as fsSync from 'fs'
 import { spawn, execSync } from 'child_process'
 import * as os from 'os'
 import * as https from 'https'
@@ -12,7 +13,21 @@ let splashWindow: BrowserWindow | null = null
 
 // ============ CLI Management ============
 
-const CLI_VERSION = '1.0.0'
+const PROJECT_ROOT_DIR = path.join(__dirname, '..', '..', '..')
+const DEFAULT_CLI_VERSION = '1.0.0'
+
+function readGradleVersionSync(gradleFilePath: string): string | null {
+  try {
+    const content = fsSync.readFileSync(gradleFilePath, 'utf-8')
+    const match = content.match(/version\s*=\s*\"([^\"]+)\"/)
+    return match?.[1] || null
+  } catch {
+    return null
+  }
+}
+
+const CLI_VERSION =
+  readGradleVersionSync(path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build.gradle.kts')) || DEFAULT_CLI_VERSION
 const CLI_DIR = path.join(os.homedir(), '.pdf-generator')
 const CLI_JAR_PATH = path.join(CLI_DIR, 'pdf-generator.jar')
 const CLI_VERSION_FILE = path.join(CLI_DIR, 'version.txt')
@@ -333,6 +348,35 @@ async function readGradleProjectVersion(gradleFilePath: string): Promise<string 
     const content = await fs.readFile(gradleFilePath, 'utf-8')
     const match = content.match(/version\s*=\s*\"([^\"]+)\"/)
     return match?.[1] || null
+  } catch {
+    return null
+  }
+}
+
+async function readJarVersionFromBuildLibs(
+  libsDir: string,
+  prefix: string,
+): Promise<string | null> {
+  try {
+    const files = await fs.readdir(libsDir)
+    const candidates =
+      files
+        .map(file => {
+          const match = file.match(new RegExp(`^${prefix}-(.+)\\.jar$`))
+          return match ? { file, version: match[1] } : null
+        })
+        .filter((item): item is { file: string; version: string } => item !== null)
+        .filter(item => !item.file.includes('sources') && !item.file.includes('javadoc'))
+
+    if (candidates.length === 0) {
+      return null
+    }
+
+    candidates.sort((a, b) =>
+      b.version.localeCompare(a.version, undefined, { numeric: true, sensitivity: 'base' }),
+    )
+
+    return candidates[0].version
   } catch {
     return null
   }
@@ -759,10 +803,15 @@ ipcMain.handle('cli:getInstallPath', () => {
 
 ipcMain.handle('app:getVersions', async (): Promise<VersionInfo> => {
   const editorVersion = app.getVersion()
-  const rootDir = path.join(__dirname, '..', '..', '..')
+  const coreVersionFromJar = await readJarVersionFromBuildLibs(path.join(PROJECT_ROOT_DIR, 'core', 'build', 'libs'), 'open-pdf-generator')
+  const cliVersionFromJar = await readJarVersionFromBuildLibs(path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build', 'libs'), 'pdf-generator-cli')
 
-  const coreVersion = await readGradleProjectVersion(path.join(rootDir, 'core', 'build.gradle.kts'))
-  const cliVersion = await readGradleProjectVersion(path.join(rootDir, 'tools', 'cli', 'build.gradle.kts'))
+  const coreVersion =
+    coreVersionFromJar ||
+    (await readGradleProjectVersion(path.join(PROJECT_ROOT_DIR, 'core', 'build.gradle.kts')))
+  const cliVersion =
+    cliVersionFromJar ||
+    (await readGradleProjectVersion(path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build.gradle.kts')))
 
   return {
     editor: editorVersion,
