@@ -1,20 +1,31 @@
 package io.pdfgenerator.cli.converter.jasper
 
+import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.BodyBackground
+import com.pdfgenerator.model.CustomSize
+import com.pdfgenerator.model.HeaderFooter
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LineStyle
+import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.Margins
 import com.pdfgenerator.model.PageSettings
 import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.RectangleStyle
 import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.SummaryPage
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TemplateMetadata
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.model.TextStyle
+import java.io.File
+import java.io.InputStream
+import java.time.LocalDate
+import java.util.UUID
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.NodeList
 
 /**
  * Converts JasperReports JRXML templates into this project's [Template] format.
@@ -39,19 +50,19 @@ object JasperTemplateConverter {
         path: String,
         options: JasperConversionOptions = JasperConversionOptions(),
     ): Template {
-        val document = buildDocument(java.io.File(path).inputStream())
+        val document = buildDocument(File(path).inputStream())
         return convertDocument(document, options)
     }
 
     fun fromInputStream(
-        input: java.io.InputStream,
+        input: InputStream,
         options: JasperConversionOptions = JasperConversionOptions(),
     ): Template {
         val document = buildDocument(input)
         return convertDocument(document, options)
     }
 
-    private fun buildDocument(input: java.io.InputStream): Document {
+    private fun buildDocument(input: InputStream): Document {
         return input.use {
             val factory = DocumentBuilderFactory.newInstance().apply {
                 isNamespaceAware = false
@@ -62,6 +73,32 @@ object JasperTemplateConverter {
             val builder = factory.newDocumentBuilder()
             builder.parse(it).apply { documentElement.normalize() }
         }
+    }
+
+    private fun convertSection(sectionNodes: NodeList,offset:Float, options: JasperConversionOptions): Map<String,*> {
+        var yOffset = 0f + offset
+        val elements = mutableListOf<com.pdfgenerator.model.Element>()
+        for (sectionIdx in 0 until sectionNodes.length) {
+            val sectionNode = sectionNodes.item(sectionIdx)
+            if (sectionNode is Element) {
+                val bands = sectionNode.getElementsByTagName("band")
+                println("bands ${elements.size}")
+                for (bandIdx in 0 until bands.length) {
+                    println("Y: $yOffset")
+                    val bandNode = bands.item(bandIdx)
+                    if (bandNode is Element) {
+                        val bandHeight = bandNode.getIntAttribute("height", 0).toFloat()
+                        elements.addAll(parseBandElements(bandNode, yOffset, options, null))
+                        yOffset += bandHeight
+                    }
+                }
+            }
+        }
+        println("pageElements ${elements.size} - y: $yOffset")
+        return mapOf(
+            "elements" to elements,
+            "height" to yOffset
+        )
     }
 
     private fun convertDocument(
@@ -85,12 +122,12 @@ object JasperTemplateConverter {
                 left = root.getIntAttribute("leftMargin", 20).toFloat(),
             )
 
-        val pageSettings =
+        var pageSettings =
             PageSettings(
                 size = "CUSTOM",
                 orientation = if (orientation.equals("landscape", ignoreCase = true)) "landscape" else "portrait",
                 margins = margins,
-                customSize = com.pdfgenerator.model.CustomSize(pageWidth.toFloat(), pageHeight.toFloat()),
+                customSize = CustomSize(pageWidth.toFloat(), pageHeight.toFloat()),
             )
 
         val metadata =
@@ -98,44 +135,153 @@ object JasperTemplateConverter {
                 name = root.getAttribute("name"),
                 description = "Converted from JasperReports JRXML",
                 author = options.author,
-                created = java.time.LocalDate.now().toString(),
+                created = LocalDate.now().toString(),
                 tags = listOf("jasper", "jrxml", "converted"),
             )
 
-        val elements = mutableListOf<com.pdfgenerator.model.Element>()
+        var elements = mutableListOf<com.pdfgenerator.model.Element>()
+        var summaryElem: List<com.pdfgenerator.model.Element>? = null
         val sectionOrder = listOf("background", "title", "pageHeader", "columnHeader", "detail", "columnFooter", "pageFooter", "summary")
         var yOffset = 0f
 
         for (sectionTag in sectionOrder) {
             val sectionNodes = root.getElementsByTagName(sectionTag)
-            for (sectionIdx in 0 until sectionNodes.length) {
-                val sectionNode = sectionNodes.item(sectionIdx)
-                if (sectionNode is Element) {
-                    val bands = sectionNode.getElementsByTagName("band")
-                    for (bandIdx in 0 until bands.length) {
-                        val bandNode = bands.item(bandIdx)
-                        if (bandNode is Element) {
-                            val bandHeight = bandNode.getIntAttribute("height", 0).toFloat()
-                            elements += parseBandElements(bandNode, yOffset, options)
-                            yOffset += bandHeight
-                        }
-                    }
+            //val sectionElements = convertSection(sectionNodes, options)
+            println("TAG: $sectionTag")
+            when (sectionTag) {
+                "background" -> {
+                    val sectionElements = convertSection(sectionNodes,0f, options)
+                    pageSettings = pageSettings.copy( bodyBackground = BodyBackground(sectionElements.get("elements") as List<com.pdfgenerator.model.Element>))
+                }
+                "title" -> {
+                    val sectionElements = convertSection(sectionNodes,0f, options)
+                    yOffset = sectionElements.get("height") as Float
+                    elements.addAll(sectionElements.get("elements") as List<com.pdfgenerator.model.Element>)
+                    pageSettings = pageSettings.copy( header =  HeaderFooter( sectionElements.get("height") as Float,sectionElements.get("elements") as List<com.pdfgenerator.model.Element>))
+                }
+                "pageHeader" -> {
+                    val sectionElements = convertSection(sectionNodes,0f, options)
+                    pageSettings = pageSettings.copy( header =  HeaderFooter( sectionElements.get("height") as Float,sectionElements.get("elements") as List<com.pdfgenerator.model.Element>))
+                }
+                "pageFooter" -> {
+                    val sectionElements = convertSection(sectionNodes,0f, options)
+                    pageSettings = pageSettings.copy( footer =  HeaderFooter( sectionElements.get("height") as Float,sectionElements.get("elements") as List<com.pdfgenerator.model.Element>))
+                }
+                "summary" -> {
+                    val sectionElements = convertSection(sectionNodes,0f, options)
+                    summaryElem = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
+                }
+                else   -> {
+                    println("adding elements to page")
+                    val sectionElements = convertSection(sectionNodes,yOffset, options)
+                    elements.addAll(sectionElements.get("elements") as List<com.pdfgenerator.model.Element>)
                 }
             }
         }
-
+        println("Template elements: ${elements.size}")
         return Template(
             version = "1.0",
             metadata = metadata,
             pageSettings = pageSettings,
             pageElements = elements,
+            summaryPage = summaryElem?.let { SummaryPage(summaryElem) }
         )
+    }
+
+    private fun parseComponentElement(
+        node: Element,
+        sectionYOffset: Float,
+        options: JasperConversionOptions,
+        frame: Map<String, Float>?
+    ): List<com.pdfgenerator.model.Element>?
+    {
+        val out = mutableListOf<com.pdfgenerator.model.Element>()
+        val reportElement = node.firstDirectChild("reportElement") ?: return null
+        var children = node.childNodes
+
+        for (idx in 0 until children.length) {
+            val child = children.item(idx)
+            if (child !is Element) continue
+
+            when (child.tagName) {
+                "jr:QRCode" -> parseJrQrCode(reportElement, child, sectionYOffset, frame)?.let(out::add)
+                "jr:list" -> parseJrList(reportElement, child, sectionYOffset, options, frame)?.let(out::add)
+            }
+        }
+        return out
+    }
+
+    private fun parseJrList(
+        reportElement: Element,
+        node: Element,
+        sectionYOffset: Float,
+        options: JasperConversionOptions,
+        frame: Map<String, Float>?
+    ) : LoopElement? {
+        var expression = node.firstDirectChild("datasetRun")?.textContent?.trim().orEmpty()
+        val content = node.firstDirectChild("jr:listContents")
+        val dataBinding = JasperExpressionMapper.toDataBinding(expression)
+        val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
+        val out = parseBandElements(content!!, 0f, options, frame)
+
+        return LoopElement(
+            type = "loop",
+            id = UUID.randomUUID().toString(),
+            x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
+            width = reportElement.getIntAttribute("width", 100).toFloat(),
+            height = reportElement.getIntAttribute("height", 16).toFloat(),
+            dataBinding = dataBinding ?: "",
+            elements = out,
+            printCondition = printCondition
+        )
+    }
+
+    private fun parseJrQrCode(
+        reportElement: Element,
+        node: Element,
+        sectionYOffset: Float,
+        frame: Map<String, Float>?
+    ) : BarcodeElement? {
+        var expression = node.firstDirectChild("jr:QRCode")?.textContent?.trim().orEmpty()
+        val dataBinding = JasperExpressionMapper.toDataBinding(expression)
+        val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
+        val condition = JasperExpressionMapper.toExpression(printCondition)
+
+        return BarcodeElement(
+            type = "barcode",
+            barcodeType = "barcodeType",
+            id = UUID.randomUUID().toString(),
+            x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
+            width = reportElement.getIntAttribute("width", 100).toFloat(),
+            height = reportElement.getIntAttribute("height", 16).toFloat(),
+            dataBinding = dataBinding ?: "",
+            printCondition = condition
+        )
+    }
+
+    private fun parseFrame(
+        node: Element,
+        sectionYOffset: Float,
+        options: JasperConversionOptions,
+    ) : List<com.pdfgenerator.model.Element>? {
+        val reportElement = node.firstDirectChild("reportElement") ?: return null
+        val x = reportElement.getIntAttribute("x", 0).toFloat()
+        val y = reportElement.getIntAttribute("y", 0).toFloat()
+        val out = parseBandElements(node, sectionYOffset, options, mapOf(
+            "x" to x,
+            "y" to y,
+        )).toMutableList()
+
+        return out
     }
 
     private fun parseBandElements(
         band: Element,
         sectionYOffset: Float,
         options: JasperConversionOptions,
+        frame: Map<String, Float>?
     ): List<com.pdfgenerator.model.Element> {
         val out = mutableListOf<com.pdfgenerator.model.Element>()
 
@@ -145,11 +291,13 @@ object JasperTemplateConverter {
             if (child !is Element) continue
 
             when (child.tagName) {
-                "staticText" -> parseStaticText(child, sectionYOffset)?.let(out::add)
-                "textField" -> parseTextField(child, sectionYOffset)?.let(out::add)
-                "line" -> parseLine(child, sectionYOffset)?.let(out::add)
-                "rectangle" -> parseRectangle(child, sectionYOffset)?.let(out::add)
-                "image" -> parseImage(child, sectionYOffset)?.let(out::add)
+                "staticText" -> parseStaticText(child, sectionYOffset, frame)?.let(out::add)
+                "textField" -> parseTextField(child, sectionYOffset, frame)?.let(out::add)
+                "line" -> parseLine(child, sectionYOffset, frame)?.let(out::add)
+                "rectangle" -> parseRectangle(child, sectionYOffset, frame)?.let(out::add)
+                "image" -> parseImage(child, sectionYOffset, frame)?.let(out::add)
+                "componentElement" -> parseComponentElement(child, sectionYOffset, options, frame)?.let(out::addAll)
+                "frame" -> parseFrame(child, sectionYOffset, options)?.let(out::addAll)
                 else -> {
                     if (options.failOnUnsupportedElement) {
                         throw JasperTemplateConversionException("Elemento Jasper não suportado: <${child.tagName}>")
@@ -164,15 +312,16 @@ object JasperTemplateConverter {
     private fun parseStaticText(
         node: Element,
         sectionYOffset: Float,
+        frame: Map<String, Float>?
     ): StaticTextElement? {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
         val textValue = node.firstDirectChild("text")?.textContent?.trim().orEmpty()
         if (textValue.isBlank()) return null
 
         return StaticTextElement(
-            id = reportElement.getAttribute("key").ifBlank { "static-${reportElement.positionSuffix()}" },
-            x = reportElement.getIntAttribute("x", 0).toFloat(),
-            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            id = UUID.randomUUID().toString(),
+            x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
             width = reportElement.getIntAttribute("width", 100).toFloat(),
             height = reportElement.getIntAttribute("height", 16).toFloat(),
             value = textValue,
@@ -183,34 +332,43 @@ object JasperTemplateConverter {
     private fun parseTextField(
         node: Element,
         sectionYOffset: Float,
+        frame: Map<String, Float>?,
     ): TextElement? {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
-        val expression = node.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
+        var expression = node.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
         val dataBinding = JasperExpressionMapper.toDataBinding(expression)
+        val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
+        val condition = JasperExpressionMapper.toExpression(printCondition)
+
+        if (expression.matches(Regex("^\".*\"$"))) {
+            expression = expression.substring(1, expression.length - 1)
+        }
 
         return TextElement(
-            id = reportElement.getAttribute("key").ifBlank { "text-${reportElement.positionSuffix()}" },
-            x = reportElement.getIntAttribute("x", 0).toFloat(),
-            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            id = UUID.randomUUID().toString(),
+            x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
             width = reportElement.getIntAttribute("width", 100).toFloat(),
             height = reportElement.getIntAttribute("height", 16).toFloat(),
             dataBinding = dataBinding,
             value = if (dataBinding == null) expression else null,
             style = parseTextStyle(node),
+            printCondition = condition
         )
     }
 
     private fun parseLine(
         node: Element,
         sectionYOffset: Float,
+        frame: Map<String, Float>?
     ): LineElement? {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
         val pen = node.firstDirectChild("graphicElement")?.firstDirectChild("pen")
 
         return LineElement(
-            id = reportElement.getAttribute("key").ifBlank { "line-${reportElement.positionSuffix()}" },
-            x = reportElement.getIntAttribute("x", 0).toFloat(),
-            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            id = UUID.randomUUID().toString(),
+            x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
             width = reportElement.getIntAttribute("width", 100).toFloat(),
             height = reportElement.getIntAttribute("height", 0).toFloat(),
             style =
@@ -224,20 +382,24 @@ object JasperTemplateConverter {
     private fun parseRectangle(
         node: Element,
         sectionYOffset: Float,
+        frame: Map<String, Float>?
     ): RectangleElement? {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
         val pen = node.firstDirectChild("graphicElement")?.firstDirectChild("pen")
 
+        val radius = node.getIntAttribute("radius", 0).toFloat()
         return RectangleElement(
-            id = reportElement.getAttribute("key").ifBlank { "rect-${reportElement.positionSuffix()}" },
-            x = reportElement.getIntAttribute("x", 0).toFloat(),
-            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            id = UUID.randomUUID().toString(),
+            x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
             width = reportElement.getIntAttribute("width", 100).toFloat(),
             height = reportElement.getIntAttribute("height", 100).toFloat(),
             style =
                 RectangleStyle(
-                    borderColor = pen?.getAttribute("lineColor")?.ifBlank { "#000000" },
-                    borderWidth = pen?.getAttribute("lineWidth")?.toFloatOrNull() ?: 1f,
+                    borderColor = pen?.getAttribute("lineColor")?.ifBlank { null },
+                    borderWidth = pen?.getAttribute("lineWidth")?.toFloatOrNull() ?: 0f,
+                    fillColor =  reportElement.getAttribute("backcolor").ifBlank { null },
+                    cornerRadius = radius
                 ),
         )
     }
@@ -245,15 +407,16 @@ object JasperTemplateConverter {
     private fun parseImage(
         node: Element,
         sectionYOffset: Float,
+        frame: Map<String, Float>?
     ): ImageElement? {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
         val expression = node.firstDirectChild("imageExpression")?.textContent?.trim().orEmpty()
         val dataBinding = JasperExpressionMapper.toDataBinding(expression)
 
         return ImageElement(
-            id = reportElement.getAttribute("key").ifBlank { "img-${reportElement.positionSuffix()}" },
-            x = reportElement.getIntAttribute("x", 0).toFloat(),
-            y = reportElement.getIntAttribute("y", 0).toFloat() + sectionYOffset,
+            id =  UUID.randomUUID().toString(),
+            x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
             width = reportElement.getIntAttribute("width", 120).toFloat(),
             height = reportElement.getIntAttribute("height", 80).toFloat(),
             dataBinding = dataBinding,

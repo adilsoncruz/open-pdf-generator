@@ -15,8 +15,8 @@ enum class PositionMode {
 sealed interface Element {
     val type: String
     val id: String
-    val x: Float
-    val y: Float
+    public val x: Float
+    public val y: Float
     val positionMode: PositionMode?
     val relativeOffsetY: Float?
 
@@ -429,8 +429,8 @@ data class ConditionalElement(
     override val id: String,
     override val x: Float = 0f,
     override val y: Float = 0f,
-    override val positionMode: PositionMode? = null,
-    override val relativeOffsetY: Float? = null,
+    override val positionMode: PositionMode? = PositionMode.ABSOLUTE,
+    override val relativeOffsetY: Float = 0f,
     val condition: String,
     val elements: List<Element>,
 ) : Element {
@@ -456,6 +456,7 @@ data class LoopElement(
     val startY: Float? = null,
     val itemSpacing: Float = 0f,
     val elements: List<Element>,
+    val printCondition: String? = null,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
