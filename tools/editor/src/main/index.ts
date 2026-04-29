@@ -281,6 +281,50 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
   }
 }
 
+async function ensureCLIReady(): Promise<{ ok: true; status: CLIStatus } | { ok: false; error: { success: false; errorCode: string; cliNotInstalled?: boolean; javaNotInstalled?: boolean } }> {
+  let cliStatus = await checkCLIStatus()
+
+  if (!cliStatus.javaInstalled) {
+    return {
+      ok: false,
+      error: {
+        success: false,
+        errorCode: 'JAVA_NOT_INSTALLED',
+        javaNotInstalled: true,
+      },
+    }
+  }
+
+  if (!cliStatus.installed || cliStatus.needsUpdate) {
+    const installResult = await installCLI()
+    if (!installResult.success) {
+      return {
+        ok: false,
+        error: {
+          success: false,
+          errorCode: 'CLI_NOT_INSTALLED',
+          cliNotInstalled: true,
+        },
+      }
+    }
+
+    cliStatus = await checkCLIStatus()
+  }
+
+  if (!cliStatus.installed) {
+    return {
+      ok: false,
+      error: {
+        success: false,
+        errorCode: 'CLI_NOT_INSTALLED',
+        cliNotInstalled: true,
+      },
+    }
+  }
+
+  return { ok: true, status: cliStatus }
+}
+
 /**
  * Baixa o CLI de uma URL
  */
@@ -866,7 +910,9 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
   console.log('📄 [Preview] Starting PDF preview generation...')
   
   try {
-    const cliStatus = await checkCLIStatus()
+    const cliReady = await ensureCLIReady()
+    if (!cliReady.ok) return cliReady.error
+    const cliStatus = cliReady.status
     console.log('📄 [Preview] CLI Status:', {
       installed: cliStatus.installed,
       javaInstalled: cliStatus.javaInstalled,
@@ -874,24 +920,6 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
       javaVersion: cliStatus.javaVersion
     })
     
-    if (!cliStatus.javaInstalled) {
-      console.error('❌ [Preview] Java not installed')
-      return {
-        success: false,
-        errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
-        javaNotInstalled: true
-      }
-    }
-    
-    if (!cliStatus.installed) {
-      console.error('❌ [Preview] CLI not installed')
-      return {
-        success: false,
-        errorCode: ErrorCodes.CLI_NOT_INSTALLED,
-        cliNotInstalled: true
-      }
-    }
-
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-preview-'))
     const templateFile = path.join(tmpDir, 'template.json')
     const dataFile = path.join(tmpDir, 'data.json')
@@ -1013,25 +1041,9 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
 // Generate PDF (calls Java library via child process)
 ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string, outputPath?: string) => {
   try {
-    const cliStatus = await checkCLIStatus()
-    
-    if (!cliStatus.javaInstalled) {
-      return {
-        success: false,
-        errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
-        cliNotInstalled: false,
-        javaNotInstalled: true
-      }
-    }
-    
-    if (!cliStatus.installed) {
-      return {
-        success: false,
-        errorCode: ErrorCodes.CLI_NOT_INSTALLED,
-        cliNotInstalled: true,
-        jarPath: CLI_JAR_PATH
-      }
-    }
+    const cliReady = await ensureCLIReady()
+    if (!cliReady.ok) return cliReady.error
+    const cliStatus = cliReady.status
 
     console.log('🔍 PDF Generation Debug Info:')
     console.log('  CLI Version:', cliStatus.version)
