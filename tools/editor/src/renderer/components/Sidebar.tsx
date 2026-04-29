@@ -908,7 +908,7 @@ function ElementsList() {
       
       
       {elementsNotInGroups.map((element, index) => (
-        element.type === 'loop' ? (
+        (element.type === 'loop' || element.type === 'container') ? (
           <LoopElementItem 
             key={element.id} 
             element={element} 

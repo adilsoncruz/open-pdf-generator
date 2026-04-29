@@ -10,6 +10,7 @@ const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
   { type: 'line', label: 'Line', icon: 'line' },
   { type: 'barcode', label: 'Barcode/QR', icon: 'barcode' },
   { type: 'loop', label: 'Loop', icon: 'loop' },
+  { type: 'container', label: 'Container', icon: 'loop' },
 ]
 
 export default function ElementsToolbar() {
@@ -129,6 +130,19 @@ export default function ElementsToolbar() {
           elements: [], 
           style: {
             borderColor: '#8b5cf6',
+            borderWidth: 1,
+            borderStyle: 'dashed',
+          },
+        }
+        break
+      case 'container':
+        element = {
+          ...baseElement,
+          width: 400,
+          height: 150,
+          elements: [],
+          style: {
+            borderColor: '#0ea5e9',
             borderWidth: 1,
             borderStyle: 'dashed',
           },

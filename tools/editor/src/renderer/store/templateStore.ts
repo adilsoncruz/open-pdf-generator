@@ -1850,7 +1850,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       const addToLoop = (elements: Element[]): Element[] => {
         return elements.map(el => {
-          if (el.id === loopId && el.type === 'loop') {
+          if (el.id === loopId && (el.type === 'loop' || el.type === 'container')) {
             return {
               ...el,
               elements: [...(el.elements || []), element],
@@ -1913,7 +1913,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       const updateInLoop = (elements: Element[]): Element[] => {
         return elements.map(el => {
-          if (el.id === loopId && el.type === 'loop') {
+          if (el.id === loopId && (el.type === 'loop' || el.type === 'container')) {
             return {
               ...el,
               elements: (el.elements || []).map(child =>
@@ -1978,7 +1978,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       const deleteFromLoop = (elements: Element[]): Element[] => {
         return elements.map(el => {
-          if (el.id === loopId && el.type === 'loop') {
+          if (el.id === loopId && (el.type === 'loop' || el.type === 'container')) {
             return {
               ...el,
               elements: (el.elements || []).filter(child => child.id !== childId),
@@ -2065,7 +2065,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       const reorderInLoop = (elements: Element[]): Element[] => {
         return elements.map(el => {
-          if (el.id === loopId && el.type === 'loop' && el.elements) {
+          if (el.id === loopId && (el.type === 'loop' || el.type === 'container') && el.elements) {
             const children = [...el.elements]
             const [removed] = children.splice(fromIndex, 1)
             children.splice(toIndex, 0, removed)

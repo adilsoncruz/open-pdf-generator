@@ -225,7 +225,7 @@ export default function PropertiesPanel() {
         { id: 'appearance', label: 'Appearance' },
         { id: 'barcode', label: 'Code' },
       ]
-    } else if (selectedElement.type === 'loop') {
+    } else if (selectedElement.type === 'loop' || selectedElement.type === 'container') {
       return [
         { id: 'appearance', label: 'Appearance' },
         { id: 'loop', label: 'Loop' },
@@ -2025,7 +2025,7 @@ export default function PropertiesPanel() {
         )}
 
         {/* LOOP ELEMENT TABS */}
-        {selectedElement.type === 'loop' && (
+        {(selectedElement.type === 'loop' || selectedElement.type === 'container') && (
           <>
             {/* APPEARANCE TAB */}
             {activeTab === 'appearance' && (
@@ -2124,28 +2124,32 @@ export default function PropertiesPanel() {
               <>
                 <PropertyGroup title="Loop Configuration" collapsible={false}>
                   <div className="space-y-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium theme-text-muted">Data Binding (Lista)</label>
-                      <Input
-                      value={selectedElement.dataBinding || ''}
-                      onChange={(e) => handleUpdate('dataBinding', e.target.value)}
-                      placeholder="Ex: invoice.items"
-                        size="sm"
-                        className="font-mono"
-                    />
-                    <p className="text-xs theme-text-muted mt-1">
-                      Path to the list in the data JSON
-                    </p>
-                  </div>
+                    {selectedElement.type === 'loop' && (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium theme-text-muted">Data Binding (Lista)</label>
+                          <Input
+                            value={selectedElement.dataBinding || ''}
+                            onChange={(e) => handleUpdate('dataBinding', e.target.value)}
+                            placeholder="Ex: invoice.items"
+                            size="sm"
+                            className="font-mono"
+                          />
+                          <p className="text-xs theme-text-muted mt-1">
+                            Path to the list in the data JSON
+                          </p>
+                        </div>
 
-                    <NumberField
-                      label="Item Spacing (px)"
-                      value={selectedElement.itemSpacing || 20}
-                      onValueChange={(value) => handleUpdate('itemSpacing', value)}
-                    />
-                    <p className="text-xs theme-text-muted -mt-1">
-                      Vertical space between each repetition
-                    </p>
+                        <NumberField
+                          label="Item Spacing (px)"
+                          value={selectedElement.itemSpacing || 20}
+                          onValueChange={(value) => handleUpdate('itemSpacing', value)}
+                        />
+                        <p className="text-xs theme-text-muted -mt-1">
+                          Vertical space between each repetition
+                        </p>
+                      </>
+                    )}
                   </div>
                 </PropertyGroup>
 

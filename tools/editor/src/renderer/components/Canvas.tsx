@@ -2181,8 +2181,10 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         )
       }
 
-      case 'loop': {
+      case 'loop':
+      case 'container': {
         const loopElements = element.elements || []
+        const isContainer = element.type === 'container'
         const loopBinding = element.dataBinding || ''
         const loopItemSpacing = element.itemSpacing || 20
         const loopWidth = typeof element.width === 'number' ? element.width : 400
@@ -2215,10 +2217,12 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                 <path d="M7 22l-4-4 4-4" />
                 <path d="M21 13v1a4 4 0 01-4 4H3" />
               </svg>
-              <span className="text-[10px] font-semibold">LOOP</span>
-              <span className="text-[10px] opacity-80 truncate max-w-[100px]">
-                {loopBinding || 'binding'}
-              </span>
+              <span className="text-[10px] font-semibold">{isContainer ? 'CONTAINER' : 'LOOP'}</span>
+              {!isContainer && (
+                <span className="text-[10px] opacity-80 truncate max-w-[100px]">
+                  {loopBinding || 'binding'}
+                </span>
+              )}
               <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded ml-1">
                 {loopElements.length}
               </span>
@@ -2377,4 +2381,3 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     </div>
   )
 }
-

@@ -1,0 +1,82 @@
+package com.pdfgenerator.adapter.openpdf
+
+import com.pdfgenerator.engine.RenderContext
+import com.pdfgenerator.engine.RenderEngine
+import com.pdfgenerator.engine.Renderer
+import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.ContainerElement
+import com.pdfgenerator.model.Element
+import com.pdfgenerator.model.ImageElement
+import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LoopElement
+import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.TableElement
+import com.pdfgenerator.model.TextElement
+
+class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<ContainerElement> {
+    override fun render(
+        element: ContainerElement,
+        context: RenderContext,
+    ) {
+        val containerX = element.x
+        val containerY = element.y
+
+        element.elements.forEach { childElement ->
+            val adjustedElement = adjustElementPosition(childElement, containerX, containerY, element.width, element.height)
+            renderEngine.render(adjustedElement, context)
+        }
+    }
+
+    private fun adjustElementPosition(
+        element: Element,
+        containerX: Float,
+        containerY: Float,
+        containerWidth: Float,
+        containerHeight: Float,
+    ): Element {
+        return when (element) {
+            is TextElement -> element.copy(x = containerX + element.x, y = containerY + element.y, width = resolveWidth(element.width, containerWidth))
+            is StaticTextElement -> element.copy(x = containerX + element.x, y = containerY + element.y, width = resolveWidth(element.width, containerWidth))
+            is ImageElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = containerY + element.y,
+                    width = resolveFloatDimension(element.width, containerWidth),
+                    height = resolveFloatDimension(element.height, containerHeight),
+                )
+            is TableElement -> element.copy(x = containerX + element.x, y = containerY + element.y)
+            is RectangleElement -> {
+                val isFullWidth = element.width.toString() == "100%" || element.width.toString() == "100.0%"
+                val isFullHeight = element.height.toString() == "100%" || element.height.toString() == "100.0%"
+                element.copy(
+                    x = if (isFullWidth) containerX else containerX + element.x,
+                    y = if (isFullHeight) containerY else containerY + element.y,
+                    width = resolveDimension(element.width, containerWidth),
+                    height = resolveDimension(element.height, containerHeight),
+                )
+            }
+            is LineElement -> element.copy(x = containerX + element.x, y = containerY + element.y, width = element.resolveWidth(containerWidth), height = element.resolveHeight(containerHeight))
+            is BarcodeElement -> element.copy(x = containerX + element.x, y = containerY + element.y)
+            is LoopElement -> element.copy(x = containerX + element.x, y = containerY + element.y)
+            is ContainerElement -> element.copy(x = containerX + element.x, y = containerY + element.y)
+            else -> element
+        }
+    }
+
+    private fun resolveDimension(value: Any?, loopDimension: Float): Any {
+        return when (value) {
+            is String -> if (value == "100%" || value == "100.0%") loopDimension else value.toFloatOrNull() ?: value
+            is Number -> value
+            else -> value ?: 0f
+        }
+    }
+
+    private fun resolveFloatDimension(value: Float, loopDimension: Float): Float {
+        return if (value.toString().endsWith("%")) loopDimension else value
+    }
+
+    private fun resolveWidth(value: Float?, loopWidth: Float): Float? {
+        return if (value == null) null else if (value.toString().endsWith("%") || value == -1f) loopWidth else value
+    }
+}
