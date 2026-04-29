@@ -23,7 +23,14 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         val containerY = element.y
 
         element.elements.forEach { childElement ->
-            val adjustedElement = adjustElementPosition(childElement, containerX, containerY, element.width, element.height)
+            val adjustedElement =
+                adjustElementPosition(
+                    element = childElement,
+                    containerX = containerX,
+                    containerY = containerY,
+                    containerWidth = element.width,
+                    containerHeight = element.height,
+                )
             renderEngine.render(adjustedElement, context)
         }
     }
@@ -36,8 +43,18 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         containerHeight: Float,
     ): Element {
         return when (element) {
-            is TextElement -> element.copy(x = containerX + element.x, y = containerY + element.y, width = resolveWidth(element.width, containerWidth))
-            is StaticTextElement -> element.copy(x = containerX + element.x, y = containerY + element.y, width = resolveWidth(element.width, containerWidth))
+            is TextElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = containerY + element.y,
+                    width = resolveWidth(element.width, containerWidth),
+                )
+            is StaticTextElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = containerY + element.y,
+                    width = resolveWidth(element.width, containerWidth),
+                )
             is ImageElement ->
                 element.copy(
                     x = containerX + element.x,
@@ -56,27 +73,65 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
                     height = resolveDimension(element.height, containerHeight),
                 )
             }
-            is LineElement -> element.copy(x = containerX + element.x, y = containerY + element.y, width = element.resolveWidth(containerWidth), height = element.resolveHeight(containerHeight))
-            is BarcodeElement -> element.copy(x = containerX + element.x, y = containerY + element.y)
-            is LoopElement -> element.copy(x = containerX + element.x, y = containerY + element.y)
-            is ContainerElement -> element.copy(x = containerX + element.x, y = containerY + element.y)
+            is LineElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = containerY + element.y,
+                    width = element.resolveWidth(containerWidth),
+                    height = element.resolveHeight(containerHeight),
+                )
+            is BarcodeElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = containerY + element.y,
+                )
+            is LoopElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = containerY + element.y,
+                )
+            is ContainerElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = containerY + element.y,
+                )
             else -> element
         }
     }
 
-    private fun resolveDimension(value: Any?, loopDimension: Float): Any {
+    private fun resolveDimension(
+        value: Any?,
+        loopDimension: Float,
+    ): Any {
         return when (value) {
-            is String -> if (value == "100%" || value == "100.0%") loopDimension else value.toFloatOrNull() ?: value
+            is String ->
+                if (value == "100%" || value == "100.0%") {
+                    loopDimension
+                } else {
+                    value.toFloatOrNull() ?: value
+                }
             is Number -> value
             else -> value ?: 0f
         }
     }
 
-    private fun resolveFloatDimension(value: Float, loopDimension: Float): Float {
+    private fun resolveFloatDimension(
+        value: Float,
+        loopDimension: Float,
+    ): Float {
         return if (value.toString().endsWith("%")) loopDimension else value
     }
 
-    private fun resolveWidth(value: Float?, loopWidth: Float): Float? {
-        return if (value == null) null else if (value.toString().endsWith("%") || value == -1f) loopWidth else value
+    private fun resolveWidth(
+        value: Float?,
+        loopWidth: Float,
+    ): Float? {
+        return if (value == null) {
+            null
+        } else if (value.toString().endsWith("%") || value == -1f) {
+            loopWidth
+        } else {
+            value
+        }
     }
 }
