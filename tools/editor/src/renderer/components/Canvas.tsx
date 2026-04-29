@@ -2208,7 +2208,9 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
           >
             
             <div 
-              className="absolute flex items-center gap-2 px-2 py-1 bg-primary-500 text-white rounded-md shadow-sm"
+              className={`absolute flex items-center gap-2 px-2 py-1 bg-primary-500 text-white rounded-md shadow-sm pointer-events-none transition-opacity ${
+                isSelected ? 'opacity-100' : 'opacity-70'
+              }`}
               style={{ top: -24, left: 0 }}
             >
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -2258,7 +2260,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             </div>
             
             {/* Spacing badge - bottom right corner */}
-            <div className="absolute bottom-1 right-1">
+            <div className="absolute bottom-1 right-1 pointer-events-none">
               <span className="text-[8px] text-primary-400 bg-primary-50 px-1.5 py-0.5 rounded">
                 spacing: {loopItemSpacing}px
               </span>
