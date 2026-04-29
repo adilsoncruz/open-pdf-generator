@@ -70,6 +70,32 @@ interface VersionInfo {
   cli: string | null
 }
 
+
+async function findLatestLocalCliJar(): Promise<string | null> {
+  const cliBuildDir = path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build', 'libs')
+
+  try {
+    const files = await fs.readdir(cliBuildDir)
+    const jarCandidates = files
+      .filter(file => file.endsWith('.jar'))
+      .filter(file => !file.includes('sources') && !file.includes('javadoc'))
+      .filter(file =>
+        file.startsWith('pdf-generator-cli-') ||
+        file.startsWith('open-pdf-generator-'),
+      )
+
+    if (jarCandidates.length === 0) return null
+
+    jarCandidates.sort((a, b) =>
+      b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' }),
+    )
+
+    return path.join(cliBuildDir, jarCandidates[0])
+  } catch {
+    return null
+  }
+}
+
 /**
  * Caminhos comuns do Java no macOS
  */
@@ -210,6 +236,7 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
   try {
     // Create directory if it doesn't exist
     await fs.mkdir(CLI_DIR, { recursive: true })
+    let selectedJarPath: string | null = source || null
     
     if (source) {
       // Copiar de um arquivo local
@@ -220,35 +247,8 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
       let fallbackJar: string | null = null
       
       if (isDev) {
-        const cliBuildDir = path.join(__dirname, '..', '..', '..', 'tools', 'cli', 'build', 'libs')
-        const coreBuildDir = path.join(__dirname, '..', '..', '..', 'core', 'build', 'libs')
-        const legacyLibraryBuildDir = path.join(__dirname, '..', '..', '..', 'library', 'build', 'libs')
         const resourcesJar = path.join(__dirname, '..', '..', 'resources', 'pdf-generator.jar')
-
-        const tryFindLocalJar = async (dir: string): Promise<string | null> => {
-          try {
-            const files = await fs.readdir(dir)
-            const jarCandidates = files.filter(file => file.endsWith("-standalone.jar"))
-            if (jarCandidates.length === 0) return null
-
-            jarCandidates.sort((a, b) => {
-              const aVersionMatch = a.match(/open-pdf-generator-(.+)-standalone\.jar/)
-              const bVersionMatch = b.match(/open-pdf-generator-(.+)-standalone\.jar/)
-              const aVersion = aVersionMatch?.[1] || ""
-              const bVersion = bVersionMatch?.[1] || ""
-              return bVersion.localeCompare(aVersion, undefined, { numeric: true, sensitivity: 'base' })
-            })
-
-            return path.join(dir, jarCandidates[0])
-          } catch {
-            return null
-          }
-        }
-
-        fallbackJar =
-          (await tryFindLocalJar(cliBuildDir)) ||
-          (await tryFindLocalJar(coreBuildDir)) ||
-          (await tryFindLocalJar(legacyLibraryBuildDir))
+        fallbackJar = await findLatestLocalCliJar()
 
         if (!fallbackJar) {
           try {
@@ -263,6 +263,7 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
       if (fallbackJar) {
         console.log(`📦 Instalando CLI de: ${fallbackJar}`)
         await fs.copyFile(fallbackJar, CLI_JAR_PATH)
+        selectedJarPath = fallbackJar
       } else {
         // Tentar baixar da URL
         return await downloadCLI(CLI_DOWNLOAD_URL)
@@ -270,7 +271,8 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
     }
     
     // Save version
-    await fs.writeFile(CLI_VERSION_FILE, CLI_VERSION)
+    const installedVersionFromJarPath = selectedJarPath?.match(/(?:pdf-generator-cli|open-pdf-generator)-(.+)\.jar$/)?.[1]
+    await fs.writeFile(CLI_VERSION_FILE, installedVersionFromJarPath || CLI_VERSION)
     
     console.log(`✅ CLI instalado com sucesso em: ${CLI_JAR_PATH}`)
     return { success: true }
