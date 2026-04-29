@@ -3,6 +3,7 @@ package com.pdfgenerator.template
 import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.BarcodeStyle
 import com.pdfgenerator.model.ConditionalElement
+import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LineStyle
@@ -302,6 +303,28 @@ class ElementsTest {
 
         assertEquals("loop1", element.id)
         assertEquals("items", element.dataBinding)
+        assertEquals(1, element.elements.size)
+    }
+
+    @Test
+    fun `should create ContainerElement`() {
+        val element =
+            ContainerElement(
+                id = "container1",
+                x = 50f,
+                y = 50f,
+                elements =
+                    listOf(
+                        TextElement(
+                            id = "text1",
+                            x = 0f,
+                            y = 0f,
+                            dataBinding = "name",
+                        ),
+                    ),
+            )
+
+        assertEquals("container1", element.id)
         assertEquals(1, element.elements.size)
     }
 

@@ -33,6 +33,7 @@ export interface ElectronAPI {
   
   // CLI Management
   getCLIStatus: () => Promise<CLIStatus>
+  getAppVersions: () => Promise<{ editor: string; core: string | null; cli: string | null }>
   installCLI: () => Promise<{ success: boolean; error?: string; errorCode?: string }>
   installCLIFromFile: () => Promise<{ success: boolean; error?: string; errorCode?: string }>
   getCLIInstallPath: () => Promise<string>
@@ -100,6 +101,5 @@ declare global {
     electronAPI: ElectronAPI
   }
 }
-
 
 

@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
 import * as path from 'path'
 import * as fs from 'fs/promises'
+import * as fsSync from 'fs'
 import { spawn, execSync } from 'child_process'
 import * as os from 'os'
 import * as https from 'https'
@@ -12,7 +13,41 @@ let splashWindow: BrowserWindow | null = null
 
 // ============ CLI Management ============
 
-const CLI_VERSION = '1.0.0'
+function resolveProjectRootDir(): string {
+  const candidates = [
+    process.cwd(),
+    path.join(__dirname, '..', '..', '..'),
+    path.join(__dirname, '..', '..', '..', '..'),
+    path.join(__dirname, '..', '..', '..', '..', '..'),
+  ]
+
+  for (const candidate of candidates) {
+    if (
+      fsSync.existsSync(path.join(candidate, 'core', 'build.gradle.kts')) &&
+      fsSync.existsSync(path.join(candidate, 'tools', 'cli', 'build.gradle.kts'))
+    ) {
+      return candidate
+    }
+  }
+
+  return process.cwd()
+}
+
+const PROJECT_ROOT_DIR = resolveProjectRootDir()
+const DEFAULT_CLI_VERSION = '1.0.0'
+
+function readGradleVersionSync(gradleFilePath: string): string | null {
+  try {
+    const content = fsSync.readFileSync(gradleFilePath, 'utf-8')
+    const match = content.match(/version\s*=\s*\"([^\"]+)\"/)
+    return match?.[1] || null
+  } catch {
+    return null
+  }
+}
+
+const CLI_VERSION =
+  readGradleVersionSync(path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build.gradle.kts')) || DEFAULT_CLI_VERSION
 const CLI_DIR = path.join(os.homedir(), '.pdf-generator')
 const CLI_JAR_PATH = path.join(CLI_DIR, 'pdf-generator.jar')
 const CLI_VERSION_FILE = path.join(CLI_DIR, 'version.txt')
@@ -27,6 +62,38 @@ interface CLIStatus {
   javaInstalled: boolean
   javaVersion: string | null
   javaPath: string | null
+}
+
+interface VersionInfo {
+  editor: string
+  core: string | null
+  cli: string | null
+}
+
+
+async function findLatestLocalCliJar(): Promise<string | null> {
+  const cliBuildDir = path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build', 'libs')
+
+  try {
+    const files = await fs.readdir(cliBuildDir)
+    const jarCandidates = files
+      .filter(file => file.endsWith('.jar'))
+      .filter(file => !file.includes('sources') && !file.includes('javadoc'))
+      .filter(file =>
+        file.startsWith('pdf-generator-cli-') ||
+        file.startsWith('open-pdf-generator-'),
+      )
+
+    if (jarCandidates.length === 0) return null
+
+    jarCandidates.sort((a, b) =>
+      b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' }),
+    )
+
+    return path.join(cliBuildDir, jarCandidates[0])
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -169,6 +236,7 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
   try {
     // Create directory if it doesn't exist
     await fs.mkdir(CLI_DIR, { recursive: true })
+    let selectedJarPath: string | null = source || null
     
     if (source) {
       // Copiar de um arquivo local
@@ -179,17 +247,13 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
       let fallbackJar: string | null = null
       
       if (isDev) {
-        // Em desenvolvimento, tentar pegar do build da library
-        const libJar = path.join(__dirname, '..', '..', '..', 'library', 'build', 'libs', `open-pdf-generator-${CLI_VERSION}-standalone.jar`)
-        try {
-          await fs.access(libJar)
-          fallbackJar = libJar
-        } catch {
-          // Tentar o JAR antigo do resources
-          const resourceJar = path.join(__dirname, '..', '..', 'resources', 'pdf-generator.jar')
+        const resourcesJar = path.join(__dirname, '..', '..', 'resources', 'pdf-generator.jar')
+        fallbackJar = await findLatestLocalCliJar()
+
+        if (!fallbackJar) {
           try {
-            await fs.access(resourceJar)
-            fallbackJar = resourceJar
+            await fs.access(resourcesJar)
+            fallbackJar = resourcesJar
           } catch {
             // Nenhum JAR encontrado localmente
           }
@@ -199,6 +263,7 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
       if (fallbackJar) {
         console.log(`📦 Instalando CLI de: ${fallbackJar}`)
         await fs.copyFile(fallbackJar, CLI_JAR_PATH)
+        selectedJarPath = fallbackJar
       } else {
         // Tentar baixar da URL
         return await downloadCLI(CLI_DOWNLOAD_URL)
@@ -206,7 +271,8 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
     }
     
     // Save version
-    await fs.writeFile(CLI_VERSION_FILE, CLI_VERSION)
+    const installedVersionFromJarPath = selectedJarPath?.match(/(?:pdf-generator-cli|open-pdf-generator)-(.+)\.jar$/)?.[1]
+    await fs.writeFile(CLI_VERSION_FILE, installedVersionFromJarPath || CLI_VERSION)
     
     console.log(`✅ CLI instalado com sucesso em: ${CLI_JAR_PATH}`)
     return { success: true }
@@ -215,6 +281,56 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
     console.error(`❌ Erro ao instalar CLI: ${errorMsg}`)
     return { success: false, error: errorMsg }
   }
+}
+
+async function ensureCLIReady(): Promise<{ ok: true; status: CLIStatus } | { ok: false; error: { success: false; errorCode: string; cliNotInstalled?: boolean; javaNotInstalled?: boolean } }> {
+  let cliStatus = await checkCLIStatus()
+
+  if (!cliStatus.javaInstalled) {
+    return {
+      ok: false,
+      error: {
+        success: false,
+        errorCode: 'JAVA_NOT_INSTALLED',
+        javaNotInstalled: true,
+      },
+    }
+  }
+
+  if (!cliStatus.installed || cliStatus.needsUpdate) {
+    const wasInstalledBeforeUpdate = cliStatus.installed
+    const installResult = await installCLI()
+    if (!installResult.success) {
+      if (wasInstalledBeforeUpdate) {
+        console.warn('⚠️ CLI update failed, continuing with currently installed CLI.')
+        return { ok: true, status: cliStatus }
+      }
+
+      return {
+        ok: false,
+        error: {
+          success: false,
+          errorCode: 'CLI_NOT_INSTALLED',
+          cliNotInstalled: true,
+        },
+      }
+    }
+
+    cliStatus = await checkCLIStatus()
+  }
+
+  if (!cliStatus.installed) {
+    return {
+      ok: false,
+      error: {
+        success: false,
+        errorCode: 'CLI_NOT_INSTALLED',
+        cliNotInstalled: true,
+      },
+    }
+  }
+
+  return { ok: true, status: cliStatus }
 }
 
 /**
@@ -297,6 +413,48 @@ async function installCLIFromFile(): Promise<{ success: boolean; error?: string;
   }
   
   return await installCLI(result.filePaths[0])
+}
+
+async function readGradleProjectVersion(gradleFilePath: string): Promise<string | null> {
+  try {
+    const content = await fs.readFile(gradleFilePath, 'utf-8')
+    const match = content.match(/version\s*=\s*\"([^\"]+)\"/)
+    return match?.[1] || null
+  } catch {
+    return null
+  }
+}
+
+async function readJarVersionFromBuildLibs(
+  libsDir: string,
+  prefixes: string[],
+): Promise<string | null> {
+  try {
+    const files = await fs.readdir(libsDir)
+    const candidates =
+      files
+        .map(file => {
+          const matchedPrefix = prefixes.find(prefix => file.startsWith(`${prefix}-`) && file.endsWith('.jar'))
+          if (!matchedPrefix) return null
+
+          const match = file.match(new RegExp(`^${matchedPrefix}-(.+)\\.jar$`))
+          return match ? { file, version: match[1] } : null
+        })
+        .filter((item): item is { file: string; version: string } => item !== null)
+        .filter(item => !item.file.includes('sources') && !item.file.includes('javadoc'))
+
+    if (candidates.length === 0) {
+      return null
+    }
+
+    candidates.sort((a, b) =>
+      b.version.localeCompare(a.version, undefined, { numeric: true, sensitivity: 'base' }),
+    )
+
+    return candidates[0].version
+  } catch {
+    return null
+  }
 }
 
 function createSplashWindow() {
@@ -718,6 +876,31 @@ ipcMain.handle('cli:getInstallPath', () => {
   return CLI_DIR
 })
 
+ipcMain.handle('app:getVersions', async (): Promise<VersionInfo> => {
+  const editorVersion = app.getVersion()
+  const coreVersionFromJar = await readJarVersionFromBuildLibs(
+    path.join(PROJECT_ROOT_DIR, 'core', 'build', 'libs'),
+    ['open-pdf-generator'],
+  )
+  const cliVersionFromJar = await readJarVersionFromBuildLibs(
+    path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build', 'libs'),
+    ['pdf-generator-cli', 'open-pdf-generator'],
+  )
+
+  const coreVersion =
+    coreVersionFromJar ||
+    (await readGradleProjectVersion(path.join(PROJECT_ROOT_DIR, 'core', 'build.gradle.kts')))
+  const cliVersion =
+    cliVersionFromJar ||
+    (await readGradleProjectVersion(path.join(PROJECT_ROOT_DIR, 'tools', 'cli', 'build.gradle.kts')))
+
+  return {
+    editor: editorVersion,
+    core: coreVersion,
+    cli: cliVersion,
+  }
+})
+
 // Gerar PDF e retornar como base64 (para preview)
 // Error codes for i18n translation in renderer
 const ErrorCodes = {
@@ -735,7 +918,9 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
   console.log('📄 [Preview] Starting PDF preview generation...')
   
   try {
-    const cliStatus = await checkCLIStatus()
+    const cliReady = await ensureCLIReady()
+    if (!cliReady.ok) return cliReady.error
+    const cliStatus = cliReady.status
     console.log('📄 [Preview] CLI Status:', {
       installed: cliStatus.installed,
       javaInstalled: cliStatus.javaInstalled,
@@ -743,24 +928,6 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
       javaVersion: cliStatus.javaVersion
     })
     
-    if (!cliStatus.javaInstalled) {
-      console.error('❌ [Preview] Java not installed')
-      return {
-        success: false,
-        errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
-        javaNotInstalled: true
-      }
-    }
-    
-    if (!cliStatus.installed) {
-      console.error('❌ [Preview] CLI not installed')
-      return {
-        success: false,
-        errorCode: ErrorCodes.CLI_NOT_INSTALLED,
-        cliNotInstalled: true
-      }
-    }
-
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-preview-'))
     const templateFile = path.join(tmpDir, 'template.json')
     const dataFile = path.join(tmpDir, 'data.json')
@@ -882,25 +1049,9 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
 // Generate PDF (calls Java library via child process)
 ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string, outputPath?: string) => {
   try {
-    const cliStatus = await checkCLIStatus()
-    
-    if (!cliStatus.javaInstalled) {
-      return {
-        success: false,
-        errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
-        cliNotInstalled: false,
-        javaNotInstalled: true
-      }
-    }
-    
-    if (!cliStatus.installed) {
-      return {
-        success: false,
-        errorCode: ErrorCodes.CLI_NOT_INSTALLED,
-        cliNotInstalled: true,
-        jarPath: CLI_JAR_PATH
-      }
-    }
+    const cliReady = await ensureCLIReady()
+    if (!cliReady.ok) return cliReady.error
+    const cliStatus = cliReady.status
 
     console.log('🔍 PDF Generation Debug Info:')
     console.log('  CLI Version:', cliStatus.version)
@@ -1001,7 +1152,7 @@ ipcMain.handle('template:validate', async (_, templatePath: string) => {
   console.log('🔍 [Validate] Validating template:', templatePath)
   
   try {
-    const cliStatus = await checkCLIStatus()
+    let cliStatus = await checkCLIStatus()
     
     if (!cliStatus.javaInstalled) {
       return {
@@ -1010,11 +1161,15 @@ ipcMain.handle('template:validate', async (_, templatePath: string) => {
       }
     }
     
-    if (!cliStatus.installed) {
-      return {
-        valid: false,
-        errorCode: ErrorCodes.CLI_NOT_INSTALLED,
+    if (!cliStatus.installed || cliStatus.needsUpdate) {
+      const installResult = await installCLI()
+      if (!installResult.success) {
+        return {
+          valid: false,
+          errorCode: ErrorCodes.CLI_NOT_INSTALLED,
+        }
       }
+      cliStatus = await checkCLIStatus()
     }
 
     const javaPath = cliStatus.javaPath || 'java'

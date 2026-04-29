@@ -9,6 +9,7 @@ import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.RenderState
 import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.ConditionalElement
+import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.ImageElement
@@ -535,6 +536,7 @@ class PDFGenerator(
             is LineElement -> element.copy(x = adjustedX, y = adjustedY)
             is TableElement -> element.copy(x = adjustedX, y = adjustedY)
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
         }
     }
@@ -557,6 +559,7 @@ class PDFGenerator(
             is LineElement -> element.copy(x = adjustedX, y = adjustedY)
             is TableElement -> element.copy(x = adjustedX, y = adjustedY)
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
         }
     }
@@ -647,6 +650,9 @@ class PDFGenerator(
             }
             is ConditionalElement -> {
                 element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: 0f
+            }
+            is ContainerElement -> {
+                element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: element.height
             }
         }
     }
