@@ -1084,18 +1084,11 @@ function LoopElementItem({ element, index: _index, currentSection }: LoopElement
             >
               {isExpanded ? '▼' : '▶'}
             </button>
-            <svg 
-              className="w-3.5 h-3.5 mr-2 text-purple-400 flex-shrink-0" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2"
-            >
-              <path d="M17 2l4 4-4 4" />
-              <path d="M3 11v-1a4 4 0 014-4h14" />
-              <path d="M7 22l-4-4 4-4" />
-              <path d="M21 13v1a4 4 0 01-4 4H3" />
-            </svg>
+            <Icon
+              name={element.type === 'container' ? 'container' : 'loop'}
+              size="xs"
+              className="mr-2 text-purple-400 flex-shrink-0"
+            />
             <span className="text-xs font-bold text-purple-300 truncate">
               {element.id}
             </span>
