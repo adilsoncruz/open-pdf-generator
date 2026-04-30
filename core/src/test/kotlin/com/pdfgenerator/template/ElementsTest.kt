@@ -1,13 +1,18 @@
 package com.pdfgenerator.template
 
 import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.BarcodeStyle
 import com.pdfgenerator.model.ConditionalElement
+import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LineStyle
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.RectangleStyle
 import com.pdfgenerator.model.TableColumn
 import com.pdfgenerator.model.TableElement
+import com.pdfgenerator.model.TableStyle
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.model.TextStyle
 import org.junit.jupiter.api.Test
@@ -298,6 +303,28 @@ class ElementsTest {
 
         assertEquals("loop1", element.id)
         assertEquals("items", element.dataBinding)
+        assertEquals(1, element.elements.size)
+    }
+
+    @Test
+    fun `should create ContainerElement`() {
+        val element =
+            ContainerElement(
+                id = "container1",
+                x = 50f,
+                y = 50f,
+                elements =
+                    listOf(
+                        TextElement(
+                            id = "text1",
+                            x = 0f,
+                            y = 0f,
+                            dataBinding = "name",
+                        ),
+                    ),
+            )
+
+        assertEquals("container1", element.id)
         assertEquals(1, element.elements.size)
     }
 

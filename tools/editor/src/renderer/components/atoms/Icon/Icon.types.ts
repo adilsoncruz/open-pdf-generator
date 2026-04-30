@@ -37,6 +37,7 @@ export type IconName =
   | 'line'
   | 'barcode'
   | 'loop'
+  | 'container'
   | 'conditional'
   | 'group'
   | 'ungroup'
