@@ -565,20 +565,25 @@ function ContainersPanel({
       <button onClick={handleAddContainer} className="w-full px-3 py-2 text-sm theme-surface border theme-border rounded-lg mb-2">
         + Add Container
       </button>
-      <div className="space-y-1">
+      <div className="space-y-2">
         {containers.map((container) => (
-          <div key={container.id} className={`px-2 py-1 rounded text-xs ${selectedContainerId === container.id ? 'bg-primary-100 dark:bg-primary-500/30' : 'theme-surface'}`}>
-            <button
-              onClick={() => onSelectContainer(container.id)}
-              className="w-full text-left"
-            >
-              {container.id}
+          <div
+            key={container.id}
+            className={`h-12 px-3 rounded-xl border transition-all duration-200 flex items-center justify-between ${
+              selectedContainerId === container.id
+                ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-300 dark:border-primary-500/50'
+                : 'theme-surface border theme-border hover:theme-surface-hover'
+            }`}
+          >
+            <button onClick={() => onSelectContainer(container.id)} className="flex-1 text-left flex items-center gap-2 min-w-0">
+              <span className="text-sm theme-text-muted">☰</span>
+              <span className="text-sm font-medium truncate">{container.id}</span>
             </button>
-            <div className="flex gap-1 mt-1">
-              <button className="px-1 rounded border theme-border" onClick={() => moveElementUp(container.id, 'body')}>↑</button>
-              <button className="px-1 rounded border theme-border" onClick={() => moveElementDown(container.id, 'body')}>↓</button>
+            <div className="flex gap-1 ml-2">
+              <button className="w-7 h-7 rounded border theme-border theme-surface text-sm" onClick={() => moveElementUp(container.id, 'body')}>↑</button>
+              <button className="w-7 h-7 rounded border theme-border theme-surface text-sm" onClick={() => moveElementDown(container.id, 'body')}>↓</button>
               <button
-                className="px-1 rounded border theme-border text-red-500"
+                className="w-7 h-7 rounded border theme-border theme-surface text-red-500 text-sm"
                 onClick={() => {
                   deleteElement(container.id, 'body')
                   onSelectContainer(null)
