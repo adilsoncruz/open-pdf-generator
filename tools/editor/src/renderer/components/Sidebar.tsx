@@ -551,7 +551,11 @@ function ContainersPanel({
   const containers = (template.page || []).filter((el) => el.type === 'container')
   const handleAddContainer = () => {
     const id = `container-${Date.now()}`
-    addElement({ type: 'container', id, x: 50, y: 50, width: 400, height: 150, elements: [] }, 'body')
+    const lastContainer = containers[containers.length - 1]
+    const lastY = typeof lastContainer?.y === 'number' ? lastContainer.y : 0
+    const lastHeight = typeof lastContainer?.height === 'number' ? lastContainer.height : 150
+    const nextY = containers.length > 0 ? lastY + lastHeight : 0
+    addElement({ type: 'container', id, x: 0, y: nextY, width: '100%', height: 150, elements: [] }, 'body')
     selectElement(id, 'body')
   }
 

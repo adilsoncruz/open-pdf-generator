@@ -225,11 +225,13 @@ export default function PropertiesPanel() {
         { id: 'appearance', label: 'Appearance' },
         { id: 'barcode', label: 'Code' },
       ]
-    } else if (selectedElement.type === 'loop' || selectedElement.type === 'container') {
+    } else if (selectedElement.type === 'loop') {
       return [
         { id: 'appearance', label: 'Appearance' },
         { id: 'loop', label: 'Loop' },
       ]
+    } else if (selectedElement.type === 'container') {
+      return [{ id: 'appearance', label: 'Appearance' }]
     } else if (selectedElement.type === 'table') {
       return [
         { id: 'general', label: 'General' },
