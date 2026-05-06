@@ -178,25 +178,29 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   }
 
   const handleOpen = async () => {
+      console.log("handleOpen 0")
     if (isDirty) {
       const confirmed = confirm(t.toolbar.unsavedChanges)
       if (!confirmed) return
     }
-
+    console.log("handleOpen 0.1")
     // Loop to keep file dialog open until valid template or user cancels
     let keepTrying = true
     while (keepTrying) {
+        console.log("handleOpen 0.1.1")
+
       const result = await window.electronAPI.openFile()
-      
+       console.log("handleOpen 0.2")
       if (!result) {
         // User cancelled the file dialog
         break
       }
-      
+      console.log("handleOpen 1.0")
       try {
         // First, try to parse JSON to catch syntax errors
+        console.log("handleOpen 1")
         const loadedTemplate = JSON.parse(result.content)
-        
+        console.log("handleOpen 2")
         // Always do basic structural validation first (CLI may not validate structure properly)
         let structuralError = ''
         if (!loadedTemplate.version) {
@@ -206,15 +210,15 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         } else if (!loadedTemplate.elements && !loadedTemplate.pageElements) {
           structuralError = t.validation.missingElements
         }
-        
+        console.log("handleOpen 3")
         if (structuralError) {
           keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${structuralError}\n\n${t.validation.selectAnotherFile}`)
           continue
         }
-        
+        console.log("handleOpen 4")
         // Validate template using CLI (if available) for deeper validation
         const validation = await window.electronAPI.validateTemplate(result.path)
-        
+        console.log("handleOpen 5")
         if (!validation.valid) {
           // CLI validation failed - show friendly error message
           if (validation.errorCode !== 'CLI_NOT_INSTALLED' && validation.errorCode !== 'JAVA_NOT_INSTALLED') {

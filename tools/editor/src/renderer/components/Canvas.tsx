@@ -13,6 +13,358 @@ interface LoopChildElementProps {
   loopHeight: number
 }
 
+// Component to render Loop child elements
+interface ContainerChildElementProps {
+  child: Element
+  containerId: string
+  location: ElementLocation
+  containerWidth: number
+  containerHeight: number
+}
+
+function ContainerChildElement({ child, containerId, location, containerWidth, containerHeight }: ContainerChildElementProps) {
+  const {
+    selectedContainerChildId,
+    selectedContainerParentId,
+    selectContainerChild,
+    updateContainerChildElement,
+    saveSnapshot,
+    testData
+  } = useTemplateStore()
+  const isSelected = selectedContainerChildId === child.id && selectedContainerParentId === containerId
+
+  // Find loop element in all sections
+  const findComponentElement = (containerElementId: string): Element | undefined => {
+    const template = useTemplateStore.getState().template
+
+    // Search in all possible locations
+    const allElements: Element[] = [
+      ...(template.pageElements || []),
+      ...(template.pageSettings.header?.elements || []),
+      ...(template.pageSettings.footer?.elements || []),
+      ...(template.pageSettings.bodyBackground?.elements || []),
+      ...(template.summaryPage?.elements || [])
+    ]
+
+    return allElements.find(e => e.id === containerElementId)
+  }
+
+  const resolveChildDisplayText = (el: { value?: string; dataBinding?: string }, fallback: string = ''): string => {
+      // The field to resolve - could be in value or dataBinding (trim whitespace)
+      const rawFieldName = el.dataBinding || el.value
+      const fieldName = rawFieldName?.trim()
+
+      if (!fieldName) {
+        return fallback
+      }
+
+      // Try to resolve the field from the loop's data array
+      if (testData && Object.keys(testData).length > 0) {
+        const loopElement = findLoopElement(loopId)
+        const loopDataBinding = loopElement?.dataBinding?.trim()
+
+        if (loopDataBinding) {
+          // Get the array from test data
+          const parts = loopDataBinding.split('.')
+          let arrayData: unknown = testData
+          for (const part of parts) {
+            const trimmedPart = part.trim()
+            if (arrayData && typeof arrayData === 'object' && trimmedPart in arrayData) {
+              arrayData = (arrayData as Record<string, unknown>)[trimmedPart]
+            } else {
+              arrayData = null
+              break
+            }
+          }
+
+          // If we found an array, try to get the field from the first item
+          if (Array.isArray(arrayData) && arrayData.length > 0) {
+            const firstItem = arrayData[0]
+
+            // Check for transformations
+            if (hasTransformations(fieldName)) {
+              const result = processExpression(fieldName, firstItem as Record<string, unknown>)
+              if (result) return result
+            }
+
+            // Simple field resolution - direct property access first
+            if (firstItem && typeof firstItem === 'object' && fieldName in firstItem) {
+              const directValue = (firstItem as Record<string, unknown>)[fieldName]
+              if (directValue !== null && directValue !== undefined) {
+                return String(directValue)
+              }
+            }
+
+            // Nested field resolution (for paths like "address.city")
+            const fieldParts = fieldName.split('.')
+            let value: unknown = firstItem
+            for (const part of fieldParts) {
+              const trimmedPart = part.trim()
+              if (value && typeof value === 'object' && trimmedPart in value) {
+                value = (value as Record<string, unknown>)[trimmedPart]
+              } else {
+                value = null
+                break
+              }
+            }
+            if (value !== null && value !== undefined) {
+              return String(value)
+            }
+          }
+        }
+      }
+
+      // Fallback: show the field name between braces
+      return `{${fieldName}}`
+    }
+
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+
+  // Resolve dimensions (support for "100%")
+  const resolveWidth = (value: string | number | undefined): number => {
+    if (value === '100%') return containerWidth
+    if (typeof value === 'number') return value
+    return 100 // default
+  }
+
+  const resolveHeight = (value: string | number | undefined): number => {
+    if (value === '100%') return loopHeight
+    if (typeof value === 'number') return value
+    return 20 // default
+  }
+
+  const handleMouseDown = (e: ReactMouseEvent) => {
+    e.stopPropagation()
+    console.log(`mouseDown ${container} - ${child.id}`)
+    selectContainerChild(containerId, child.id, location)
+    setIsDragging(true)
+    setDragStart({ x: e.clientX - child.x, y: e.clientY - child.y })
+  }
+
+  useEffect(() => {
+    if (!isDragging) return
+
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
+      const newX = Math.max(0, e.clientX - dragStart.x)
+      const newY = Math.max(0, e.clientY - dragStart.y)
+      console.log(`mouseMove ${container} - ${child.id}`)
+      updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+      saveSnapshot()
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging, dragStart, containerId, child.id, location, updateContainerChildElement, saveSnapshot])
+
+  // Renderizar baseado no tipo
+  const renderContent = () => {
+    switch (child.type) {
+      case 'text':
+      case 'static_text': {
+        const textWidth = child.width ? resolveWidth(child.width) : undefined
+        const textHeight = child.height ? resolveHeight(child.height) : undefined
+        const displayText = resolveChildDisplayText(child, child.type === 'text' ? 'campo' : 'Texto')
+        return (
+          <div
+            style={{
+              fontSize: child.style?.fontSize || 10,
+              fontFamily: child.style?.fontFamily || 'Helvetica',
+              color: child.style?.color || '#000000',
+              fontWeight: child.style?.fontWeight || 'normal',
+              width: textWidth || 'auto',
+              height: textHeight || 'auto',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {displayText}
+          </div>
+        )
+      }
+      case 'image': {
+        const imgWidth = resolveWidth(child.width || 50)
+        const imgHeight = resolveHeight(child.height || 50)
+        return (
+          <div
+            className="bg-gray-200 flex items-center justify-center text-gray-400"
+            style={{
+              width: imgWidth,
+              height: imgHeight,
+            }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+          </div>
+        )
+      }
+      case 'rectangle': {
+        const rectWidth = resolveWidth(child.width)
+        const rectHeight = resolveHeight(child.height)
+        return (
+          <div
+            style={{
+              width: rectWidth,
+              height: rectHeight,
+              backgroundColor: child.style?.fillColor || '#e0e0e0',
+              borderRadius: child.style?.cornerRadius || 0,
+              border: child.style?.borderColor ? `1px solid ${child.style.borderColor}` : 'none',
+            }}
+          />
+        )
+      }
+      case 'line': {
+        // Support both new (width/height) and legacy (x2/y2) formats, including "100%"
+        const lineChildWidthRaw = child.width ?? (child.x2 ? child.x2 - child.x : 100)
+        const lineChildHeightRaw = child.height ?? (child.y2 ? child.y2 - child.y : 0)
+        const lineChildWidth = typeof lineChildWidthRaw === 'string' ? resolveWidth(lineChildWidthRaw) : lineChildWidthRaw
+        const lineChildHeight = typeof lineChildHeightRaw === 'string' ? resolveHeight(lineChildHeightRaw) : lineChildHeightRaw
+        const childStrokeWidth = child.style?.strokeWidth || 1
+
+        // SVG must be large enough to contain the stroke
+        const svgChildWidth = Math.max(Math.abs(lineChildWidth), childStrokeWidth)
+        const svgChildHeight = Math.max(Math.abs(lineChildHeight), childStrokeWidth)
+
+        // Calculate line coordinates with stroke offset
+        const childStrokeOffset = childStrokeWidth / 2
+        const childLineX1 = lineChildWidth >= 0 ? childStrokeOffset : svgChildWidth - childStrokeOffset
+        const childLineY1 = lineChildHeight >= 0 ? childStrokeOffset : svgChildHeight - childStrokeOffset
+        const childLineX2 = lineChildWidth >= 0 ? svgChildWidth - childStrokeOffset : childStrokeOffset
+        const childLineY2 = lineChildHeight >= 0 ? svgChildHeight - childStrokeOffset : childStrokeOffset
+
+        return (
+          <svg
+            width={svgChildWidth}
+            height={svgChildHeight}
+            style={{ overflow: 'visible' }}
+          >
+            <line
+              x1={childLineX1}
+              y1={childLineY1}
+              x2={childLineX2}
+              y2={childLineY2}
+              stroke={child.style?.strokeColor || '#000000'}
+              strokeWidth={childStrokeWidth}
+            />
+          </svg>
+        )
+      }
+      case 'loop': {
+         const loopElements = child.elements || []
+                 const loopBinding = child.dataBinding || ''
+                 const loopItemSpacing = child.itemSpacing || 20
+                 const loopWidth = typeof child.width === 'number' ? child.width : 400
+                 const loopHeight = typeof child.height === 'number' ? child.height : 150
+
+                 return (
+                   <div
+                     className={`cursor-move select-none relative ${
+                       isSelected ? 'ring-2 ring-primary-500' : ''
+                     }`}
+                     style={{
+                       width: loopWidth,
+                       height: loopHeight,
+                       backgroundColor: 'rgba(139, 92, 246, 0.03)',
+                       borderWidth: child.style?.borderWidth || 2,
+                       borderStyle: (child.style?.borderStyle as string) || 'dashed',
+                       borderColor: child.style?.borderColor || '#8b5cf6',
+                       borderRadius: 4,
+                     }}
+                     //onMouseDown={handleMouseDown}
+                   >
+         {/*
+                      <div
+                       className={`absolute flex items-center gap-2 px-2 py-1 bg-primary-500 text-white rounded-md shadow-sm pointer-events-none transition-opacity ${
+                         isSelected ? 'opacity-100' : 'opacity-70'
+                       }`}
+                       style={{ top: -24, right: -100 }}
+                     >
+                       <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                         <path d="M17 2l4 4-4 4" />
+                         <path d="M3 11v-1a4 4 0 014-4h14" />
+                         <path d="M7 22l-4-4 4-4" />
+                         <path d="M21 13v1a4 4 0 01-4 4H3" />
+                       </svg>
+                       <span className="text-[10px] font-semibold">LOOP</span>
+                       <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded ml-1">
+                         {loopElements.length}
+                       </span>
+                     </div>
+         */}
+
+                     <div className="relative w-full h-full">
+                       {loopElements.length === 0 ? (
+                         <div className="absolute inset-0 flex items-center justify-center">
+                           <div className="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50">
+                             <div className="text-primary-400 text-[10px] font-medium">Adicione elementos</div>
+                             <div className="text-primary-300 text-[9px]">via sidebar</div>
+                           </div>
+                         </div>
+                       ) : (
+                         <>
+
+                           {loopElements.map((childLoop: Element) => (
+                             <LoopChildElement
+                               key={childLoop.id}
+                               child={childLoop}
+                               loopId={child.id}
+                               location={location}
+                               loopWidth={loopWidth}
+                               loopHeight={loopHeight}
+                             />
+                           ))}
+                         </>
+                       )}
+                     </div>
+
+                     {/* Spacing badge - bottom right corner
+                     <div className="absolute bottom-1 right-1 pointer-events-none">
+                       <span className="text-[8px] text-primary-400 bg-primary-50 px-1.5 py-0.5 rounded">
+                         spacing: {loopItemSpacing}px
+                       </span>
+                     </div>
+                     */}
+                   </div>
+                 )
+      }
+      default:
+        return <div className="w-10 h-10 bg-gray-300" />
+    }
+  }
+
+  return (
+    <div
+      className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500 ring-offset-1' : ''}`}
+      style={{
+        left: child.x || 0,
+        top: child.y || 0,
+      }}
+      onMouseDown={handleMouseDown}
+    >
+      {renderContent()}
+      {/* Label do elemento */}
+      {isSelected && (
+        <div className="absolute -top-4 left-0 text-[9px] bg-purple-500 text-white px-1 rounded">
+          {child.type}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: LoopChildElementProps) {
   const { 
     selectedLoopChildId, 
@@ -282,9 +634,17 @@ export default function Canvas() {
   const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, currentSection, setCurrentSection, clearSelection } = useTemplateStore()
   const [zoom, setZoom] = useState(100) // Zoom em porcentagem
 
-  const pageSize = template.pageSettings.size === 'A4' 
-    ? { width: 595, height: 842 } 
-    : { width: 612, height: 792 } // Letter
+  let pageSize;
+  switch(template.pageSettings.size) {
+      case "A4" :
+        pageSize = { width: 595, height: 842 };
+      case "PORTRAIT" :
+        pageSize = { width: 612, height: 792 };
+      case "CUSTOM" :
+        pageSize = { width: template.pageSettings.customSize?.width || 595, height: template.pageSettings.customSize?.height || 842 };
+      default:
+        pageSize ={ width: 595, height: 842 };
+  }
 
   const scale = zoom / 100 // Converte porcentagem para escala
   const margins = template.pageSettings.margins
@@ -2181,10 +2541,8 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         )
       }
 
-      case 'loop':
-      case 'container': {
+      case 'loop': {
         const loopElements = element.elements || []
-        const isContainer = element.type === 'container'
         const loopBinding = element.dataBinding || ''
         const loopItemSpacing = element.itemSpacing || 20
         const loopWidth = typeof element.width === 'number' ? element.width : 400
@@ -2206,12 +2564,12 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             }}
             onMouseDown={handleMouseDown}
           >
-            
-            <div 
+{/*
+             <div
               className={`absolute flex items-center gap-2 px-2 py-1 bg-primary-500 text-white rounded-md shadow-sm pointer-events-none transition-opacity ${
                 isSelected ? 'opacity-100' : 'opacity-70'
               }`}
-              style={{ top: -24, left: 0 }}
+              style={{ top: -24, right: -100 }}
             >
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M17 2l4 4-4 4" />
@@ -2219,25 +2577,17 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                 <path d="M7 22l-4-4 4-4" />
                 <path d="M21 13v1a4 4 0 01-4 4H3" />
               </svg>
-              <span className="text-[10px] font-semibold">{isContainer ? 'CONTAINER' : 'LOOP'}</span>
-              {!isContainer && (
-                <span className="text-[10px] opacity-80 truncate max-w-[100px]">
-                  {loopBinding || 'binding'}
-                </span>
-              )}
+              <span className="text-[10px] font-semibold">LOOP</span>
               <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded ml-1">
                 {loopElements.length}
               </span>
             </div>
-            
+*/}
             
             <div className="relative w-full h-full">
               {loopElements.length === 0 ? (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50">
-                    <svg className="w-5 h-5 mx-auto mb-1 text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
                     <div className="text-primary-400 text-[10px] font-medium">Adicione elementos</div>
                     <div className="text-primary-300 text-[9px]">via sidebar</div>
                   </div>
@@ -2259,15 +2609,93 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
               )}
             </div>
             
-            {/* Spacing badge - bottom right corner */}
+            {/* Spacing badge - bottom right corner
             <div className="absolute bottom-1 right-1 pointer-events-none">
               <span className="text-[8px] text-primary-400 bg-primary-50 px-1.5 py-0.5 rounded">
                 spacing: {loopItemSpacing}px
               </span>
             </div>
+            */}
           </div>
         )
       }
+      case 'container': {
+              const containerElements = element.elements || []
+              const containerItemSpacing = element.itemSpacing || 20
+              const containerWidth = typeof element.width === 'number' ? element.width : 400
+              const containerHeight = typeof element.height === 'number' ? element.height : 150
+
+              return (
+                <div
+                  className={`cursor-move select-none relative ${
+                    isSelected ? 'ring-2 ring-primary-500' : ''
+                  }`}
+                  style={{
+                    width: containerWidth,
+                    height: containerHeight,
+                    backgroundColor: 'rgba(139, 92, 246, 0.03)',
+                    borderWidth: element.style?.borderWidth || 2,
+                    borderStyle: (element.style?.borderStyle as string) || 'dashed',
+                    borderColor: element.style?.borderColor || '#8b5cf6',
+                    borderRadius: 4,
+                  }}
+                  onMouseDown={handleMouseDown}
+                >
+{/*
+                  <div
+                    className={`absolute flex items-center gap-2 px-2 py-1 bg-primary-500 text-white rounded-md shadow-sm pointer-events-none transition-opacity ${
+                      isSelected ? 'opacity-100' : 'opacity-20'
+                    }`}
+                    style={{ top: -24, right: -100 }}
+                  >
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17 2l4 4-4 4" />
+                      <path d="M3 11v-1a4 4 0 014-4h14" />
+                      <path d="M7 22l-4-4 4-4" />
+                      <path d="M21 13v1a4 4 0 01-4 4H3" />
+                    </svg>
+                    <span className="text-[10px] font-semibold">CONTAINER</span>
+                    <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded ml-1">
+                      {containerElements.length}
+                    </span>
+                  </div>
+*/}
+
+                  <div className="relative w-full h-full">
+                    {containerElements.length === 0 ? (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50">
+                          <div className="text-primary-400 text-[10px] font-medium">Adicione elementos <span className="text-primary-300 text-[9px]">via sidebar</span></div>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+
+                        {containerElements.map((child: Element) => (
+                          <ContainerChildElement
+                            key={child.id}
+                            child={child}
+                            containerId={element.id}
+                            location={location}
+                            containerWidth={containerWidth}
+                            containerHeight={containerHeight}
+                          />
+                        ))}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Spacing badge - bottom right corner
+                  <div className="absolute bottom-1 right-1 pointer-events-none">
+                    <span className="text-[8px] text-primary-400 bg-primary-50 px-1.5 py-0.5 rounded">
+                      spacing: {containerItemSpacing}px
+                    </span>
+                  </div>
+                  */}
+                </div>
+              )
+            }
+
 
       default:
         return null

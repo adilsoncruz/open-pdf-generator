@@ -41,7 +41,6 @@ class GenerateCommand : CliktCommand(
     ).file(mustExist = true)
 
     private val output by option(
-        "-o",
         "--output",
         help = "Output PDF file path",
     ).default("output.pdf")
@@ -228,7 +227,6 @@ class ConvertCommand : CliktCommand(
     ).file(mustExist = true)
 
     private val output by option(
-        "-o",
         "--output",
         help = "Output JSON template file path (required unless --stdout is used)",
     )
@@ -247,11 +245,9 @@ class ConvertCommand : CliktCommand(
         if (!input.extension.equals("jrxml", ignoreCase = true)) {
             throw IllegalArgumentException("Input file must have .jrxml extension")
         }
-
         if (!stdout && output == null) {
             throw IllegalArgumentException("Use --output <file> or --stdout")
         }
-
         val template =
             JasperTemplateConverter.fromFile(
                 input.absolutePath,
@@ -265,7 +261,6 @@ class ConvertCommand : CliktCommand(
         if (stdout) {
             echo(json)
         }
-
         output?.let {
             val outputFile = File(it)
             outputFile.parentFile?.mkdirs()

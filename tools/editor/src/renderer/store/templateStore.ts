@@ -164,6 +164,15 @@ interface TemplateStore {
   clearLoopChildSelection: () => void
   toggleLoopExpanded: (loopId: string) => void
   reorderLoopChildren: (loopId: string, fromIndex: number, toIndex: number, location?: ElementLocation) => void
+
+  // Container Element Actions
+  addElementToLoop: (containerId: string, element: Element, location?: ElementLocation) => void
+  updateContainerChildElement: (containerId: string, childId: string, updates: Partial<Element>, location?: ElementLocation) => void
+  deleteContainerChildElement: (containerId: string, childId: string, location?: ElementLocation) => void
+  selectContainerChild: (containerId: string, childId: string, location?: ElementLocation) => void
+  clearContainerChildSelection: () => void
+  toggleContainerExpanded: (containerId: string) => void
+  reorderContainerChildren: (containerId: string, fromIndex: number, toIndex: number, location?: ElementLocation) => void
   
   // UI State Actions
   togglePropertiesPanelPinned: () => void
@@ -223,6 +232,9 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   selectedLoopChildId: null,
   selectedLoopParentId: null,
   expandedLoopIds: [],
+  selectedContainerChildId: null,
+  selectedContainerParentId: null,
+  expandedContainerIds: [],
   currentFilePath: null,
   isDirty: false,
   testData: {},
@@ -518,6 +530,8 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       selectedGroupId: null, 
       selectedLoopChildId: null, 
       selectedLoopParentId: null,
+      selectedContainerChildId: null,
+      selectedContainerParentId: null,
     }),
 
   toggleElementSelection: (id, location) =>
@@ -1913,7 +1927,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       const updateInLoop = (elements: Element[]): Element[] => {
         return elements.map(el => {
-          if (el.id === loopId && (el.type === 'loop' || el.type === 'container')) {
+          if (el.id === loopId) {
             return {
               ...el,
               elements: (el.elements || []).map(child =>
@@ -2033,6 +2047,8 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         isDirty: true,
         selectedLoopChildId: null,
         selectedLoopParentId: null,
+        selectedContainerChildId: null,
+        selectedContainerParentId: null,
       }
     }),
 
@@ -2044,11 +2060,29 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       selectedElementLocation: location || state.currentSection,
       selectedGroupId: null,
     })),
-
+  selectContainerChild: (containerId, childId, location) => {
+      console.log(containerId, childId)
+      set((state) => ({
+        selectedContainerParentId: containerId,
+        selectedContainerChildId: childId,
+        selectedElementIds: [containerId],
+        selectedElementLocation: location || state.currentSection,
+        selectedGroupId: null,
+      }))
+  },
   clearLoopChildSelection: () =>
     set({
       selectedLoopChildId: null,
       selectedLoopParentId: null,
+      selectedContainerChildId: null,
+      selectedContainerParentId: null,
+    }),
+  clearContainerChildSelection: () =>
+      set({
+        selectedContainerChildId: null,
+        selectedContainerParentId: null,
+        selectedLoopChildId: null,
+        selectedLoopParentId: null,
     }),
 
   toggleLoopExpanded: (loopId) =>
@@ -2056,6 +2090,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       expandedLoopIds: state.expandedLoopIds.includes(loopId)
         ? state.expandedLoopIds.filter(id => id !== loopId)
         : [...state.expandedLoopIds, loopId],
+    })),
+  toggleContainerExpanded: (containerId) =>
+    set((state) => ({
+      expandedContainerIds: state.expandedContainerIds.includes(containerId)
+        ? state.expandedContainerIds.filter(id => id !== containerId)
+        : [...state.expandedContainerIds, containerId],
     })),
 
   reorderLoopChildren: (loopId, fromIndex, toIndex, location) =>
@@ -2136,5 +2176,70 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     set((state) => ({
       isSidebarMinimized: !state.isSidebarMinimized,
     })),
+
+  updateContainerChildElement: (containerId, childId, updates, location) =>
+      set((state) => {
+        const loc = location || state.currentSection
+        const historyState = saveToHistory(state, state.template)
+
+        const updateInContainer = (elements: Element[]): Element[] => {
+          return elements.map(el => {
+            if (el.id === containerId) {
+              return {
+                ...el,
+                elements: (el.elements || []).map(child =>
+                  child.id === childId ? { ...child, ...updates } : child
+                ),
+              }
+            }
+            return el
+          })
+        }
+
+        let newTemplate: Template
+
+        if (loc === 'header' && state.template.pageSettings.header) {
+          newTemplate = {
+            ...state.template,
+            pageSettings: {
+              ...state.template.pageSettings,
+              header: {
+                ...state.template.pageSettings.header,
+                elements: updateInContainer(state.template.pageSettings.header.elements),
+              },
+            },
+          }
+        } else if (loc === 'footer' && state.template.pageSettings.footer) {
+          newTemplate = {
+            ...state.template,
+            pageSettings: {
+              ...state.template.pageSettings,
+              footer: {
+                ...state.template.pageSettings.footer,
+                elements: updateInContainer(state.template.pageSettings.footer.elements),
+              },
+            },
+          }
+        } else if (loc === 'summary' && state.template.summaryPage) {
+          newTemplate = {
+            ...state.template,
+            summaryPage: {
+              ...state.template.summaryPage,
+              elements: updateInContainer(state.template.summaryPage.elements),
+            },
+          }
+        } else {
+          newTemplate = {
+            ...state.template,
+            pageElements: updateInContainer(state.template.pageElements),
+          }
+        }
+
+        return {
+          ...historyState,
+          template: newTemplate,
+          isDirty: true,
+        }
+      }),
 }))
 

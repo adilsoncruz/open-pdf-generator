@@ -44,11 +44,13 @@ export default function PropertiesPanel() {
   const selectedGroupId = store.selectedGroupId
   const selectedLoopChildId = store.selectedLoopChildId
   const selectedLoopParentId = store.selectedLoopParentId
+  const selectedContainerChildId = store.selectedContainerChildId
+  const selectedContainerParentId = store.selectedContainerParentId
   const updateElement = store.updateElement
   const updateSelectedElements = store.updateSelectedElements
   const addElementToLoop = store.addElementToLoop
   const saveSnapshot = store.saveSnapshot
-  
+  const addElementToContainer = store.addElementToContainer
   
   const handleInputBlur = () => {
     saveSnapshot()
@@ -105,6 +107,35 @@ export default function PropertiesPanel() {
     }
   }
 
+  if (selectedContainerChildId && selectedContainerParentId) {
+      // Encontrar o loop pai e o elemento filho
+      let containerElement: Element | null = null
+
+      if (selectedElementLocation === 'header' && template.pageSettings.header) {
+        containerElement = template.pageSettings.header.elements.find(el => el.id === selectedContainerParentId) || null
+      } else if (selectedElementLocation === 'footer' && template.pageSettings.footer) {
+        containerElement = template.pageSettings.footer.elements.find(el => el.id === selectedContainerParentId) || null
+      } else if (selectedElementLocation === 'summary' && template.summaryPage) {
+        containerElement = template.summaryPage.elements.find(el => el.id === selectedContainerParentId) || null
+      } else {
+        containerElement = template.pageElements.find(el => el.id === selectedContainerParentId) || null
+      }
+
+      if (containerElement && containerElement.elements) {
+        const childElement = containerElement.elements.find((c: Element) => c.id === selectedContainerChildId)
+        if (childElement) {
+          return (
+            <LoopChildPropertiesPanel
+              loopId={selectedContainerParentId}
+              child={childElement}
+              location={selectedElementLocation}
+              loopElement={containerElement}
+            />
+          )
+        }
+      }
+    }
+
   
   if (selectedElements.length === 0) {
     // Buscar grupo selecionado
@@ -159,7 +190,7 @@ export default function PropertiesPanel() {
 
   const isMultiSelection = selectedElements.length > 1
   const selectedElement = selectedElements[0] 
-
+   console.log("selected element")
   const handleUpdate = (field: string, value: string | number | boolean | object | null) => {
     if (isMultiSelection) {
       updateSelectedElements({ [field]: value })
@@ -228,7 +259,7 @@ export default function PropertiesPanel() {
     } else if (selectedElement.type === 'loop' || selectedElement.type === 'container') {
       return [
         { id: 'appearance', label: 'Appearance' },
-        { id: 'loop', label: 'Loop' },
+        { id: 'elements', label: 'elements' },
       ]
     } else if (selectedElement.type === 'table') {
       return [
@@ -2120,7 +2151,7 @@ export default function PropertiesPanel() {
             )}
 
             {/* LOOP TAB */}
-            {activeTab === 'loop' && (
+            {activeTab === 'elements' && (
               <>
                 <PropertyGroup title="Loop Configuration" collapsible={false}>
                   <div className="space-y-3">
@@ -2161,6 +2192,7 @@ export default function PropertiesPanel() {
                       { type: 'image', label: 'Image', icon: 'image' as const },
                       { type: 'rectangle', label: 'Rectangle', icon: 'rectangle' as const },
                       { type: 'line', label: 'Line', icon: 'minus' as const },
+                      { type: 'loop', label: 'Loop', icon: 'loop' as const },
                     ].map((item) => (
                       <Button
                         key={item.type}
@@ -2184,6 +2216,8 @@ export default function PropertiesPanel() {
                             newElement = { ...newElement, width: 100, height: 20, style: { fillColor: '#e0e0e0' } }
                           } else if (item.type === 'line') {
                             newElement = { ...newElement, width: 100, height: 0, style: { strokeColor: '#000000', strokeWidth: 1 } }
+                          } else if (item.type === 'loop') {
+                            newElement = { ...newElement, width: 100, height: 20, databinding: '' }
                           }
                           
                           addElementToLoop(selectedElement.id, newElement, selectedElementLocation)
@@ -3941,6 +3975,7 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
           </svg>
         )
       default:
+        console.log("clicked")
         return null
     }
   }

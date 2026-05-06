@@ -2,6 +2,7 @@ package io.pdfgenerator.cli.converter.jasper
 
 import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.BodyBackground
+import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.CustomSize
 import com.pdfgenerator.model.HeaderFooter
 import com.pdfgenerator.model.ImageElement
@@ -10,6 +11,7 @@ import com.pdfgenerator.model.LineStyle
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.Margins
 import com.pdfgenerator.model.PageSettings
+import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.RectangleStyle
 import com.pdfgenerator.model.StaticTextElement
@@ -75,26 +77,42 @@ object JasperTemplateConverter {
         }
     }
 
-    private fun convertSection(sectionNodes: NodeList,offset:Float, options: JasperConversionOptions): Map<String,*> {
+    fun hasSubreport(jrxmlFile: File): Boolean {
+        val factory = DocumentBuilderFactory.newInstance()
+        val builder = factory.newDocumentBuilder()
+        val document = builder.parse(jrxmlFile)
+
+        val nodeList = document.getElementsByTagName("subreport")
+        return nodeList.length > 0
+    }
+
+    private fun convertSection(sectionNodes: NodeList,offset:Float, maxWidth: Float, options: JasperConversionOptions): Map<String,*> {
         var yOffset = 0f + offset
         val elements = mutableListOf<com.pdfgenerator.model.Element>()
         for (sectionIdx in 0 until sectionNodes.length) {
             val sectionNode = sectionNodes.item(sectionIdx)
             if (sectionNode is Element) {
                 val bands = sectionNode.getElementsByTagName("band")
-                println("bands ${elements.size}")
-                for (bandIdx in 0 until bands.length) {
-                    println("Y: $yOffset")
-                    val bandNode = bands.item(bandIdx)
+                if(bands.length == 1) {
+                    val bandNode = bands.item(0)
                     if (bandNode is Element) {
                         val bandHeight = bandNode.getIntAttribute("height", 0).toFloat()
                         elements.addAll(parseBandElements(bandNode, yOffset, options, null))
                         yOffset += bandHeight
                     }
+                } else {
+                    for (bandIdx in 0 until bands.length) {
+                        val bandNode = bands.item(bandIdx)
+                        if (bandNode is Element) {
+                            val bandHeight = bandNode.getIntAttribute("height", 0).toFloat()
+                            elements.add(parseBand(bandNode, yOffset, maxWidth, options, null))
+                            yOffset += bandHeight
+                        }
+                    }
                 }
             }
         }
-        println("pageElements ${elements.size} - y: $yOffset")
+
         return mapOf(
             "elements" to elements,
             "height" to yOffset
@@ -128,8 +146,11 @@ object JasperTemplateConverter {
                 orientation = if (orientation.equals("landscape", ignoreCase = true)) "landscape" else "portrait",
                 margins = margins,
                 customSize = CustomSize(pageWidth.toFloat(), pageHeight.toFloat()),
+                header = null,
+                footer = null,
+                bodyBackground = null,
             )
-
+        val containerWidth = pageWidth.toFloat() - margins.left - margins.right
         val metadata =
             TemplateMetadata(
                 name = root.getAttribute("name"),
@@ -146,39 +167,54 @@ object JasperTemplateConverter {
 
         for (sectionTag in sectionOrder) {
             val sectionNodes = root.getElementsByTagName(sectionTag)
-            //val sectionElements = convertSection(sectionNodes, options)
-            println("TAG: $sectionTag")
             when (sectionTag) {
                 "background" -> {
-                    val sectionElements = convertSection(sectionNodes,0f, options)
-                    pageSettings = pageSettings.copy( bodyBackground = BodyBackground(sectionElements.get("elements") as List<com.pdfgenerator.model.Element>))
+                    val sectionElements = convertSection(sectionNodes,0f, containerWidth, options)
+                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
+                    if(out.isNotEmpty() ) {
+                        pageSettings = pageSettings.copy( bodyBackground = BodyBackground(out))
+                    }
                 }
                 "title" -> {
-                    val sectionElements = convertSection(sectionNodes,0f, options)
-                    yOffset = sectionElements.get("height") as Float
-                    elements.addAll(sectionElements.get("elements") as List<com.pdfgenerator.model.Element>)
-                    pageSettings = pageSettings.copy( header =  HeaderFooter( sectionElements.get("height") as Float,sectionElements.get("elements") as List<com.pdfgenerator.model.Element>))
+                    val sectionElements = convertSection(sectionNodes,0f, containerWidth, options)
+                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
+                    if(out.isNotEmpty() ) {
+                        yOffset = sectionElements.get("height") as Float
+                        elements.addAll(out)
+                    }
                 }
                 "pageHeader" -> {
-                    val sectionElements = convertSection(sectionNodes,0f, options)
-                    pageSettings = pageSettings.copy( header =  HeaderFooter( sectionElements.get("height") as Float,sectionElements.get("elements") as List<com.pdfgenerator.model.Element>))
+                    val sectionElements = convertSection(sectionNodes,0f, containerWidth, options)
+                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
+                    if(out.isNotEmpty() ) {
+                        pageSettings =
+                            pageSettings.copy(header = HeaderFooter(sectionElements.get("height") as Float, out))
+                    }
                 }
                 "pageFooter" -> {
-                    val sectionElements = convertSection(sectionNodes,0f, options)
-                    pageSettings = pageSettings.copy( footer =  HeaderFooter( sectionElements.get("height") as Float,sectionElements.get("elements") as List<com.pdfgenerator.model.Element>))
+                    val sectionElements = convertSection(sectionNodes,0f,containerWidth, options)
+                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
+                    if(out.isNotEmpty() ) {
+                        pageSettings =
+                            pageSettings.copy(footer = HeaderFooter(sectionElements.get("height") as Float, out))
+                    }
                 }
                 "summary" -> {
-                    val sectionElements = convertSection(sectionNodes,0f, options)
-                    summaryElem = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
+                    val sectionElements = convertSection(sectionNodes,0f,containerWidth, options)
+                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
+                    if(out.isNotEmpty() ) {
+                        summaryElem = out
+                    }
                 }
                 else   -> {
-                    println("adding elements to page")
-                    val sectionElements = convertSection(sectionNodes,yOffset, options)
-                    elements.addAll(sectionElements.get("elements") as List<com.pdfgenerator.model.Element>)
+                    val sectionElements = convertSection(sectionNodes,yOffset,containerWidth, options)
+                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
+                    if(out.isNotEmpty() ) {
+                        elements.addAll(out)
+                    }
                 }
             }
         }
-        println("Template elements: ${elements.size}")
         return Template(
             version = "1.0",
             metadata = metadata,
@@ -234,6 +270,28 @@ object JasperTemplateConverter {
             dataBinding = dataBinding ?: "",
             elements = out,
             printCondition = printCondition
+        )
+    }
+
+    private fun parseBand(
+        node: Element,
+        sectionYOffset: Float,
+        maxWidth: Float,
+        options: JasperConversionOptions,
+        frame: Map<String, Float>?
+    ): ContainerElement {
+        val out = parseBandElements(node, 0f, options, frame)
+
+        return ContainerElement(
+          type = "container",
+          id = UUID.randomUUID().toString(),
+          x = node.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+          y = node.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
+          width = maxWidth,
+          height = node.getIntAttribute("height", 16).toFloat(),
+          positionMode = PositionMode.RELATIVE,
+          relativeOffsetY = 0f,
+          elements = out
         )
     }
 
@@ -298,6 +356,7 @@ object JasperTemplateConverter {
                 "image" -> parseImage(child, sectionYOffset, frame)?.let(out::add)
                 "componentElement" -> parseComponentElement(child, sectionYOffset, options, frame)?.let(out::addAll)
                 "frame" -> parseFrame(child, sectionYOffset, options)?.let(out::addAll)
+                "subreport" -> parseSubReport(child, sectionYOffset, options)?.let(out::addAll)
                 else -> {
                     if (options.failOnUnsupportedElement) {
                         throw JasperTemplateConversionException("Elemento Jasper não suportado: <${child.tagName}>")

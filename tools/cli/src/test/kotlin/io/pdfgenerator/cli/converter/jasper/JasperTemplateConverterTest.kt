@@ -33,7 +33,7 @@ class JasperTemplateConverterTest {
                   </staticText>
                 </band>
               </title>
-              <background>
+            <background>
         <band height="802" splitType="Stretch">
             <frame>
                 <reportElement x="284" y="9" width="270" height="172" uuid="d3b92e46-5b1a-4e82-853e-e428760d8fd1">
@@ -67,9 +67,118 @@ class JasperTemplateConverterTest {
                     <property name="com.jaspersoft.studio.unit.margin" value="px"/>
                     <property name="com.jaspersoft.studio.unit.x" value="px"/>
                 </reportElement>
-                <jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" margin="0">
-                    <jr:codeExpression><![CDATA[$F{qrCodeData}]]></jr:codeExpression>
-                </jr:QRCode>
+                <jr:list xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" printOrder="Vertical">
+                    <datasetRun subDataset="Data" uuid="a2041552-12ea-4e6b-a713-8622e5fc9393">
+                        <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{document})]]></dataSourceExpression>
+                    </datasetRun>
+                    <jr:listContents height="19" width="555">
+                        <textField>
+                            <reportElement x="10" y="0" width="110" height="19" uuid="2c241b9d-7d87-4b56-858d-2d4268d52e18"/>
+                            <box>
+                                <pen lineColor="#EFEFEF"/>
+                                <topPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <leftPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <bottomPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <rightPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                            </box>
+                            <textElement verticalAlignment="Middle">
+                                <font size="10"/>
+                                <paragraph firstLineIndent="3"/>
+                            </textElement>
+                            <textFieldExpression><![CDATA[$F{type}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="120" y="0" width="80" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
+                            <box>
+                                <pen lineColor="#EFEFEF"/>
+                                <topPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <leftPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <bottomPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <rightPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                            </box>
+                            <textElement verticalAlignment="Middle">
+                                <font size="10"/>
+                                <paragraph firstLineIndent="3"/>
+                            </textElement>
+                            <textFieldExpression><![CDATA[$F{period}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="200" y="0" width="60" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
+                            <box>
+                                <pen lineColor="#EFEFEF"/>
+                                <topPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <leftPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <bottomPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <rightPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                            </box>
+                            <textElement verticalAlignment="Middle">
+                                <font size="10"/>
+                                <paragraph firstLineIndent="3"/>
+                            </textElement>
+                            <textFieldExpression><![CDATA[$F{quantity}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="260" y="0" width="40" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
+                            <box>
+                                <pen lineColor="#EFEFEF"/>
+                                <topPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <leftPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <bottomPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <rightPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                            </box>
+                            <textElement verticalAlignment="Middle">
+                                <font size="10"/>
+                                <paragraph firstLineIndent="3"/>
+                            </textElement>
+                            <textFieldExpression><![CDATA[$F{percentage}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="300" y="0" width="90" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
+                            <box>
+                                <pen lineColor="#EFEFEF"/>
+                                <topPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <leftPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <bottomPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <rightPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                            </box>
+                            <textElement verticalAlignment="Middle">
+                                <font size="10"/>
+                                <paragraph firstLineIndent="3"/>
+                            </textElement>
+                            <textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="390" y="0" width="80" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
+                            <box>
+                                <pen lineColor="#EFEFEF"/>
+                                <topPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <leftPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <bottomPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <rightPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                            </box>
+                            <textElement verticalAlignment="Middle">
+                                <font size="10"/>
+                                <paragraph firstLineIndent="3"/>
+                            </textElement>
+                            <textFieldExpression><![CDATA[$F{netValue}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="470" y="0" width="80" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
+                            <box>
+                                <pen lineColor="#EFEFEF"/>
+                                <topPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <leftPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <bottomPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                                <rightPen lineWidth="2.0" lineStyle="Solid" lineColor="#EFEFEF"/>
+                            </box>
+                            <textElement verticalAlignment="Middle">
+                                <font size="10"/>
+                                <paragraph firstLineIndent="3"/>
+                            </textElement>
+                            <textFieldExpression><![CDATA[$F{taxValue}]]></textFieldExpression>
+                        </textField>
+                    </jr:listContents>
+                </jr:list>
             </componentElement>
         </band>
         </background>

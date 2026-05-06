@@ -138,7 +138,8 @@ export default function ElementsToolbar() {
       case 'container':
         element = {
           ...baseElement,
-          width: 400,
+          x: 0,
+          width: 528,
           height: 150,
           elements: [],
           style: {
