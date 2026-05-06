@@ -31,7 +31,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
     
     // Search in all possible locations
     const allElements: Element[] = [
-      ...(template.pageElements || []),
+      ...(template.page || []),
       ...(template.pageSettings.header?.elements || []),
       ...(template.pageSettings.footer?.elements || []),
       ...(template.pageSettings.bodyBackground?.elements || []),
@@ -300,7 +300,7 @@ export default function Canvas() {
     }
 
     // Only check body elements (not header/footer)
-    template.pageElements.forEach((element) => {
+    template.page.forEach((element) => {
       const x = element.x
       const y = element.y
       const width = element.width
@@ -939,7 +939,7 @@ export default function Canvas() {
               }
             }}
           >
-            {template.pageElements
+            {template.page
               .filter((element) => !element.hidden)
               .map((element) => (
                 <CanvasElement
@@ -952,7 +952,7 @@ export default function Canvas() {
                   pageSize={pageSize}
                   selectedElementIds={selectedElementIds}
                   selectedElementLocation={selectedElementLocation}
-                  allElements={template.pageElements}
+                  allElements={template.page}
                   onUpdateMultiple={() => {}}
                   updateElement={updateElement}
                 />

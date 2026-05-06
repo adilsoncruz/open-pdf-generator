@@ -25,6 +25,7 @@ export default function Sidebar() {
   } = useTemplateStore()
 
   const [pageSettingsExpanded, setPageSettingsExpanded] = useState(false)
+  const [selectedContainerId, setSelectedContainerId] = useState<string | null>(null)
 
   if (isSidebarMinimized && !isSidebarPinned) {
     return (
@@ -515,20 +516,64 @@ export default function Sidebar() {
             {t.sidebar.elementsTitle}
           </h2>
         </div>
-        <GroupButton />
+        {currentSection === 'body' && (
+          <ContainersPanel
+            selectedContainerId={selectedContainerId}
+            onSelectContainer={setSelectedContainerId}
+          />
+        )}
+        <GroupButton selectedContainerId={selectedContainerId} />
       </div>
 
       {/* Elements List - WITH SCROLL */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 pb-4">
-          <ElementsList />
+          <ElementsList selectedContainerId={selectedContainerId} />
         </div>
       </div>
     </div>
   )
 }
 
-function GroupButton() {
+function ContainersPanel({
+  selectedContainerId,
+  onSelectContainer,
+}: {
+  selectedContainerId: string | null
+  onSelectContainer: (id: string | null) => void
+}) {
+  const { template, addElement, currentSection } = useTemplateStore()
+
+  if (currentSection !== 'body') return null
+  const containers = (template.page || []).filter((el) => el.type === 'container')
+  const handleAddContainer = () => {
+    const id = `container-${Date.now()}`
+    addElement({ type: 'container', id, x: 50, y: 50, width: 400, height: 150, elements: [] }, 'body')
+    onSelectContainer(id)
+  }
+
+  return (
+    <div className="mb-3">
+      <h3 className="text-xs font-semibold theme-text-muted uppercase mb-2">Containers</h3>
+      <button onClick={handleAddContainer} className="w-full px-3 py-2 text-sm theme-surface border theme-border rounded-lg mb-2">
+        + Add Container
+      </button>
+      <div className="space-y-1">
+        {containers.map((container) => (
+          <button
+            key={container.id}
+            onClick={() => onSelectContainer(container.id)}
+            className={`w-full text-left px-2 py-1 rounded text-xs ${selectedContainerId === container.id ? 'bg-primary-100 dark:bg-primary-500/30' : 'theme-surface'}`}
+          >
+            {container.id}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function GroupButton({ selectedContainerId }: { selectedContainerId: string | null }) {
   const { t } = useTranslation()
   const { 
     selectedElementIds, 
@@ -565,7 +610,7 @@ function GroupButton() {
     groups.some(group => group.elementIds.includes(elementId))
   )
 
-  const canCreateGroup = selectedElementIds.length >= 2 && !hasElementInGroup
+  const canCreateGroup = selectedElementIds.length >= 2 && !hasElementInGroup && (currentSection !== 'body' || !!selectedContainerId)
 
   const getGroupButtonTitle = (): string => {
     if (selectedElementIds.length < 2) {
@@ -654,7 +699,7 @@ function GroupButton() {
   )
 }
 
-function ElementsList() {
+function ElementsList({ selectedContainerId }: { selectedContainerId: string | null }) {
   const { t } = useTranslation()
   const { 
     template, 
@@ -690,7 +735,9 @@ function ElementsList() {
       const summaryElements = template.summaryPage?.elements || []
       return [...backgroundElements, ...summaryElements]
     } else {
-      return template.pageElements
+      const containers = template.page || []
+      const selected = containers.find((el) => el.id === selectedContainerId && el.type === 'container')
+      return (selected?.elements as Element[]) || []
     }
   }
 

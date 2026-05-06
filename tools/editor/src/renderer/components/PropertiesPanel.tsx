@@ -69,7 +69,7 @@ export default function PropertiesPanel() {
     } else if (selectedElementLocation === 'summary' && template.summaryPage) {
       elements = template.summaryPage.elements.filter((el) => selectedElementIds.includes(el.id))
     } else {
-      elements = template.pageElements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.page.filter((el) => selectedElementIds.includes(el.id))
     }
     
     return elements
@@ -87,7 +87,7 @@ export default function PropertiesPanel() {
     } else if (selectedElementLocation === 'summary' && template.summaryPage) {
       loopElement = template.summaryPage.elements.find(el => el.id === selectedLoopParentId) || null
     } else {
-      loopElement = template.pageElements.find(el => el.id === selectedLoopParentId) || null
+      loopElement = template.page.find(el => el.id === selectedLoopParentId) || null
     }
     
     if (loopElement && loopElement.elements) {
@@ -3308,7 +3308,7 @@ function GroupPropertiesPanel({
     } else if (location === 'bodyBackground' && template.pageSettings.bodyBackground) {
       allElements = template.pageSettings.bodyBackground.elements
     } else {
-      allElements = template.pageElements
+      allElements = template.page
     }
     
     return allElements.filter(el => group.elementIds.includes(el.id))
