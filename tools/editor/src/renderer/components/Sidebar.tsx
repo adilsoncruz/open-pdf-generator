@@ -511,20 +511,20 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Layers Header and Group Button */}
+      {/* Containers + Elements Header and Group Button */}
       <div className="px-4 py-3 border-t theme-border">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="section-header flex items-center gap-2">
-            <Icon name="layers" size="sm" />
-            {t.sidebar.elementsTitle}
-          </h2>
-        </div>
         {currentSection === 'body' && (
           <ContainersPanel
             selectedContainerId={selectedContainerId}
             onSelectContainer={(id) => selectElement(id, 'body')}
           />
         )}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="section-header flex items-center gap-2">
+            <Icon name="layers" size="sm" />
+            {t.sidebar.elementsTitle}
+          </h2>
+        </div>
         <GroupButton selectedContainerId={selectedContainerId} />
       </div>
 
@@ -565,7 +565,9 @@ function ContainersPanel({
         {containers.map((container) => (
           <button
             key={container.id}
-            onClick={() => onSelectContainer(container.id)}
+            onClick={() => {
+              onSelectContainer(container.id)
+            }}
             className={`w-full text-left px-2 py-1 rounded text-xs ${selectedContainerId === container.id ? 'bg-primary-100 dark:bg-primary-500/30' : 'theme-surface'}`}
           >
             {container.id}
