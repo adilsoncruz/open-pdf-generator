@@ -66,7 +66,8 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                 itemsRenderedOnCurrentPage = 0
             }
 
-            val loopContext = LoopContext(item, index)
+            val normalizedItemMap = (item as? Map<*, *>)?.mapKeys { it.key.toString() }
+            val loopContext = LoopContext(item = item, index = index, normalizedItemMap = normalizedItemMap)
             val newContext = context.copy(loopContext = loopContext)
 
             element.elements.forEach { childElement ->
