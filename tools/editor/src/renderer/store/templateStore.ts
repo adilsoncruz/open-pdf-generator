@@ -328,6 +328,28 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           ...saveToHistory(state, newTemplate),
         }
       } else {
+        const selectedId = state.selectedElementIds[0]
+        const selectedContainer = state.template.page.find(
+          (el) => el.id === selectedId && el.type === 'container'
+        )
+
+        if (selectedContainer && element.type !== 'container') {
+          newTemplate = {
+            ...state.template,
+            page: state.template.page.map((el) =>
+              el.id === selectedContainer.id
+                ? { ...el, elements: [...(el.elements || []), element] }
+                : el
+            ),
+          }
+          return {
+            template: newTemplate,
+            selectedElementIds: [element.id],
+            selectedElementLocation: 'body',
+            isDirty: true,
+            ...saveToHistory(state, newTemplate),
+          }
+        }
         newTemplate = {
           ...state.template,
           page: [...state.template.page, element],
@@ -2137,4 +2159,3 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       isSidebarMinimized: !state.isSidebarMinimized,
     })),
 }))
-

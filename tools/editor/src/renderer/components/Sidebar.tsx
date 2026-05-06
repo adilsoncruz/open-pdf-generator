@@ -25,7 +25,10 @@ export default function Sidebar() {
   } = useTemplateStore()
 
   const [pageSettingsExpanded, setPageSettingsExpanded] = useState(false)
-  const [selectedContainerId, setSelectedContainerId] = useState<string | null>(null)
+  const { selectedElementIds, selectElement } = useTemplateStore()
+  const selectedContainerId = currentSection === 'body'
+    ? (template.page || []).find(el => el.id === selectedElementIds[0] && el.type === 'container')?.id || null
+    : null
 
   if (isSidebarMinimized && !isSidebarPinned) {
     return (
@@ -519,7 +522,7 @@ export default function Sidebar() {
         {currentSection === 'body' && (
           <ContainersPanel
             selectedContainerId={selectedContainerId}
-            onSelectContainer={setSelectedContainerId}
+            onSelectContainer={(id) => selectElement(id, 'body')}
           />
         )}
         <GroupButton selectedContainerId={selectedContainerId} />
@@ -542,14 +545,14 @@ function ContainersPanel({
   selectedContainerId: string | null
   onSelectContainer: (id: string | null) => void
 }) {
-  const { template, addElement, currentSection } = useTemplateStore()
+  const { template, addElement, currentSection, selectElement } = useTemplateStore()
 
   if (currentSection !== 'body') return null
   const containers = (template.page || []).filter((el) => el.type === 'container')
   const handleAddContainer = () => {
     const id = `container-${Date.now()}`
     addElement({ type: 'container', id, x: 50, y: 50, width: 400, height: 150, elements: [] }, 'body')
-    onSelectContainer(id)
+    selectElement(id, 'body')
   }
 
   return (
