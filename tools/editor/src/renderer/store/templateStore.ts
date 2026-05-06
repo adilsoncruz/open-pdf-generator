@@ -201,6 +201,22 @@ const normalizeBodyContainers = (template: Template): Template => ({
   ),
 })
 
+const restackBodyContainers = (elements: Element[]): Element[] => {
+  let currentY = 0
+  return elements.map((el) => {
+    if (el.type !== 'container') return el
+    const next = {
+      ...el,
+      x: 0,
+      y: currentY,
+      width: '100%',
+    }
+    const h = typeof el.height === 'number' ? el.height : 150
+    currentY += h
+    return next
+  })
+}
+
 
 const saveToHistory = (state: TemplateStore, newTemplate: Template) => {
   const newHistory = state.history.slice(0, state.historyIndex + 1)
@@ -996,10 +1012,11 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           isDirty: true,
         }
       } else {
+        const moved = moveUp(state.template.page)
         return {
           template: {
             ...state.template,
-            page: moveUp(state.template.page),
+            page: restackBodyContainers(moved),
           },
           isDirty: true,
         }
@@ -1045,10 +1062,11 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           isDirty: true,
         }
       } else {
+        const moved = moveDown(state.template.page)
         return {
           template: {
             ...state.template,
-            page: moveDown(state.template.page),
+            page: restackBodyContainers(moved),
           },
           isDirty: true,
         }
