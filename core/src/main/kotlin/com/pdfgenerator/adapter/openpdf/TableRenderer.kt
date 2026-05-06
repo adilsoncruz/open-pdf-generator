@@ -17,6 +17,7 @@ import com.pdfgenerator.util.DataBindingResolver
 import com.pdfgenerator.util.ExpressionProcessor
 import com.pdfgenerator.util.FontCache
 import com.pdfgenerator.util.Formatter
+import com.pdfgenerator.util.withSyntheticPageNumber
 import org.slf4j.LoggerFactory
 
 class TableRenderer : Renderer<TableElement> {
@@ -107,7 +108,7 @@ class TableRenderer : Renderer<TableElement> {
                 fun getHeaderHeightForPage(pageNum: Int): Float {
                     val condition = context.headerPrintCondition
                     if (condition == null) return context.templateHeaderHeight
-                    val pageData = context.data.toMutableMap().apply { put("_pageNumber", pageNum) }
+                    val pageData = withSyntheticPageNumber(context.data, pageNum)
                     return if (ConditionEvaluator.evaluate(condition, pageData, null)) {
                         context.templateHeaderHeight
                     } else {
@@ -118,7 +119,7 @@ class TableRenderer : Renderer<TableElement> {
                 fun getFooterHeightForPage(pageNum: Int): Float {
                     val condition = context.footerPrintCondition
                     if (condition == null) return context.templateFooterHeight
-                    val pageData = context.data.toMutableMap().apply { put("_pageNumber", pageNum) }
+                    val pageData = withSyntheticPageNumber(context.data, pageNum)
                     return if (ConditionEvaluator.evaluate(condition, pageData, null)) {
                         context.templateFooterHeight
                     } else {

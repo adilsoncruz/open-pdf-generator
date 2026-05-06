@@ -24,6 +24,8 @@ import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
+import com.pdfgenerator.util.withSyntheticBindings
+import com.pdfgenerator.util.withSyntheticPageNumber
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -311,7 +313,7 @@ class PDFGenerator(
             val templateHeaderHeight = template.pageSettings.header?.height ?: 0f
             val templateFooterHeight = template.pageSettings.footer?.height ?: 0f
 
-            val page1Data = data.toMutableMap().apply { put("_pageNumber", 1) }
+            val page1Data = withSyntheticPageNumber(data, 1)
 
             val headerVisiblePage1 =
                 template.pageSettings.header?.let { header ->
@@ -363,11 +365,14 @@ class PDFGenerator(
             val bodyOffsetX = margins.left
 
             val enrichedData =
-                data.toMutableMap().apply {
-                    put("_pageNumber", 1) // Initial page
-                    put("_date", java.time.LocalDate.now().toString())
-                    put("_dateTime", java.time.LocalDateTime.now().toString())
-                }
+                withSyntheticBindings(
+                    data,
+                    mapOf(
+                        "_pageNumber" to 1, // Initial page
+                        "_date" to java.time.LocalDate.now().toString(),
+                        "_dateTime" to java.time.LocalDateTime.now().toString(),
+                    ),
+                )
 
             val context =
                 RenderContext(
