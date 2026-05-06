@@ -9,43 +9,65 @@ import java.util.Date
 import java.util.Locale
 
 object ExpressionProcessor {
+    private const val EXPRESSION_PART_SEPARATOR = "|"
+    private const val TRANSFORMATION_ARG_SEPARATOR = ':'
+    private const val MAX_EXPRESSION_CACHE_SIZE = 1024
+
+    private val templatePlaceholderRegex = """\$\{([^}]+)\}""".toRegex()
+    private val transformationArgsRegex = """'([^']*)'|"([^"]*)"|([^:]+)""".toRegex()
+
+    private val expressionCacheLock = Any()
+    private val parsedExpressionCache =
+        object : LinkedHashMap<String, ParsedExpression>(MAX_EXPRESSION_CACHE_SIZE, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ParsedExpression>?): Boolean {
+                return size > MAX_EXPRESSION_CACHE_SIZE
+            }
+        }
+
+    private data class ParsedExpression(
+        val binding: String,
+        val transformations: List<ParsedTransformation>,
+    )
+
+    private data class ParsedTransformation(
+        val functionName: String,
+        val args: List<String>,
+    )
+
     fun process(
         expression: String,
         data: Map<String, Any?>,
         loopContext: com.pdfgenerator.engine.LoopContext? = null,
     ): String {
-        val parts = expression.split("|").map { it.trim() }
+        val parsedExpression = getOrParseExpression(expression)
+        val rawValue = DataBindingResolver.resolve(parsedExpression.binding, data, loopContext)
 
-        if (parts.isEmpty()) return ""
-
-        val binding = parts[0]
-        val rawValue = DataBindingResolver.resolve(binding, data, loopContext)
-
-        if (parts.size == 1) {
+        if (parsedExpression.transformations.isEmpty()) {
             return valueToString(rawValue)
         }
 
         var currentValue: Any? = rawValue
-        for (i in 1 until parts.size) {
-            currentValue = applyTransformation(currentValue, parts[i])
+        for (transformation in parsedExpression.transformations) {
+            currentValue = applyTransformation(currentValue, transformation)
         }
 
         return valueToString(currentValue)
     }
 
     fun hasTransformations(expression: String): Boolean {
-        return expression.contains("|")
+        return expression.contains(EXPRESSION_PART_SEPARATOR)
     }
 
     fun extractBinding(expression: String): String {
-        return expression.split("|").firstOrNull()?.trim() ?: expression
+        return getOrParseExpression(expression).binding
     }
 
     private fun applyTransformation(
         value: Any?,
-        transformation: String,
+        transformation: ParsedTransformation,
     ): Any? {
-        val (funcName, args) = parseTransformation(transformation)
+        val funcName = transformation.functionName
+        val args = transformation.args
 
         return when (funcName.lowercase()) {
             "uppercase", "upper" -> toUpperCase(value)
@@ -89,23 +111,20 @@ object ExpressionProcessor {
         @Suppress("UNCHECKED_CAST")
         val objMap = value as Map<String, Any?>
 
-        val regex = """\$\{([^}]+)\}""".toRegex()
-
-        return regex.replace(templateStr) { match ->
+        return templatePlaceholderRegex.replace(templateStr) { match ->
             val propPath = match.groupValues[1].trim()
 
-            if (propPath.contains("|")) {
-                val parts = propPath.split("|").map { it.trim() }
-                val propName = parts[0]
-                val propValue = resolvePropPath(propName, objMap)
+            val parsedExpression = getOrParseExpression(propPath)
+            val propValue = resolvePropPath(parsedExpression.binding, objMap)
 
+            if (parsedExpression.transformations.isEmpty()) {
+                valueToString(propValue)
+            } else {
                 var currentValue: Any? = propValue
-                for (i in 1 until parts.size) {
-                    currentValue = applyTransformation(currentValue, parts[i])
+                for (transformation in parsedExpression.transformations) {
+                    currentValue = applyTransformation(currentValue, transformation)
                 }
                 valueToString(currentValue)
-            } else {
-                valueToString(resolvePropPath(propPath, objMap))
             }
         }
     }
@@ -152,20 +171,47 @@ object ExpressionProcessor {
         return parts.joinToString(separator)
     }
 
-    private fun parseTransformation(transformation: String): Pair<String, List<String>> {
-        val colonIndex = transformation.indexOf(':')
+    private fun getOrParseExpression(expression: String): ParsedExpression {
+        synchronized(expressionCacheLock) {
+            parsedExpressionCache[expression]?.let { return it }
+        }
+
+        val parsedExpression = parseExpression(expression)
+
+        synchronized(expressionCacheLock) {
+            parsedExpressionCache[expression] = parsedExpression
+        }
+
+        return parsedExpression
+    }
+
+    private fun parseExpression(expression: String): ParsedExpression {
+        val parts = expression.split(EXPRESSION_PART_SEPARATOR).map { it.trim() }
+        if (parts.isEmpty()) {
+            return ParsedExpression("", emptyList())
+        }
+
+        val binding = parts[0]
+        if (parts.size == 1) {
+            return ParsedExpression(binding, emptyList())
+        }
+
+        val transformations = parts.drop(1).map(::parseTransformation)
+        return ParsedExpression(binding, transformations)
+    }
+
+    private fun parseTransformation(transformation: String): ParsedTransformation {
+        val colonIndex = transformation.indexOf(TRANSFORMATION_ARG_SEPARATOR)
 
         if (colonIndex == -1) {
-            return Pair(transformation.trim(), emptyList())
+            return ParsedTransformation(transformation.trim(), emptyList())
         }
 
         val funcName = transformation.substring(0, colonIndex).trim()
         val argsStr = transformation.substring(colonIndex + 1)
 
         val args = mutableListOf<String>()
-        val regex = """'([^']*)'|"([^"]*)"|([^:]+)""".toRegex()
-
-        regex.findAll(argsStr).forEach { match ->
+        transformationArgsRegex.findAll(argsStr).forEach { match ->
             val arg =
                 match.groupValues[1].ifEmpty {
                     match.groupValues[2].ifEmpty {
@@ -177,7 +223,7 @@ object ExpressionProcessor {
             }
         }
 
-        return Pair(funcName, args)
+        return ParsedTransformation(funcName, args)
     }
 
     private fun valueToString(value: Any?): String {
