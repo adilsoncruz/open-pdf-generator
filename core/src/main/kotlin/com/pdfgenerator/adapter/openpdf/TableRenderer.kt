@@ -194,12 +194,17 @@ class TableRenderer : Renderer<TableElement> {
             is List<*> ->
                 data.mapNotNull { item ->
                     when (item) {
-                        is Map<*, *> -> item.mapKeys { it.key.toString() }
+                        is Map<*, *> -> toStringKeyMap(item)
                         else -> null
                     }
                 }
             else -> emptyList()
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun toStringKeyMap(map: Map<*, *>): Map<String, Any?> {
+        return map as? Map<String, Any?> ?: map.mapKeys { it.key.toString() }
     }
 
     private fun addHeaders(
@@ -301,7 +306,7 @@ class TableRenderer : Renderer<TableElement> {
             element.columns.forEachIndexed { colIndex, column ->
                 val value =
                     if (ExpressionProcessor.hasTransformations(column.field)) {
-                        ExpressionProcessor.process(column.field, row.mapKeys { it.key }, null)
+                        ExpressionProcessor.process(column.field, row, null)
                     } else {
                         row[column.field]
                     }
