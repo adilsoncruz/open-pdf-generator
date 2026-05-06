@@ -545,7 +545,7 @@ function ContainersPanel({
   selectedContainerId: string | null
   onSelectContainer: (id: string | null) => void
 }) {
-  const { template, addElement, currentSection, selectElement } = useTemplateStore()
+  const { template, addElement, currentSection, selectElement, moveElementUp, moveElementDown, deleteElement } = useTemplateStore()
 
   if (currentSection !== 'body') return null
   const containers = (template.page || []).filter((el) => el.type === 'container')
@@ -567,15 +567,27 @@ function ContainersPanel({
       </button>
       <div className="space-y-1">
         {containers.map((container) => (
-          <button
-            key={container.id}
-            onClick={() => {
-              onSelectContainer(container.id)
-            }}
-            className={`w-full text-left px-2 py-1 rounded text-xs ${selectedContainerId === container.id ? 'bg-primary-100 dark:bg-primary-500/30' : 'theme-surface'}`}
-          >
-            {container.id}
-          </button>
+          <div key={container.id} className={`px-2 py-1 rounded text-xs ${selectedContainerId === container.id ? 'bg-primary-100 dark:bg-primary-500/30' : 'theme-surface'}`}>
+            <button
+              onClick={() => onSelectContainer(container.id)}
+              className="w-full text-left"
+            >
+              {container.id}
+            </button>
+            <div className="flex gap-1 mt-1">
+              <button className="px-1 rounded border theme-border" onClick={() => moveElementUp(container.id, 'body')}>↑</button>
+              <button className="px-1 rounded border theme-border" onClick={() => moveElementDown(container.id, 'body')}>↓</button>
+              <button
+                className="px-1 rounded border theme-border text-red-500"
+                onClick={() => {
+                  deleteElement(container.id, 'body')
+                  onSelectContainer(null)
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
         ))}
       </div>
     </div>

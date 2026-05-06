@@ -194,6 +194,13 @@ const defaultTemplate: Template = {
   page: [],
 }
 
+const normalizeBodyContainers = (template: Template): Template => ({
+  ...template,
+  page: (template.page || []).map((el) =>
+    el.type === 'container' ? { ...el, x: 0, width: '100%' } : el
+  ),
+})
+
 
 const saveToHistory = (state: TemplateStore, newTemplate: Template) => {
   const newHistory = state.history.slice(0, state.historyIndex + 1)
@@ -236,12 +243,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
   setTemplate: (template) =>
     set(() => ({
-      template,
+      template: normalizeBodyContainers(template),
       isDirty: false,
       selectedElementIds: [],
       selectedElementLocation: 'body',
       
-      history: [JSON.parse(JSON.stringify(template))],
+      history: [JSON.parse(JSON.stringify(normalizeBodyContainers(template)))],
       historyIndex: 0,
     })),
 
@@ -346,7 +353,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           }
           return {
             template: newTemplate,
-            selectedElementIds: [normalizedElement.id],
+            selectedElementIds: [selectedContainer.id],
             selectedElementLocation: 'body',
             isDirty: true,
             ...saveToHistory(state, newTemplate),
