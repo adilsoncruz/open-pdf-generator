@@ -72,7 +72,7 @@ class PDFGenerator(
         template: Template,
         data: Map<String, Any?>,
     ): ByteArray {
-        val estimatedPages = maxOf(1, template.pageElements.size / 10)
+        val estimatedPages = maxOf(1, template.bodyElements().size / 10)
         val initialSize = estimatedPages * 50 * 1024
         val output = ByteArrayOutputStream(initialSize)
         generateToStream(template, data, output)
@@ -388,7 +388,7 @@ class PDFGenerator(
 
             val pageGroupIndex = buildGroupIndex(template.groups)
 
-            template.pageElements.forEach { element ->
+            template.bodyElements().forEach { element ->
                 try {
                     if (shouldRenderElement(element, pageGroupIndex, data)) {
                         val effectiveY =
