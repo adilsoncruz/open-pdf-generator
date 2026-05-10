@@ -356,7 +356,7 @@ object JasperTemplateConverter {
                 "image" -> parseImage(child, sectionYOffset, frame)?.let(out::add)
                 "componentElement" -> parseComponentElement(child, sectionYOffset, options, frame)?.let(out::addAll)
                 "frame" -> parseFrame(child, sectionYOffset, options)?.let(out::addAll)
-                "subreport" -> parseSubReport(child, sectionYOffset, options)?.let(out::addAll)
+                //"subreport" -> parseSubReport(child, sectionYOffset, options)?.let(out::addAll)
                 else -> {
                     if (options.failOnUnsupportedElement) {
                         throw JasperTemplateConversionException("Elemento Jasper não suportado: <${child.tagName}>")
