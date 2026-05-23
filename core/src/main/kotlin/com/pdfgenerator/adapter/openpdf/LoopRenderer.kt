@@ -116,7 +116,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                     is RectangleElement -> {
                         when (val h = element.height) {
                             is String -> {
-                                if (h == "100%" || h == "100.0%") loopHeight else 20f
+                                if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
                             }
                             is Number -> h.toFloat()
                             else -> 20f
