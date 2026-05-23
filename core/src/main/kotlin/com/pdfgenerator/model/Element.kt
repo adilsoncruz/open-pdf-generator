@@ -38,18 +38,7 @@ data class TextElement(
     val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
-        return when (width) {
-            is Number -> width.toFloat()
-            is String -> {
-                if (width.endsWith("%")) {
-                    val percentage = width.removeSuffix("%").toFloatOrNull() ?: 100f
-                    containerWidth * (percentage / 100f)
-                } else {
-                    width.toFloatOrNull() ?: containerWidth
-                }
-            }
-            else -> containerWidth
-        }
+        return width ?: containerWidth
     }
 
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
@@ -74,18 +63,7 @@ data class StaticTextElement(
     val style: TextStyle? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
-        return when (width) {
-            is Number -> width.toFloat()
-            is String -> {
-                if (width.endsWith("%")) {
-                    val percentage = width.removeSuffix("%").toFloatOrNull() ?: 100f
-                    containerWidth * (percentage / 100f)
-                } else {
-                    width.toFloatOrNull() ?: containerWidth
-                }
-            }
-            else -> containerWidth
-        }
+        return width ?: containerWidth
     }
 
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
@@ -422,18 +400,7 @@ data class BarcodeElement(
     val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
-        return when (width) {
-            is Number -> width.toFloat()
-            is String -> {
-                if (width.endsWith("%")) {
-                    val percentage = width.removeSuffix("%").toFloatOrNull() ?: 100f
-                    containerWidth * (percentage / 100f)
-                } else {
-                    width.toFloatOrNull() ?: containerWidth
-                }
-            }
-            else -> containerWidth
-        }
+        return width
     }
 
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
