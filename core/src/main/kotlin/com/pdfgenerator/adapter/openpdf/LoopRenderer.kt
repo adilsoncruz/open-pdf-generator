@@ -6,12 +6,12 @@ import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.RenderState
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.Element
-import com.pdfgenerator.model.TextElement
-import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.DataBindingResolver
 import org.slf4j.LoggerFactory
 
@@ -44,7 +44,8 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         val calculatedItemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
         val itemHeight = if (loopHeight > 0f) loopHeight else calculatedItemHeight
 
-        val maxYInTemplate = context.containerHeight ?: run {
+        val maxYInTemplate =
+            context.containerHeight ?: run {
             val pageHeight = context.document.pageSize.height
             val margins = context.template.pageSettings.margins
             val headerHeight = context.template.pageSettings.header?.height ?: 0f
@@ -138,5 +139,4 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
             y + height
         } ?: 20f
     }
-
 }
