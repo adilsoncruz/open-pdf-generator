@@ -40,16 +40,15 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         val calculatedItemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
         val itemHeight = if (loopHeight > 0f) loopHeight else calculatedItemHeight
 
-        val pageHeight = context.document.pageSize.height
-        val margins = context.template.pageSettings.margins
-        val headerHeight = context.template.pageSettings.header?.height ?: 0f
-        val footerHeight = context.template.pageSettings.footer?.height ?: 0f
-
-        val contentAreaTop = margins.top + headerHeight
-        val contentAreaBottom = pageHeight - margins.bottom - footerHeight
-        val availableContentHeight = contentAreaBottom - contentAreaTop
-
-        val maxYInTemplate = availableContentHeight
+        val maxYInTemplate = context.containerHeight ?: run {
+            val pageHeight = context.document.pageSize.height
+            val margins = context.template.pageSettings.margins
+            val headerHeight = context.template.pageSettings.header?.height ?: 0f
+            val footerHeight = context.template.pageSettings.footer?.height ?: 0f
+            val contentAreaTop = margins.top + headerHeight
+            val contentAreaBottom = pageHeight - margins.bottom - footerHeight
+            contentAreaBottom - contentAreaTop
+        }
 
         val itemSpacing = element.itemSpacing.coerceAtLeast(0f)
 
