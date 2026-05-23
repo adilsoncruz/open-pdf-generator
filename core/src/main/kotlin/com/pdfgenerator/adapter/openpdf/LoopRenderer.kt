@@ -37,7 +37,8 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         val loopWidth = element.width
         val loopHeight = element.height
 
-        val itemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
+        val calculatedItemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
+        val itemHeight = if (loopHeight > 0f) loopHeight else calculatedItemHeight
 
         val pageHeight = context.document.pageSize.height
         val margins = context.template.pageSettings.margins
