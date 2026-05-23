@@ -39,12 +39,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         val loopHeight = element.height
 
         val calculatedItemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
-        val itemHeight =
-            when {
-                loopHeight > 0f && calculatedItemHeight > 0f -> kotlin.math.min(loopHeight, calculatedItemHeight)
-                loopHeight > 0f -> loopHeight
-                else -> calculatedItemHeight
-            }
+        val itemHeight = if (loopHeight > 0f) loopHeight else calculatedItemHeight
 
         val maxYInTemplate = context.containerHeight ?: run {
             val pageHeight = context.document.pageSize.height
