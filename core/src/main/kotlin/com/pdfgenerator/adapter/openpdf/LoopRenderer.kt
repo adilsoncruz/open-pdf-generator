@@ -46,14 +46,14 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
 
         val maxYInTemplate =
             context.containerHeight ?: run {
-            val pageHeight = context.document.pageSize.height
-            val margins = context.template.pageSettings.margins
-            val headerHeight = context.template.pageSettings.header?.height ?: 0f
-            val footerHeight = context.template.pageSettings.footer?.height ?: 0f
-            val contentAreaTop = margins.top + headerHeight
-            val contentAreaBottom = pageHeight - margins.bottom - footerHeight
-            contentAreaBottom - contentAreaTop
-        }
+                val pageHeight = context.document.pageSize.height
+                val margins = context.template.pageSettings.margins
+                val headerHeight = context.template.pageSettings.header?.height ?: 0f
+                val footerHeight = context.template.pageSettings.footer?.height ?: 0f
+                val contentAreaTop = margins.top + headerHeight
+                val contentAreaBottom = pageHeight - margins.bottom - footerHeight
+                contentAreaBottom - contentAreaTop
+            }
 
         val itemSpacing = element.itemSpacing.coerceAtLeast(0f)
 
