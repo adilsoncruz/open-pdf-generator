@@ -614,7 +614,7 @@ class PDFGenerator(
 
     private fun calculateLoopItemHeight(
         elements: List<Element>,
-        loopWidth: Float,
+        loopWidth: Any,
         loopHeight: Float,
     ): Float {
         if (elements.isEmpty()) {
