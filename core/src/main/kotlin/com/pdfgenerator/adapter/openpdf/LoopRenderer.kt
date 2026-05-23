@@ -32,7 +32,8 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
 
         val loopX = element.x
-        val loopBaseY = element.startY ?: element.y
+        // Use template-local Y for loop stacking. startY may already be absolute and include body/header offsets.
+        val loopBaseY = element.y
 
         val loopWidth = element.width
         val loopHeight = element.height
