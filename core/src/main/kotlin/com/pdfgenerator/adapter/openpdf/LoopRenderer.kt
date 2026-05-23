@@ -87,7 +87,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         context.renderState?.let { state ->
             val finalYAbsolute = context.offsetY + loopBaseY + (currentYOffset - element.itemSpacing)
             val finalYRelative = finalYAbsolute - context.bodyOffsetY
-            state.currentY = finalYRelative
+            state.updateMaxY(finalYRelative)
         }
     }
 
