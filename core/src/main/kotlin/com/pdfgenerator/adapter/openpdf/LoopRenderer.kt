@@ -6,6 +6,9 @@ import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.RenderState
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.Element
+import com.pdfgenerator.model.TextElement
+import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.RectangleElement
