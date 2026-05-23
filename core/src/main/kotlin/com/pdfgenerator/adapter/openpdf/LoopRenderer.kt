@@ -58,13 +58,14 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
 
         loopData.forEachIndexed { index, item ->
             var itemStartY = loopBaseY + currentYOffset
-            val itemEndY = itemStartY + itemHeight
+            var itemEndY = itemStartY + itemHeight
 
             if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
                 currentYOffset = 0f
                 itemsRenderedOnCurrentPage = 0
                 itemStartY = loopBaseY
+                itemEndY = itemStartY + itemHeight
             }
 
             val loopContext = LoopContext(item, index)
