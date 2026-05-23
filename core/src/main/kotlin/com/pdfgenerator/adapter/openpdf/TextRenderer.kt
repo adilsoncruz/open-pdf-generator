@@ -111,7 +111,7 @@ class TextRenderer : Renderer<TextElement> {
 
         val pageHeight = context.document.pageSize.height
         val x = context.resolveX(element.x)
-        val y = if (element.positionMode == com.pdfgenerator.model.PositionMode.RELATIVE || context.loopContext != null) context.resolveY(element.y) else context.bodyOffsetY + element.y
+        val y = context.resolveY(element.y)
         val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
 
         val contentByte =
@@ -197,7 +197,7 @@ class TextRenderer : Renderer<TextElement> {
         val pageHeight = context.document.pageSize.height
 
         val x = context.resolveX(element.x)
-        val y = if (element.positionMode == com.pdfgenerator.model.PositionMode.RELATIVE || context.loopContext != null) context.resolveY(element.y) else context.bodyOffsetY + element.y
+        val y = context.resolveY(element.y)
         val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
         val boxWidth = (element.width as? Number)?.toFloat() ?: 100f
         val boxHeight = (element.height as? Number)?.toFloat() ?: 100f
