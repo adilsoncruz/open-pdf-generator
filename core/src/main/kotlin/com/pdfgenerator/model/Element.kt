@@ -476,6 +476,7 @@ data class ConditionalElement(
     override val y: Float = 0f,
     override val positionMode: PositionMode? = null,
     override val relativeOffsetY: Float? = null,
+    val width: Any = 400f,
     val condition: String,
     val elements: List<Element>,
 ) : Element {
