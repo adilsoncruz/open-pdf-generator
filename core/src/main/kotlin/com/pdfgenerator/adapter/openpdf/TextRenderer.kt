@@ -112,7 +112,7 @@ class TextRenderer : Renderer<TextElement> {
         val pageHeight = context.document.pageSize.height
         val x = context.resolveX(element.x)
         val y = context.resolveY(element.y)
-        val yTop = pageHeight - y
+        val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
 
         val contentByte =
             if (context.useContentUnder) {
@@ -135,7 +135,7 @@ class TextRenderer : Renderer<TextElement> {
 
         val fontSize = element.style?.fontSize ?: 12f
         val boxHeight = element.height ?: fontSize
-        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "center"
+        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "top"
 
         val paddingTop = element.style?.paddingTop ?: 0f
         val paddingBottom = element.style?.paddingBottom ?: 0f
@@ -198,7 +198,7 @@ class TextRenderer : Renderer<TextElement> {
 
         val x = context.resolveX(element.x)
         val y = context.resolveY(element.y)
-        val yTop = pageHeight - y
+        val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
         val boxWidth = (element.width as? Number)?.toFloat() ?: 100f
         val boxHeight = (element.height as? Number)?.toFloat() ?: 100f
 

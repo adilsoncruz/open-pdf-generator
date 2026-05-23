@@ -3,11 +3,15 @@ package com.pdfgenerator.adapter.openpdf
 import com.pdfgenerator.engine.LoopContext
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
+import com.pdfgenerator.engine.RenderState
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.Element
+import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.DataBindingResolver
 import org.slf4j.LoggerFactory
 
@@ -31,34 +35,43 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
 
         val loopX = element.x
-        val loopStartY = element.startY ?: element.y
+        // Use template-local Y for loop stacking. startY may already be absolute and include body/header offsets.
+        val loopBaseY = element.y
 
-        val loopWidth = element.width
+        val containerWidth = context.containerWidth ?: (context.document.pageSize.width - context.template.pageSettings.margins.left - context.template.pageSettings.margins.right)
+        val loopWidth = element.resolveWidth(containerWidth)
         val loopHeight = element.height
 
-        val itemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
+        val calculatedItemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
+        val itemHeight = if (loopHeight > 0f) loopHeight else calculatedItemHeight
 
-        val pageHeight = context.document.pageSize.height
-        val margins = context.template.pageSettings.margins
-        val headerHeight = context.template.pageSettings.header?.height ?: 0f
-        val footerHeight = context.template.pageSettings.footer?.height ?: 0f
+        val maxYInTemplate =
+            context.containerHeight ?: run {
+                val pageHeight = context.document.pageSize.height
+                val margins = context.template.pageSettings.margins
+                val headerHeight = context.template.pageSettings.header?.height ?: 0f
+                val footerHeight = context.template.pageSettings.footer?.height ?: 0f
+                val contentAreaTop = margins.top + headerHeight
+                val contentAreaBottom = pageHeight - margins.bottom - footerHeight
+                contentAreaBottom - contentAreaTop
+            }
 
-        val contentAreaTop = margins.top + headerHeight
-        val contentAreaBottom = pageHeight - margins.bottom - footerHeight
-        val availableContentHeight = contentAreaBottom - contentAreaTop
+        val itemSpacing = element.itemSpacing.coerceAtLeast(0f)
 
-        val maxYInTemplate = availableContentHeight
-
-        var currentY = loopStartY
         var itemsRenderedOnCurrentPage = 0
+        var totalItemsRendered = 0
+        var currentYOffset = 0f
 
         loopData.forEachIndexed { index, item ->
-            val itemEndY = currentY + itemHeight
+            var itemStartY = loopBaseY + currentYOffset
+            var itemEndY = itemStartY + itemHeight
 
             if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
-                currentY = loopStartY
                 itemsRenderedOnCurrentPage = 0
+                currentYOffset = 0f
+                itemStartY = loopBaseY
+                itemEndY = itemStartY + itemHeight
             }
 
             val loopContext = LoopContext(item, index)
@@ -66,9 +79,10 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                 context.copy(
                     loopContext = loopContext,
                     offsetX = context.offsetX + loopX,
-                    offsetY = context.offsetY + currentY,
+                    offsetY = context.offsetY + itemStartY,
                     containerWidth = loopWidth,
                     containerHeight = itemHeight,
+                    renderState = RenderState(),
                 )
 
             element.elements.forEach { childElement ->
@@ -76,13 +90,15 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
             }
 
             itemsRenderedOnCurrentPage++
-            currentY += itemHeight + element.itemSpacing
+            totalItemsRendered++
+            currentYOffset += itemHeight + itemSpacing
         }
 
         context.renderState?.let { state ->
-            val finalYAbsolute = context.offsetY + (currentY - element.itemSpacing)
+            val renderedHeight = (totalItemsRendered * itemHeight) + ((totalItemsRendered - 1).coerceAtLeast(0) * itemSpacing)
+            val finalYAbsolute = context.offsetY + loopBaseY + renderedHeight
             val finalYRelative = finalYAbsolute - context.bodyOffsetY
-            state.currentY = finalYRelative
+            state.updateMaxY(finalYRelative)
         }
     }
 
@@ -109,7 +125,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                     is RectangleElement -> {
                         when (val h = element.height) {
                             is String -> {
-                                if (h == "100%" || h == "100.0%") loopHeight else 20f
+                                if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
                             }
                             is Number -> h.toFloat()
                             else -> 20f
@@ -124,5 +140,4 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
             y + height
         } ?: 20f
     }
-
 }
