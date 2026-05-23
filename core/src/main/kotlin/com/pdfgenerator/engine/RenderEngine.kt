@@ -20,8 +20,10 @@ import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TextElement
+import org.slf4j.LoggerFactory
 
 class RenderEngine(private val config: PDFGeneratorConfig) {
+    private val logger = LoggerFactory.getLogger(RenderEngine::class.java)
     private val textRenderer = TextRenderer()
     private val staticTextRenderer = StaticTextRenderer()
     private val imageRenderer = ImageRenderer(config)
@@ -36,6 +38,17 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
         element: Element,
         context: RenderContext,
     ) {
+        logger.debug(
+            "Rendering element type={} id={} x={} y={} positionMode={} offsetX={} offsetY={} bodyOffsetY={}",
+            element.type,
+            element.id,
+            element.x,
+            element.y,
+            element.positionMode,
+            context.offsetX,
+            context.offsetY,
+            context.bodyOffsetY,
+        )
         when (element) {
             is TextElement -> textRenderer.render(element, context)
             is StaticTextElement -> staticTextRenderer.render(element, context)
