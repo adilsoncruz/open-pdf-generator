@@ -3,7 +3,6 @@ package com.pdfgenerator.adapter.openpdf
 import com.pdfgenerator.engine.LoopContext
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
-import com.pdfgenerator.engine.RenderState
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.LineElement
@@ -32,7 +31,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
 
         val loopX = element.x
-        val loopStartY = element.startY ?: element.y
+        val loopBaseY = element.startY ?: element.y
 
         val loopWidth = element.width
         val loopHeight = element.height
@@ -50,16 +49,18 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
 
         val maxYInTemplate = availableContentHeight
 
-        var currentY = loopStartY
+        var currentYOffset = 0f
         var itemsRenderedOnCurrentPage = 0
 
         loopData.forEachIndexed { index, item ->
-            val itemEndY = currentY + itemHeight
+            var itemStartY = loopBaseY + currentYOffset
+            var itemEndY = itemStartY + itemHeight
 
             if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
-                currentY = loopStartY
+                currentYOffset = 0f
                 itemsRenderedOnCurrentPage = 0
+                itemStartY = loopBaseY
             }
 
             val loopContext = LoopContext(item, index)
@@ -67,10 +68,9 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                 context.copy(
                     loopContext = loopContext,
                     offsetX = context.offsetX + loopX,
-                    offsetY = context.offsetY + currentY,
+                    offsetY = context.offsetY + itemStartY,
                     containerWidth = loopWidth,
                     containerHeight = itemHeight,
-                    renderState = RenderState(),
                 )
 
             element.elements.forEach { childElement ->
@@ -78,11 +78,11 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
             }
 
             itemsRenderedOnCurrentPage++
-            currentY += itemHeight + element.itemSpacing
+            currentYOffset += itemHeight + element.itemSpacing
         }
 
         context.renderState?.let { state ->
-            val finalYAbsolute = context.offsetY + (currentY - element.itemSpacing)
+            val finalYAbsolute = context.offsetY + loopBaseY + (currentYOffset - element.itemSpacing)
             val finalYRelative = finalYAbsolute - context.bodyOffsetY
             state.currentY = finalYRelative
         }
