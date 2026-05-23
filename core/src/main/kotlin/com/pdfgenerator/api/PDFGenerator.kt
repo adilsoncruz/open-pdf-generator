@@ -513,14 +513,37 @@ class PDFGenerator(
     ): Float {
         return when (element) {
             is TextElement -> {
-                val overflow = element.style?.overflow?.lowercase() ?: "visible"
                 val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-
-                if (overflow == "auto" && element.style?.multiline == true && element.width != null) {
+                if (element.style?.multiline == true && element.width != null) {
                     val text = resolveTextForHeight(element.dataBinding, element.value, data)
                     if (text != null) {
+                        val contentHeight =
+                            TextRenderer.calculateContentHeight(
+                                text = text,
+                                boxWidth = element.width,
+                                fontSize = element.style?.fontSize ?: 12f,
+                                lineHeight = element.style?.lineHeight,
+                                paddingTop = element.style?.paddingTop ?: 0f,
+                                paddingBottom = element.style?.paddingBottom ?: 0f,
+                                paddingLeft = element.style?.paddingLeft ?: 0f,
+                                paddingRight = element.style?.paddingRight ?: 0f,
+                                firstLineIndent = element.style?.firstLineIndent ?: 0f,
+                                fontFamily = element.style?.fontFamily ?: "Helvetica",
+                            )
+                        kotlin.math.max(definedHeight, contentHeight)
+                    } else {
+                        definedHeight
+                    }
+                } else {
+                    definedHeight
+                }
+            }
+            is StaticTextElement -> {
+                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
+                if (element.style?.multiline == true && element.width != null) {
+                    val contentHeight =
                         TextRenderer.calculateContentHeight(
-                            text = text,
+                            text = element.value,
                             boxWidth = element.width,
                             fontSize = element.style?.fontSize ?: 12f,
                             lineHeight = element.style?.lineHeight,
@@ -531,30 +554,7 @@ class PDFGenerator(
                             firstLineIndent = element.style?.firstLineIndent ?: 0f,
                             fontFamily = element.style?.fontFamily ?: "Helvetica",
                         )
-                    } else {
-                        definedHeight
-                    }
-                } else {
-                    definedHeight
-                }
-            }
-            is StaticTextElement -> {
-                val overflow = element.style?.overflow?.lowercase() ?: "visible"
-                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-
-                if (overflow == "auto" && element.style?.multiline == true && element.width != null) {
-                    TextRenderer.calculateContentHeight(
-                        text = element.value,
-                        boxWidth = element.width,
-                        fontSize = element.style?.fontSize ?: 12f,
-                        lineHeight = element.style?.lineHeight,
-                        paddingTop = element.style?.paddingTop ?: 0f,
-                        paddingBottom = element.style?.paddingBottom ?: 0f,
-                        paddingLeft = element.style?.paddingLeft ?: 0f,
-                        paddingRight = element.style?.paddingRight ?: 0f,
-                        firstLineIndent = element.style?.firstLineIndent ?: 0f,
-                        fontFamily = element.style?.fontFamily ?: "Helvetica",
-                    )
+                    kotlin.math.max(definedHeight, contentHeight)
                 } else {
                     definedHeight
                 }
@@ -586,8 +586,10 @@ class PDFGenerator(
             is LoopElement -> {
                 val loopData = DataBindingResolver.resolve(element.dataBinding, data, null)
                 val itemCount = if (loopData is List<*>) loopData.size else 0
-                val itemHeight = calculateLoopItemHeight(element.elements, element.width, element.height)
-                val totalSpacing = if (itemCount > 1) element.itemSpacing * (itemCount - 1) else 0f
+                val calculatedItemHeight = calculateLoopItemHeight(element.elements, element.width, element.height)
+                val itemHeight = if (element.height > 0f) element.height else calculatedItemHeight
+                val spacing = element.itemSpacing.coerceAtLeast(0f)
+                val totalSpacing = if (itemCount > 1) spacing * (itemCount - 1) else 0f
                 (itemCount * itemHeight) + totalSpacing
             }
             is ConditionalElement -> {
@@ -612,7 +614,7 @@ class PDFGenerator(
 
     private fun calculateLoopItemHeight(
         elements: List<Element>,
-        loopWidth: Float,
+        loopWidth: Any,
         loopHeight: Float,
     ): Float {
         if (elements.isEmpty()) {
