@@ -39,8 +39,12 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         val loopHeight = element.height
 
         val calculatedItemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
-        // Loop height is the container box in template/editor; item step must be based on child content height.
-        val itemHeight = if (calculatedItemHeight > 0f) calculatedItemHeight else loopHeight
+        val itemHeight =
+            when {
+                loopHeight > 0f && calculatedItemHeight > 0f -> kotlin.math.min(loopHeight, calculatedItemHeight)
+                loopHeight > 0f -> loopHeight
+                else -> calculatedItemHeight
+            }
 
         val maxYInTemplate = context.containerHeight ?: run {
             val pageHeight = context.document.pageSize.height
