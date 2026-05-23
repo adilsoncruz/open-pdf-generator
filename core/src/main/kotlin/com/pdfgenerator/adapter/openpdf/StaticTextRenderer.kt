@@ -8,8 +8,10 @@ import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.FontCache
+import org.slf4j.LoggerFactory
 
 class StaticTextRenderer : Renderer<StaticTextElement> {
+    private val logger = LoggerFactory.getLogger(StaticTextRenderer::class.java)
     override fun render(
         element: StaticTextElement,
         context: RenderContext,
@@ -107,6 +109,8 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
 
         contentByte.showText(text)
         contentByte.endText()
+
+        logger.debug("StaticText {} pos mode={} x={} y={} bodyOffsetY={} offsetY={} yTop={} textY={} pageHeight={}", element.id, element.positionMode, x, y, context.bodyOffsetY, context.offsetY, yTop, textY, pageHeight)
     }
 
     private fun renderMultiline(
