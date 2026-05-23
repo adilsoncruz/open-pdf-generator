@@ -3,6 +3,7 @@ package com.pdfgenerator.adapter.openpdf
 import com.pdfgenerator.engine.LoopContext
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
+import com.pdfgenerator.engine.RenderState
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.LineElement
@@ -54,7 +55,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
 
         loopData.forEachIndexed { index, item ->
             var itemStartY = loopBaseY + currentYOffset
-            var itemEndY = itemStartY + itemHeight
+            val itemEndY = itemStartY + itemHeight
 
             if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
@@ -71,6 +72,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                     offsetY = context.offsetY + itemStartY,
                     containerWidth = loopWidth,
                     containerHeight = itemHeight,
+                    renderState = RenderState(),
                 )
 
             element.elements.forEach { childElement ->
