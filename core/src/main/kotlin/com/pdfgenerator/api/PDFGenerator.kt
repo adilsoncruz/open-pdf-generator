@@ -595,6 +595,7 @@ class PDFGenerator(
             is ConditionalElement -> {
                 element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: 0f
             }
+            else -> 0f
         }
     }
 
