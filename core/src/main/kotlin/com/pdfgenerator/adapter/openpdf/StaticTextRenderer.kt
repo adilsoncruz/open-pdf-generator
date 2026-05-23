@@ -44,7 +44,7 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         val pageHeight = context.document.pageSize.height
         val x = context.resolveX(element.x)
         val y = context.resolveY(element.y)
-        val yTop = pageHeight - y
+        val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
 
         val contentByte =
             if (context.useContentUnder) {
@@ -66,7 +66,7 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         }
 
         val boxHeight = element.height ?: fontSize
-        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "center"
+        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "top"
         val paddingTop = element.style?.paddingTop ?: 0f
         val paddingBottom = element.style?.paddingBottom ?: 0f
         val lineHeightMultiplier = element.style?.lineHeight ?: 1.2f
@@ -120,7 +120,7 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
 
         val x = context.resolveX(element.x)
         val y = context.resolveY(element.y)
-        val yTop = pageHeight - y
+        val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
         val boxWidth = element.width ?: 100f
         val boxHeight = element.height ?: 100f
 
