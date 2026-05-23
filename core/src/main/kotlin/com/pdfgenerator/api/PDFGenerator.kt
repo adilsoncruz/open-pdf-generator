@@ -586,8 +586,10 @@ class PDFGenerator(
             is LoopElement -> {
                 val loopData = DataBindingResolver.resolve(element.dataBinding, data, null)
                 val itemCount = if (loopData is List<*>) loopData.size else 0
-                val itemHeight = calculateLoopItemHeight(element.elements, element.width, element.height)
-                val totalSpacing = if (itemCount > 1) element.itemSpacing * (itemCount - 1) else 0f
+                val calculatedItemHeight = calculateLoopItemHeight(element.elements, element.width, element.height)
+                val itemHeight = if (element.height > 0f) element.height else calculatedItemHeight
+                val spacing = element.itemSpacing.coerceAtLeast(0f)
+                val totalSpacing = if (itemCount > 1) spacing * (itemCount - 1) else 0f
                 (itemCount * itemHeight) + totalSpacing
             }
             is ConditionalElement -> {
