@@ -51,6 +51,8 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
 
         val maxYInTemplate = availableContentHeight
 
+        val itemSpacing = element.itemSpacing.coerceAtLeast(0f)
+
         var currentYOffset = 0f
         var itemsRenderedOnCurrentPage = 0
 
@@ -81,11 +83,11 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
             }
 
             itemsRenderedOnCurrentPage++
-            currentYOffset += itemHeight + element.itemSpacing
+            currentYOffset += itemHeight + itemSpacing
         }
 
         context.renderState?.let { state ->
-            val finalYAbsolute = context.offsetY + loopBaseY + (currentYOffset - element.itemSpacing)
+            val finalYAbsolute = context.offsetY + loopBaseY + (currentYOffset - itemSpacing)
             val finalYRelative = finalYAbsolute - context.bodyOffsetY
             state.updateMaxY(finalYRelative)
         }
