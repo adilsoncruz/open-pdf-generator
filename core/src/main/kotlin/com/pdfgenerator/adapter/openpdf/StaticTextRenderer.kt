@@ -66,7 +66,7 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         }
 
         val boxHeight = element.height ?: fontSize
-        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "center"
+        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "top"
         val paddingTop = element.style?.paddingTop ?: 0f
         val paddingBottom = element.style?.paddingBottom ?: 0f
         val lineHeightMultiplier = element.style?.lineHeight ?: 1.2f

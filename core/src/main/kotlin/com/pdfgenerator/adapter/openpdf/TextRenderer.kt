@@ -135,7 +135,7 @@ class TextRenderer : Renderer<TextElement> {
 
         val fontSize = element.style?.fontSize ?: 12f
         val boxHeight = element.height ?: fontSize
-        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "center"
+        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "top"
 
         val paddingTop = element.style?.paddingTop ?: 0f
         val paddingBottom = element.style?.paddingBottom ?: 0f
