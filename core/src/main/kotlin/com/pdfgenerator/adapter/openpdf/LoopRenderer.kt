@@ -68,16 +68,20 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         var totalItemsRendered = 0
         var currentYOffset = 0f
 
+        val contextOffsetInBody = context.offsetY - context.bodyOffsetY
+
         loopData.forEachIndexed { index, item ->
             var itemStartY = loopBaseY + currentYOffset
             var itemEndY = itemStartY + itemHeight
+            var itemEndYInBody = contextOffsetInBody + itemEndY
 
-            if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
+            if (itemEndYInBody > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
                 itemsRenderedOnCurrentPage = 0
                 currentYOffset = 0f
                 itemStartY = loopBaseY
                 itemEndY = itemStartY + itemHeight
+                itemEndYInBody = itemEndY
             }
 
             val normalizedItemMap = (item as? Map<*, *>)?.mapKeys { it.key.toString() }
