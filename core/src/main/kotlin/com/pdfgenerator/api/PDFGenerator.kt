@@ -369,8 +369,11 @@ class PDFGenerator(
             template.pageElements.forEach { element ->
                 try {
                     if (shouldRenderElement(element, pageGroupIndex, data)) {
+                        val isRelativeFlow =
+                            element.positionMode == PositionMode.RELATIVE || element is ContainerElement
+
                         val effectiveY =
-                            if (element.positionMode == PositionMode.RELATIVE) {
+                            if (isRelativeFlow) {
                                 val offsetY = element.relativeOffsetY ?: 0f
                                 renderState.currentY + offsetY
                             } else {
@@ -378,7 +381,7 @@ class PDFGenerator(
                             }
 
                         val renderContext =
-                            if (element.positionMode == PositionMode.RELATIVE) {
+                            if (isRelativeFlow) {
                                 context.copy(offsetY = bodyOffsetY + (effectiveY - element.y))
                             } else {
                                 context
