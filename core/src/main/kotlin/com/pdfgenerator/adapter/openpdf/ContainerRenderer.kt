@@ -4,6 +4,7 @@ import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.ConditionalElement
 import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ImageElement
@@ -96,11 +97,15 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
                     x = containerX + element.x,
                     y = containerY + element.y,
                 )
-            is LoopElement -> {
-               return  element.copy(
+            is LoopElement ->
+                element.copy(
                     x = containerX + element.x,
                     y = containerY + element.y,
-                    width = element.resolveWidth(containerWidth),
+                )
+            is ContainerElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = containerY + element.y,
                 )
             else -> element
         }
@@ -108,35 +113,40 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
 
     private fun resolveDimension(
         value: Any?,
-        loopDimension: Float,
+        containerDimension: Float,
     ): Any {
         return when (value) {
-            is String ->
-                if (value == "100%" || value == "100.0%") {
-                    loopDimension
+            is Number -> value.toFloat()
+            is String -> {
+                if (value.endsWith("%")) {
+                    val percentage = value.removeSuffix("%").toFloatOrNull() ?: 100f
+                    containerDimension * (percentage / 100f)
                 } else {
                     value.toFloatOrNull() ?: value
                 }
-            is Number -> value
-            else -> value ?: 0f
+            }
+
+            null -> containerDimension
+            else -> value
         }
     }
 
+
     private fun resolveFloatDimension(
         value: Float,
-        loopDimension: Float,
+        containerDimension: Float,
     ): Float {
-        return if (value.toString().endsWith("%")) loopDimension else value
+        return if (value == -1f) containerDimension else value
     }
 
     private fun resolveWidth(
         value: Float?,
-        loopWidth: Float,
+        containerWidth: Float,
     ): Float? {
         return if (value == null) {
             null
         } else if (value.toString().endsWith("%") || value == -1f) {
-            loopWidth
+            containerWidth
         } else {
             value
         }
