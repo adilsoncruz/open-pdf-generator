@@ -70,7 +70,7 @@ class PDFGenerator(
         template: Template,
         data: Map<String, Any?>,
     ): ByteArray {
-        val output = ByteArrayOutputStream(maxOf(1, template.pageElements.size / 10) * 50 * 1024)
+        val output = ByteArrayOutputStream(maxOf(1, (template.pageElements?.size ?: 0) / 10) * 50 * 1024)
         generateToStream(template, data, output)
         return output.toByteArray()
     }
