@@ -289,7 +289,6 @@ object JasperTemplateConverter {
           y = node.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
           width = maxWidth,
           height = node.getIntAttribute("height", 16).toFloat(),
-          positionMode = PositionMode.RELATIVE,
           relativeOffsetY = 0f,
           elements = out
         )

@@ -2163,7 +2163,7 @@ export default function PropertiesPanel() {
                     )}
                   </div>
                 </PropertyGroup>
-
+                )}
                 <PropertyGroup title="Size" collapsible={false}>
                   <div className={`grid gap-3 ${selectedElement.type === 'container' ? 'grid-cols-1' : 'grid-cols-2'}`}>
                     {selectedElement.type === 'loop' && (
