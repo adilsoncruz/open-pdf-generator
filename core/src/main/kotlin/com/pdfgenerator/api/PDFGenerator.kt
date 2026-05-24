@@ -627,7 +627,11 @@ class PDFGenerator(
                 element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: 0f
             }
             is ContainerElement -> {
-                element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: element.height
+                val contentHeight =
+                    element.elements.maxOfOrNull { child ->
+                        child.y + getElementHeight(child, data, context)
+                    } ?: 0f
+                kotlin.math.max(element.height, contentHeight)
             }
         }
     }

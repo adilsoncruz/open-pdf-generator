@@ -7,6 +7,7 @@ import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.RectangleElement
 import kotlin.math.max
+import kotlin.math.min
 
 class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<ContainerElement> {
     override fun render(
@@ -16,11 +17,14 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         val effectiveContainerHeight =
             context.containerHeight?.let { parentHeight -> max(parentHeight, element.height) } ?: element.height
 
+        val effectiveContainerWidth =
+            context.containerWidth?.let { parentWidth -> min(parentWidth, element.width) } ?: element.width
+
         val containerContext =
             context.copy(
                 offsetX = context.offsetX + element.x,
                 offsetY = context.offsetY + element.y,
-                containerWidth = element.width,
+                containerWidth = effectiveContainerWidth,
                 containerHeight = effectiveContainerHeight,
             )
 
