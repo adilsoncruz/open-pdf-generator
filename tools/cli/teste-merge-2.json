@@ -1,0 +1,184 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "New Template",
+    "description": "",
+    "author": "",
+    "created": "2026-05-10T22:09:21.186Z",
+    "modified": "2026-05-10T22:09:21.187Z",
+    "tags": []
+  },
+  "pageSettings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 15,
+      "right": 30,
+      "bottom": 30,
+      "left": 30
+    },
+    "bodyBackground": {
+      "elements": [
+        {
+          "type": "rectangle",
+          "id": "rectangle-1778455018080",
+          "x": 0,
+          "y": 0,
+          "width": "100%",
+          "height": "100%",
+          "style": {
+            "fillColor": null,
+            "borderColor": null,
+            "borderWidth": 2,
+            "cornerRadius": 0
+          }
+        }
+      ]
+    },
+    "header": {
+      "height": 100,
+      "elements": [
+        {
+          "type": "rectangle",
+          "id": "rectangle-1778456285059",
+          "x": 0,
+          "y": 0,
+          "width": "100%",
+          "height": "100%",
+          "style": {
+            "fillColor": "#7377d3",
+            "borderColor": null,
+            "borderWidth": 1,
+            "cornerRadius": 0
+          }
+        },
+        {
+          "type": "static_text",
+          "id": "text-1778450987579",
+          "x": 0,
+          "y": 0,
+          "value": "New Text",
+          "width": 200,
+          "height": 20,
+          "positionMode": "RELATIVE",
+          "style": {
+            "fontSize": 12,
+            "fontFamily": "Helvetica",
+            "fontWeight": "normal",
+            "color": "#000000",
+            "alignment": "left"
+          }
+        }
+      ]
+    }
+  },
+  "pageElements": [
+
+    {
+      "type": "container",
+      "id": "container-1778117745669",
+      "x": 0,
+      "y": 150,
+      "width": 554,
+      "height": 150,
+      "elements": [
+        {
+          "type": "loop",
+          "id": "loop-1778450972642",
+          "x": 0,
+          "y": 0,
+          "width": 530,
+          "height": 199,
+          "dataBinding": "items",
+          "itemSpacing": 20,
+          "elements": [
+            {
+              "type": "rectangle",
+              "id": "rectangle-1778453579608",
+              "x": 0,
+              "y": 0,
+              "width": "100%",
+              "height": 198,
+              "style": {
+                "fillColor": "#d4d8de",
+                "borderColor": null,
+                "borderWidth": 1,
+                "cornerRadius": 0
+              }
+            },
+            {
+              "type": "text",
+              "id": "text-1778450987574",
+              "x": 0,
+              "y": 0,
+              "value": "New Text",
+              "width": 200,
+              "height": 30,
+              "style": {
+                "fontSize": 12,
+                "fontFamily": "Helvetica",
+                "fontWeight": "normal",
+                "color": "#000000",
+                "alignment": "left"
+              },
+              "dataBinding": "name"
+            },
+            {
+              "type": "rectangle",
+              "id": "rectangle-1778450994373",
+              "x": 13,
+              "y": 52,
+              "width": 83,
+              "height": 67,
+              "style": {
+                "fillColor": "#4a90e2",
+                "borderColor": null,
+                "borderWidth": 1,
+                "cornerRadius": 0
+              }
+            },
+            {
+              "type": "static_text",
+              "id": "static_text-1778451010490",
+              "x": 197,
+              "y": 56,
+              "value": "bla bla bla",
+              "width": 200,
+              "height": 30,
+              "style": {
+                "fontSize": 12,
+                "fontFamily": "Helvetica",
+                "fontWeight": "normal",
+                "color": "#000000",
+                "alignment": "left"
+              }
+            }
+          ],
+          "style": {
+            "borderColor": "#8b5cf6",
+            "borderWidth": 1,
+            "borderStyle": "dashed"
+          },
+          "positionMode": "RELATIVE"
+        },
+        {
+          "type": "text",
+          "id": "text-1778452157619",
+          "x": 0,
+          "y": 375,
+          "value": "New Text",
+          "width": 200,
+          "height": 30,
+          "style": {
+            "fontSize": 12,
+            "fontFamily": "Helvetica",
+            "fontWeight": "normal",
+            "color": "#000000",
+            "alignment": "left"
+          },
+          "dataBinding": "id"
+        }
+      ]
+    }
+  ]
+}

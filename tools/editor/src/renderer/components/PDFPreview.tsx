@@ -38,12 +38,12 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
   
   // Check if template has any elements to render
   const hasContent = useMemo(() => {
-    const pageElements = template.pageElements || []
+    const page = template.page || []
     const headerElements = template.pageSettings?.header?.elements || []
     const footerElements = template.pageSettings?.footer?.elements || []
     const summaryElements = template.summaryPage?.elements || []
     
-    return pageElements.length > 0 || 
+    return page.length > 0 || 
            headerElements.length > 0 || 
            footerElements.length > 0 || 
            summaryElements.length > 0
@@ -82,7 +82,7 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
     console.log('📄 [Preview] Starting preview generation...')
     console.log('📄 [Preview] Template structure:', {
       name: template.metadata?.name,
-      pageElements: template.pageElements?.length || 0,
+      page: template.page?.length || 0,
       hasHeader: !!template.pageSettings?.header,
       hasFooter: !!template.pageSettings?.footer,
       // Check if JSON has correct structure

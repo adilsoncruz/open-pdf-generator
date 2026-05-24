@@ -19,8 +19,11 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         element: ContainerElement,
         context: RenderContext,
     ) {
-        val containerX = element.x
+        // Container is always treated as full-width and relative in body flow.
+        val containerX = 0f
         val containerY = element.y
+        val containerWidth = context.containerWidth ?: element.width
+        val containerHeight = if (element.height > 0f) element.height else (context.containerHeight ?: 0f)
 
         element.elements.forEach { childElement ->
             val adjustedElement =
@@ -28,10 +31,18 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
                     element = childElement,
                     containerX = containerX,
                     containerY = containerY,
-                    containerWidth = element.width,
-                    containerHeight = element.height,
+                    containerWidth = containerWidth,
+                    containerHeight = containerHeight,
                 )
-            renderEngine.render(adjustedElement, context)
+
+            val childContext =
+                if (childElement is LoopElement) {
+                    context.copy(containerWidth = containerWidth, containerHeight = context.containerHeight)
+                } else {
+                    context.copy(containerWidth = containerWidth, containerHeight = containerHeight)
+                }
+
+            renderEngine.render(adjustedElement, childContext)
         }
     }
 
@@ -89,13 +100,7 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
                return  element.copy(
                     x = containerX + element.x,
                     y = containerY + element.y,
-                    width = resolveWidth(element.width, containerWidth),
-                )
-            }
-            is ContainerElement ->
-                element.copy(
-                    x = containerX + element.x,
-                    y = containerY + element.y,
+                    width = element.resolveWidth(containerWidth),
                 )
             else -> element
         }

@@ -71,7 +71,7 @@ export default function PropertiesPanel() {
     } else if (selectedElementLocation === 'summary' && template.summaryPage) {
       elements = template.summaryPage.elements.filter((el) => selectedElementIds.includes(el.id))
     } else {
-      elements = template.pageElements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.page.filter((el) => selectedElementIds.includes(el.id))
     }
     
     return elements
@@ -89,7 +89,7 @@ export default function PropertiesPanel() {
     } else if (selectedElementLocation === 'summary' && template.summaryPage) {
       loopElement = template.summaryPage.elements.find(el => el.id === selectedLoopParentId) || null
     } else {
-      loopElement = template.pageElements.find(el => el.id === selectedLoopParentId) || null
+      loopElement = template.page.find(el => el.id === selectedLoopParentId) || null
     }
     
     if (loopElement && loopElement.elements) {
@@ -256,11 +256,13 @@ export default function PropertiesPanel() {
         { id: 'appearance', label: 'Appearance' },
         { id: 'barcode', label: 'Code' },
       ]
-    } else if (selectedElement.type === 'loop' || selectedElement.type === 'container') {
+    } else if (selectedElement.type === 'loop') {
       return [
         { id: 'appearance', label: 'Appearance' },
         { id: 'elements', label: 'elements' },
       ]
+    } else if (selectedElement.type === 'container') {
+      return [{ id: 'appearance', label: 'Appearance' }]
     } else if (selectedElement.type === 'table') {
       return [
         { id: 'general', label: 'General' },
@@ -1927,31 +1929,53 @@ export default function PropertiesPanel() {
                   
                   {/* Modo de Posicionamento - Barcode */}
                   <div className="mt-3">
-                    <Select
-                      value={selectedElement.positionMode || 'ABSOLUTE'}
-                      onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
-                      options={[
-                        { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
-                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
-                      ]}
-                    />
-                    {selectedElement.positionMode === 'RELATIVE' && (
+                    {selectedElement.type === 'container' ? (
                       <>
                         <p className="text-[10px] text-purple-500 mt-1 mb-2">
-                          ↳ Positioned after the previous element in PDF
+                          Container is always RELATIVE (core rule)
                         </p>
                         <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
-                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
                             <Input
-                            type="number"
-                            value={selectedElement.relativeOffsetY ?? 10}
-                            onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                              type="number"
+                              value={selectedElement.relativeOffsetY ?? 0}
+                              onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
                               size="sm"
                               className="w-20"
-                          />
-                          <span className="text-[10px] theme-text-muted">px</span>
-                        </div>
+                            />
+                            <span className="text-[10px] theme-text-muted">px</span>
+                          </div>
                         </PropertyRow>
+                      </>
+                    ) : (
+                      <>
+                        <Select
+                          value={selectedElement.positionMode || 'ABSOLUTE'}
+                          onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
+                          options={[
+                            { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
+                            { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                          ]}
+                        />
+                        {selectedElement.positionMode === 'RELATIVE' && (
+                          <>
+                            <p className="text-[10px] text-purple-500 mt-1 mb-2">
+                              ↳ Positioned after the previous element in PDF
+                            </p>
+                            <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
+                            <div className="flex items-center gap-2">
+                                <Input
+                                type="number"
+                                value={selectedElement.relativeOffsetY ?? 0}
+                                onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                                  size="sm"
+                                  className="w-20"
+                              />
+                              <span className="text-[10px] theme-text-muted">px</span>
+                            </div>
+                            </PropertyRow>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
@@ -2067,7 +2091,8 @@ export default function PropertiesPanel() {
                       <label className="text-xs font-medium theme-text-muted">ID</label>
                       <Input
                         value={selectedElement.id}
-                        disabled
+                        onChange={(e) => handleUpdate('id', e.target.value)}
+                        disabled={selectedElement.type !== 'container'}
                         size="sm"
                       />
                     </div>
@@ -2075,59 +2100,79 @@ export default function PropertiesPanel() {
                   </>
                 )}
 
-                <PropertyGroup title="Location" collapsible={false}>
-                  <div className="grid grid-cols-2 gap-3">
-                    <NumberField
-                      label="X"
-                        value={selectedElement.x}
-                      onValueChange={(value) => handleUpdate('x', value)}
-                    />
-                    <NumberField
-                      label="Y"
-                        value={selectedElement.y}
-                      onValueChange={(value) => handleUpdate('y', value)}
+                {selectedElement.type === 'loop' && (
+                  <PropertyGroup title="Location" collapsible={false}>
+                    <div className="grid grid-cols-2 gap-3">
+                      <NumberField
+                        label="X"
+                          value={selectedElement.x}
+                        onValueChange={(value) => handleUpdate('x', value)}
                       />
                   </div>
                   
                   {/* Modo de Posicionamento - Loop */}
                   <div className="mt-3">
-                    <Select
-                      value={selectedElement.positionMode || 'ABSOLUTE'}
-                      onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
-                      options={[
-                        { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
-                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
-                      ]}
-                    />
-                    {selectedElement.positionMode === 'RELATIVE' && (
+                    {selectedElement.type === 'container' ? (
                       <>
                         <p className="text-[10px] text-purple-500 mt-1 mb-2">
-                          ↳ Positioned after the previous element in PDF
+                          Container is always RELATIVE (core rule)
                         </p>
                         <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
-                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
                             <Input
-                            type="number"
-                            value={selectedElement.relativeOffsetY ?? 10}
-                            onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                              type="number"
+                              value={selectedElement.relativeOffsetY ?? 0}
+                              onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
                               size="sm"
                               className="w-20"
-                          />
-                          <span className="text-[10px] theme-text-muted">px</span>
-                        </div>
+                            />
+                            <span className="text-[10px] theme-text-muted">px</span>
+                          </div>
                         </PropertyRow>
+                      </>
+                    ) : (
+                      <>
+                        <Select
+                          value={selectedElement.positionMode || 'ABSOLUTE'}
+                          onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
+                          options={[
+                            { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
+                            { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                          ]}
+                        />
+                        {selectedElement.positionMode === 'RELATIVE' && (
+                          <>
+                            <p className="text-[10px] text-purple-500 mt-1 mb-2">
+                              ↳ Positioned after the previous element in PDF
+                            </p>
+                            <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
+                            <div className="flex items-center gap-2">
+                                <Input
+                                type="number"
+                                value={selectedElement.relativeOffsetY ?? 0}
+                                onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                                  size="sm"
+                                  className="w-20"
+                              />
+                              <span className="text-[10px] theme-text-muted">px</span>
+                            </div>
+                            </PropertyRow>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
                 </PropertyGroup>
 
                 <PropertyGroup title="Size" collapsible={false}>
-                  <div className="grid grid-cols-2 gap-3">
-                    <NumberField
-                      label="W (Width)"
-                        value={selectedElement.width}
-                      onValueChange={(value) => handleUpdate('width', value)}
-                    />
+                  <div className={`grid gap-3 ${selectedElement.type === 'container' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {selectedElement.type === 'loop' && (
+                      <NumberField
+                        label="W (Width)"
+                          value={selectedElement.width}
+                        onValueChange={(value) => handleUpdate('width', value)}
+                      />
+                    )}
                     <NumberField
                       label="H (Height)"
                         value={selectedElement.height}
@@ -3342,7 +3387,7 @@ function GroupPropertiesPanel({
     } else if (location === 'bodyBackground' && template.pageSettings.bodyBackground) {
       allElements = template.pageSettings.bodyBackground.elements
     } else {
-      allElements = template.pageElements
+      allElements = template.page
     }
     
     return allElements.filter(el => group.elementIds.includes(el.id))

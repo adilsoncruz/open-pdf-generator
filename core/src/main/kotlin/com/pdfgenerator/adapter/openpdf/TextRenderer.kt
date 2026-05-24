@@ -5,6 +5,8 @@ import com.lowagie.text.Font
 import com.lowagie.text.pdf.BaseFont
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.Renderer
+import com.pdfgenerator.engine.TextLayoutCacheKey
+import com.pdfgenerator.engine.TextLayoutMeasurement
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.ConditionEvaluator
@@ -14,6 +16,44 @@ import com.pdfgenerator.util.FontCache
 
 class TextRenderer : Renderer<TextElement> {
     companion object {
+        fun getOrMeasureMultilineLayout(
+            elementId: String,
+            resolvedText: String,
+            styleHash: Int,
+            boxWidth: Float,
+            fontSize: Float,
+            lineHeight: Float?,
+            paddingTop: Float,
+            paddingBottom: Float,
+            paddingLeft: Float,
+            paddingRight: Float,
+            firstLineIndent: Float,
+            fontFamily: String,
+            cache: MutableMap<TextLayoutCacheKey, TextLayoutMeasurement>? = null,
+            baseFont: BaseFont? = null,
+        ): TextLayoutMeasurement {
+            val cacheKey = TextLayoutCacheKey(elementId, resolvedText, styleHash)
+            cache?.get(cacheKey)?.let { return it }
+
+            val measuredLayout =
+                measureMultilineLayout(
+                    text = resolvedText,
+                    boxWidth = boxWidth,
+                    fontSize = fontSize,
+                    lineHeight = lineHeight,
+                    paddingTop = paddingTop,
+                    paddingBottom = paddingBottom,
+                    paddingLeft = paddingLeft,
+                    paddingRight = paddingRight,
+                    firstLineIndent = firstLineIndent,
+                    fontFamily = fontFamily,
+                    baseFont = baseFont,
+                )
+
+            cache?.put(cacheKey, measuredLayout)
+            return measuredLayout
+        }
+
         fun calculateContentHeight(
             text: String,
             boxWidth: Float,
@@ -26,16 +66,46 @@ class TextRenderer : Renderer<TextElement> {
             firstLineIndent: Float,
             fontFamily: String,
         ): Float {
+            return measureMultilineLayout(
+                text = text,
+                boxWidth = boxWidth,
+                fontSize = fontSize,
+                lineHeight = lineHeight,
+                paddingTop = paddingTop,
+                paddingBottom = paddingBottom,
+                paddingLeft = paddingLeft,
+                paddingRight = paddingRight,
+                firstLineIndent = firstLineIndent,
+                fontFamily = fontFamily,
+            ).contentHeight
+        }
+
+        private fun measureMultilineLayout(
+            text: String,
+            boxWidth: Float,
+            fontSize: Float,
+            lineHeight: Float?,
+            paddingTop: Float,
+            paddingBottom: Float,
+            paddingLeft: Float,
+            paddingRight: Float,
+            firstLineIndent: Float,
+            fontFamily: String,
+            baseFont: BaseFont? = null,
+        ): TextLayoutMeasurement {
             val lineSpacing = fontSize * (lineHeight ?: 1f)
             val availableBoxWidth = boxWidth - paddingLeft - paddingRight
 
-            val baseFontName =
-                when {
-                    fontFamily.lowercase().contains("times") -> BaseFont.TIMES_ROMAN
-                    fontFamily.lowercase().contains("courier") -> BaseFont.COURIER
-                    else -> BaseFont.HELVETICA
+            val fontForMeasurement =
+                baseFont ?: run {
+                    val baseFontName =
+                        when {
+                            fontFamily.lowercase().contains("times") -> BaseFont.TIMES_ROMAN
+                            fontFamily.lowercase().contains("courier") -> BaseFont.COURIER
+                            else -> BaseFont.HELVETICA
+                        }
+                    FontCache.getFont(baseFontName)
                 }
-            val baseFont = FontCache.getFont(baseFontName)
 
             val paragraphs = text.split("\n", "\\n")
             val lines = mutableListOf<String>()
@@ -53,7 +123,7 @@ class TextRenderer : Renderer<TextElement> {
                     val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
                     val indent = if (lines.isEmpty()) firstLineIndent else 0f
                     val availableWidth = availableBoxWidth - indent
-                    val lineWidth = baseFont.getWidthPoint(testLine, fontSize)
+                    val lineWidth = fontForMeasurement.getWidthPoint(testLine, fontSize)
 
                     if (lineWidth > availableWidth && currentLine.isNotEmpty()) {
                         lines.add(currentLine)
@@ -67,8 +137,11 @@ class TextRenderer : Renderer<TextElement> {
                 }
             }
 
-            val contentHeight = paddingTop + (lines.size * lineSpacing) + paddingBottom
-            return contentHeight
+            return TextLayoutMeasurement(
+                lines = lines,
+                lineSpacing = lineSpacing,
+                contentHeight = paddingTop + (lines.size * lineSpacing) + paddingBottom,
+            )
         }
     }
 
@@ -110,7 +183,9 @@ class TextRenderer : Renderer<TextElement> {
             }
 
         val pageHeight = context.document.pageSize.height
-        val yTop = pageHeight - element.y
+        val x = context.resolveX(element.x)
+        val y = context.resolveY(element.y)
+        val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
 
         val contentByte =
             if (context.useContentUnder) {
@@ -126,14 +201,14 @@ class TextRenderer : Renderer<TextElement> {
             val bgColor = ColorUtil.hexToColor(backgroundColor)
             contentByte.saveState()
             contentByte.setColorFill(bgColor)
-            contentByte.rectangle(element.x, yTop - boxHeight, boxWidth, boxHeight)
+            contentByte.rectangle(x, yTop - boxHeight, boxWidth, boxHeight)
             contentByte.fill()
             contentByte.restoreState()
         }
 
         val fontSize = element.style?.fontSize ?: 12f
         val boxHeight = element.height ?: fontSize
-        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "center"
+        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "top"
 
         val paddingTop = element.style?.paddingTop ?: 0f
         val paddingBottom = element.style?.paddingBottom ?: 0f
@@ -167,17 +242,17 @@ class TextRenderer : Renderer<TextElement> {
             Element.ALIGN_CENTER -> {
                 val textWidth = font.baseFont.getWidthPoint(text, fontSize)
                 val boxWidth = element.width ?: textWidth
-                val xPos = element.x + (boxWidth - textWidth) / 2f
+                val xPos = x + (boxWidth - textWidth) / 2f
                 contentByte.setTextMatrix(xPos, textY)
             }
             Element.ALIGN_RIGHT -> {
                 val textWidth = font.baseFont.getWidthPoint(text, fontSize)
                 val boxWidth = element.width ?: textWidth
-                val xPos = element.x + boxWidth - textWidth
+                val xPos = x + boxWidth - textWidth
                 contentByte.setTextMatrix(xPos, textY)
             }
             else -> {
-                contentByte.setTextMatrix(element.x, textY)
+                contentByte.setTextMatrix(x, textY)
             }
         }
 
@@ -194,7 +269,9 @@ class TextRenderer : Renderer<TextElement> {
         val fontSize = element.style?.fontSize ?: 12f
         val pageHeight = context.document.pageSize.height
 
-        val yTop = pageHeight - element.y
+        val x = context.resolveX(element.x)
+        val y = context.resolveY(element.y)
+        val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
         val boxWidth = (element.width as? Number)?.toFloat() ?: 100f
         val boxHeight = (element.height as? Number)?.toFloat() ?: 100f
 
@@ -203,9 +280,6 @@ class TextRenderer : Renderer<TextElement> {
         val paddingLeft = element.style?.paddingLeft ?: 0f
         val paddingRight = element.style?.paddingRight ?: 0f
         val firstLineIndent = element.style?.firstLineIndent ?: 0f
-
-        val lineHeight = element.style?.lineHeight ?: 1f
-        val lineSpacing = fontSize * lineHeight
 
         val contentByte =
             if (context.useContentUnder) {
@@ -219,48 +293,36 @@ class TextRenderer : Renderer<TextElement> {
             val bgColor = ColorUtil.hexToColor(backgroundColor)
             contentByte.saveState()
             contentByte.setColorFill(bgColor)
-            contentByte.rectangle(element.x, yTop - boxHeight, boxWidth, boxHeight)
+            contentByte.rectangle(x, yTop - boxHeight, boxWidth, boxHeight)
             contentByte.fill()
             contentByte.restoreState()
         }
 
+        val measuredLayout =
+            getOrMeasureMultilineLayout(
+                elementId = element.id,
+                resolvedText = text,
+                styleHash = element.style?.hashCode() ?: 0,
+                boxWidth = boxWidth,
+                fontSize = fontSize,
+                lineHeight = element.style?.lineHeight,
+                paddingTop = paddingTop,
+                paddingBottom = paddingBottom,
+                paddingLeft = paddingLeft,
+                paddingRight = paddingRight,
+                firstLineIndent = firstLineIndent,
+                fontFamily = element.style?.fontFamily ?: "Helvetica",
+                cache = context.textLayoutCache,
+                baseFont = font.baseFont,
+            )
+        val lines = measuredLayout.lines
         val availableBoxWidth = boxWidth - paddingLeft - paddingRight
-        val lines = mutableListOf<String>()
-
-        val paragraphs = text.split("\n", "\\n")
-
-        for (paragraph in paragraphs) {
-            if (paragraph.isEmpty()) {
-                lines.add("")
-                continue
-            }
-
-            val words = paragraph.split(" ")
-            var currentLine = ""
-
-            for (word in words) {
-                val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
-                val indent = if (lines.isEmpty()) firstLineIndent else 0f
-                val availableWidth = availableBoxWidth - indent
-                val lineWidth = font.baseFont.getWidthPoint(testLine, fontSize)
-
-                if (lineWidth > availableWidth && currentLine.isNotEmpty()) {
-                    lines.add(currentLine)
-                    currentLine = word
-                } else {
-                    currentLine = testLine
-                }
-            }
-            if (currentLine.isNotEmpty()) {
-                lines.add(currentLine)
-            }
-        }
 
         val overflow = element.style?.overflow?.lowercase() ?: "visible"
         val linesToRender =
             if (overflow == "hidden") {
                 val availableHeight = boxHeight - paddingTop - paddingBottom
-                val maxLines = (availableHeight / lineSpacing).toInt().coerceAtLeast(1)
+                val maxLines = (availableHeight / measuredLayout.lineSpacing).toInt().coerceAtLeast(1)
                 lines.take(maxLines)
             } else {
                 lines
@@ -274,23 +336,23 @@ class TextRenderer : Renderer<TextElement> {
 
         val alignment = element.style?.alignment?.lowercase() ?: "left"
 
-        val extraSpace = lineSpacing - fontSize
+        val extraSpace = measuredLayout.lineSpacing - fontSize
         val spaceAbove = extraSpace / 2f
 
         linesToRender.forEachIndexed { lineIndex, line ->
             val baselineFromLineBoxTop = spaceAbove + (fontSize * 0.8f)
-            val baselineOffset = paddingTop + baselineFromLineBoxTop + (lineIndex * lineSpacing)
+            val baselineOffset = paddingTop + baselineFromLineBoxTop + (lineIndex * measuredLayout.lineSpacing)
 
             val yPos = yTop - baselineOffset
 
             val indent = if (lineIndex == 0) firstLineIndent else 0f
-            val xStart = element.x + paddingLeft + indent
+            val xStart = x + paddingLeft + indent
             val lineWidth = font.baseFont.getWidthPoint(line, fontSize)
 
             val xPos =
                 when (alignment) {
-                    "center" -> element.x + paddingLeft + (availableBoxWidth - indent - lineWidth) / 2f + indent
-                    "right" -> element.x + boxWidth - paddingRight - lineWidth
+                    "center" -> x + paddingLeft + (availableBoxWidth - indent - lineWidth) / 2f + indent
+                    "right" -> x + boxWidth - paddingRight - lineWidth
                     else -> xStart
                 }
 

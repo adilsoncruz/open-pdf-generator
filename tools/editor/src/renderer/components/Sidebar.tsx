@@ -25,6 +25,10 @@ export default function Sidebar() {
   } = useTemplateStore()
 
   const [pageSettingsExpanded, setPageSettingsExpanded] = useState(false)
+  const { selectedElementIds, selectElement } = useTemplateStore()
+  const selectedContainerId = currentSection === 'body'
+    ? (template.page || []).find(el => el.id === selectedElementIds[0] && el.type === 'container')?.id || null
+    : null
 
   if (isSidebarMinimized && !isSidebarPinned) {
     return (
@@ -507,28 +511,95 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Layers Header and Group Button */}
+      {/* Containers + Elements Header and Group Button */}
       <div className="px-4 py-3 border-t theme-border">
+        {currentSection === 'body' && (
+          <ContainersPanel
+            selectedContainerId={selectedContainerId}
+            onSelectContainer={(id) => selectElement(id, 'body')}
+          />
+        )}
         <div className="flex items-center justify-between mb-3">
           <h2 className="section-header flex items-center gap-2">
             <Icon name="layers" size="sm" />
             {t.sidebar.elementsTitle}
           </h2>
         </div>
-        <GroupButton />
+        <GroupButton selectedContainerId={selectedContainerId} />
       </div>
 
       {/* Elements List - WITH SCROLL */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 pb-4">
-          <ElementsList />
+          <ElementsList selectedContainerId={selectedContainerId} />
         </div>
       </div>
     </div>
   )
 }
 
-function GroupButton() {
+function ContainersPanel({
+  selectedContainerId,
+  onSelectContainer,
+}: {
+  selectedContainerId: string | null
+  onSelectContainer: (id: string | null) => void
+}) {
+  const { template, addElement, currentSection, selectElement, moveElementUp, moveElementDown, deleteElement } = useTemplateStore()
+
+  if (currentSection !== 'body') return null
+  const containers = (template.page || []).filter((el) => el.type === 'container')
+  const handleAddContainer = () => {
+    const id = `container-${Date.now()}`
+    const lastContainer = containers[containers.length - 1]
+    const lastY = typeof lastContainer?.y === 'number' ? lastContainer.y : 0
+    const lastHeight = typeof lastContainer?.height === 'number' ? lastContainer.height : 150
+    const nextY = containers.length > 0 ? lastY + lastHeight : 0
+    addElement({ type: 'container', id, x: 0, y: nextY, width: '100%', height: 150, elements: [] }, 'body')
+    selectElement(id, 'body')
+  }
+
+  return (
+    <div className="mb-3">
+      <h3 className="text-xs font-semibold theme-text-muted uppercase mb-2">Containers</h3>
+      <button onClick={handleAddContainer} className="w-full px-3 py-2 text-sm theme-surface border theme-border rounded-lg mb-2">
+        + Add Container
+      </button>
+      <div className="space-y-2">
+        {containers.map((container) => (
+          <div
+            key={container.id}
+            className={`h-12 px-3 rounded-xl border transition-all duration-200 flex items-center justify-between ${
+              selectedContainerId === container.id
+                ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-300 dark:border-primary-500/50'
+                : 'theme-surface border theme-border hover:theme-surface-hover'
+            }`}
+          >
+            <button onClick={() => onSelectContainer(container.id)} className="flex-1 text-left flex items-center gap-2 min-w-0">
+              <span className="text-sm theme-text-muted">☰</span>
+              <span className="text-sm font-medium truncate">{container.id}</span>
+            </button>
+            <div className="flex gap-1 ml-2">
+              <button className="w-7 h-7 rounded border theme-border theme-surface text-sm" onClick={() => moveElementUp(container.id, 'body')}>↑</button>
+              <button className="w-7 h-7 rounded border theme-border theme-surface text-sm" onClick={() => moveElementDown(container.id, 'body')}>↓</button>
+              <button
+                className="w-7 h-7 rounded border theme-border theme-surface text-red-500 text-sm"
+                onClick={() => {
+                  deleteElement(container.id, 'body')
+                  onSelectContainer(null)
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function GroupButton({ selectedContainerId }: { selectedContainerId: string | null }) {
   const { t } = useTranslation()
   const { 
     selectedElementIds, 
@@ -565,7 +636,7 @@ function GroupButton() {
     groups.some(group => group.elementIds.includes(elementId))
   )
 
-  const canCreateGroup = selectedElementIds.length >= 2 && !hasElementInGroup
+  const canCreateGroup = selectedElementIds.length >= 2 && !hasElementInGroup && (currentSection !== 'body' || !!selectedContainerId)
 
   const getGroupButtonTitle = (): string => {
     if (selectedElementIds.length < 2) {
@@ -654,7 +725,7 @@ function GroupButton() {
   )
 }
 
-function ElementsList() {
+function ElementsList({ selectedContainerId }: { selectedContainerId: string | null }) {
   const { t } = useTranslation()
   const { 
     template, 
@@ -690,7 +761,9 @@ function ElementsList() {
       const summaryElements = template.summaryPage?.elements || []
       return [...backgroundElements, ...summaryElements]
     } else {
-      return template.pageElements
+      const containers = template.page || []
+      const selected = containers.find((el) => el.id === selectedContainerId && el.type === 'container')
+      return (selected?.elements as Element[]) || []
     }
   }
 

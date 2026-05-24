@@ -39,7 +39,9 @@ class RectangleRenderer : Renderer<RectangleElement> {
             }
 
         val pageHeight = context.document.pageSize.height
-        val yPosition = pageHeight - element.y - resolvedHeight
+        val x = context.resolveX(element.x)
+        val y = context.resolveY(element.y)
+        val yPosition = pageHeight - y - resolvedHeight
 
         cb.saveState()
 
@@ -48,7 +50,7 @@ class RectangleRenderer : Renderer<RectangleElement> {
 
             if (element.style.cornerRadius > 0) {
                 cb.roundRectangle(
-                    element.x,
+                    x,
                     yPosition,
                     resolvedWidth,
                     resolvedHeight,
@@ -56,7 +58,7 @@ class RectangleRenderer : Renderer<RectangleElement> {
                 )
                 cb.fill()
             } else {
-                cb.rectangle(element.x, yPosition, resolvedWidth, resolvedHeight)
+                cb.rectangle(x, yPosition, resolvedWidth, resolvedHeight)
                 cb.fill()
             }
         }
@@ -75,7 +77,7 @@ class RectangleRenderer : Renderer<RectangleElement> {
 
                 if (style.cornerRadius > 0) {
                     cb.roundRectangle(
-                        element.x,
+                        x,
                         yPosition,
                         resolvedWidth,
                         resolvedHeight,
@@ -83,7 +85,7 @@ class RectangleRenderer : Renderer<RectangleElement> {
                     )
                     cb.stroke()
                 } else {
-                    cb.rectangle(element.x, yPosition, resolvedWidth, resolvedHeight)
+                    cb.rectangle(x, yPosition, resolvedWidth, resolvedHeight)
                     cb.stroke()
                 }
             }

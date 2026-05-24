@@ -3,15 +3,14 @@ package com.pdfgenerator.adapter.openpdf
 import com.pdfgenerator.engine.LoopContext
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
+import com.pdfgenerator.engine.RenderState
 import com.pdfgenerator.engine.Renderer
-import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.StaticTextElement
-import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.DataBindingResolver
 import org.slf4j.LoggerFactory
@@ -36,52 +35,86 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         }
 
         val loopX = element.x
-        val loopStartY = element.startY ?: element.y
+        // Use template-local Y for loop stacking. startY may already be absolute and include body/header offsets.
+        val loopBaseY = element.y
 
-        val loopWidth = element.width
+        val containerWidth =
+            context.containerWidth
+                ?: (
+                    context.document.pageSize.width -
+                        context.template.pageSettings.margins.left -
+                        context.template.pageSettings.margins.right
+                )
+        val loopWidth = element.resolveWidth(containerWidth)
         val loopHeight = element.height
 
-        val itemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
+        val calculatedItemHeight = calculateItemHeight(element.elements, loopWidth, loopHeight)
+        val itemHeight = if (loopHeight > 0f) loopHeight else calculatedItemHeight
 
-        val pageHeight = context.document.pageSize.height
-        val margins = context.template.pageSettings.margins
-        val headerHeight = context.template.pageSettings.header?.height ?: 0f
-        val footerHeight = context.template.pageSettings.footer?.height ?: 0f
-
-        val contentAreaTop = margins.top + headerHeight
-        val contentAreaBottom = pageHeight - margins.bottom - footerHeight
-        val availableContentHeight = contentAreaBottom - contentAreaTop
-
-        val maxYInTemplate = availableContentHeight
-
-        var currentY = loopStartY
-        var itemsRenderedOnCurrentPage = 0
-
-        loopData.forEachIndexed { index, item ->
-            val itemEndY = currentY + itemHeight
-
-            if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
-                context.document.newPage()
-                currentY = loopStartY
-                itemsRenderedOnCurrentPage = 0
+        val maxYInTemplate =
+            context.containerHeight ?: run {
+                val pageHeight = context.document.pageSize.height
+                val margins = context.template.pageSettings.margins
+                val headerHeight = context.template.pageSettings.header?.height ?: 0f
+                val footerHeight = context.template.pageSettings.footer?.height ?: 0f
+                val contentAreaTop = margins.top + headerHeight
+                val contentAreaBottom = pageHeight - margins.bottom - footerHeight
+                contentAreaBottom - contentAreaTop
             }
 
-            val loopContext = LoopContext(item, index)
-            val newContext = context.copy(loopContext = loopContext)
+        val itemSpacing = element.itemSpacing.coerceAtLeast(0f)
+
+        var itemsRenderedOnCurrentPage = 0
+        var totalItemsRendered = 0
+        var currentYOffset = 0f
+
+        val contextOffsetInBody = context.offsetY - context.bodyOffsetY
+        var pageOffsetY = context.offsetY
+        var pageOffsetInBody = contextOffsetInBody
+
+        loopData.forEachIndexed { index, item ->
+            var itemStartY = loopBaseY + currentYOffset
+            var itemEndY = itemStartY + itemHeight
+            var itemEndYInBody = pageOffsetInBody + itemEndY
+
+            if (itemEndYInBody > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
+                context.document.newPage()
+                itemsRenderedOnCurrentPage = 0
+                currentYOffset = 0f
+                val restartAtTopOfBody = contextOffsetInBody > 0f
+                pageOffsetY = if (restartAtTopOfBody) context.bodyOffsetY else context.offsetY
+                pageOffsetInBody = if (restartAtTopOfBody) 0f else contextOffsetInBody
+                itemStartY = if (restartAtTopOfBody) 0f else loopBaseY
+                itemEndY = itemStartY + itemHeight
+                itemEndYInBody = pageOffsetInBody + itemEndY
+            }
+
+            val normalizedItemMap = (item as? Map<*, *>)?.mapKeys { it.key.toString() }
+            val loopContext = LoopContext(item = item, index = index, normalizedItemMap = normalizedItemMap)
+            val itemContext =
+                context.copy(
+                    loopContext = loopContext,
+                    offsetX = context.offsetX + loopX,
+                    offsetY = pageOffsetY + itemStartY,
+                    containerWidth = loopWidth,
+                    containerHeight = itemHeight,
+                    renderState = RenderState(),
+                )
 
             element.elements.forEach { childElement ->
-                val adjustedElement = adjustElementPosition(childElement, loopX, currentY, loopWidth, itemHeight)
-                renderEngine.render(adjustedElement, newContext)
+                renderEngine.render(childElement, itemContext)
             }
 
             itemsRenderedOnCurrentPage++
-            currentY += itemHeight + element.itemSpacing
+            totalItemsRendered++
+            currentYOffset += itemHeight + itemSpacing
         }
 
         context.renderState?.let { state ->
-            val finalYAbsolute = currentY - element.itemSpacing
+            val renderedHeight = (totalItemsRendered * itemHeight) + ((totalItemsRendered - 1).coerceAtLeast(0) * itemSpacing)
+            val finalYAbsolute = context.offsetY + loopBaseY + renderedHeight
             val finalYRelative = finalYAbsolute - context.bodyOffsetY
-            state.currentY = finalYRelative
+            state.updateMaxY(finalYRelative)
         }
     }
 
@@ -108,7 +141,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                     is RectangleElement -> {
                         when (val h = element.height) {
                             is String -> {
-                                if (h == "100%" || h == "100.0%") loopHeight else 20f
+                                if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
                             }
                             is Number -> h.toFloat()
                             else -> 20f
@@ -122,111 +155,5 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                 }
             y + height
         } ?: 20f
-    }
-
-    private fun adjustElementPosition(
-        element: Element,
-        loopX: Float,
-        currentY: Float,
-        loopWidth: Float,
-        itemHeight: Float,
-    ): Element {
-        return when (element) {
-            is TextElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                    width = resolveWidth(element.width, loopWidth),
-                )
-            is StaticTextElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                    width = resolveWidth(element.width, loopWidth),
-                )
-            is ImageElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                    width = resolveFloatDimension(element.width, loopWidth),
-                    height = resolveFloatDimension(element.height, itemHeight),
-                )
-            is TableElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                )
-            is RectangleElement -> {
-                val isFullWidth =
-                    element.width.toString() == "100%" ||
-                        element.width.toString() == "100.0%"
-                val isFullHeight =
-                    element.height.toString() == "100%" ||
-                        element.height.toString() == "100.0%"
-                element.copy(
-                    x = if (isFullWidth) loopX else loopX + element.x,
-                    y = if (isFullHeight) currentY else currentY + element.y,
-                    width = resolveDimension(element.width, loopWidth),
-                    height = resolveDimension(element.height, itemHeight),
-                )
-            }
-            is LineElement -> {
-                val resolvedWidth = element.resolveWidth(loopWidth)
-                val resolvedHeight = element.resolveHeight(itemHeight)
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                    width = resolvedWidth,
-                    height = resolvedHeight,
-                )
-            }
-            is BarcodeElement ->
-                element.copy(
-                    x = loopX + element.x,
-                    y = currentY + element.y,
-                )
-            else -> element
-        }
-    }
-
-    private fun resolveDimension(
-        value: Any?,
-        loopDimension: Float,
-    ): Any {
-        return when (value) {
-            is String -> {
-                if (value == "100%" || value == "100.0%") {
-                    loopDimension
-                } else {
-                    value.toFloatOrNull() ?: value
-                }
-            }
-            is Number -> value
-            else -> value ?: 0f
-        }
-    }
-
-    private fun resolveFloatDimension(
-        value: Float,
-        loopDimension: Float,
-    ): Float {
-        return if (value.toString().endsWith("%")) {
-            loopDimension
-        } else {
-            value
-        }
-    }
-
-    private fun resolveWidth(
-        value: Float?,
-        loopWidth: Float,
-    ): Float? {
-        return if (value == null) {
-            null
-        } else if (value.toString().endsWith("%") || value == -1f) {
-            loopWidth
-        } else {
-            value
-        }
     }
 }

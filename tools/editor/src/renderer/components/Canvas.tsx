@@ -383,7 +383,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
     
     // Search in all possible locations
     const allElements: Element[] = [
-      ...(template.pageElements || []),
+      ...(template.page || []),
       ...(template.pageSettings.header?.elements || []),
       ...(template.pageSettings.footer?.elements || []),
       ...(template.pageSettings.bodyBackground?.elements || []),
@@ -660,7 +660,7 @@ export default function Canvas() {
     }
 
     // Only check body elements (not header/footer)
-    template.pageElements.forEach((element) => {
+    template.page.forEach((element) => {
       const x = element.x
       const y = element.y
       const width = element.width
@@ -1299,7 +1299,7 @@ export default function Canvas() {
               }
             }}
           >
-            {template.pageElements
+            {template.page
               .filter((element) => !element.hidden)
               .map((element) => (
                 <CanvasElement
@@ -1312,7 +1312,7 @@ export default function Canvas() {
                   pageSize={pageSize}
                   selectedElementIds={selectedElementIds}
                   selectedElementLocation={selectedElementLocation}
-                  allElements={template.pageElements}
+                  allElements={template.page}
                   onUpdateMultiple={() => {}}
                   updateElement={updateElement}
                 />
@@ -2545,7 +2545,13 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         const loopElements = element.elements || []
         const loopBinding = element.dataBinding || ''
         const loopItemSpacing = element.itemSpacing || 20
-        const loopWidth = typeof element.width === 'number' ? element.width : 400
+        const bodyAvailableWidth = pageSize.width - margins.left - margins.right
+        const loopWidth =
+          element.width === '100%'
+            ? bodyAvailableWidth
+            : typeof element.width === 'number'
+              ? element.width
+              : 400
         const loopHeight = typeof element.height === 'number' ? element.height : 150
         
         return (
