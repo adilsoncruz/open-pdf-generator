@@ -39,13 +39,19 @@ data class RenderContext(
     val containerHeight: Float? = null,
     val isSummaryPage: Boolean = false,
     val renderState: RenderState? = null,
+    val offsetX: Float = 0f,
+    val offsetY: Float = 0f,
     val bodyOffsetY: Float = 0f,
     val headerPrintCondition: String? = null,
     val footerPrintCondition: String? = null,
     val templateHeaderHeight: Float = 0f,
     val templateFooterHeight: Float = 0f,
     val textLayoutCache: MutableMap<TextLayoutCacheKey, TextLayoutMeasurement> = mutableMapOf(),
-)
+) {
+    fun resolveX(x: Float): Float = offsetX + x
+
+    fun resolveY(y: Float): Float = offsetY + y
+}
 
 data class LoopContext(
     val item: Any?,

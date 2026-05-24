@@ -129,12 +129,14 @@ class TableRenderer : Renderer<TableElement> {
 
                 var currentPage = context.writer.pageNumber
                 val footerHeightPage1 = getFooterHeightForPage(currentPage)
-                val startY = pageHeight - element.y
+                val resolvedX = context.resolveX(element.x)
+                val resolvedY = context.resolveY(element.y)
+                val startY = pageHeight - resolvedY
                 val bottomY = margins.bottom + footerHeightPage1
                 val ct = ColumnText(context.writer.directContent)
                 ct.addElement(table)
-                val leftX = element.x
-                val rightX = element.x + totalWidth
+                val leftX = resolvedX
+                val rightX = resolvedX + totalWidth
                 ct.setSimpleColumn(leftX, bottomY, rightX, startY)
 
                 var status = ct.go()
@@ -154,7 +156,7 @@ class TableRenderer : Renderer<TableElement> {
                 }
 
                 if (context.renderState != null) {
-                    val elementY = element.y - context.bodyOffsetY
+                    val elementY = context.resolveY(element.y) - context.bodyOffsetY
                     val firstPageHeight = startY - ct.yLine
                     context.renderState.updateMaxY(elementY + kotlin.math.abs(firstPageHeight))
                 }
@@ -166,20 +168,22 @@ class TableRenderer : Renderer<TableElement> {
             }
         } else {
             val pageHeight = context.document.pageSize.height
-            val yPosition = pageHeight - element.y
+            val resolvedX = context.resolveX(element.x)
+            val resolvedY = context.resolveY(element.y)
+            val yPosition = pageHeight - resolvedY
 
             val tableHeight =
                 table.writeSelectedRows(
                     0,
                     -1,
-                    element.x,
+                    resolvedX,
                     yPosition,
                     context.writer.directContent,
                 )
 
             if (context.renderState != null) {
                 val actualHeight = kotlin.math.abs(tableHeight)
-                val elementY = element.y - context.bodyOffsetY
+                val elementY = context.resolveY(element.y) - context.bodyOffsetY
                 context.renderState.updateMaxY(elementY + actualHeight)
             }
         }
