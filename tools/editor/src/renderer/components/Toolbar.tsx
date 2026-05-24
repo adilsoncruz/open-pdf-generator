@@ -23,6 +23,12 @@ interface ToolbarProps {
   previewMode?: 'hidden' | 'tab' | 'split'
 }
 
+interface AppVersions {
+  editor: string
+  core: string | null
+  cli: string | null
+}
+
 export interface ToolbarRef {
   handleNew: () => void
   handleOpen: () => void
@@ -54,6 +60,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   const [cliStatus, setCLIStatus] = useState<CLIStatus | null>(null)
   const [isInstallingCLI, setIsInstallingCLI] = useState(false)
   const [installError, setInstallError] = useState<string | null>(null)
+  const [appVersions, setAppVersions] = useState<AppVersions | null>(null)
   
 
   
@@ -70,6 +77,19 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   useEffect(() => {
     checkCLIStatus()
   }, [checkCLIStatus])
+
+  useEffect(() => {
+    const loadVersions = async () => {
+      try {
+        const versions = await window.electronAPI.getAppVersions()
+        setAppVersions(versions)
+      } catch (error) {
+        console.error('Error loading app versions:', error)
+      }
+    }
+
+    loadVersions()
+  }, [])
   
   // Map error codes to translated messages
   const getErrorMessage = useCallback((errorCode?: string): string => {
@@ -625,9 +645,9 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
               <div className="p-4 rounded-lg theme-bg-secondary border theme-border">
                 <h3 className="text-sm font-medium theme-text mb-2">{t.settings.versionInfo}</h3>
                 <div className="space-y-1 text-xs theme-text-secondary">
-                  <p><span className="font-medium">{t.settings.editor}:</span> v1.0.0</p>
-                  <p><span className="font-medium">{t.settings.coreLibrary}:</span> v1.0.0</p>
-                  {cliStatus?.version && <p><span className="font-medium">{t.settings.cli}:</span> {cliStatus.version}</p>}
+                  <p><span className="font-medium">{t.settings.editor}:</span> v{appVersions?.editor || '—'}</p>
+                  <p><span className="font-medium">{t.settings.coreLibrary}:</span> v{appVersions?.core || '—'}</p>
+                  <p><span className="font-medium">{t.settings.cli}:</span> v{appVersions?.cli || cliStatus?.version || '—'}</p>
                 </div>
               </div>
               

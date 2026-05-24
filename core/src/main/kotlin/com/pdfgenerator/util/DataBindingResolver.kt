@@ -33,11 +33,7 @@ object DataBindingResolver {
         binding: String,
         loopContext: LoopContext,
     ): Any? {
-        val item = loopContext.item
-        if (item !is Map<*, *>) return null
-
-        @Suppress("UNCHECKED_CAST")
-        val itemMap = item.mapKeys { it.key.toString() } as Map<String, Any?>
+        val itemMap = loopContext.normalizedItemMap ?: normalizeLoopItemMap(loopContext.item) ?: return null
         return resolvePath(binding, itemMap)
     }
 
@@ -54,13 +50,23 @@ object DataBindingResolver {
             binding.startsWith("\$item.") -> {
                 val path = binding.removePrefix("\$item.")
                 when (val item = loopContext.item) {
-                    is Map<*, *> -> resolvePath(path, item.mapKeys { it.key.toString() })
+                    is Map<*, *> -> {
+                        val itemMap = loopContext.normalizedItemMap ?: normalizeLoopItemMap(item) ?: return null
+                        resolvePath(path, itemMap)
+                    }
                     else -> null
                 }
             }
             binding == "\$item" -> loopContext.item
             else -> null
         }
+    }
+
+    private fun normalizeLoopItemMap(item: Any?): Map<String, Any?>? {
+        if (item !is Map<*, *>) return null
+
+        @Suppress("UNCHECKED_CAST")
+        return item.mapKeys { it.key.toString() } as Map<String, Any?>
     }
 
     private fun resolvePath(

@@ -18,6 +18,7 @@ import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ConditionEvaluator
+import com.pdfgenerator.util.withSyntheticBindings
 import org.slf4j.LoggerFactory
 
 class HeaderFooterPageEvent(
@@ -58,11 +59,14 @@ class HeaderFooterPageEvent(
             }
 
             val pageData =
-                data.toMutableMap().apply {
-                    put("_pageNumber", writer.pageNumber)
-                    put("_date", java.time.LocalDate.now().toString())
-                    put("_dateTime", java.time.LocalDateTime.now().toString())
-                }
+                withSyntheticBindings(
+                    data,
+                    mapOf(
+                        "_pageNumber" to writer.pageNumber,
+                        "_date" to java.time.LocalDate.now().toString(),
+                        "_dateTime" to java.time.LocalDateTime.now().toString(),
+                    ),
+                )
 
             template.pageSettings.bodyBackground?.let { bodyBackground ->
                 val bgCondition = bodyBackground.printCondition
@@ -84,11 +88,14 @@ class HeaderFooterPageEvent(
     ) {
         try {
             val pageData =
-                data.toMutableMap().apply {
-                    put("_pageNumber", writer.pageNumber)
-                    put("_date", java.time.LocalDate.now().toString())
-                    put("_dateTime", java.time.LocalDateTime.now().toString())
-                }
+                withSyntheticBindings(
+                    data,
+                    mapOf(
+                        "_pageNumber" to writer.pageNumber,
+                        "_date" to java.time.LocalDate.now().toString(),
+                        "_dateTime" to java.time.LocalDateTime.now().toString(),
+                    ),
+                )
 
             template.pageSettings.header?.let { header ->
                 val headerCondition = header.printCondition

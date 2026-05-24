@@ -509,6 +509,26 @@ data class LoopElement(
     }
 }
 
+data class ContainerElement(
+    override val type: String = "container",
+    override val id: String,
+    override val x: Float = 0f,
+    override val y: Float = 0f,
+    override val positionMode: PositionMode? = null,
+    override val relativeOffsetY: Float? = null,
+    val width: Float = 400f,
+    val height: Float = 50f,
+    val elements: List<Element>,
+) : Element {
+    override fun validate(pageSettings: PageSettings): List<ValidationError> {
+        val errors = mutableListOf<ValidationError>()
+        elements.forEach { element ->
+            errors.addAll(element.validate(pageSettings))
+        }
+        return errors
+    }
+}
+
 class PositionModeTypeAdapter : JsonDeserializer<PositionMode?> {
     override fun deserialize(
         json: JsonElement?,
@@ -555,6 +575,7 @@ class ElementDeserializer : JsonDeserializer<Element> {
             "barcode" -> gson.fromJson(json, BarcodeElement::class.java)
             "conditional" -> gson.fromJson(json, ConditionalElement::class.java)
             "loop" -> gson.fromJson(json, LoopElement::class.java)
+            "container" -> gson.fromJson(json, ContainerElement::class.java)
             else -> throw IllegalArgumentException("Unknown element type: $type")
         }
     }

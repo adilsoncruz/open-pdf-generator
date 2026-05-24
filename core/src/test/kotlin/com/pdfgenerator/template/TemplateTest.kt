@@ -1,6 +1,15 @@
 package com.pdfgenerator.template
 
+import com.pdfgenerator.model.ConditionalElement
+import com.pdfgenerator.model.ContainerElement
+import com.pdfgenerator.model.CustomSize
+import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LoopElement
+import com.pdfgenerator.model.Margins
+import com.pdfgenerator.model.PageSettings
+import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.Template
+import com.pdfgenerator.model.TemplateMetadata
 import com.pdfgenerator.model.TextElement
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -250,6 +259,41 @@ class TemplateTest {
             val loop = template.pageElements[1] as LoopElement
             assertEquals("items", loop.dataBinding)
             assertEquals(1, loop.elements.size)
+        }
+
+        @Test
+        fun `should parse container element`() {
+            val json =
+                """
+                {
+                  "version": "1.0",
+                  "pageSettings": {
+                    "size": "A4",
+                    "orientation": "portrait",
+                    "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
+                  },
+                  "pageElements": [
+                    {
+                      "type": "container",
+                      "id": "container1",
+                      "x": 0,
+                      "y": 20,
+                      "width": 400,
+                      "height": 80,
+                      "elements": [
+                        { "type": "text", "id": "name", "x": 10, "y": 10, "dataBinding": "user.name" }
+                      ]
+                    }
+                  ]
+                }
+                """.trimIndent()
+
+            val template = Template.fromString(json)
+
+            assertEquals(1, template.pageElements.size)
+            val container = template.pageElements[0] as ContainerElement
+            assertEquals("container1", container.id)
+            assertEquals(1, container.elements.size)
         }
 
         @Test
@@ -519,7 +563,7 @@ class TemplateTest {
     }
 
     @Nested
-    inner class PageSettings {
+    inner class PageSettingsTests {
         @Test
         fun `should get A4 page size`() {
             val settings =

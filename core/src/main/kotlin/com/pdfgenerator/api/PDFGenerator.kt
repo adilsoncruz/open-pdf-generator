@@ -1,5 +1,6 @@
 package com.pdfgenerator.api
 
+import com.google.gson.Gson
 import com.lowagie.text.Document
 import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.adapter.openpdf.HeaderFooterPageEvent
@@ -9,6 +10,7 @@ import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.RenderState
 import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.ConditionalElement
+import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.ImageElement
@@ -22,6 +24,8 @@ import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
+import com.pdfgenerator.util.withSyntheticBindings
+import com.pdfgenerator.util.withSyntheticPageNumber
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -34,19 +38,16 @@ class PDFGenerator(
 ) {
     private val logger = LoggerFactory.getLogger(PDFGenerator::class.java)
     private val renderEngine = RenderEngine(config)
+    private val gson = Gson()
 
     companion object {
         private val templateCache = ConcurrentHashMap<String, Template>()
 
         @JvmStatic
-        fun clearCache() {
-            templateCache.clear()
-        }
+        fun clearCache() = templateCache.clear()
 
         @JvmStatic
-        fun invalidateCache(templatePath: String) {
-            templateCache.remove(templatePath)
-        }
+        fun invalidateCache(templatePath: String) = templateCache.remove(templatePath)
 
         @JvmStatic
         fun cacheSize(): Int = templateCache.size
@@ -69,9 +70,7 @@ class PDFGenerator(
         template: Template,
         data: Map<String, Any?>,
     ): ByteArray {
-        val estimatedPages = maxOf(1, template.pageElements.size / 10)
-        val initialSize = estimatedPages * 50 * 1024
-        val output = ByteArrayOutputStream(initialSize)
+        val output = ByteArrayOutputStream(maxOf(1, template.pageElements.size / 10) * 50 * 1024)
         generateToStream(template, data, output)
         return output.toByteArray()
     }
@@ -81,9 +80,7 @@ class PDFGenerator(
         dataJson: String,
     ): ByteArray {
         try {
-            val template = Template.fromString(templateJson)
-            val data = parseDataJson(dataJson)
-            return generate(template, data)
+            return generate(Template.fromString(templateJson), parseDataJson(dataJson))
         } catch (e: PDFGenerationException) {
             throw e
         } catch (e: com.google.gson.JsonSyntaxException) {
@@ -102,9 +99,7 @@ class PDFGenerator(
         outputFile: File,
     ) {
         try {
-            val template = Template.fromString(templateJson)
-            val data = parseDataJson(dataJson)
-            generate(template, data, outputFile)
+            generate(Template.fromString(templateJson), parseDataJson(dataJson), outputFile)
         } catch (e: PDFGenerationException) {
             throw e
         } catch (e: Exception) {
@@ -115,19 +110,14 @@ class PDFGenerator(
     fun generateFromPath(
         templatePath: String,
         data: Map<String, Any?>,
-    ): ByteArray {
-        val template = getOrLoadTemplate(templatePath)
-        return generate(template, data)
-    }
+    ): ByteArray = generate(getOrLoadTemplate(templatePath), data)
 
     fun generateFromPath(
         templatePath: String,
         dataJson: String,
     ): ByteArray {
         try {
-            val template = getOrLoadTemplate(templatePath)
-            val data = parseDataJson(dataJson)
-            return generate(template, data)
+            return generate(getOrLoadTemplate(templatePath), parseDataJson(dataJson))
         } catch (e: PDFGenerationException) {
             throw e
         } catch (e: com.google.gson.JsonSyntaxException) {
@@ -147,20 +137,13 @@ class PDFGenerator(
         templatePath: String,
         data: Map<String, Any?>,
         outputFile: File,
-    ) {
-        val template = getOrLoadTemplate(templatePath)
-        generate(template, data, outputFile)
-    }
+    ) = generate(getOrLoadTemplate(templatePath), data, outputFile)
 
     fun generateFromPath(
         templatePath: String,
         dataJson: String,
         outputFile: File,
-    ) {
-        val template = getOrLoadTemplate(templatePath)
-        val data = parseDataJson(dataJson)
-        generate(template, data, outputFile)
-    }
+    ) = generate(getOrLoadTemplate(templatePath), parseDataJson(dataJson), outputFile)
 
     private fun getOrLoadTemplate(templatePath: String): Template {
         return templateCache.getOrPut(templatePath) {
@@ -204,21 +187,14 @@ class PDFGenerator(
             val minified = minifyJson(cleanContent)
             Template.fromString(minified)
         } catch (e: com.google.gson.JsonSyntaxException) {
-            throw PDFGenerationException(
-                "Erro de sintaxe JSON no template '$templatePath': ${e.message}.",
-                e,
-            )
+            throw PDFGenerationException("Erro de sintaxe JSON no template '$templatePath': ${e.message}.", e)
         } catch (e: Exception) {
-            throw PDFGenerationException(
-                "Erro ao parsear template '$templatePath': ${e.message}",
-                e,
-            )
+            throw PDFGenerationException("Erro ao parsear template '$templatePath': ${e.message}", e)
         }
     }
 
     private fun minifyJson(json: String): String {
         return try {
-            val gson = com.google.gson.Gson()
             val jsonElement = gson.fromJson(json, com.google.gson.JsonElement::class.java)
             gson.toJson(jsonElement)
         } catch (e: Exception) {
@@ -234,7 +210,6 @@ class PDFGenerator(
             val stream =
                 this::class.java.classLoader.getResourceAsStream(path)
                     ?: this::class.java.getResourceAsStream(path)
-
             if (stream != null) {
                 return stream.bufferedReader().use { it.readText() }
             }
@@ -246,7 +221,6 @@ class PDFGenerator(
     @Suppress("UNCHECKED_CAST")
     private fun parseDataJson(dataJson: String): Map<String, Any?> {
         try {
-            val gson = com.google.gson.Gson()
             val jsonElement = gson.fromJson(dataJson, com.google.gson.JsonElement::class.java)
             val result = jsonToMap(jsonElement)
             if (result !is Map<*, *>) {
@@ -310,7 +284,7 @@ class PDFGenerator(
             val templateHeaderHeight = template.pageSettings.header?.height ?: 0f
             val templateFooterHeight = template.pageSettings.footer?.height ?: 0f
 
-            val page1Data = data.toMutableMap().apply { put("_pageNumber", 1) }
+            val page1Data = withSyntheticPageNumber(data, 1)
 
             val headerVisiblePage1 =
                 template.pageSettings.header?.let { header ->
@@ -362,11 +336,14 @@ class PDFGenerator(
             val bodyOffsetX = margins.left
 
             val enrichedData =
-                data.toMutableMap().apply {
-                    put("_pageNumber", 1) // Initial page
-                    put("_date", java.time.LocalDate.now().toString())
-                    put("_dateTime", java.time.LocalDateTime.now().toString())
-                }
+                withSyntheticBindings(
+                    data,
+                    mapOf(
+                        "_pageNumber" to 1,
+                        "_date" to java.time.LocalDate.now().toString(),
+                        "_dateTime" to java.time.LocalDateTime.now().toString(),
+                    ),
+                )
 
             val context =
                 RenderContext(
@@ -387,9 +364,11 @@ class PDFGenerator(
                     templateFooterHeight = templateFooterHeight,
                 )
 
+            val pageGroupIndex = buildGroupIndex(template.groups)
+
             template.pageElements.forEach { element ->
                 try {
-                    if (shouldRenderElement(element, template.groups, data)) {
+                    if (shouldRenderElement(element, pageGroupIndex, data)) {
                         val effectiveY =
                             if (element.positionMode == PositionMode.RELATIVE) {
                                 val offsetY = element.relativeOffsetY ?: 10f
@@ -448,32 +427,48 @@ class PDFGenerator(
                         )
 
                     template.summaryPage.background?.let { bg ->
+                        val summaryBackgroundGroupIndex = buildGroupIndex(bg.groups)
                         bg.elements.forEach { element ->
                             try {
-                                if (shouldRenderElement(element, bg.groups, data)) {
+                                if (shouldRenderElement(element, summaryBackgroundGroupIndex, data)) {
                                     renderEngine.render(element, summaryContext.copy(useContentUnder = true))
+                                    if (shouldRenderElement(element, summaryBackgroundGroupIndex, data)) {
+                                        val adjustedElement =
+                                            adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
+                                        renderEngine.render(
+                                            adjustedElement,
+                                            summaryContext.copy(useContentUnder = true),
+                                        )
+                                    }
                                 }
                             } catch (e: Exception) {
-                                logger.error("Erro ao renderizar background da summary ${element.id}: ${e.message}", e)
+                                logger.error(
+                                    "Erro ao renderizar background da summary ${element.id}: ${e.message}",
+                                    e,
+                                )
                             }
                         }
                     }
 
+                    val summaryGroupIndex = buildGroupIndex(template.summaryPage.groups)
                     template.summaryPage.elements.forEach { element ->
                         try {
-                            if (shouldRenderElement(element, template.summaryPage.groups, data)) {
-                                renderEngine.render(element, summaryContext)
+                            if (shouldRenderElement(element, summaryGroupIndex, data)) {
+                                val adjustedElement = adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
+                                renderEngine.render(adjustedElement, summaryContext)
                             }
                         } catch (e: Exception) {
                             logger.error("Erro ao renderizar elemento da summary ${element.id}: ${e.message}", e)
                             if (config.strictMode) {
-                                throw PDFGenerationException("Erro ao renderizar elemento da summary ${element.id}", e)
+                                throw PDFGenerationException(
+                                    "Erro ao renderizar elemento da summary ${element.id}",
+                                    e,
+                                )
                             }
                         }
                     }
                 }
             }
-
             document.close()
         } catch (e: PDFGenerationException) {
             throw e
@@ -482,20 +477,29 @@ class PDFGenerator(
         }
     }
 
+    private fun buildGroupIndex(groups: List<ElementGroup>?): Map<String, ElementGroup> {
+        if (groups.isNullOrEmpty()) {
+            return emptyMap()
+        }
+
+        val groupIndex = HashMap<String, ElementGroup>()
+        groups.forEach { group ->
+            group.elementIds.forEach { elementId ->
+                groupIndex.putIfAbsent(elementId, group)
+            }
+        }
+
+        return groupIndex
+    }
+
     private fun shouldRenderElement(
         element: Element,
-        groups: List<ElementGroup>?,
+        groupIndex: Map<String, ElementGroup>,
         data: Map<String, Any?>,
     ): Boolean {
-        if (groups.isNullOrEmpty()) {
-            return true
-        }
+        if (groupIndex.isEmpty()) return true
 
-        val group = groups.find { it.elementIds.contains(element.id) }
-
-        if (group == null) {
-            return true
-        }
+        val group = groupIndex[element.id] ?: return true
 
         val shouldRender = ConditionEvaluator.evaluate(group.printCondition, data)
 
@@ -504,6 +508,28 @@ class PDFGenerator(
         }
 
         return shouldRender
+    }
+
+    private fun adjustElementForBody(
+        element: Element,
+        bodyOffsetX: Float,
+        bodyOffsetY: Float,
+    ): Element {
+        val adjustedX = bodyOffsetX + element.x
+        val adjustedY = bodyOffsetY + element.y
+
+        return when (element) {
+            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
+            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
+            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
+            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
+            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
+            is TableElement -> element.copy(x = adjustedX, y = adjustedY)
+            is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
+        }
     }
 
     private fun getElementHeight(
@@ -517,9 +543,11 @@ class PDFGenerator(
                 if (element.style?.multiline == true && element.width != null) {
                     val text = resolveTextForHeight(element.dataBinding, element.value, data)
                     if (text != null) {
-                        val contentHeight =
-                            TextRenderer.calculateContentHeight(
-                                text = text,
+                        TextRenderer
+                            .getOrMeasureMultilineLayout(
+                                elementId = element.id,
+                                resolvedText = text,
+                                styleHash = element.style?.hashCode() ?: 0,
                                 boxWidth = element.width,
                                 fontSize = element.style?.fontSize ?: 12f,
                                 lineHeight = element.style?.lineHeight,
@@ -529,8 +557,8 @@ class PDFGenerator(
                                 paddingRight = element.style?.paddingRight ?: 0f,
                                 firstLineIndent = element.style?.firstLineIndent ?: 0f,
                                 fontFamily = element.style?.fontFamily ?: "Helvetica",
-                            )
-                        kotlin.math.max(definedHeight, contentHeight)
+                                cache = context.textLayoutCache,
+                            ).contentHeight
                     } else {
                         definedHeight
                     }
@@ -540,10 +568,13 @@ class PDFGenerator(
             }
             is StaticTextElement -> {
                 val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
+
                 if (element.style?.multiline == true && element.width != null) {
-                    val contentHeight =
-                        TextRenderer.calculateContentHeight(
-                            text = element.value,
+                    TextRenderer
+                        .getOrMeasureMultilineLayout(
+                            elementId = element.id,
+                            resolvedText = element.value,
+                            styleHash = element.style?.hashCode() ?: 0,
                             boxWidth = element.width,
                             fontSize = element.style?.fontSize ?: 12f,
                             lineHeight = element.style?.lineHeight,
@@ -553,8 +584,8 @@ class PDFGenerator(
                             paddingRight = element.style?.paddingRight ?: 0f,
                             firstLineIndent = element.style?.firstLineIndent ?: 0f,
                             fontFamily = element.style?.fontFamily ?: "Helvetica",
-                        )
-                    kotlin.math.max(definedHeight, contentHeight)
+                            cache = context.textLayoutCache,
+                        ).contentHeight
                 } else {
                     definedHeight
                 }
@@ -595,7 +626,9 @@ class PDFGenerator(
             is ConditionalElement -> {
                 element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: 0f
             }
-            else -> 0f
+            is ContainerElement -> {
+                element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: element.height
+            }
         }
     }
 
@@ -635,20 +668,24 @@ class PDFGenerator(
                             element.height
                         }
                     }
+
                     is RectangleElement -> {
                         val h = element.height
                         when (h) {
                             is String -> {
                                 if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
                             }
+
                             is Number -> h.toFloat()
                             else -> 20f
                         }
                     }
+
                     is LineElement -> {
                         val lineHeight = element.resolveHeight(loopHeight)
                         if (lineHeight > 0) kotlin.math.abs(lineHeight) else 1f
                     }
+
                     is BarcodeElement -> element.height
                     else -> 20f
                 }

@@ -80,7 +80,8 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                 itemEndY = itemStartY + itemHeight
             }
 
-            val loopContext = LoopContext(item, index)
+            val normalizedItemMap = (item as? Map<*, *>)?.mapKeys { it.key.toString() }
+            val loopContext = LoopContext(item = item, index = index, normalizedItemMap = normalizedItemMap)
             val itemContext =
                 context.copy(
                     loopContext = loopContext,

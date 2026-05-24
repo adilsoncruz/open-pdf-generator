@@ -2181,8 +2181,10 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         )
       }
 
-      case 'loop': {
+      case 'loop':
+      case 'container': {
         const loopElements = element.elements || []
+        const isContainer = element.type === 'container'
         const loopBinding = element.dataBinding || ''
         const loopItemSpacing = element.itemSpacing || 20
         const loopWidth = typeof element.width === 'number' ? element.width : 400
@@ -2206,7 +2208,9 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
           >
             
             <div 
-              className="absolute flex items-center gap-2 px-2 py-1 bg-primary-500 text-white rounded-md shadow-sm"
+              className={`absolute flex items-center gap-2 px-2 py-1 bg-primary-500 text-white rounded-md shadow-sm pointer-events-none transition-opacity ${
+                isSelected ? 'opacity-100' : 'opacity-70'
+              }`}
               style={{ top: -24, left: 0 }}
             >
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -2215,10 +2219,12 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                 <path d="M7 22l-4-4 4-4" />
                 <path d="M21 13v1a4 4 0 01-4 4H3" />
               </svg>
-              <span className="text-[10px] font-semibold">LOOP</span>
-              <span className="text-[10px] opacity-80 truncate max-w-[100px]">
-                {loopBinding || 'binding'}
-              </span>
+              <span className="text-[10px] font-semibold">{isContainer ? 'CONTAINER' : 'LOOP'}</span>
+              {!isContainer && (
+                <span className="text-[10px] opacity-80 truncate max-w-[100px]">
+                  {loopBinding || 'binding'}
+                </span>
+              )}
               <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded ml-1">
                 {loopElements.length}
               </span>
@@ -2254,7 +2260,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             </div>
             
             {/* Spacing badge - bottom right corner */}
-            <div className="absolute bottom-1 right-1">
+            <div className="absolute bottom-1 right-1 pointer-events-none">
               <span className="text-[8px] text-primary-400 bg-primary-50 px-1.5 py-0.5 rounded">
                 spacing: {loopItemSpacing}px
               </span>
@@ -2377,4 +2383,3 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     </div>
   )
 }
-

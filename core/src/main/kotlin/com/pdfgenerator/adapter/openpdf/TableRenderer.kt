@@ -17,6 +17,7 @@ import com.pdfgenerator.util.DataBindingResolver
 import com.pdfgenerator.util.ExpressionProcessor
 import com.pdfgenerator.util.FontCache
 import com.pdfgenerator.util.Formatter
+import com.pdfgenerator.util.withSyntheticPageNumber
 import org.slf4j.LoggerFactory
 
 class TableRenderer : Renderer<TableElement> {
@@ -107,7 +108,7 @@ class TableRenderer : Renderer<TableElement> {
                 fun getHeaderHeightForPage(pageNum: Int): Float {
                     val condition = context.headerPrintCondition
                     if (condition == null) return context.templateHeaderHeight
-                    val pageData = context.data.toMutableMap().apply { put("_pageNumber", pageNum) }
+                    val pageData = withSyntheticPageNumber(context.data, pageNum)
                     return if (ConditionEvaluator.evaluate(condition, pageData, null)) {
                         context.templateHeaderHeight
                     } else {
@@ -118,7 +119,7 @@ class TableRenderer : Renderer<TableElement> {
                 fun getFooterHeightForPage(pageNum: Int): Float {
                     val condition = context.footerPrintCondition
                     if (condition == null) return context.templateFooterHeight
-                    val pageData = context.data.toMutableMap().apply { put("_pageNumber", pageNum) }
+                    val pageData = withSyntheticPageNumber(context.data, pageNum)
                     return if (ConditionEvaluator.evaluate(condition, pageData, null)) {
                         context.templateFooterHeight
                     } else {
@@ -198,12 +199,17 @@ class TableRenderer : Renderer<TableElement> {
             is List<*> ->
                 data.mapNotNull { item ->
                     when (item) {
-                        is Map<*, *> -> item.mapKeys { it.key.toString() }
+                        is Map<*, *> -> toStringKeyMap(item)
                         else -> null
                     }
                 }
             else -> emptyList()
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun toStringKeyMap(map: Map<*, *>): Map<String, Any?> {
+        return map as? Map<String, Any?> ?: map.mapKeys { it.key.toString() }
     }
 
     private fun addHeaders(
@@ -305,7 +311,7 @@ class TableRenderer : Renderer<TableElement> {
             element.columns.forEachIndexed { colIndex, column ->
                 val value =
                     if (ExpressionProcessor.hasTransformations(column.field)) {
-                        ExpressionProcessor.process(column.field, row.mapKeys { it.key }, null)
+                        ExpressionProcessor.process(column.field, row, null)
                     } else {
                         row[column.field]
                     }

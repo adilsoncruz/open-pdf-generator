@@ -15,6 +15,18 @@ class RenderState {
     }
 }
 
+data class TextLayoutCacheKey(
+    val elementId: String,
+    val resolvedText: String,
+    val styleHash: Int,
+)
+
+data class TextLayoutMeasurement(
+    val lines: List<String>,
+    val lineSpacing: Float,
+    val contentHeight: Float,
+)
+
 data class RenderContext(
     val document: Document,
     val writer: PdfWriter,
@@ -34,6 +46,7 @@ data class RenderContext(
     val footerPrintCondition: String? = null,
     val templateHeaderHeight: Float = 0f,
     val templateFooterHeight: Float = 0f,
+    val textLayoutCache: MutableMap<TextLayoutCacheKey, TextLayoutMeasurement> = mutableMapOf(),
 ) {
     fun resolveX(x: Float): Float = offsetX + x
 
@@ -43,4 +56,5 @@ data class RenderContext(
 data class LoopContext(
     val item: Any?,
     val index: Int,
+    val normalizedItemMap: Map<String, Any?>? = null,
 )
