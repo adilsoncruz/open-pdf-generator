@@ -1,8 +1,8 @@
 package com.pdfgenerator.api
 
+import com.google.gson.Gson
 import com.lowagie.text.Document
 import com.lowagie.text.pdf.PdfWriter
-import com.google.gson.Gson
 import com.pdfgenerator.adapter.openpdf.HeaderFooterPageEvent
 import com.pdfgenerator.adapter.openpdf.TextRenderer
 import com.pdfgenerator.engine.RenderContext
@@ -24,6 +24,8 @@ import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
+import com.pdfgenerator.util.withSyntheticBindings
+import com.pdfgenerator.util.withSyntheticPageNumber
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -42,14 +44,10 @@ class PDFGenerator(
         private val templateCache = ConcurrentHashMap<String, Template>()
 
         @JvmStatic
-        fun clearCache() {
-            templateCache.clear()
-        }
+        fun clearCache() = templateCache.clear()
 
         @JvmStatic
-        fun invalidateCache(templatePath: String) {
-            templateCache.remove(templatePath)
-        }
+        fun invalidateCache(templatePath: String) = templateCache.remove(templatePath)
 
         @JvmStatic
         fun cacheSize(): Int = templateCache.size
@@ -72,9 +70,7 @@ class PDFGenerator(
         template: Template,
         data: Map<String, Any?>,
     ): ByteArray {
-        val estimatedPages = maxOf(1, template.bodyElements().size / 10)
-        val initialSize = estimatedPages * 50 * 1024
-        val output = ByteArrayOutputStream(initialSize)
+        val output = ByteArrayOutputStream(maxOf(1, template.pageElements.size / 10) * 50 * 1024)
         generateToStream(template, data, output)
         return output.toByteArray()
     }
@@ -84,9 +80,7 @@ class PDFGenerator(
         dataJson: String,
     ): ByteArray {
         try {
-            val template = Template.fromString(templateJson)
-            val data = parseDataJson(dataJson)
-            return generate(template, data)
+            return generate(Template.fromString(templateJson), parseDataJson(dataJson))
         } catch (e: PDFGenerationException) {
             throw e
         } catch (e: com.google.gson.JsonSyntaxException) {
@@ -105,9 +99,7 @@ class PDFGenerator(
         outputFile: File,
     ) {
         try {
-            val template = Template.fromString(templateJson)
-            val data = parseDataJson(dataJson)
-            generate(template, data, outputFile)
+            generate(Template.fromString(templateJson), parseDataJson(dataJson), outputFile)
         } catch (e: PDFGenerationException) {
             throw e
         } catch (e: Exception) {
@@ -118,19 +110,14 @@ class PDFGenerator(
     fun generateFromPath(
         templatePath: String,
         data: Map<String, Any?>,
-    ): ByteArray {
-        val template = getOrLoadTemplate(templatePath)
-        return generate(template, data)
-    }
+    ): ByteArray = generate(getOrLoadTemplate(templatePath), data)
 
     fun generateFromPath(
         templatePath: String,
         dataJson: String,
     ): ByteArray {
         try {
-            val template = getOrLoadTemplate(templatePath)
-            val data = parseDataJson(dataJson)
-            return generate(template, data)
+            return generate(getOrLoadTemplate(templatePath), parseDataJson(dataJson))
         } catch (e: PDFGenerationException) {
             throw e
         } catch (e: com.google.gson.JsonSyntaxException) {
@@ -150,20 +137,13 @@ class PDFGenerator(
         templatePath: String,
         data: Map<String, Any?>,
         outputFile: File,
-    ) {
-        val template = getOrLoadTemplate(templatePath)
-        generate(template, data, outputFile)
-    }
+    ) = generate(getOrLoadTemplate(templatePath), data, outputFile)
 
     fun generateFromPath(
         templatePath: String,
         dataJson: String,
         outputFile: File,
-    ) {
-        val template = getOrLoadTemplate(templatePath)
-        val data = parseDataJson(dataJson)
-        generate(template, data, outputFile)
-    }
+    ) = generate(getOrLoadTemplate(templatePath), parseDataJson(dataJson), outputFile)
 
     private fun getOrLoadTemplate(templatePath: String): Template {
         return templateCache.getOrPut(templatePath) {
@@ -207,15 +187,9 @@ class PDFGenerator(
             val minified = minifyJson(cleanContent)
             Template.fromString(minified)
         } catch (e: com.google.gson.JsonSyntaxException) {
-            throw PDFGenerationException(
-                "Erro de sintaxe JSON no template '$templatePath': ${e.message}.",
-                e,
-            )
+            throw PDFGenerationException("Erro de sintaxe JSON no template '$templatePath': ${e.message}.", e)
         } catch (e: Exception) {
-            throw PDFGenerationException(
-                "Erro ao parsear template '$templatePath': ${e.message}",
-                e,
-            )
+            throw PDFGenerationException("Erro ao parsear template '$templatePath': ${e.message}", e)
         }
     }
 
@@ -236,7 +210,6 @@ class PDFGenerator(
             val stream =
                 this::class.java.classLoader.getResourceAsStream(path)
                     ?: this::class.java.getResourceAsStream(path)
-
             if (stream != null) {
                 return stream.bufferedReader().use { it.readText() }
             }
@@ -311,7 +284,7 @@ class PDFGenerator(
             val templateHeaderHeight = template.pageSettings.header?.height ?: 0f
             val templateFooterHeight = template.pageSettings.footer?.height ?: 0f
 
-            val page1Data = data.toMutableMap().apply { put("_pageNumber", 1) }
+            val page1Data = withSyntheticPageNumber(data, 1)
 
             val headerVisiblePage1 =
                 template.pageSettings.header?.let { header ->
@@ -363,11 +336,14 @@ class PDFGenerator(
             val bodyOffsetX = margins.left
 
             val enrichedData =
-                data.toMutableMap().apply {
-                    put("_pageNumber", 1) // Initial page
-                    put("_date", java.time.LocalDate.now().toString())
-                    put("_dateTime", java.time.LocalDateTime.now().toString())
-                }
+                withSyntheticBindings(
+                    data,
+                    mapOf(
+                        "_pageNumber" to 1,
+                        "_date" to java.time.LocalDate.now().toString(),
+                        "_dateTime" to java.time.LocalDateTime.now().toString(),
+                    ),
+                )
 
             val context =
                 RenderContext(
@@ -379,6 +355,8 @@ class PDFGenerator(
                     containerWidth = bodyContainerWidth,
                     containerHeight = bodyContainerHeight,
                     renderState = renderState,
+                    offsetX = bodyOffsetX,
+                    offsetY = bodyOffsetY,
                     bodyOffsetY = bodyOffsetY,
                     headerPrintCondition = headerCondition,
                     footerPrintCondition = footerCondition,
@@ -391,16 +369,24 @@ class PDFGenerator(
             template.bodyElements().forEach { element ->
                 try {
                     if (shouldRenderElement(element, pageGroupIndex, data)) {
+                        val isRelativeFlow =
+                            element.positionMode == PositionMode.RELATIVE || element is ContainerElement
+
                         val effectiveY =
-                            if (element.positionMode == PositionMode.RELATIVE) {
-                                val offsetY = element.relativeOffsetY ?: 10f
+                            if (isRelativeFlow) {
+                                val offsetY = element.relativeOffsetY ?: 0f
                                 renderState.currentY + offsetY
                             } else {
                                 element.y
                             }
 
-                        val adjustedElement = adjustElementForBodyWithY(element, bodyOffsetX, bodyOffsetY, effectiveY)
-                        renderEngine.render(adjustedElement, context)
+                        val renderContext =
+                            if (isRelativeFlow) {
+                                context.copy(offsetY = bodyOffsetY + (effectiveY - element.y))
+                            } else {
+                                context
+                            }
+                        renderEngine.render(element, renderContext)
 
                         if (element !is LoopElement && element !is TableElement) {
                             val elementHeight = getElementHeight(element, data, context)
@@ -438,6 +424,8 @@ class PDFGenerator(
                             isSummaryPage = true,
                             containerWidth = summaryContainerWidth,
                             containerHeight = summaryContainerHeight,
+                            offsetX = summaryOffsetX,
+                            offsetY = summaryOffsetY,
                             bodyOffsetY = summaryOffsetY,
                         )
 
@@ -446,11 +434,21 @@ class PDFGenerator(
                         bg.elements.forEach { element ->
                             try {
                                 if (shouldRenderElement(element, summaryBackgroundGroupIndex, data)) {
-                                    val adjustedElement = adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
-                                    renderEngine.render(adjustedElement, summaryContext.copy(useContentUnder = true))
+                                    renderEngine.render(element, summaryContext.copy(useContentUnder = true))
+                                    if (shouldRenderElement(element, summaryBackgroundGroupIndex, data)) {
+                                        val adjustedElement =
+                                            adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
+                                        renderEngine.render(
+                                            adjustedElement,
+                                            summaryContext.copy(useContentUnder = true),
+                                        )
+                                    }
                                 }
                             } catch (e: Exception) {
-                                logger.error("Erro ao renderizar background da summary ${element.id}: ${e.message}", e)
+                                logger.error(
+                                    "Erro ao renderizar background da summary ${element.id}: ${e.message}",
+                                    e,
+                                )
                             }
                         }
                     }
@@ -465,13 +463,15 @@ class PDFGenerator(
                         } catch (e: Exception) {
                             logger.error("Erro ao renderizar elemento da summary ${element.id}: ${e.message}", e)
                             if (config.strictMode) {
-                                throw PDFGenerationException("Erro ao renderizar elemento da summary ${element.id}", e)
+                                throw PDFGenerationException(
+                                    "Erro ao renderizar elemento da summary ${element.id}",
+                                    e,
+                                )
                             }
                         }
                     }
                 }
             }
-
             document.close()
         } catch (e: PDFGenerationException) {
             throw e
@@ -500,15 +500,9 @@ class PDFGenerator(
         groupIndex: Map<String, ElementGroup>,
         data: Map<String, Any?>,
     ): Boolean {
-        if (groupIndex.isEmpty()) {
-            return true
-        }
+        if (groupIndex.isEmpty()) return true
 
-        val group = groupIndex[element.id]
-
-        if (group == null) {
-            return true
-        }
+        val group = groupIndex[element.id] ?: return true
 
         val shouldRender = ConditionEvaluator.evaluate(group.printCondition, data)
 
@@ -541,29 +535,6 @@ class PDFGenerator(
         }
     }
 
-    private fun adjustElementForBodyWithY(
-        element: Element,
-        bodyOffsetX: Float,
-        bodyOffsetY: Float,
-        effectiveY: Float,
-    ): Element {
-        val adjustedX = bodyOffsetX + element.x
-        val adjustedY = bodyOffsetY + effectiveY
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            is TableElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
-        }
-    }
-
     private fun getElementHeight(
         element: Element,
         data: Map<String, Any?>,
@@ -571,14 +542,42 @@ class PDFGenerator(
     ): Float {
         return when (element) {
             is TextElement -> {
-                val overflow = element.style?.overflow?.lowercase() ?: "visible"
                 val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-
-                if (overflow == "auto" && element.style?.multiline == true && element.width != null) {
+                if (element.style?.multiline == true && element.width != null) {
                     val text = resolveTextForHeight(element.dataBinding, element.value, data)
                     if (text != null) {
-                        TextRenderer.calculateContentHeight(
-                            text = text,
+                        TextRenderer
+                            .getOrMeasureMultilineLayout(
+                                elementId = element.id,
+                                resolvedText = text,
+                                styleHash = element.style?.hashCode() ?: 0,
+                                boxWidth = element.width,
+                                fontSize = element.style?.fontSize ?: 12f,
+                                lineHeight = element.style?.lineHeight,
+                                paddingTop = element.style?.paddingTop ?: 0f,
+                                paddingBottom = element.style?.paddingBottom ?: 0f,
+                                paddingLeft = element.style?.paddingLeft ?: 0f,
+                                paddingRight = element.style?.paddingRight ?: 0f,
+                                firstLineIndent = element.style?.firstLineIndent ?: 0f,
+                                fontFamily = element.style?.fontFamily ?: "Helvetica",
+                                cache = context.textLayoutCache,
+                            ).contentHeight
+                    } else {
+                        definedHeight
+                    }
+                } else {
+                    definedHeight
+                }
+            }
+            is StaticTextElement -> {
+                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
+
+                if (element.style?.multiline == true && element.width != null) {
+                    TextRenderer
+                        .getOrMeasureMultilineLayout(
+                            elementId = element.id,
+                            resolvedText = element.value,
+                            styleHash = element.style?.hashCode() ?: 0,
                             boxWidth = element.width,
                             fontSize = element.style?.fontSize ?: 12f,
                             lineHeight = element.style?.lineHeight,
@@ -588,31 +587,8 @@ class PDFGenerator(
                             paddingRight = element.style?.paddingRight ?: 0f,
                             firstLineIndent = element.style?.firstLineIndent ?: 0f,
                             fontFamily = element.style?.fontFamily ?: "Helvetica",
-                        )
-                    } else {
-                        definedHeight
-                    }
-                } else {
-                    definedHeight
-                }
-            }
-            is StaticTextElement -> {
-                val overflow = element.style?.overflow?.lowercase() ?: "visible"
-                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-
-                if (overflow == "auto" && element.style?.multiline == true && element.width != null) {
-                    TextRenderer.calculateContentHeight(
-                        text = element.value,
-                        boxWidth = element.width,
-                        fontSize = element.style?.fontSize ?: 12f,
-                        lineHeight = element.style?.lineHeight,
-                        paddingTop = element.style?.paddingTop ?: 0f,
-                        paddingBottom = element.style?.paddingBottom ?: 0f,
-                        paddingLeft = element.style?.paddingLeft ?: 0f,
-                        paddingRight = element.style?.paddingRight ?: 0f,
-                        firstLineIndent = element.style?.firstLineIndent ?: 0f,
-                        fontFamily = element.style?.fontFamily ?: "Helvetica",
-                    )
+                            cache = context.textLayoutCache,
+                        ).contentHeight
                 } else {
                     definedHeight
                 }
@@ -644,15 +620,21 @@ class PDFGenerator(
             is LoopElement -> {
                 val loopData = DataBindingResolver.resolve(element.dataBinding, data, null)
                 val itemCount = if (loopData is List<*>) loopData.size else 0
-                val itemHeight = calculateLoopItemHeight(element.elements, element.width, element.height)
-                val totalSpacing = if (itemCount > 1) element.itemSpacing * (itemCount - 1) else 0f
+                val calculatedItemHeight = calculateLoopItemHeight(element.elements, element.width, element.height)
+                val itemHeight = if (element.height > 0f) element.height else calculatedItemHeight
+                val spacing = element.itemSpacing.coerceAtLeast(0f)
+                val totalSpacing = if (itemCount > 1) spacing * (itemCount - 1) else 0f
                 (itemCount * itemHeight) + totalSpacing
             }
             is ConditionalElement -> {
                 element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: 0f
             }
             is ContainerElement -> {
-                element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: element.height
+                val contentHeight =
+                    element.elements.maxOfOrNull { child ->
+                        child.y + getElementHeight(child, data, context)
+                    } ?: 0f
+                kotlin.math.max(element.height, contentHeight)
             }
         }
     }
@@ -673,7 +655,7 @@ class PDFGenerator(
 
     private fun calculateLoopItemHeight(
         elements: List<Element>,
-        loopWidth: Float,
+        loopWidth: Any,
         loopHeight: Float,
     ): Float {
         if (elements.isEmpty()) {
@@ -693,20 +675,24 @@ class PDFGenerator(
                             element.height
                         }
                     }
+
                     is RectangleElement -> {
                         val h = element.height
                         when (h) {
                             is String -> {
                                 if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
                             }
+
                             is Number -> h.toFloat()
                             else -> 20f
                         }
                     }
+
                     is LineElement -> {
                         val lineHeight = element.resolveHeight(loopHeight)
                         if (lineHeight > 0) kotlin.math.abs(lineHeight) else 1f
                     }
+
                     is BarcodeElement -> element.height
                     else -> 20f
                 }

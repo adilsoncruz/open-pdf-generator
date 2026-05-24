@@ -91,9 +91,11 @@ class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElem
             scaleImage(image, element)
 
             val pageHeight = context.document.pageSize.height
-            val yPosition = pageHeight - element.y - element.height
+            val x = context.resolveX(element.x)
+            val y = context.resolveY(element.y)
+            val yPosition = pageHeight - y - element.height
 
-            image.setAbsolutePosition(element.x, yPosition)
+            image.setAbsolutePosition(x, yPosition)
             context.document.add(image)
         } catch (e: Exception) {
             logger.error("Erro ao carregar imagem ${element.id}: ${e.message}", e)

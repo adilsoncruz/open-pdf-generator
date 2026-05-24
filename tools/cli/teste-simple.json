@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "New Template",
+    "description": "",
+    "author": "",
+    "created": "2026-05-10T22:09:21.186Z",
+    "modified": "2026-05-10T22:09:21.187Z",
+    "tags": []
+  },
+  "pageSettings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 30,
+      "right": 30,
+      "bottom": 30,
+      "left": 10
+    },
+    "bodyBackground": {
+      "elements": [
+        {
+          "type": "rectangle",
+          "id": "rectangle-1778455018080",
+          "x": 0,
+          "y": 0,
+          "width": "100%",
+          "height": "100%",
+          "style": {
+            "fillColor": null,
+            "borderColor": null,
+            "borderWidth": 2,
+            "cornerRadius": 0
+          }
+        }
+      ]
+    }
+  },
+  "pageElements": [
+    {
+      "type": "text",
+      "id": "text-1778450987570",
+      "x": 0,
+      "y": 0,
+      "value": "New Text",
+      "width": 100,
+      "height": 30,
+      "dataBinding": "text",
+      "style": {
+        "fontSize": 12,
+        "fontFamily": "Helvetica",
+        "fontWeight": "normal",
+        "color": "#000000",
+        "alignment": "left",
+        "multiline": true
+      }
+    },
+    {
+      "type": "text",
+      "id": "text-1778450987579",
+      "x": 0,
+      "y": 0,
+      "value": "New Text",
+      "width": 100,
+      "height": 30,
+      "dataBinding": "text_2",
+      "positionMode": "RELATIVE",
+      "style": {
+        "fontSize": 12,
+        "fontFamily": "Helvetica",
+        "fontWeight": "normal",
+        "color": "#000000",
+        "alignment": "left",
+        "multiline": true
+      }
+    }
+  ]
+}

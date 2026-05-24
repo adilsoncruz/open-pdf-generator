@@ -137,8 +137,11 @@ export default function ElementsToolbar() {
       case 'container':
         element = {
           ...baseElement,
+          x: 0,
           width: 400,
           height: 150,
+          positionMode: 'RELATIVE',
+          relativeOffsetY: 0,
           elements: [],
           style: {
             borderColor: '#0ea5e9',
