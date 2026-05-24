@@ -4,7 +4,6 @@ import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.BarcodeElement
-import com.pdfgenerator.model.ConditionalElement
 import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ImageElement
