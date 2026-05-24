@@ -514,12 +514,13 @@ data class ContainerElement(
     override val id: String,
     override val x: Float = 0f,
     override val y: Float = 0f,
-    override val positionMode: PositionMode? = PositionMode.RELATIVE,
     override val relativeOffsetY: Float? = null,
     val width: Float = 400f,
     val height: Float = 50f,
     val elements: List<Element>,
 ) : Element {
+    override val positionMode: PositionMode = PositionMode.RELATIVE
+
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
         elements.forEach { element ->
@@ -575,7 +576,7 @@ class ElementDeserializer : JsonDeserializer<Element> {
             "barcode" -> gson.fromJson(json, BarcodeElement::class.java)
             "conditional" -> gson.fromJson(json, ConditionalElement::class.java)
             "loop" -> gson.fromJson(json, LoopElement::class.java)
-            "container" -> gson.fromJson(json, ContainerElement::class.java).copy(positionMode = PositionMode.RELATIVE)
+            "container" -> gson.fromJson(json, ContainerElement::class.java)
             else -> throw IllegalArgumentException("Unknown element type: $type")
         }
     }
