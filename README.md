@@ -139,6 +139,10 @@ Templates are JSON files with page settings, header/footer, and body elements:
 }
 ```
 
+> Coordinate system note: `pageElements` (body) start **below** the top margin + header area.  
+> This means body element/container/loop `y` values are relative to the body content area, not the physical top of the page.  
+> Example: with `header.height = 100` and `margins.top = 15`, use `y: 0` to start right after the header (do **not** add `115` again).
+
 ## ✨ Features
 
 ### Core Engine
