@@ -5,6 +5,7 @@ import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.LoopElement
+import com.pdfgenerator.model.RectangleElement
 import kotlin.math.max
 
 class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<ContainerElement> {
@@ -31,7 +32,20 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
                 } else {
                     containerContext
                 }
-            renderEngine.render(childElement, childContext)
+
+            val adjustedChildElement =
+                if (childElement is RectangleElement) {
+                    val isFullWidth = childElement.width.toString() == "100%" || childElement.width.toString() == "100.0%"
+                    val isFullHeight = childElement.height.toString() == "100%" || childElement.height.toString() == "100.0%"
+                    childElement.copy(
+                        x = if (isFullWidth) 0f else childElement.x,
+                        y = if (isFullHeight) 0f else childElement.y,
+                    )
+                } else {
+                    childElement
+                }
+
+            renderEngine.render(adjustedChildElement, childContext)
         }
     }
 }
