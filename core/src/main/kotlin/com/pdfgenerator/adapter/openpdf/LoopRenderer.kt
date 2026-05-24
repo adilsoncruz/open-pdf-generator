@@ -79,9 +79,10 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                 context.document.newPage()
                 itemsRenderedOnCurrentPage = 0
                 currentYOffset = 0f
-                itemStartY = loopBaseY
+                val restartAtTopOfBody = contextOffsetInBody > 0f
+                itemStartY = if (restartAtTopOfBody) 0f else loopBaseY
                 itemEndY = itemStartY + itemHeight
-                itemEndYInBody = itemEndY
+                itemEndYInBody = if (restartAtTopOfBody) itemEndY else contextOffsetInBody + itemEndY
             }
 
             val normalizedItemMap = (item as? Map<*, *>)?.mapKeys { it.key.toString() }
