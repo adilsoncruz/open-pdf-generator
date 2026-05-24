@@ -10,7 +10,6 @@ const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
   { type: 'line', label: 'Line', icon: 'line' },
   { type: 'barcode', label: 'Barcode/QR', icon: 'barcode' },
   { type: 'loop', label: 'Loop', icon: 'loop' },
-  { type: 'container', label: 'Container', icon: 'container' },
 ]
 
 export default function ElementsToolbar() {

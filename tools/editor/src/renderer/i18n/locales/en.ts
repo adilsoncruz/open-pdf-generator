@@ -259,7 +259,7 @@ const en: Translations = {
     invalidTemplateHint: 'The selected file is not a valid PDF template.',
     missingVersion: 'Missing "version" field.',
     missingPageSettings: 'Missing "pageSettings" field.',
-    missingElements: 'Missing "elements" or "pageElements" field.',
+    missingElements: 'Missing "elements" or "page" field.',
     invalidJson: 'Invalid JSON format.',
     validTemplate: 'Template is valid.',
     templateValidationFailed: 'The selected file is not a valid PDF template. Please check if the file follows the correct format.',

@@ -366,7 +366,7 @@ class PDFGenerator(
 
             val pageGroupIndex = buildGroupIndex(template.groups)
 
-            template.pageElements.forEach { element ->
+            template.bodyElements().forEach { element ->
                 try {
                     if (shouldRenderElement(element, pageGroupIndex, data)) {
                         val isRelativeFlow =

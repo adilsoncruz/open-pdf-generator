@@ -172,7 +172,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         orientation: 'portrait',
         margins: { top: 30, right: 30, bottom: 30, left: 30 },
       },
-      pageElements: [],
+      page: [],
     })
     setCurrentFilePath(null)
   }
@@ -203,7 +203,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
           structuralError = t.validation.missingVersion
         } else if (!loadedTemplate.pageSettings) {
           structuralError = t.validation.missingPageSettings
-        } else if (!loadedTemplate.elements && !loadedTemplate.pageElements) {
+        } else if (!loadedTemplate.elements && !loadedTemplate.page) {
           structuralError = t.validation.missingElements
         }
         

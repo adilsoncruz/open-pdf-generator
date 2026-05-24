@@ -131,7 +131,7 @@ export function EditorPage() {
           ) {
             allElements = template.pageSettings.bodyBackground.elements
           } else {
-            allElements = template.pageElements
+            allElements = template.page
           }
 
           selectedElementIds.forEach((id) => {

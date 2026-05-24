@@ -69,7 +69,7 @@ export default function PropertiesPanel() {
     } else if (selectedElementLocation === 'summary' && template.summaryPage) {
       elements = template.summaryPage.elements.filter((el) => selectedElementIds.includes(el.id))
     } else {
-      elements = template.pageElements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.page.filter((el) => selectedElementIds.includes(el.id))
     }
     
     return elements
@@ -87,7 +87,7 @@ export default function PropertiesPanel() {
     } else if (selectedElementLocation === 'summary' && template.summaryPage) {
       loopElement = template.summaryPage.elements.find(el => el.id === selectedLoopParentId) || null
     } else {
-      loopElement = template.pageElements.find(el => el.id === selectedLoopParentId) || null
+      loopElement = template.page.find(el => el.id === selectedLoopParentId) || null
     }
     
     if (loopElement && loopElement.elements) {
@@ -225,11 +225,13 @@ export default function PropertiesPanel() {
         { id: 'appearance', label: 'Appearance' },
         { id: 'barcode', label: 'Code' },
       ]
-    } else if (selectedElement.type === 'loop' || selectedElement.type === 'container') {
+    } else if (selectedElement.type === 'loop') {
       return [
         { id: 'appearance', label: 'Appearance' },
         { id: 'loop', label: 'Loop' },
       ]
+    } else if (selectedElement.type === 'container') {
+      return [{ id: 'appearance', label: 'Appearance' }]
     } else if (selectedElement.type === 'table') {
       return [
         { id: 'general', label: 'General' },
@@ -2058,7 +2060,8 @@ export default function PropertiesPanel() {
                       <label className="text-xs font-medium theme-text-muted">ID</label>
                       <Input
                         value={selectedElement.id}
-                        disabled
+                        onChange={(e) => handleUpdate('id', e.target.value)}
+                        disabled={selectedElement.type !== 'container'}
                         size="sm"
                       />
                     </div>
@@ -2066,17 +2069,13 @@ export default function PropertiesPanel() {
                   </>
                 )}
 
-                <PropertyGroup title="Location" collapsible={false}>
-                  <div className="grid grid-cols-2 gap-3">
-                    <NumberField
-                      label="X"
-                        value={selectedElement.x}
-                      onValueChange={(value) => handleUpdate('x', value)}
-                    />
-                    <NumberField
-                      label="Y"
-                        value={selectedElement.y}
-                      onValueChange={(value) => handleUpdate('y', value)}
+                {selectedElement.type === 'loop' && (
+                  <PropertyGroup title="Location" collapsible={false}>
+                    <div className="grid grid-cols-2 gap-3">
+                      <NumberField
+                        label="X"
+                          value={selectedElement.x}
+                        onValueChange={(value) => handleUpdate('x', value)}
                       />
                   </div>
                   
@@ -2135,12 +2134,14 @@ export default function PropertiesPanel() {
                 </PropertyGroup>
 
                 <PropertyGroup title="Size" collapsible={false}>
-                  <div className="grid grid-cols-2 gap-3">
-                    <NumberField
-                      label="W (Width)"
-                        value={selectedElement.width}
-                      onValueChange={(value) => handleUpdate('width', value)}
-                    />
+                  <div className={`grid gap-3 ${selectedElement.type === 'container' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {selectedElement.type === 'loop' && (
+                      <NumberField
+                        label="W (Width)"
+                          value={selectedElement.width}
+                        onValueChange={(value) => handleUpdate('width', value)}
+                      />
+                    )}
                     <NumberField
                       label="H (Height)"
                         value={selectedElement.height}
@@ -3352,7 +3353,7 @@ function GroupPropertiesPanel({
     } else if (location === 'bodyBackground' && template.pageSettings.bodyBackground) {
       allElements = template.pageSettings.bodyBackground.elements
     } else {
-      allElements = template.pageElements
+      allElements = template.page
     }
     
     return allElements.filter(el => group.elementIds.includes(el.id))

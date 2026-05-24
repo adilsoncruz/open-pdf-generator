@@ -12,10 +12,13 @@ data class Template(
     val version: String,
     val metadata: TemplateMetadata = TemplateMetadata(),
     val pageSettings: PageSettings,
-    val pageElements: List<Element> = emptyList(),
+    val page: List<Element>? = null,
+    val pageElements: List<Element>? = null,
     val groups: List<ElementGroup>? = null,
     val summaryPage: SummaryPage? = null,
 ) {
+    fun bodyElements(): List<Element> = page ?: pageElements ?: emptyList()
+
     companion object {
         private val gson: Gson =
             GsonBuilder()
@@ -46,16 +49,17 @@ data class Template(
             errors.add(ValidationError("version", "Version must be in X.Y format"))
         }
 
-        val ids = pageElements.map { it.id }
+        val elements = bodyElements()
+        val ids = elements.map { it.id }
         val duplicateIds = ids.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
         if (duplicateIds.isNotEmpty()) {
-            errors.add(ValidationError("pageElements", "Duplicate IDs: ${duplicateIds.joinToString(", ")}"))
+            errors.add(ValidationError("page", "Duplicate IDs: ${duplicateIds.joinToString(", ")}"))
         }
 
-        pageElements.forEachIndexed { index, element ->
+        elements.forEachIndexed { index, element ->
             val elementErrors = element.validate(pageSettings)
             elementErrors.forEach { error ->
-                errors.add(ValidationError("pageElements[$index].${error.path}", error.message))
+                errors.add(ValidationError("page[$index].${error.path}", error.message))
             }
         }
 
