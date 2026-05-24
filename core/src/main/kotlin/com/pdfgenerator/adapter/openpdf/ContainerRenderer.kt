@@ -96,8 +96,8 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
                     x = containerX + element.x,
                     y = containerY + element.y,
                 )
-            is LoopElement ->
-                element.copy(
+            is LoopElement -> {
+               return  element.copy(
                     x = containerX + element.x,
                     y = containerY + element.y,
                     width = element.resolveWidth(containerWidth),

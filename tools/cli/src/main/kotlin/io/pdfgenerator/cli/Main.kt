@@ -12,6 +12,8 @@ import com.pdfgenerator.adapter.openpdf.ImageRenderer
 import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.api.Version
+import io.pdfgenerator.cli.converter.jasper.JasperConversionOptions
+import io.pdfgenerator.cli.converter.jasper.JasperTemplateConverter
 import com.pdfgenerator.model.Template
 import java.io.File
 
@@ -39,7 +41,6 @@ class GenerateCommand : CliktCommand(
     ).file(mustExist = true)
 
     private val output by option(
-        "-o",
         "--output",
         help = "Output PDF file path",
     ).default("output.pdf")
@@ -217,6 +218,58 @@ class ValidateCommand : CliktCommand(
     }
 }
 
+class ConvertCommand : CliktCommand(
+    name = "convert",
+    help = "Convert Jasper JRXML template to JSON template",
+) {
+    private val input by argument(
+        help = "Path to the Jasper JRXML file",
+    ).file(mustExist = true)
+
+    private val output by option(
+        "--output",
+        help = "Output JSON template file path (required unless --stdout is used)",
+    )
+
+    private val stdout by option(
+        "--stdout",
+        help = "Print converted JSON to stdout",
+    ).flag(default = false)
+
+    private val failOnUnsupported by option(
+        "--fail-on-unsupported",
+        help = "Fail conversion when an unsupported Jasper element is found",
+    ).flag(default = false)
+
+    override fun run() {
+        if (!input.extension.equals("jrxml", ignoreCase = true)) {
+            throw IllegalArgumentException("Input file must have .jrxml extension")
+        }
+        if (!stdout && output == null) {
+            throw IllegalArgumentException("Use --output <file> or --stdout")
+        }
+        val template =
+            JasperTemplateConverter.fromFile(
+                input.absolutePath,
+                options =
+                    JasperConversionOptions(
+                        failOnUnsupportedElement = failOnUnsupported,
+                    ),
+            )
+
+        val json = template.toJson()
+        if (stdout) {
+            echo(json)
+        }
+        output?.let {
+            val outputFile = File(it)
+            outputFile.parentFile?.mkdirs()
+            outputFile.writeText(json)
+            echo("✓ Template converted successfully: ${outputFile.absolutePath}")
+        }
+    }
+}
+
 class CacheCommand : CliktCommand(
     name = "cache",
     help = "Manage template and image caches",
@@ -294,6 +347,7 @@ fun main(args: Array<String>) {
         .subcommands(
             GenerateCommand(),
             ValidateCommand(),
+            ConvertCommand(),
             cacheCmd,
             VersionCommand(),
         )

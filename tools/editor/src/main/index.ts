@@ -52,7 +52,7 @@ const CLI_DIR = path.join(os.homedir(), '.pdf-generator')
 const CLI_JAR_PATH = path.join(CLI_DIR, 'pdf-generator.jar')
 const CLI_VERSION_FILE = path.join(CLI_DIR, 'version.txt')
 
-const CLI_DOWNLOAD_URL = `https://github.com/adilsoncruz/open-pdf-generator/releases/download/v${CLI_VERSION}/open-pdf-generator-${CLI_VERSION}-standalone.jar`
+const CLI_DOWNLOAD_URL = `https://github.com/adilsoncruz/open-pdf-generator/releases/download/v${CLI_VERSION}/open-pdf-generator-${CLI_VERSION}.jar`
 
 interface CLIStatus {
   installed: boolean
@@ -94,6 +94,12 @@ async function findLatestLocalCliJar(): Promise<string | null> {
   } catch {
     return null
   }
+}
+
+interface OpenFileResult {
+  path: string
+  content: string
+  convertedFromJasper?: boolean
 }
 
 /**
@@ -237,7 +243,7 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
     // Create directory if it doesn't exist
     await fs.mkdir(CLI_DIR, { recursive: true })
     let selectedJarPath: string | null = source || null
-    
+
     if (source) {
       // Copiar de um arquivo local
       await fs.copyFile(source, CLI_JAR_PATH)
@@ -765,26 +771,47 @@ app.on('window-all-closed', () => {
 // Abrir arquivo
 ipcMain.handle('dialog:openFile', async () => {
   if (!mainWindow) return null
-
+  console.log("dialog:openFile")
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openFile'],
     filters: [
       { name: 'JSON Templates', extensions: ['json'] },
+      { name: 'Jasper Templates', extensions: ['jrxml'] },
       { name: 'All Files', extensions: ['*'] },
     ],
   })
-
+  console.log("dialog:openFile: result")
   if (result.canceled || result.filePaths.length === 0) {
     return null
   }
 
   const filePath = result.filePaths[0]
-  const content = await fs.readFile(filePath, 'utf-8')
+  const extension = path.extname(filePath).toLowerCase()
+  console.log(`dialog:openFile: extension ${extension}`)
 
+  if (extension === '.jrxml') {
+    const conversion = await convertJrxmlToJson(filePath)
+    console.log(`dialog:openFile:conversion - ${conversion.content}`)
+    console.log(`dialog:openfile: conversion success ${conversion.success}`)
+    if (!conversion.success || !conversion.content) {
+      throw new Error(conversion.error || 'Failed to convert JRXML template')
+    }
+    console.log(`dialog:openFile:conversion success`)
+    fs.writeFile(filePath.replace("jrxml", "json"), conversion.content)
+    const openResult: OpenFileResult = {
+      path: filePath.replace("jrxml", "json"),
+      content: conversion.content,
+      convertedFromJasper: true,
+    }
+    return openResult
+  }
+  console.log(`dialog:openFile:read file ${filePath}`)
+  const content = await fs.readFile(filePath, 'utf-8')
+ console.log(`dialog:openFile:read file success`)
   return {
     path: filePath,
     content,
-  }
+  } as OpenFileResult
 })
 
 // Abrir arquivo de dados JSON
@@ -914,6 +941,95 @@ const ErrorCodes = {
   OPERATION_CANCELLED: 'OPERATION_CANCELLED',
 } as const
 
+async function convertJrxmlToJson(filePath: string): Promise<{ success: boolean; content?: string; error?: string; errorCode?: string }> {
+  const cliStatus = await checkCLIStatus()
+
+  console.log(cliStatus)
+
+  if (!cliStatus.javaInstalled) {
+    return { success: false, errorCode: ErrorCodes.JAVA_NOT_INSTALLED, error: 'Java not installed' }
+  }
+
+  if (!cliStatus.installed) {
+    return { success: false, errorCode: ErrorCodes.CLI_NOT_INSTALLED, error: 'CLI not installed' }
+  }
+
+  const javaPath = cliStatus.javaPath || 'java'
+
+  const runConvertCommand = (filePath: string) =>
+    new Promise<{ success: boolean; stdout: string; stderr: string; spawnError?: string }>((resolve) => {
+      const java = spawn(javaPath, [
+                    '-jar',
+                    CLI_JAR_PATH,
+                    'convert',
+                    filePath,
+                    '--stdout',
+                  ])
+      let stdout = ''
+      let stderr = ''
+
+      java.stdout.on('data', (data) => {
+        stdout += data.toString()
+      })
+
+      java.stderr.on('data', (data) => {
+        stderr += data.toString()
+      })
+
+      java.on('close', (code) => {
+        resolve({ success: code === 0, stdout, stderr })
+      })
+
+      java.on('error', (error) => {
+          console.log(`error: ${error.message}`)
+        resolve({ success: false, stdout, stderr, spawnError: error.message })
+      })
+    })
+
+  // Fluxo principal para CLIs mais novos.
+  console.log(`convert ${filePath}`)
+  const stdoutResult = await runConvertCommand(filePath)
+  console.log(`CLI convert error ${stdoutResult.spawnError}`)
+  console.log(`CLI convert error ${stdoutResult.stderr}`)
+  console.log(`CLI convert result ${stdoutResult.stdout}`)
+  if (stdoutResult.success) {
+    return { success: true, content: stdoutResult.stdout }
+  }
+
+  // Fallback para CLIs antigos (sem --stdout) ou variantes de opções.
+  let tmpDir: string | null = null
+  try {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'jrxml-convert-'))
+    const outputPath = path.join(tmpDir, `${path.basename(filePath, path.extname(filePath))}.json`)
+
+    let fileResult = await runConvertCommand(filePath)
+    console.log(`CLI convert fileResult error ${fileResult.spawnError}`)
+      console.log(`CLI convert fileResult error ${fileResult.stderr}`)
+    if (!fileResult.success) {
+      const fallbackError = (fileResult.spawnError || `${fileResult.stderr}\n${fileResult.stdout}`).trim()
+      const stdoutError = (stdoutResult.spawnError || `${stdoutResult.stderr}\n${stdoutResult.stdout}`).trim()
+      return {
+        success: false,
+        error: fallbackError || stdoutError,
+        errorCode: fileResult.spawnError || stdoutResult.spawnError ? ErrorCodes.ERROR_EXECUTING_JAVA : ErrorCodes.UNKNOWN_ERROR,
+      }
+    }
+
+    const content = await fs.readFile(outputPath, 'utf-8')
+    return { success: true, content }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to convert JRXML template',
+      errorCode: ErrorCodes.UNKNOWN_ERROR,
+    }
+  } finally {
+    if (tmpDir) {
+      await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => undefined)
+    }
+  }
+}
+
 ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: string) => {
   console.log('📄 [Preview] Starting PDF preview generation...')
   
@@ -927,7 +1043,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
       version: cliStatus.version,
       javaVersion: cliStatus.javaVersion
     })
-    
+
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-preview-'))
     const templateFile = path.join(tmpDir, 'template.json')
     const dataFile = path.join(tmpDir, 'data.json')
@@ -953,7 +1069,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
     }
 
     const javaPath = cliStatus.javaPath || 'java'
-    console.log('📄 [Preview] Executing:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '-o', pdfFile)
+    console.log('📄 [Preview] Executing:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '--output', pdfFile)
     
     return new Promise((resolve) => {
       const java = spawn(javaPath, [
@@ -963,7 +1079,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
         templateFile,
         '-d',
         dataFile,
-        '-o',
+        '--output',
         pdfFile,
       ])
 

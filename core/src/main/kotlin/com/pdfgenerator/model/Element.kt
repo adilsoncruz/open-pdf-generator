@@ -15,8 +15,8 @@ enum class PositionMode {
 sealed interface Element {
     val type: String
     val id: String
-    val x: Float
-    val y: Float
+    public val x: Float
+    public val y: Float
     val positionMode: PositionMode?
     val relativeOffsetY: Float?
 
@@ -484,6 +484,7 @@ data class LoopElement(
     val startY: Float? = null,
     val itemSpacing: Float = 0f,
     val elements: List<Element>,
+    val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {
