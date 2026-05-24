@@ -371,7 +371,7 @@ class PDFGenerator(
                     if (shouldRenderElement(element, pageGroupIndex, data)) {
                         val effectiveY =
                             if (element.positionMode == PositionMode.RELATIVE) {
-                                val offsetY = element.relativeOffsetY ?: 10f
+                                val offsetY = element.relativeOffsetY ?: 0f
                                 renderState.currentY + offsetY
                             } else {
                                 element.y
