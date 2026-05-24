@@ -5,18 +5,22 @@ import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.LoopElement
+import kotlin.math.max
 
 class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<ContainerElement> {
     override fun render(
         element: ContainerElement,
         context: RenderContext,
     ) {
+        val effectiveContainerHeight =
+            context.containerHeight?.let { parentHeight -> max(parentHeight, element.height) } ?: element.height
+
         val containerContext =
             context.copy(
                 offsetX = context.offsetX + element.x,
                 offsetY = context.offsetY + element.y,
                 containerWidth = element.width,
-                containerHeight = element.height,
+                containerHeight = effectiveContainerHeight,
             )
 
         element.elements.forEach { childElement ->
