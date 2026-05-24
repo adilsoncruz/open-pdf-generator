@@ -68,16 +68,25 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         var totalItemsRendered = 0
         var currentYOffset = 0f
 
+        val contextOffsetInBody = context.offsetY - context.bodyOffsetY
+        var pageOffsetY = context.offsetY
+        var pageOffsetInBody = contextOffsetInBody
+
         loopData.forEachIndexed { index, item ->
             var itemStartY = loopBaseY + currentYOffset
             var itemEndY = itemStartY + itemHeight
+            var itemEndYInBody = pageOffsetInBody + itemEndY
 
-            if (itemEndY > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
+            if (itemEndYInBody > maxYInTemplate && itemsRenderedOnCurrentPage > 0) {
                 context.document.newPage()
                 itemsRenderedOnCurrentPage = 0
                 currentYOffset = 0f
-                itemStartY = loopBaseY
+                val restartAtTopOfBody = contextOffsetInBody > 0f
+                pageOffsetY = if (restartAtTopOfBody) context.bodyOffsetY else context.offsetY
+                pageOffsetInBody = if (restartAtTopOfBody) 0f else contextOffsetInBody
+                itemStartY = if (restartAtTopOfBody) 0f else loopBaseY
                 itemEndY = itemStartY + itemHeight
+                itemEndYInBody = pageOffsetInBody + itemEndY
             }
 
             val normalizedItemMap = (item as? Map<*, *>)?.mapKeys { it.key.toString() }
@@ -86,7 +95,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                 context.copy(
                     loopContext = loopContext,
                     offsetX = context.offsetX + loopX,
-                    offsetY = context.offsetY + itemStartY,
+                    offsetY = pageOffsetY + itemStartY,
                     containerWidth = loopWidth,
                     containerHeight = itemHeight,
                     renderState = RenderState(),

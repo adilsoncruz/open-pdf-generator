@@ -1896,31 +1896,53 @@ export default function PropertiesPanel() {
                   
                   {/* Modo de Posicionamento - Barcode */}
                   <div className="mt-3">
-                    <Select
-                      value={selectedElement.positionMode || 'ABSOLUTE'}
-                      onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
-                      options={[
-                        { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
-                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
-                      ]}
-                    />
-                    {selectedElement.positionMode === 'RELATIVE' && (
+                    {selectedElement.type === 'container' ? (
                       <>
                         <p className="text-[10px] text-purple-500 mt-1 mb-2">
-                          ↳ Positioned after the previous element in PDF
+                          Container is always RELATIVE (core rule)
                         </p>
                         <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
-                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
                             <Input
-                            type="number"
-                            value={selectedElement.relativeOffsetY ?? 10}
-                            onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                              type="number"
+                              value={selectedElement.relativeOffsetY ?? 0}
+                              onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
                               size="sm"
                               className="w-20"
-                          />
-                          <span className="text-[10px] theme-text-muted">px</span>
-                        </div>
+                            />
+                            <span className="text-[10px] theme-text-muted">px</span>
+                          </div>
                         </PropertyRow>
+                      </>
+                    ) : (
+                      <>
+                        <Select
+                          value={selectedElement.positionMode || 'ABSOLUTE'}
+                          onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
+                          options={[
+                            { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
+                            { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                          ]}
+                        />
+                        {selectedElement.positionMode === 'RELATIVE' && (
+                          <>
+                            <p className="text-[10px] text-purple-500 mt-1 mb-2">
+                              ↳ Positioned after the previous element in PDF
+                            </p>
+                            <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
+                            <div className="flex items-center gap-2">
+                                <Input
+                                type="number"
+                                value={selectedElement.relativeOffsetY ?? 0}
+                                onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                                  size="sm"
+                                  className="w-20"
+                              />
+                              <span className="text-[10px] theme-text-muted">px</span>
+                            </div>
+                            </PropertyRow>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
@@ -2060,31 +2082,53 @@ export default function PropertiesPanel() {
                   
                   {/* Modo de Posicionamento - Loop */}
                   <div className="mt-3">
-                    <Select
-                      value={selectedElement.positionMode || 'ABSOLUTE'}
-                      onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
-                      options={[
-                        { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
-                        { value: 'RELATIVE', label: 'Relative (follows content above)' },
-                      ]}
-                    />
-                    {selectedElement.positionMode === 'RELATIVE' && (
+                    {selectedElement.type === 'container' ? (
                       <>
                         <p className="text-[10px] text-purple-500 mt-1 mb-2">
-                          ↳ Positioned after the previous element in PDF
+                          Container is always RELATIVE (core rule)
                         </p>
                         <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
-                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
                             <Input
-                            type="number"
-                            value={selectedElement.relativeOffsetY ?? 10}
-                            onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                              type="number"
+                              value={selectedElement.relativeOffsetY ?? 0}
+                              onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
                               size="sm"
                               className="w-20"
-                          />
-                          <span className="text-[10px] theme-text-muted">px</span>
-                        </div>
+                            />
+                            <span className="text-[10px] theme-text-muted">px</span>
+                          </div>
                         </PropertyRow>
+                      </>
+                    ) : (
+                      <>
+                        <Select
+                          value={selectedElement.positionMode || 'ABSOLUTE'}
+                          onChange={(e) => handleUpdate('positionMode', e.target.value === 'ABSOLUTE' ? null : e.target.value)}
+                          options={[
+                            { value: 'ABSOLUTE', label: 'Absoluto (fixo no canvas)' },
+                            { value: 'RELATIVE', label: 'Relative (follows content above)' },
+                          ]}
+                        />
+                        {selectedElement.positionMode === 'RELATIVE' && (
+                          <>
+                            <p className="text-[10px] text-purple-500 mt-1 mb-2">
+                              ↳ Positioned after the previous element in PDF
+                            </p>
+                            <PropertyRow label="Offset Y (PDF):" labelWidth="lg">
+                            <div className="flex items-center gap-2">
+                                <Input
+                                type="number"
+                                value={selectedElement.relativeOffsetY ?? 0}
+                                onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
+                                  size="sm"
+                                  className="w-20"
+                              />
+                              <span className="text-[10px] theme-text-muted">px</span>
+                            </div>
+                            </PropertyRow>
+                          </>
+                        )}
                       </>
                     )}
                   </div>

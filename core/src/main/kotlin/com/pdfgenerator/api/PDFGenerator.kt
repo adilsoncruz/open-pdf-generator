@@ -369,16 +369,19 @@ class PDFGenerator(
             template.pageElements.forEach { element ->
                 try {
                     if (shouldRenderElement(element, pageGroupIndex, data)) {
+                        val isRelativeFlow =
+                            element.positionMode == PositionMode.RELATIVE || element is ContainerElement
+
                         val effectiveY =
-                            if (element.positionMode == PositionMode.RELATIVE) {
-                                val offsetY = element.relativeOffsetY ?: 10f
+                            if (isRelativeFlow) {
+                                val offsetY = element.relativeOffsetY ?: 0f
                                 renderState.currentY + offsetY
                             } else {
                                 element.y
                             }
 
                         val renderContext =
-                            if (element.positionMode == PositionMode.RELATIVE) {
+                            if (isRelativeFlow) {
                                 context.copy(offsetY = bodyOffsetY + (effectiveY - element.y))
                             } else {
                                 context
@@ -627,7 +630,11 @@ class PDFGenerator(
                 element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: 0f
             }
             is ContainerElement -> {
-                element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: element.height
+                val contentHeight =
+                    element.elements.maxOfOrNull { child ->
+                        child.y + getElementHeight(child, data, context)
+                    } ?: 0f
+                kotlin.math.max(element.height, contentHeight)
             }
         }
     }

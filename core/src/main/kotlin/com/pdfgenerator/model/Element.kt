@@ -514,12 +514,13 @@ data class ContainerElement(
     override val id: String,
     override val x: Float = 0f,
     override val y: Float = 0f,
-    override val positionMode: PositionMode? = null,
     override val relativeOffsetY: Float? = null,
     val width: Float = 400f,
     val height: Float = 50f,
     val elements: List<Element>,
 ) : Element {
+    override val positionMode: PositionMode = PositionMode.RELATIVE
+
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
         elements.forEach { element ->
