@@ -130,7 +130,6 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         }
     }
 
-
     private fun resolveFloatDimension(
         value: Float,
         containerDimension: Float,
