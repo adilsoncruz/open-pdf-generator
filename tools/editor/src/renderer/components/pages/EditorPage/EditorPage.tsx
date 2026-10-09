@@ -45,6 +45,11 @@ export function EditorPage() {
     copyElement,
     pasteElement,
     copiedElements,
+    selectedContainerChildId,
+    selectedContainerParentId,
+    selectedLoopChildId,
+    selectedLoopParentId,
+    deleteLoopChildElement,
   } = useTemplateStore()
 
   const { theme } = useUIStore()
@@ -161,7 +166,13 @@ export function EditorPage() {
 
       // Delete/Backspace: delete selected elements
       if ((e.key === 'Delete' || e.key === 'Backspace') && !isInputField) {
-        if (selectedElementIds.length > 0) {
+        if (selectedContainerChildId && selectedContainerParentId) {
+          e.preventDefault()
+          deleteLoopChildElement(selectedContainerParentId, selectedContainerChildId, selectedElementLocation)
+        } else if (selectedLoopChildId && selectedLoopParentId) {
+          e.preventDefault()
+          deleteLoopChildElement(selectedLoopParentId, selectedLoopChildId, selectedElementLocation)
+        } else if (selectedElementIds.length > 0) {
           e.preventDefault()
           deleteSelectedElements()
         }
@@ -282,7 +293,11 @@ export function EditorPage() {
       }
     })
     window.electronAPI.onMenuDelete(() => {
-      if (selectedElementIds.length > 0) {
+      if (selectedContainerChildId && selectedContainerParentId) {
+        deleteLoopChildElement(selectedContainerParentId, selectedContainerChildId, selectedElementLocation)
+      } else if (selectedLoopChildId && selectedLoopParentId) {
+        deleteLoopChildElement(selectedLoopParentId, selectedLoopChildId, selectedElementLocation)
+      } else if (selectedElementIds.length > 0) {
         deleteSelectedElements()
       }
     })

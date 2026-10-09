@@ -39,7 +39,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
 
     // Search in all possible locations
     const allElements: Element[] = [
-      ...(template.pageElements || []),
+      ...(template.page || []),
       ...(template.pageSettings.header?.elements || []),
       ...(template.pageSettings.footer?.elements || []),
       ...(template.pageSettings.bodyBackground?.elements || []),
@@ -50,73 +50,43 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   }
 
   const resolveChildDisplayText = (el: { value?: string; dataBinding?: string }, fallback: string = ''): string => {
-      // The field to resolve - could be in value or dataBinding (trim whitespace)
-      const rawFieldName = el.dataBinding || el.value
-      const fieldName = rawFieldName?.trim()
-
-      if (!fieldName) {
-        return fallback
-      }
-
-      // Try to resolve the field from the loop's data array
+    // Se tem valor fixo, usar ele
+    if (el.value) {
+      return el.value
+    }
+    
+    // Se tem dataBinding, tentar processar
+    if (el.dataBinding) {
+      // Se temos dados de teste e o binding pode ser resolvido
       if (testData && Object.keys(testData).length > 0) {
-        const loopElement = findLoopElement(loopId)
-        const loopDataBinding = loopElement?.dataBinding?.trim()
-
-        if (loopDataBinding) {
-          // Get the array from test data
-          const parts = loopDataBinding.split('.')
-          let arrayData: unknown = testData
+        if (hasTransformations(el.dataBinding)) {
+          // Process expressions (e.g. "invoice.name | upperCase")
+          const result = processExpression(el.dataBinding, testData)
+          if (result) return result
+        } else {
+          // Tentar resolver binding simples
+          const parts = el.dataBinding.split('.')
+          let value: unknown = testData
           for (const part of parts) {
-            const trimmedPart = part.trim()
-            if (arrayData && typeof arrayData === 'object' && trimmedPart in arrayData) {
-              arrayData = (arrayData as Record<string, unknown>)[trimmedPart]
+            if (value && typeof value === 'object' && part in value) {
+              value = (value as Record<string, unknown>)[part]
             } else {
-              arrayData = null
+              value = null
               break
             }
           }
-
-          // If we found an array, try to get the field from the first item
-          if (Array.isArray(arrayData) && arrayData.length > 0) {
-            const firstItem = arrayData[0]
-
-            // Check for transformations
-            if (hasTransformations(fieldName)) {
-              const result = processExpression(fieldName, firstItem as Record<string, unknown>)
-              if (result) return result
-            }
-
-            // Simple field resolution - direct property access first
-            if (firstItem && typeof firstItem === 'object' && fieldName in firstItem) {
-              const directValue = (firstItem as Record<string, unknown>)[fieldName]
-              if (directValue !== null && directValue !== undefined) {
-                return String(directValue)
-              }
-            }
-
-            // Nested field resolution (for paths like "address.city")
-            const fieldParts = fieldName.split('.')
-            let value: unknown = firstItem
-            for (const part of fieldParts) {
-              const trimmedPart = part.trim()
-              if (value && typeof value === 'object' && trimmedPart in value) {
-                value = (value as Record<string, unknown>)[trimmedPart]
-              } else {
-                value = null
-                break
-              }
-            }
-            if (value !== null && value !== undefined) {
-              return String(value)
-            }
+          if (value !== null && value !== undefined) {
+            return String(value)
           }
         }
       }
-
-      // Fallback: show the field name between braces
-      return `{${fieldName}}`
+      
+      // Fallback para quando não temos dados ou não encontrou o campo
+      return `{${el.dataBinding}}`
     }
+    
+    return fallback
+  }
 
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -129,14 +99,14 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   }
 
   const resolveHeight = (value: string | number | undefined): number => {
-    if (value === '100%') return loopHeight
+    if (value === '100%') return containerHeight
     if (typeof value === 'number') return value
     return 20 // default
   }
 
   const handleMouseDown = (e: ReactMouseEvent) => {
     e.stopPropagation()
-    console.log(`mouseDown ${container} - ${child.id}`)
+    console.log(`mouseDown ${containerId} - ${child.id}`)
     selectContainerChild(containerId, child.id, location)
     setIsDragging(true)
     setDragStart({ x: e.clientX - child.x, y: e.clientY - child.y })
@@ -146,9 +116,15 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
     if (!isDragging) return
 
     const handleMouseMove = (e: globalThis.MouseEvent) => {
-      const newX = Math.max(0, e.clientX - dragStart.x)
-      const newY = Math.max(0, e.clientY - dragStart.y)
-      console.log(`mouseMove ${container} - ${child.id}`)
+      const childWidth = resolveWidth(child.width)
+      const childHeight = resolveHeight(child.height)
+      
+      let newX = e.clientX - dragStart.x
+      let newY = e.clientY - dragStart.y
+      
+      newX = Math.max(0, Math.min(newX, Math.max(0, containerWidth - childWidth)))
+      newY = Math.max(0, Math.min(newY, Math.max(0, containerHeight - childHeight)))
+      
       updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
     }
 
@@ -490,8 +466,15 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
     if (!isDragging) return
     
     const handleMouseMove = (e: globalThis.MouseEvent) => {
-      const newX = Math.max(0, e.clientX - dragStart.x)
-      const newY = Math.max(0, e.clientY - dragStart.y)
+      const childWidth = resolveWidth(child.width)
+      const childHeight = resolveHeight(child.height)
+      
+      let newX = e.clientX - dragStart.x
+      let newY = e.clientY - dragStart.y
+      
+      newX = Math.max(0, Math.min(newX, Math.max(0, loopWidth - childWidth)))
+      newY = Math.max(0, Math.min(newY, Math.max(0, loopHeight - childHeight)))
+      
       updateLoopChildElement(loopId, child.id, { x: newX, y: newY }, location)
     }
     
@@ -862,6 +845,7 @@ export default function Canvas() {
                         isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'bodyBackground'}
                         onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'bodyBackground') : selectElement(element.id, 'bodyBackground')}
                         onUpdate={(updates) => updateElement(element.id, updates, 'bodyBackground')}
+                        location="bodyBackground"
                         margins={margins}
                         pageSize={pageSize}
                         selectedElementIds={selectedElementIds}
@@ -998,6 +982,7 @@ export default function Canvas() {
                       isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
                       onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
                       onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
+                        location="summary"
                       margins={margins}
                       pageSize={pageSize}
                       selectedElementIds={selectedElementIds}
@@ -1028,6 +1013,7 @@ export default function Canvas() {
                         isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
                         onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
                         onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
+                        location="summary"
                         margins={margins}
                         pageSize={pageSize}
                         selectedElementIds={selectedElementIds}
@@ -1140,7 +1126,7 @@ export default function Canvas() {
           {/* Labels laterais */}
           {template.pageSettings.header && (
             <div
-              className={`absolute right-full mr-3 px-3 py-1 rounded-l text-xs font-semibold whitespace-nowrap ${
+              className={`absolute right-full mr-3 px-3 py-1 rounded-l text-xs font-semibold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity ${
                 currentSection === 'header' 
                   ? 'bg-blue-500 text-white' 
                   : 'bg-gray-400 text-white'
@@ -1149,13 +1135,17 @@ export default function Canvas() {
                 top: margins.top + (template.pageSettings.header.height / 2),
                 transform: 'translateY(-50%)',
               }}
+              onClick={() => {
+                setCurrentSection('header')
+                clearSelection()
+              }}
             >
               HEADER
             </div>
           )}
           
           <div
-            className={`absolute right-full mr-3 px-3 py-1 rounded-l text-xs font-semibold whitespace-nowrap ${
+            className={`absolute right-full mr-3 px-3 py-1 rounded-l text-xs font-semibold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity ${
               currentSection === 'body' 
                 ? 'bg-gray-600 text-white' 
                 : 'bg-gray-400 text-white'
@@ -1171,13 +1161,17 @@ export default function Canvas() {
               })(),
               transform: 'translateY(-50%)',
             }}
+            onClick={() => {
+              setCurrentSection('body')
+              clearSelection()
+            }}
           >
             BODY
           </div>
           
           {template.pageSettings.footer && (
             <div
-              className={`absolute right-full mr-3 px-3 py-1 rounded-l text-xs font-semibold whitespace-nowrap ${
+              className={`absolute right-full mr-3 px-3 py-1 rounded-l text-xs font-semibold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity ${
                 currentSection === 'footer' 
                   ? 'bg-green-500 text-white' 
                   : 'bg-gray-400 text-white'
@@ -1185,6 +1179,10 @@ export default function Canvas() {
               style={{
                 top: pageSize.height - margins.bottom - template.pageSettings.footer.height + (template.pageSettings.footer.height / 2),
                 transform: 'translateY(-50%)',
+              }}
+              onClick={() => {
+                setCurrentSection('footer')
+                clearSelection()
               }}
             >
               FOOTER
@@ -1213,6 +1211,12 @@ export default function Canvas() {
                 height: template.pageSettings.header.height,
                 zIndex: 10,
               }}
+              onClick={(e) => {
+                if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('cursor-not-allowed')) {
+                  setCurrentSection('header')
+                  clearSelection()
+                }
+              }}
             >
               {template.pageSettings.header.elements
                 .filter((element) => !element.hidden)
@@ -1223,6 +1227,7 @@ export default function Canvas() {
                     isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'header'}
                     onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'header') : selectElement(element.id, 'header')}
                     onUpdate={(updates) => updateElement(element.id, updates, 'header')}
+                        location="header"
                     margins={margins}
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
@@ -1253,6 +1258,12 @@ export default function Canvas() {
                 height: template.pageSettings.footer.height,
                 zIndex: 10,
               }}
+              onClick={(e) => {
+                if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('cursor-not-allowed')) {
+                  setCurrentSection('footer')
+                  clearSelection()
+                }
+              }}
             >
               {template.pageSettings.footer.elements
                 .filter((element) => !element.hidden)
@@ -1263,6 +1274,7 @@ export default function Canvas() {
                     isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'footer'}
                     onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'footer') : selectElement(element.id, 'footer')}
                     onUpdate={(updates) => updateElement(element.id, updates, 'footer')}
+                        location="footer"
                     margins={margins}
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
@@ -1308,6 +1320,7 @@ export default function Canvas() {
                   isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'body'}
                   onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'body') : selectElement(element.id, 'body')}
                   onUpdate={(updates) => updateElement(element.id, updates, 'body')}
+                        location="body"
                   margins={margins}
                   pageSize={pageSize}
                   selectedElementIds={selectedElementIds}
@@ -1604,6 +1617,7 @@ interface CanvasElementProps {
   allElements: Element[]
   onUpdateMultiple: () => void
   updateElement: (id: string, updates: Partial<Element>, location?: ElementLocation) => void
+  location: ElementLocation
 }
 
 // Map PDF fonts to equivalent web fonts
@@ -1622,7 +1636,7 @@ function getFontFamily(pdfFont?: string): string {
   return fontMap[pdfFont] || 'Arial, sans-serif'
 }
 
-function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement }: CanvasElementProps) {
+function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
   const template = useTemplateStore(state => state.template)
   const testData = useTemplateStore(state => state.testData)
   const saveSnapshot = useTemplateStore(state => state.saveSnapshot)
@@ -2628,7 +2642,13 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
       case 'container': {
               const containerElements = element.elements || []
               const containerItemSpacing = element.itemSpacing || 20
-              const containerWidth = typeof element.width === 'number' ? element.width : 400
+              const bodyAvailableWidth = pageSize.width - margins.left - margins.right
+              const containerWidth =
+                element.width === '100%'
+                  ? bodyAvailableWidth
+                  : typeof element.width === 'number'
+                    ? element.width
+                    : 400
               const containerHeight = typeof element.height === 'number' ? element.height : 150
 
               return (

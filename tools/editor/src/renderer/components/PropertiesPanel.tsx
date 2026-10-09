@@ -118,7 +118,7 @@ export default function PropertiesPanel() {
       } else if (selectedElementLocation === 'summary' && template.summaryPage) {
         containerElement = template.summaryPage.elements.find(el => el.id === selectedContainerParentId) || null
       } else {
-        containerElement = template.pageElements.find(el => el.id === selectedContainerParentId) || null
+        containerElement = template.page?.find(el => el.id === selectedContainerParentId) || null
       }
 
       if (containerElement && containerElement.elements) {
@@ -330,7 +330,7 @@ export default function PropertiesPanel() {
               <label className="text-xs font-medium theme-text-muted">ID</label>
               <Input
               value={selectedElement.id}
-              disabled
+              onChange={(e) => handleUpdate('id', e.target.value)}
                 size="sm"
             />
           </div>
@@ -1174,7 +1174,7 @@ export default function PropertiesPanel() {
                       <label className="text-xs font-medium theme-text-muted">ID</label>
                       <Input
                         value={selectedElement.id}
-                        disabled
+              onChange={(e) => handleUpdate('id', e.target.value)}
                         size="sm"
                       />
                     </div>
@@ -1318,7 +1318,7 @@ export default function PropertiesPanel() {
                       <label className="text-xs font-medium theme-text-muted">ID</label>
                       <Input
                         value={selectedElement.id}
-                        disabled
+              onChange={(e) => handleUpdate('id', e.target.value)}
                         size="sm"
                       />
                     </div>
@@ -1757,7 +1757,7 @@ export default function PropertiesPanel() {
                       <label className="text-xs font-medium theme-text-muted">ID</label>
                       <Input
                         value={selectedElement.id}
-                        disabled
+              onChange={(e) => handleUpdate('id', e.target.value)}
                         size="sm"
                       />
                     </div>
@@ -1905,7 +1905,7 @@ export default function PropertiesPanel() {
                       <label className="text-xs font-medium theme-text-muted">ID</label>
                       <Input
                         value={selectedElement.id}
-                        disabled
+              onChange={(e) => handleUpdate('id', e.target.value)}
                         size="sm"
                       />
                     </div>
@@ -4079,7 +4079,7 @@ function LoopChildPropertiesPanel({ loopId, child, location, loopElement }: Loop
               <label className="text-xs font-medium theme-text-muted">ID</label>
               <Input
                 value={child.id}
-                disabled
+                onChange={(e) => handleUpdate('id', e.target.value)}
                 size="sm"
               />
             </div>

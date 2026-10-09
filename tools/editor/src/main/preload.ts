@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   generatePDFPreview: (templateJson: string, dataJson: string) =>
     ipcRenderer.invoke('pdf:generatePreview', templateJson, dataJson),
   openPDF: (pdfPath: string) => ipcRenderer.invoke('pdf:open', pdfPath),
+  openBase64PDF: (base64: string, openInViewer?: boolean) => ipcRenderer.invoke('pdf:openBase64', base64, openInViewer),
   
   // Template Validation API
   validateTemplate: (templatePath: string) =>
@@ -152,6 +153,7 @@ export interface ElectronAPI {
     javaNotInstalled?: boolean
   }>
   openPDF: (pdfPath: string) => Promise<{ success: boolean; error?: string }>
+  openBase64PDF: (base64: string, openInViewer?: boolean) => Promise<{ success: boolean; error?: string }>
   
   // Template Validation
   validateTemplate: (templatePath: string) => Promise<{

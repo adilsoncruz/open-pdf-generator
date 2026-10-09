@@ -22,7 +22,7 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         // Container is always treated as full-width and relative in body flow.
         val containerX = 0f
         val containerY = element.y
-        val containerWidth = context.containerWidth ?: element.width
+        val containerWidth = context.containerWidth ?: element.resolveWidth(595.28f)
         val containerHeight = if (element.height > 0f) element.height else (context.containerHeight ?: 0f)
 
         element.elements.forEach { childElement ->

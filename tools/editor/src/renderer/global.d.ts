@@ -66,6 +66,7 @@ export interface ElectronAPI {
     javaNotInstalled?: boolean
   }>
   openPDF: (pdfPath: string) => Promise<{ success: boolean; error?: string }>
+  openBase64PDF: (base64: string, openInViewer?: boolean) => Promise<{ success: boolean; error?: string }>
   
   // Template Validation
   validateTemplate: (templatePath: string) => Promise<{

@@ -5,7 +5,8 @@ import { useTemplateStore } from '../store/templateStore'
 import { useTranslation } from '../i18n'
 import { 
   ArrowPathIcon, 
-  XMarkIcon, 
+  XMarkIcon,
+  ArrowTopRightOnSquareIcon, 
   ChevronLeftIcon, 
   ChevronRightIcon,
   ExclamationTriangleIcon,
@@ -15,7 +16,7 @@ import { Button, Select, Divider } from './atoms'
 import { IconButton } from './molecules'
 
 // Configure PDF.js worker using local file from node_modules
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
 interface PDFPreviewProps {
@@ -235,6 +236,16 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
           >
             <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
+          
+{pdfData && (
+            <button
+              onClick={() => window.electronAPI.openBase64PDF(pdfData)}
+              className="p-1.5 rounded theme-hover theme-text-muted hover:theme-text"
+              title="Open external window"
+            >
+              <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+            </button>
+          )}
           
           {onClose && (
             <button

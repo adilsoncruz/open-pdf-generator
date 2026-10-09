@@ -25,9 +25,18 @@ export default function Sidebar() {
   } = useTemplateStore()
 
   const [pageSettingsExpanded, setPageSettingsExpanded] = useState(false)
-  const { selectedElementIds, selectElement } = useTemplateStore()
-  const selectedContainerId = currentSection === 'body'
-    ? (template.page || []).find(el => el.id === selectedElementIds[0] && el.type === 'container')?.id || null
+  const [sectionsExpanded, setSectionsExpanded] = useState(true)
+  const { selectedElementIds, selectElement, selectedContainerParentId } = useTemplateStore()
+  const getSectionElements = () => {
+    if (currentSection === 'header') return template.pageSettings.header?.elements || []
+    if (currentSection === 'footer') return template.pageSettings.footer?.elements || []
+    if (currentSection === 'bodyBackground') return template.pageSettings.bodyBackground?.elements || []
+    if (currentSection === 'summary') return template.summaryPage?.elements || []
+    return template.page || []
+  }
+
+  const selectedContainerId = ['body', 'header', 'footer', 'summary'].includes(currentSection)
+    ? selectedContainerParentId || (getSectionElements().find(el => el.id === selectedElementIds[0] && el.type === 'container')?.id || null)
     : null
 
   if (isSidebarMinimized && !isSidebarPinned) {
@@ -327,10 +336,23 @@ export default function Sidebar() {
 
         {/* Section Selector */}
         <div className="mb-4 p-3 theme-bg-tertiary border theme-border rounded-xl">
-          <h2 className="section-header mb-3 flex items-center gap-2">
-            <Icon name="section" size="sm" />
-            {t.sidebar.section}
-          </h2>
+          <div 
+            className={`flex items-center justify-between cursor-pointer ${sectionsExpanded ? 'mb-3' : 'mb-0'}`}
+            onClick={() => setSectionsExpanded(!sectionsExpanded)}
+          >
+            <h2 className="section-header flex items-center gap-2 mb-0">
+              <Icon name="section" size="sm" />
+              {t.sidebar.section}
+            </h2>
+            <button
+              className="theme-text-muted hover:theme-surface rounded p-0.5"
+              title={sectionsExpanded ? t.sidebar.collapse : t.sidebar.expand}
+            >
+              {sectionsExpanded ? '▼' : '▶'}
+            </button>
+          </div>
+          
+          {sectionsExpanded && (
           <div className="space-y-2">
             {/* Header */}
             {template.pageSettings.header ? (
@@ -508,15 +530,16 @@ export default function Sidebar() {
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
 
       {/* Containers + Elements Header and Group Button */}
       <div className="px-4 py-3 border-t theme-border">
-        {currentSection === 'body' && (
+        {['body', 'header', 'footer', 'summary'].includes(currentSection) && (
           <ContainersPanel
             selectedContainerId={selectedContainerId}
-            onSelectContainer={(id) => selectElement(id, 'body')}
+            onSelectContainer={(id) => selectElement(id, currentSection)}
           />
         )}
         <div className="flex items-center justify-between mb-3">
@@ -545,59 +568,178 @@ function ContainersPanel({
   selectedContainerId: string | null
   onSelectContainer: (id: string | null) => void
 }) {
-  const { template, addElement, currentSection, selectElement, moveElementUp, moveElementDown, deleteElement } = useTemplateStore()
+  const [containersExpanded, setContainersExpanded] = useState(true)
+  const [isAdding, setIsAdding] = useState(false)
+  const [newContainerName, setNewContainerName] = useState('')
+  const [editingContainerId, setEditingContainerId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
 
-  if (currentSection !== 'body') return null
-  const containers = (template.page || []).filter((el) => el.type === 'container')
-  const handleAddContainer = () => {
+  const { template, addElement, currentSection, selectElement, moveElementUp, moveElementDown, deleteElement, updateElement } = useTemplateStore()
+
+  if (!['body', 'header', 'footer', 'summary'].includes(currentSection)) return null
+
+  const getSectionElements = () => {
+    if (currentSection === 'header') return template.pageSettings.header?.elements || []
+    if (currentSection === 'footer') return template.pageSettings.footer?.elements || []
+    if (currentSection === 'summary') return template.summaryPage?.elements || []
+    return template.page || []
+  }
+
+  const containers = getSectionElements().filter((el) => el.type === 'container')
+  
+  const handleAddContainerSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    const name = newContainerName.trim() || `Container ${containers.length + 1}`
+
     const id = `container-${Date.now()}`
     const lastContainer = containers[containers.length - 1]
     const lastY = typeof lastContainer?.y === 'number' ? lastContainer.y : 0
     const lastHeight = typeof lastContainer?.height === 'number' ? lastContainer.height : 150
     const nextY = containers.length > 0 ? lastY + lastHeight : 0
-    addElement({ type: 'container', id, x: 0, y: nextY, width: '100%', height: 150, elements: [] }, 'body')
-    selectElement(id, 'body')
+    addElement({ type: 'container', id, name, x: 0, y: nextY, width: '100%', height: 150, elements: [] }, currentSection)
+    selectElement(id, currentSection)
+    
+    setIsAdding(false)
+    setNewContainerName('')
   }
+
+  const handleRenameContainerSubmit = (id: string, e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    const newName = editingName.trim()
+    if (newName) {
+      updateElement(id, { name: newName }, currentSection)
+    }
+    setEditingContainerId(null)
+  }
+
+  const renderContainerItem = (container: Element) => (
+    <div
+      key={container.id}
+      className={`h-12 px-3 rounded-xl border transition-all duration-200 flex items-center justify-between ${
+        selectedContainerId === container.id
+          ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-300 dark:border-primary-500/50'
+          : 'theme-surface border theme-border hover:theme-surface-hover'
+      }`}
+    >
+      {editingContainerId === container.id ? (
+        <form onSubmit={(e) => handleRenameContainerSubmit(container.id, e)} className="flex-1 mr-2">
+          <input
+            type="text"
+            autoFocus
+            className="w-full px-2 py-1 text-sm theme-surface border theme-border rounded"
+            value={editingName}
+            onChange={(e) => setEditingName(e.target.value)}
+            onBlur={() => handleRenameContainerSubmit(container.id)}
+          />
+        </form>
+      ) : (
+        <button 
+          onClick={() => onSelectContainer(container.id)} 
+          onDoubleClick={() => {
+            setEditingContainerId(container.id)
+            setEditingName((container.name as string) || container.id)
+          }} 
+          className="flex-1 text-left flex items-center gap-2 min-w-0" 
+          title="Duplo clique para renomear"
+        >
+          <span className="text-sm theme-text-muted">☰</span>
+          <span className="text-sm font-medium truncate">{(container.name as string) || container.id}</span>
+        </button>
+      )}
+      <div className="flex gap-1 ml-2">
+        <button className="w-7 h-7 rounded border theme-border theme-surface text-sm" onClick={() => moveElementUp(container.id, currentSection)}>↑</button>
+        <button className="w-7 h-7 rounded border theme-border theme-surface text-sm" onClick={() => moveElementDown(container.id, currentSection)}>↓</button>
+        <button
+          className="w-7 h-7 rounded border theme-border theme-surface text-red-500 text-sm"
+          onClick={() => {
+            deleteElement(container.id, currentSection)
+            onSelectContainer(null)
+          }}
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="mb-3">
-      <h3 className="text-xs font-semibold theme-text-muted uppercase mb-2">Containers</h3>
-      <button onClick={handleAddContainer} className="w-full px-3 py-2 text-sm theme-surface border theme-border rounded-lg mb-2">
-        + Add Container
-      </button>
-      <div className="space-y-2">
-        {containers.map((container) => (
-          <div
-            key={container.id}
-            className={`h-12 px-3 rounded-xl border transition-all duration-200 flex items-center justify-between ${
-              selectedContainerId === container.id
-                ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-300 dark:border-primary-500/50'
-                : 'theme-surface border theme-border hover:theme-surface-hover'
-            }`}
+      <div 
+        className="flex items-center justify-between cursor-pointer mb-2"
+        onClick={() => setContainersExpanded(!containersExpanded)}
+      >
+        <h3 className="text-xs font-semibold theme-text-muted uppercase mb-0">Containers</h3>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsAdding(true)
+            }}
+            className="group flex items-center bg-primary-600 hover:bg-primary-700 text-white rounded px-2 py-0.5 text-xs font-bold transition-all"
+            title="Add Container"
           >
-            <button onClick={() => onSelectContainer(container.id)} className="flex-1 text-left flex items-center gap-2 min-w-0">
-              <span className="text-sm theme-text-muted">☰</span>
-              <span className="text-sm font-medium truncate">{container.id}</span>
-            </button>
-            <div className="flex gap-1 ml-2">
-              <button className="w-7 h-7 rounded border theme-border theme-surface text-sm" onClick={() => moveElementUp(container.id, 'body')}>↑</button>
-              <button className="w-7 h-7 rounded border theme-border theme-surface text-sm" onClick={() => moveElementDown(container.id, 'body')}>↓</button>
-              <button
-                className="w-7 h-7 rounded border theme-border theme-surface text-red-500 text-sm"
-                onClick={() => {
-                  deleteElement(container.id, 'body')
-                  onSelectContainer(null)
-                }}
-              >
-                ✕
-              </button>
-            </div>
+            <span>+</span>
+            <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-300 group-hover:max-w-[100px] group-hover:ml-1 font-normal">
+              Add Container
+            </span>
+          </button>
+          <button
+            className="theme-text-muted hover:theme-surface rounded p-0.5 ml-1"
+            title={containersExpanded ? "Colapsar Containers" : "Expandir Containers"}
+          >
+            {containersExpanded ? '▼' : '▶'}
+          </button>
+        </div>
+      </div>
+      
+      {isAdding && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="theme-surface border theme-border rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold theme-text mb-4">Novo Container</h3>
+            <form onSubmit={handleAddContainerSubmit}>
+              <input
+                type="text"
+                autoFocus
+                className="w-full px-3 py-2 text-sm theme-surface border theme-border rounded-lg mb-4"
+                placeholder={`Container ${containers.length + 1}`}
+                value={newContainerName}
+                onChange={(e) => setNewContainerName(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAdding(false)
+                    setNewContainerName('')
+                  }}
+                  className="px-4 py-2 rounded-lg theme-surface border theme-border hover:theme-surface-hover transition theme-text"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition"
+                >
+                  Criar Container
+                </button>
+              </div>
+            </form>
           </div>
-        ))}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {containersExpanded
+          ? containers.map(container => renderContainerItem(container))
+          : (selectedContainerId && containers.find(c => c.id === selectedContainerId)
+              ? renderContainerItem(containers.find(c => c.id === selectedContainerId)!)
+              : null)
+        }
       </div>
     </div>
   )
 }
+
 
 function GroupButton({ selectedContainerId }: { selectedContainerId: string | null }) {
   const { t } = useTranslation()
@@ -736,12 +878,15 @@ function ElementsList({ selectedContainerId }: { selectedContainerId: string | n
     selectElement,
     toggleElementSelection, 
     deleteElement,
+    deleteLoopChildElement,
     reorderElement,
     toggleElementVisibility,
     toggleGroupCollapse,
     toggleGroupVisibility,
     selectGroup,
-    reorderGroup
+    reorderGroup,
+    selectedContainerChildId,
+    selectContainerChild
   } = useTemplateStore()
   
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
@@ -761,9 +906,12 @@ function ElementsList({ selectedContainerId }: { selectedContainerId: string | n
       const summaryElements = template.summaryPage?.elements || []
       return [...backgroundElements, ...summaryElements]
     } else {
-      const containers = template.page || []
-      const selected = containers.find((el) => el.id === selectedContainerId && el.type === 'container')
-      return (selected?.elements as Element[]) || []
+      if (selectedContainerId) {
+        const containers = template.page || []
+        const selected = containers.find((el) => el.id === selectedContainerId && el.type === 'container')
+        return (selected?.elements as Element[]) || []
+      }
+      return template.page || []
     }
   }
 
@@ -952,11 +1100,20 @@ function ElementsList({ selectedContainerId }: { selectedContainerId: string | n
                   <div
                     key={element.id}
                     className={`px-2 py-1.5 rounded-lg cursor-pointer border transition-all text-xs ${
-                      selectedElementIds.includes(element.id) && selectedElementLocation === currentSection
+                      (selectedContainerId && selectedContainerChildId === element.id) ||
+                      (selectedElementIds.includes(element.id) && selectedElementLocation === currentSection && !selectedContainerId)
                         ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200 font-medium'
                         : 'theme-surface border-primary-500/20 hover:bg-primary-500/10 theme-text-secondary'
                     }`}
-                    onClick={(e) => (e.ctrlKey || e.metaKey) ? toggleElementSelection(element.id, currentSection) : selectElement(element.id, currentSection)}
+                    onClick={(e) => {
+                      if (selectedContainerId) {
+                        selectContainerChild(selectedContainerId, element.id, currentSection)
+                      } else if (e.ctrlKey || e.metaKey) {
+                        toggleElementSelection(element.id, currentSection)
+                      } else {
+                        selectElement(element.id, currentSection)
+                      }
+                    }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="truncate">{element.id}</span>
@@ -1002,11 +1159,21 @@ function ElementsList({ selectedContainerId }: { selectedContainerId: string | n
                 ? 'opacity-50 bg-primary-500/20 border-primary-400' 
                 : dragOverIndex === index
                 ? 'border-primary-500 border-dashed bg-primary-500/10'
-                : selectedElementIds.includes(element.id) && selectedElementLocation === currentSection
+                : selectedContainerId && selectedContainerChildId === element.id
+                ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200 font-medium shadow-sm'
+                : selectedElementIds.includes(element.id) && selectedElementLocation === currentSection && !selectedContainerId
                 ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200 font-medium shadow-sm'
                 : 'theme-surface border theme-border hover:bg-primary-500/10 hover:border-primary-500/30 theme-text-secondary'
             }`}
-            onClick={(e) => (e.ctrlKey || e.metaKey) ? toggleElementSelection(element.id, currentSection) : selectElement(element.id, currentSection)}
+            onClick={(e) => {
+              if (selectedContainerId) {
+                selectContainerChild(selectedContainerId, element.id, currentSection)
+              } else if (e.ctrlKey || e.metaKey) {
+                toggleElementSelection(element.id, currentSection)
+              } else {
+                selectElement(element.id, currentSection)
+              }
+            }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center flex-1 mr-2 min-w-0">
@@ -1042,7 +1209,11 @@ function ElementsList({ selectedContainerId }: { selectedContainerId: string | n
                   onClick={(e) => {
                     e.stopPropagation()
                     if (confirm(t.sidebar.deleteElementConfirm)) {
-                      deleteElement(element.id, currentSection)
+                      if (selectedContainerId) {
+                        deleteLoopChildElement(selectedContainerId, element.id, currentSection)
+                      } else {
+                        deleteElement(element.id, currentSection)
+                      }
                     }
                   }}
                   className="w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-400 hover:bg-red-500/20 rounded transition"
@@ -1095,6 +1266,17 @@ function LoopElementItem({ element, index: _index, currentSection }: LoopElement
   
   const [draggedChildIndex, setDraggedChildIndex] = useState<number | null>(null)
   const [dragOverChildIndex, setDragOverChildIndex] = useState<number | null>(null)
+  
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editingNameValue, setEditingNameValue] = useState('')
+
+  const handleRenameSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    if (editingNameValue.trim()) {
+      useTemplateStore.getState().updateElement(element.id, { name: editingNameValue.trim() }, currentSection)
+    }
+    setIsEditingName(false)
+  }
   
   const isExpanded = expandedLoopIds.includes(element.id)
   const isSelected = selectedElementIds.includes(element.id) && selectedElementLocation === currentSection
@@ -1162,9 +1344,32 @@ function LoopElementItem({ element, index: _index, currentSection }: LoopElement
               size="xs"
               className="mr-2 text-purple-400 flex-shrink-0"
             />
-            <span className="text-xs font-bold text-purple-300 truncate">
-              {element.id}
-            </span>
+            {isEditingName ? (
+              <form onSubmit={handleRenameSubmit} className="flex-1 mr-2 min-w-0" onClick={e => e.stopPropagation()}>
+                <input
+                  type="text"
+                  autoFocus
+                  className="w-full px-1 py-0.5 text-xs text-black border rounded"
+                  value={editingNameValue}
+                  onChange={(e) => setEditingNameValue(e.target.value)}
+                  onBlur={() => handleRenameSubmit()}
+                />
+              </form>
+            ) : (
+              <span 
+                className="text-xs font-bold text-purple-300 truncate"
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  if (element.type === 'container') {
+                    setEditingNameValue((element.name as string) || element.id)
+                    setIsEditingName(true)
+                  }
+                }}
+                title={element.type === 'container' ? "Duplo clique para renomear" : undefined}
+              >
+                {(element.name as string) || element.id}
+              </span>
+            )}
             <span className="text-xs text-purple-400 ml-2">({loopChildren.length})</span>
           </div>
           <div className="flex items-center gap-1">

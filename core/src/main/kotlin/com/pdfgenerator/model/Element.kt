@@ -516,10 +516,25 @@ data class ContainerElement(
     override val x: Float = 0f,
     override val y: Float = 0f,
     override val relativeOffsetY: Float? = null,
-    val width: Float = 400f,
+    val width: Any = 400f,
     val height: Float = 50f,
     val elements: List<Element>,
 ) : Element {
+    fun resolveWidth(containerWidth: Float): Float {
+        return when (width) {
+            is Number -> width.toFloat()
+            is String -> {
+                if (width.endsWith("%")) {
+                    val percentage = width.removeSuffix("%").toFloatOrNull() ?: 100f
+                    containerWidth * (percentage / 100f)
+                } else {
+                    width.toFloatOrNull() ?: containerWidth
+                }
+            }
+            else -> containerWidth
+        }
+    }
+
     override val positionMode: PositionMode = PositionMode.RELATIVE
 
     override fun validate(pageSettings: PageSettings): List<ValidationError> {

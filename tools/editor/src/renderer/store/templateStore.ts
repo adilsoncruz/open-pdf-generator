@@ -90,7 +90,11 @@ interface TemplateStore {
   selectedElementLocation: ElementLocation
   selectedGroupId: string | null  // ID do grupo selecionado
   selectedLoopChildId: string | null  // ID do elemento filho do loop selecionado
-  selectedLoopParentId: string | null  // ID do loop pai do elemento selecionado
+  selectedLoopParentId: string | null
+  expandedLoopIds: string[]
+  selectedContainerChildId: string | null
+  selectedContainerParentId: string | null
+  expandedContainerIds: string[]
   expandedLoopIds: string[]  // IDs dos loops expandidos na sidebar
   currentFilePath: string | null
   isDirty: boolean
@@ -98,7 +102,7 @@ interface TemplateStore {
   currentSection: ElementLocation
   history: Template[]
   historyIndex: number
-  copiedElements: { elements: Element[]; location: ElementLocation } | null
+  copiedElements: { elements: Element[]; location: ElementLocation; isChild?: boolean; parentId?: string | null } | null
   isPropertiesPanelPinned: boolean
   isSidebarPinned: boolean
   isSidebarMinimized: boolean
@@ -292,108 +296,130 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
   addElement: (element, location = 'body') =>
     set((state) => {
-      const normalizedElement =
-        element.type === 'container' ? { ...element, x: 0, width: '100%' } : element
+      let normalizedElement = { ...element }
+      if (element.type === 'container') {
+        const size = state.template.pageSettings.size
+        const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 }
+        const margins = state.template.pageSettings.margins
+        const headerHeight = state.template.pageSettings.header?.height || 0
+        const footerHeight = state.template.pageSettings.footer?.height || 0
+        
+        let sectionHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0)
+        if (location === 'header') sectionHeight = headerHeight
+        else if (location === 'footer') sectionHeight = footerHeight
+        else if (location === 'body') sectionHeight -= (headerHeight + footerHeight)
+        
+        normalizedElement = {
+          ...element,
+          x: 0,
+          width: '100%',
+          height: Math.min(typeof element.height === 'number' ? element.height : 150, Math.max(0, sectionHeight))
+        }
+      }
+      const selectedId = state.selectedElementIds[0]
+      const insertIntoElements = (elements: Element[]) => {
+        const selectedContainer = elements.find(
+          (el) => el.id === selectedId && el.type === 'container'
+        )
+        if (selectedContainer && normalizedElement.type !== 'container') {
+          return {
+            newElements: elements.map((el) =>
+              el.id === selectedContainer.id
+                ? { ...el, elements: [...(el.elements || []), normalizedElement] }
+                : el
+            ),
+            newSelectedId: selectedContainer.id
+          }
+        }
+        return {
+          newElements: [...elements, normalizedElement],
+          newSelectedId: normalizedElement.id
+        }
+      }
+
       let newTemplate
       if (location === 'header' && state.template.pageSettings.header) {
+        const { newElements, newSelectedId } = insertIntoElements(state.template.pageSettings.header.elements)
         newTemplate = {
             ...state.template,
             pageSettings: {
               ...state.template.pageSettings,
               header: {
                 ...state.template.pageSettings.header,
-                elements: [...state.template.pageSettings.header.elements, normalizedElement],
+                elements: newElements,
               },
             },
         }
         return {
           template: newTemplate,
-          selectedElementIds: [normalizedElement.id],
+          selectedElementIds: [newSelectedId],
           selectedElementLocation: 'header',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else if (location === 'footer' && state.template.pageSettings.footer) {
+        const { newElements, newSelectedId } = insertIntoElements(state.template.pageSettings.footer.elements)
         newTemplate = {
             ...state.template,
             pageSettings: {
               ...state.template.pageSettings,
               footer: {
                 ...state.template.pageSettings.footer,
-                elements: [...state.template.pageSettings.footer.elements, normalizedElement],
+                elements: newElements,
               },
             },
         }
         return {
           template: newTemplate,
-          selectedElementIds: [normalizedElement.id],
+          selectedElementIds: [newSelectedId],
           selectedElementLocation: 'footer',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else if (location === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        const { newElements, newSelectedId } = insertIntoElements(state.template.pageSettings.bodyBackground.elements)
         newTemplate = {
             ...state.template,
             pageSettings: {
               ...state.template.pageSettings,
               bodyBackground: {
                 ...state.template.pageSettings.bodyBackground,
-                elements: [...state.template.pageSettings.bodyBackground.elements, normalizedElement],
+                elements: newElements,
               },
             },
         }
         return {
           template: newTemplate,
-          selectedElementIds: [normalizedElement.id],
+          selectedElementIds: [newSelectedId],
           selectedElementLocation: 'bodyBackground',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else if (location === 'summary' && state.template.summaryPage) {
+        const { newElements, newSelectedId } = insertIntoElements(state.template.summaryPage.elements)
         newTemplate = {
             ...state.template,
             summaryPage: {
               ...state.template.summaryPage,
-              elements: [...state.template.summaryPage.elements, normalizedElement],
+              elements: newElements,
             },
         }
         return {
           template: newTemplate,
-          selectedElementIds: [normalizedElement.id],
+          selectedElementIds: [newSelectedId],
           selectedElementLocation: 'summary',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else {
-        const selectedId = state.selectedElementIds[0]
-        const selectedContainer = state.template.page.find(
-          (el) => el.id === selectedId && el.type === 'container'
-        )
-
-        if (selectedContainer && normalizedElement.type !== 'container') {
-          newTemplate = {
-            ...state.template,
-            page: state.template.page.map((el) =>
-              el.id === selectedContainer.id
-                ? { ...el, elements: [...(el.elements || []), normalizedElement] }
-                : el
-            ),
-          }
-          return {
-            template: newTemplate,
-            selectedElementIds: [selectedContainer.id],
-            selectedElementLocation: 'body',
-            isDirty: true,
-            ...saveToHistory(state, newTemplate),
-          }
-        }
+        const { newElements, newSelectedId } = insertIntoElements(state.template.page)
         newTemplate = {
           ...state.template,
-          page: [...state.template.page, normalizedElement],
+          page: newElements,
         }
         return {
           template: newTemplate,
-          selectedElementIds: [normalizedElement.id],
+          selectedElementIds: [newSelectedId],
           selectedElementLocation: 'body',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
@@ -404,6 +430,49 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   updateElement: (id, updates, location) =>
     set((state) => {
       const loc = location || state.selectedElementLocation
+      const newId = updates.id !== undefined ? updates.id : id
+      
+      const updateGroups = (groups?: ElementGroup[]) => {
+        if (!groups || newId === id) return groups
+        return groups.map(g => ({
+          ...g,
+          elementIds: g.elementIds.map(eid => eid === id ? newId : eid)
+        }))
+      }
+
+      const applyUpdates = (elements: Element[]) => {
+        return elements.map((el) => {
+          if (el.id !== id) return el
+          
+          let result = { ...el, ...updates }
+          
+          if (el.type === 'container') {
+             const size = state.template.pageSettings.size
+             const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 }
+             const margins = state.template.pageSettings.margins
+             const headerHeight = state.template.pageSettings.header?.height || 0
+             const footerHeight = state.template.pageSettings.footer?.height || 0
+             
+             let sectionHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0)
+             if (loc === 'header') sectionHeight = headerHeight
+             else if (loc === 'footer') sectionHeight = footerHeight
+             else if (loc === 'body') sectionHeight -= (headerHeight + footerHeight)
+             
+             if (typeof result.height === 'number') {
+               result.height = Math.min(result.height, Math.max(0, sectionHeight))
+             }
+             
+             result.x = 0
+             result.width = '100%'
+          }
+          
+          return result
+        })
+      }
+      
+      const newSelectedElementIds = newId !== id 
+        ? state.selectedElementIds.map(sid => sid === id ? newId : sid)
+        : state.selectedElementIds
       
       if (loc === 'header' && state.template.pageSettings.header) {
         return {
@@ -413,12 +482,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               ...state.template.pageSettings,
               header: {
                 ...state.template.pageSettings.header,
-                elements: state.template.pageSettings.header.elements.map((el) =>
-                  el.id === id ? { ...el, ...updates } : el
-                ),
+                elements: applyUpdates(state.template.pageSettings.header.elements),
+                groups: updateGroups(state.template.pageSettings.header.groups),
               },
             },
           },
+          selectedElementIds: newSelectedElementIds,
           isDirty: true,
         }
       } else if (loc === 'footer' && state.template.pageSettings.footer) {
@@ -429,12 +498,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               ...state.template.pageSettings,
               footer: {
                 ...state.template.pageSettings.footer,
-                elements: state.template.pageSettings.footer.elements.map((el) =>
-                  el.id === id ? { ...el, ...updates } : el
-                ),
+                elements: applyUpdates(state.template.pageSettings.footer.elements),
+                groups: updateGroups(state.template.pageSettings.footer.groups),
               },
             },
           },
+          selectedElementIds: newSelectedElementIds,
           isDirty: true,
         }
       } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
@@ -445,12 +514,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               ...state.template.pageSettings,
               bodyBackground: {
                 ...state.template.pageSettings.bodyBackground,
-                elements: state.template.pageSettings.bodyBackground.elements.map((el) =>
-                  el.id === id ? { ...el, ...updates } : el
-                ),
+                elements: applyUpdates(state.template.pageSettings.bodyBackground.elements),
+                groups: updateGroups(state.template.pageSettings.bodyBackground.groups),
               },
             },
           },
+          selectedElementIds: newSelectedElementIds,
           isDirty: true,
         }
       } else if (loc === 'summary' && state.template.summaryPage) {
@@ -459,34 +528,21 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             ...state.template,
             summaryPage: {
               ...state.template.summaryPage,
-              elements: state.template.summaryPage.elements.map((el) =>
-                el.id === id ? { ...el, ...updates } : el
-              ),
+              elements: applyUpdates(state.template.summaryPage.elements),
+              groups: updateGroups(state.template.summaryPage.groups),
             },
           },
+          selectedElementIds: newSelectedElementIds,
           isDirty: true,
         }
       } else {
-        const currentElement = state.template.page.find((el) => el.id === id)
-        const isContainer = currentElement?.type === 'container'
-        const sanitizedUpdates = isContainer
-          ? {
-              ...(typeof updates.id !== 'undefined' ? { id: updates.id } : {}),
-              ...(typeof updates.height !== 'undefined' ? { height: updates.height } : {}),
-              ...(typeof updates.printCondition !== 'undefined'
-                ? { printCondition: updates.printCondition }
-                : {}),
-              x: 0,
-              width: '100%',
-            }
-          : updates
         return {
           template: {
             ...state.template,
-            page: state.template.page.map((el) =>
-              el.id === id ? { ...el, ...sanitizedUpdates } : el
-            ),
+            page: applyUpdates(state.template.page),
+            groups: updateGroups(state.template.groups),
           },
+          selectedElementIds: newSelectedElementIds,
           isDirty: true,
         }
       }
@@ -1325,7 +1381,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
   copyElement: () =>
     set((state) => {
-      const { selectedElementIds, selectedElementLocation, template } = state
+      const { selectedElementIds, selectedElementLocation, selectedContainerChildId, template } = state
       
       if (selectedElementIds.length === 0) return state
       
@@ -1342,8 +1398,24 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         allElements = template.page
       }
       
-      // Filtrar apenas os elementos selecionados
-      const elementsToCopy = allElements.filter(el => selectedElementIds.includes(el.id))
+      let elementsToCopy: Element[] = []
+      let isChild = false
+      let parentId: string | null = null
+
+      if (selectedContainerChildId) {
+        const container = allElements.find(el => el.id === selectedElementIds[0]) as any
+        if (container && container.elements) {
+          const child = container.elements.find((el: any) => el.id === selectedContainerChildId)
+          if (child) {
+            elementsToCopy = [child]
+            isChild = true
+            parentId = container.id
+          }
+        }
+      } else {
+        // Filtrar apenas os elementos selecionados
+        elementsToCopy = allElements.filter(el => selectedElementIds.includes(el.id))
+      }
       
       if (elementsToCopy.length === 0) return state
       
@@ -1356,19 +1428,20 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         copiedElements: {
           elements: copiedElements,
           location: selectedElementLocation,
+          isChild,
+          parentId
         },
       }
     }),
 
   pasteElement: () =>
     set((state) => {
-      const { copiedElements, currentSection, template } = state
+      const { copiedElements, currentSection, template, selectedElementIds, selectedContainerChildId } = state
       
       if (!copiedElements || copiedElements.elements.length === 0) {
         console.log('⚠️ Nenhum elemento copiado')
         return state
       }
-      
       
       const timestamp = Date.now()
       const newElements = copiedElements.elements.map((element, index) => ({
@@ -1380,8 +1453,92 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       console.log(`📋 Pasting ${newElements.length} element(s) to section:`, currentSection)
       
-      
       let newTemplate: Template
+      
+      let targetContainerId: string | null = null
+      
+      if (selectedContainerChildId) {
+        targetContainerId = selectedElementIds[0]
+      } else if (selectedElementIds.length === 1) {
+        let allElements: any[] = []
+        if (currentSection === 'header' && template.pageSettings.header) {
+          allElements = template.pageSettings.header.elements
+        } else if (currentSection === 'footer' && template.pageSettings.footer) {
+          allElements = template.pageSettings.footer.elements
+        } else if (currentSection === 'bodyBackground' && template.pageSettings.bodyBackground) {
+          allElements = template.pageSettings.bodyBackground.elements
+        } else {
+          allElements = template.page
+        }
+        
+        const el = allElements.find(e => e.id === selectedElementIds[0])
+        if (el && el.type === 'container') {
+          targetContainerId = el.id
+        }
+      }
+      
+      if (targetContainerId) {
+        const insertIntoContainer = (elements: any[]): any[] => {
+          return elements.map(el => {
+            if (el.id === targetContainerId && el.type === 'container') {
+              return {
+                ...el,
+                elements: [...(el.elements || []), ...newElements]
+              }
+            }
+            return el
+          })
+        }
+        
+        if (currentSection === 'header' && template.pageSettings.header) {
+          newTemplate = {
+            ...template,
+            pageSettings: {
+              ...template.pageSettings,
+              header: {
+                ...template.pageSettings.header,
+                elements: insertIntoContainer(template.pageSettings.header.elements),
+              },
+            },
+          }
+        } else if (currentSection === 'footer' && template.pageSettings.footer) {
+          newTemplate = {
+            ...template,
+            pageSettings: {
+              ...template.pageSettings,
+              footer: {
+                ...template.pageSettings.footer,
+                elements: insertIntoContainer(template.pageSettings.footer.elements),
+              },
+            },
+          }
+        } else if (currentSection === 'bodyBackground' && template.pageSettings.bodyBackground) {
+          newTemplate = {
+            ...template,
+            pageSettings: {
+              ...template.pageSettings,
+              bodyBackground: {
+                ...template.pageSettings.bodyBackground,
+                elements: insertIntoContainer(template.pageSettings.bodyBackground.elements),
+              },
+            },
+          }
+        } else {
+          newTemplate = {
+            ...template,
+            page: insertIntoContainer(template.page),
+          }
+        }
+        
+        return {
+          template: newTemplate,
+          selectedElementIds: [targetContainerId],
+          selectedContainerChildId: newElements[0].id,
+          selectedElementLocation: currentSection,
+          isDirty: true,
+          ...saveToHistory(state, newTemplate),
+        }
+      }
       
       if (currentSection === 'header' && template.pageSettings.header) {
         newTemplate = {
@@ -1426,6 +1583,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       return {
         template: newTemplate,
         selectedElementIds: newElements.map(el => el.id),
+        selectedContainerChildId: null,
         selectedElementLocation: currentSection,
         isDirty: true,
         ...saveToHistory(state, newTemplate),
@@ -1986,6 +2144,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     set((state) => {
       const loc = location || state.currentSection
       const historyState = saveToHistory(state, state.template)
+      const newChildId = updates.id !== undefined ? updates.id : childId
       
       const updateInLoop = (elements: Element[]): Element[] => {
         return elements.map(el => {
@@ -2043,6 +2202,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       return {
         ...historyState,
         template: newTemplate,
+        selectedLoopChildId: state.selectedLoopChildId === childId ? newChildId : state.selectedLoopChildId,
         isDirty: true,
       }
     }),
@@ -2243,6 +2403,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       set((state) => {
         const loc = location || state.currentSection
         const historyState = saveToHistory(state, state.template)
+        const newChildId = updates.id !== undefined ? updates.id : childId
 
         const updateInContainer = (elements: Element[]): Element[] => {
           return elements.map(el => {
@@ -2293,13 +2454,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         } else {
           newTemplate = {
             ...state.template,
-            pageElements: updateInContainer(state.template.pageElements),
+            page: updateInContainer(state.template.page),
           }
         }
 
         return {
           ...historyState,
           template: newTemplate,
+          selectedContainerChildId: state.selectedContainerChildId === childId ? newChildId : state.selectedContainerChildId,
           isDirty: true,
         }
       }),

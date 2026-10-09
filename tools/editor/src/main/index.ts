@@ -1262,6 +1262,24 @@ ipcMain.handle('pdf:open', async (_, pdfPath: string) => {
     }
   }
 })
+ipcMain.handle('pdf:openBase64', async (_, base64: string, openInViewer?: boolean) => {
+  try {
+    const tmpDir = path.join(app.getPath('temp'), 'opg-external-preview')
+    await fs.mkdir(tmpDir, { recursive: true })
+    const pdfFile = path.join(tmpDir, 'preview.pdf')
+    await fs.writeFile(pdfFile, Buffer.from(base64, 'base64'))
+    if (openInViewer !== false) {
+      await shell.openPath(pdfFile)
+    }
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    }
+  }
+})
+
 
 // Validate template using CLI
 ipcMain.handle('template:validate', async (_, templatePath: string) => {
