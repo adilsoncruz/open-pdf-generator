@@ -42,7 +42,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   const { t } = useTranslation()
   const {
     template,
-    testData,
     currentFilePath,
     isDirty,
     setTemplate,
@@ -253,9 +252,9 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
       if (result.success) {
         markClean()
         // Update preview if open
-        if (effectivePreviewMode !== 'hidden') {
-          triggerRefresh()
-        }
+        if (effectivePreviewMode !== 'hidden' || usePreviewStore.getState().isExternalActive) {
+        triggerRefresh()
+      }
       } else {
         alert('Error saving: ' + result.error)
       }
@@ -273,7 +272,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
       setCurrentFilePath(result)
       markClean()
       // Update preview if open
-      if (effectivePreviewMode !== 'hidden') {
+      if (effectivePreviewMode !== 'hidden' || usePreviewStore.getState().isExternalActive) {
         triggerRefresh()
       }
     }

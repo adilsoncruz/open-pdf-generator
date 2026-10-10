@@ -336,20 +336,24 @@ export function EditorPage() {
 
   const { isExternalActive, refreshTrigger } = usePreviewStore()
 
+  // Track previous refresh trigger
+  const prevTriggerRef = useRef<number>(0)
   useEffect(() => {
     const generateAndSaveExternal = async () => {
-      const result = await window.electronAPI.generatePDFPreview(JSON.stringify(template), JSON.stringify(testData))
+      // Read directly from store to avoid running on every keystroke
+      const { template: currentTemplate, testData: currentTestData } = useTemplateStore.getState()
+      const result = await window.electronAPI.generatePDFPreview(JSON.stringify(currentTemplate), JSON.stringify(currentTestData))
       if (result.success && result.pdfBase64) {
         usePreviewStore.getState().setPdfData(result.pdfBase64)
         window.electronAPI.openBase64PDF(result.pdfBase64, false)
       }
     }
     
-    if (isExternalActive && refreshTrigger > 0) {
+    if (isExternalActive && refreshTrigger > 0 && refreshTrigger !== prevTriggerRef.current) {
+      prevTriggerRef.current = refreshTrigger
       generateAndSaveExternal()
     }
-  }, [refreshTrigger, isExternalActive, template,
-    testData, testData])
+  }, [refreshTrigger, isExternalActive])
 
   const showPropertiesPanel =
     isPropertiesPanelPinned ||
