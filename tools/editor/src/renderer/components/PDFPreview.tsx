@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
+import 'react-pdf/dist/Page/AnnotationLayer.css'
 import { usePreviewStore } from '../store/previewStore'
 import { useTemplateStore } from '../store/templateStore'
 import { useTranslation } from '../i18n'
@@ -332,7 +333,7 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
                   pageNumber={currentPage}
                   scale={scale}
                   renderTextLayer={false}
-                  renderAnnotationLayer={false}
+                  renderAnnotationLayer={true}
                   className="bg-white"
                 />
               </Document>
