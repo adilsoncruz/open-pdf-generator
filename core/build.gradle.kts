@@ -12,6 +12,7 @@ version = "1.0.1"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -34,7 +35,6 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
     testImplementation("io.mockk:mockk:1.13.13")
     testImplementation("org.assertj:assertj-core:3.26.3")
-    testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:1.0.0-SNAPSHOT")
 }
 
 tasks.test {

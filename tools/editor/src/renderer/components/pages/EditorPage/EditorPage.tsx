@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { TabBar } from '../../TabBar'
 import { useTemplateStore, type Element } from '../../../store/templateStore'
 import { useUIStore } from '../../../store/uiStore'
 import { usePreviewStore } from '../../../store/previewStore'
@@ -351,7 +350,6 @@ export function EditorPage() {
           onTogglePreview={togglePreview}
           previewMode={previewMode}
         />
-        <TabBar />
 
         {/* Main Content */}
         <div className="flex flex-1 overflow-hidden">

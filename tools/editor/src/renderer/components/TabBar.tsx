@@ -24,7 +24,7 @@ export const TabBar: React.FC = () => {
   if (tabs.length === 0) return null
 
   return (
-    <div className="flex items-center bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-x-auto h-9 min-h-[36px] flex-shrink-0">
+    <div className="flex items-center space-x-1 overflow-x-auto h-full px-2 flex-1 scrollbar-hide">
       {tabs.map(tab => {
         const isActive = tab.id === activeTabId
         // Always read latest state for active tab
@@ -38,15 +38,15 @@ export const TabBar: React.FC = () => {
             key={tab.id}
             onClick={() => switchTab(tab.id)}
             className={`
-              group flex items-center h-full px-3 text-sm border-r border-gray-200 dark:border-gray-700 cursor-pointer min-w-[120px] max-w-[200px] select-none
+              group flex items-center h-8 px-3 text-xs font-medium rounded-md cursor-pointer max-w-[160px] min-w-[100px] select-none transition-colors border
               ${isActive 
-                ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-b-2 border-b-blue-600' 
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                ? 'bg-primary-50 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 border-primary-200 dark:border-primary-500/30 shadow-sm' 
+                : 'bg-transparent text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent hover:border-gray-200 dark:hover:border-gray-700'
               }
             `}
           >
             <span className="truncate flex-1 mr-2">{displayName}</span>
-            {displayIsDirty && <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 flex-shrink-0"></span>}
+            {displayIsDirty && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 flex-shrink-0"></span>}
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -54,7 +54,7 @@ export const TabBar: React.FC = () => {
               }}
               className={`p-0.5 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 ${isActive ? 'opacity-100' : ''}`}
             >
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
         )
