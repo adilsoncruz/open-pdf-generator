@@ -88,18 +88,25 @@ class RichTextRenderer : Renderer<RichTextElement> {
         element: RichTextElement,
         context: RenderContext,
     ): String? {
-        val dataBindingText =
-            element.dataBinding?.let { binding ->
-                val resolvedValue = DataBindingResolver.resolve(binding, context.data, context.loopContext)
-                resolvedValue?.toString()
+        return when {
+            !element.dataBinding.isNullOrBlank() -> {
+                if (ExpressionProcessor.hasTransformations(element.dataBinding)) {
+                    ExpressionProcessor.process(element.dataBinding, context.data, context.loopContext)
+                } else {
+                    val value = DataBindingResolver.resolve(element.dataBinding, context.data, context.loopContext)
+                    value?.toString()
+                }
             }
-
-        val valueText =
-            element.value?.let { value ->
-                ExpressionProcessor.process(value, context.data, context.loopContext)
+            !element.value.isNullOrBlank() && context.loopContext != null -> {
+                if (ExpressionProcessor.hasTransformations(element.value)) {
+                    ExpressionProcessor.process(element.value, context.data, context.loopContext)
+                } else {
+                    val fieldValue = DataBindingResolver.resolve(element.value, context.data, context.loopContext)
+                    fieldValue?.toString() ?: element.value
+                }
             }
-
-        return dataBindingText ?: valueText
+            else -> element.value
+        }
     }
 
     private fun parseMarkdown(
