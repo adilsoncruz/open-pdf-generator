@@ -7,6 +7,7 @@ import com.pdfgenerator.adapter.openpdf.ImageRenderer
 import com.pdfgenerator.adapter.openpdf.LineRenderer
 import com.pdfgenerator.adapter.openpdf.LoopRenderer
 import com.pdfgenerator.adapter.openpdf.RectangleRenderer
+import com.pdfgenerator.adapter.openpdf.SpacerRenderer
 import com.pdfgenerator.adapter.openpdf.StaticTextRenderer
 import com.pdfgenerator.adapter.openpdf.TableRenderer
 import com.pdfgenerator.adapter.openpdf.TextRenderer
@@ -19,6 +20,7 @@ import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.SpacerElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TextElement
@@ -34,6 +36,7 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
     private val rectangleRenderer = RectangleRenderer()
     private val lineRenderer = LineRenderer()
     private val barcodeRenderer = BarcodeRenderer()
+    private val spacerRenderer = SpacerRenderer()
     private val conditionalRenderer = ConditionalRenderer(this)
     private val loopRenderer = LoopRenderer(this)
     private val containerRenderer = ContainerRenderer(this)
@@ -62,6 +65,7 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
             is RectangleElement -> rectangleRenderer.render(element, context)
             is LineElement -> lineRenderer.render(element, context)
             is BarcodeElement -> barcodeRenderer.render(element, context)
+            is SpacerElement -> spacerRenderer.render(element, context)
             is ConditionalElement -> conditionalRenderer.render(element, context)
             is LoopElement -> loopRenderer.render(element, context)
             is ContainerElement -> containerRenderer.render(element, context)
