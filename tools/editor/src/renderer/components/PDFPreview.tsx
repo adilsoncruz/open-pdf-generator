@@ -31,6 +31,7 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
   const [numPages, setNumPages] = useState<number>(0)
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [scale, setScale] = useState<number>(0.8)
+  const [isExternalActive, setIsExternalActive] = useState(false)
   
   // Pan/drag state
   const [isPanning, setIsPanning] = useState(false)
@@ -150,7 +151,15 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
     }
   }, [refreshTrigger, isLoading, generatePreview, hasContent])
   
-  const goToPrevPage = () => setCurrentPage(p => Math.max(1, p - 1))
+  
+  // Auto-refresh external preview when pdfData changes
+  useEffect(() => {
+    if (isExternalActive && pdfData) {
+      window.electronAPI.openBase64PDF(pdfData, false)
+    }
+  }, [pdfData, isExternalActive])
+  
+const goToPrevPage = () => setCurrentPage(p => Math.max(1, p - 1))
   const goToNextPage = () => setCurrentPage(p => Math.min(numPages, p + 1))
   const zoomIn = () => setScale(s => Math.min(2, s + 0.2))
   const zoomOut = () => setScale(s => Math.max(0.4, s - 0.2))
@@ -239,7 +248,7 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
           
 {pdfData && (
             <button
-              onClick={() => window.electronAPI.openBase64PDF(pdfData)}
+              onClick={() => { setIsExternalActive(true); window.electronAPI.openBase64PDF(pdfData, true); }}
               className="p-1.5 rounded theme-hover theme-text-muted hover:theme-text"
               title="Open external window"
             >

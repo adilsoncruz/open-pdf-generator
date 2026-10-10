@@ -51,33 +51,12 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   } = useTemplateStore()
   
   const { theme, toggleTheme } = useUIStore()
-  const { mode: previewModeFromStore, triggerRefresh, refreshTrigger } = usePreviewStore()
+  const { mode: previewModeFromStore, triggerRefresh } = usePreviewStore()
   
   // Use previewMode from store if not passed as prop
   const effectivePreviewMode = previewMode || previewModeFromStore
   
 
-  const [externalActive, setExternalActive] = useState(false)
-
-  const generateAndSaveExternal = async (openViewer = false) => {
-    const result = await window.electronAPI.generatePDFPreview(JSON.stringify(template), JSON.stringify(testData))
-    if (result.success && result.pdfBase64) {
-      usePreviewStore.getState().setPdfData(result.pdfBase64)
-      window.electronAPI.openBase64PDF(result.pdfBase64, openViewer)
-    }
-  }
-
-  const handleExternalPreview = () => {
-    setExternalActive(true)
-    generateAndSaveExternal(true) // generate and open
-  }
-
-  // Auto-refresh external preview when internal refresh is triggered
-  useEffect(() => {
-    if (externalActive && refreshTrigger > 0) {
-      generateAndSaveExternal(false) // just save silently
-    }
-  }, [refreshTrigger, externalActive])
 
   const [showFileMenu, setShowFileMenu] = useState(false)
   const [showCLIModal, setShowCLIModal] = useState(false)
@@ -470,15 +449,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         )}
         
 
-        {/* External Preview Button */}
-        <Button
-          onClick={handleExternalPreview}
-          variant="secondary"
-          title="Abrir Preview em Janela Separada"
-        >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-          External
-        </Button>
 
         {/* 4. Preview Toggle Button */}
         {onTogglePreview && (
