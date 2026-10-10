@@ -584,6 +584,7 @@ class ElementDeserializer : JsonDeserializer<Element> {
 
         return when (type) {
             "text" -> gson.fromJson(json, TextElement::class.java)
+            "rich_text" -> gson.fromJson(json, RichTextElement::class.java)
             "static_text" -> gson.fromJson(json, StaticTextElement::class.java)
             "image" -> gson.fromJson(json, ImageElement::class.java)
             "table" -> gson.fromJson(json, TableElement::class.java)
