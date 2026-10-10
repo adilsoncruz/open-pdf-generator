@@ -15,16 +15,18 @@ import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
-import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
-import com.pdfgenerator.model.SpacerElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TextElement
-import com.pdfgenerator.model.PageBreakElementimport com.pdfgenerator.model.RichTextElementimport com.pdfgenerator.util.ConditionEvaluator
+import com.pdfgenerator.model.PageBreakElement
+import com.pdfgenerator.model.SpacerElement
+import com.pdfgenerator.model.RichTextElement
+import com.pdfgenerator.model.LinkElement
+import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
 import com.pdfgenerator.util.withSyntheticBindings
 import com.pdfgenerator.util.withSyntheticPageNumber
@@ -502,17 +504,36 @@ class PDFGenerator(
         groupIndex: Map<String, ElementGroup>,
         data: Map<String, Any?>,
     ): Boolean {
-        if (groupIndex.isEmpty()) return true
 
-        val group = groupIndex[element.id] ?: return true
+        val group = groupIndex[element.id]
 
-        val shouldRender = ConditionEvaluator.evaluate(group.printCondition, data)
-
-        if (!shouldRender) {
-            logger.debug("Elemento ${element.id} SKIPPED (grupo '${group.name}' printCondition='${group.printCondition}' = false)")
+        if (group != null && group.printCondition != null) {
+            val shouldRenderGroup = ConditionEvaluator.evaluate(group.printCondition, data)
+            if (!shouldRenderGroup) {
+                logger.debug("Elemento ${element.id} SKIPPED (grupo '${group.name}' printCondition='${group.printCondition}' = false)")
+                return false
+            }
         }
 
-        return shouldRender
+        val elementCondition = when (element) {
+            is TextElement -> element.printCondition
+            is BarcodeElement -> element.printCondition
+            is LoopElement -> element.printCondition
+            is PageBreakElement -> element.printCondition
+            is RichTextElement -> element.printCondition
+            is LinkElement -> element.printCondition
+            else -> null
+        }
+        
+        if (elementCondition != null) {
+            val shouldRenderElement = ConditionEvaluator.evaluate(elementCondition, data)
+            if (!shouldRenderElement) {
+                logger.debug("Elemento ${element.id} SKIPPED (printCondition='$elementCondition' = false)")
+                return false
+            }
+        }
+
+        return true
     }
 
     private fun adjustElementForBody(
@@ -525,7 +546,6 @@ class PDFGenerator(
 
         return when (element) {
             is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RichTextElement -> element.copy(x = adjustedX, y = adjustedY)
             is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
             is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
             is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
@@ -535,8 +555,12 @@ class PDFGenerator(
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
             is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
-            is PageBreakElement -> element.copy(x = adjustedX, y = adjustedY)            is SpacerElement -> element.copy(x = adjustedX, y = adjustedY)        }            is LinkElement -> element.copy(x = adjustedX, y = adjustedY)
-        }    }
+            is PageBreakElement -> element.copy(x = adjustedX, y = adjustedY)
+            is SpacerElement -> element.copy(x = adjustedX, y = adjustedY)
+            is RichTextElement -> element.copy(x = adjustedX, y = adjustedY)
+            is LinkElement -> element.copy(x = adjustedX, y = adjustedY)
+        }
+    }
 
     private fun getElementHeight(
         element: Element,
@@ -544,33 +568,6 @@ class PDFGenerator(
         context: RenderContext,
     ): Float {
         return when (element) {
-            is RichTextElement -> {            is LinkElement -> {                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-                if (element.style?.multiline == true && element.width != null) {
-                    val text = resolveTextForHeight(element.dataBinding, element.value, data)
-                    if (text != null) {
-                        TextRenderer
-                            .getOrMeasureMultilineLayout(
-                                elementId = element.id,
-                                resolvedText = text,
-                                styleHash = element.style?.hashCode() ?: 0,
-                                boxWidth = element.width,
-                                fontSize = element.style?.fontSize ?: 12f,
-                                lineHeight = element.style?.lineHeight,
-                                paddingTop = element.style?.paddingTop ?: 0f,
-                                paddingBottom = element.style?.paddingBottom ?: 0f,
-                                paddingLeft = element.style?.paddingLeft ?: 0f,
-                                paddingRight = element.style?.paddingRight ?: 0f,
-                                firstLineIndent = element.style?.firstLineIndent ?: 0f,
-                                fontFamily = element.style?.fontFamily ?: "Helvetica",
-                                cache = context.textLayoutCache,
-                            ).contentHeight
-                    } else {
-                        definedHeight
-                    }
-                } else {
-                    definedHeight
-                }
-            }
             is TextElement -> {
                 val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
                 if (element.style?.multiline == true && element.width != null) {
@@ -666,7 +663,65 @@ class PDFGenerator(
                     } ?: 0f
                 kotlin.math.max(element.height, contentHeight)
             }
-            is PageBreakElement -> 0f            is SpacerElement -> element.height        }
+            is PageBreakElement -> 0f
+            is SpacerElement -> element.height
+            is RichTextElement -> {
+                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
+                if (element.style?.multiline == true && element.width != null) {
+                    val text = resolveTextForHeight(element.dataBinding, element.value, data)
+                    if (text != null) {
+                        TextRenderer
+                            .getOrMeasureMultilineLayout(
+                                elementId = element.id,
+                                resolvedText = text,
+                                styleHash = element.style?.hashCode() ?: 0,
+                                boxWidth = element.width,
+                                fontSize = element.style?.fontSize ?: 12f,
+                                lineHeight = element.style?.lineHeight,
+                                paddingTop = element.style?.paddingTop ?: 0f,
+                                paddingBottom = element.style?.paddingBottom ?: 0f,
+                                paddingLeft = element.style?.paddingLeft ?: 0f,
+                                paddingRight = element.style?.paddingRight ?: 0f,
+                                firstLineIndent = element.style?.firstLineIndent ?: 0f,
+                                fontFamily = element.style?.fontFamily ?: "Helvetica",
+                                cache = context.textLayoutCache,
+                            ).contentHeight
+                    } else {
+                        definedHeight
+                    }
+                } else {
+                    definedHeight
+                }
+            }
+            is LinkElement -> {
+                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
+                if (element.style?.multiline == true && element.width != null) {
+                    val text = resolveTextForHeight(element.dataBinding, element.value, data)
+                    if (text != null) {
+                        TextRenderer
+                            .getOrMeasureMultilineLayout(
+                                elementId = element.id,
+                                resolvedText = text,
+                                styleHash = element.style?.hashCode() ?: 0,
+                                boxWidth = element.width,
+                                fontSize = element.style?.fontSize ?: 12f,
+                                lineHeight = element.style?.lineHeight,
+                                paddingTop = element.style?.paddingTop ?: 0f,
+                                paddingBottom = element.style?.paddingBottom ?: 0f,
+                                paddingLeft = element.style?.paddingLeft ?: 0f,
+                                paddingRight = element.style?.paddingRight ?: 0f,
+                                firstLineIndent = element.style?.firstLineIndent ?: 0f,
+                                fontFamily = element.style?.fontFamily ?: "Helvetica",
+                                cache = context.textLayoutCache,
+                            ).contentHeight
+                    } else {
+                        definedHeight
+                    }
+                } else {
+                    definedHeight
+                }
+            }
+        }
     }
 
     private fun resolveTextForHeight(
@@ -697,8 +752,8 @@ class PDFGenerator(
             val height =
                 when (element) {
                     is LinkElement -> element.height ?: 20f
-                    is TextElement -> element.height ?: 20f
                     is RichTextElement -> element.height ?: 20f
+                    is TextElement -> element.height ?: 20f
                     is StaticTextElement -> element.height ?: 20f
                     is ImageElement -> {
                         if (element.height.toString() == "100%" || element.height.toString() == "100.0%") {

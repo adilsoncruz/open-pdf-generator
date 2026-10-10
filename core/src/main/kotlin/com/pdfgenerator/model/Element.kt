@@ -584,7 +584,6 @@ class ElementDeserializer : JsonDeserializer<Element> {
 
         return when (type) {
             "text" -> gson.fromJson(json, TextElement::class.java)
-            "rich_text" -> gson.fromJson(json, RichTextElement::class.java)
             "static_text" -> gson.fromJson(json, StaticTextElement::class.java)
             "image" -> gson.fromJson(json, ImageElement::class.java)
             "table" -> gson.fromJson(json, TableElement::class.java)
@@ -594,7 +593,11 @@ class ElementDeserializer : JsonDeserializer<Element> {
             "conditional" -> gson.fromJson(json, ConditionalElement::class.java)
             "loop" -> gson.fromJson(json, LoopElement::class.java)
             "container" -> gson.fromJson(json, ContainerElement::class.java)
-            "page_break" -> gson.fromJson(json, PageBreakElement::class.java)            "spacer" -> gson.fromJson(json, SpacerElement::class.java)            else -> throw IllegalArgumentException("Unknown element type: $type")            "link" -> gson.fromJson(json, LinkElement::class.java)
-            else -> throw IllegalArgumentException("Unknown element type: $type")        }
+            "page_break" -> gson.fromJson(json, PageBreakElement::class.java)
+            "spacer" -> gson.fromJson(json, SpacerElement::class.java)
+            "rich_text" -> gson.fromJson(json, RichTextElement::class.java)
+            "link" -> gson.fromJson(json, LinkElement::class.java)
+            else -> throw IllegalArgumentException("Unknown element type: $type")
+        }
     }
 }

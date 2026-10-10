@@ -7,7 +7,9 @@ import com.pdfgenerator.adapter.openpdf.ImageRenderer
 import com.pdfgenerator.adapter.openpdf.LineRenderer
 import com.pdfgenerator.adapter.openpdf.LinkRenderer
 import com.pdfgenerator.adapter.openpdf.LoopRenderer
+import com.pdfgenerator.adapter.openpdf.PageBreakRenderer
 import com.pdfgenerator.adapter.openpdf.RectangleRenderer
+import com.pdfgenerator.adapter.openpdf.RichTextRenderer
 import com.pdfgenerator.adapter.openpdf.SpacerRenderer
 import com.pdfgenerator.adapter.openpdf.StaticTextRenderer
 import com.pdfgenerator.adapter.openpdf.TableRenderer
@@ -21,13 +23,14 @@ import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.LoopElement
+import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.RichTextElement
 import com.pdfgenerator.model.SpacerElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TextElement
-import com.pdfgenerator.model.PageBreakElementimport com.pdfgenerator.model.RichTextElement
-import com.pdfgenerator.adapter.openpdf.RichTextRendererimport org.slf4j.LoggerFactory
+import org.slf4j.LoggerFactory
 
 class RenderEngine(private val config: PDFGeneratorConfig) {
     private val logger = LoggerFactory.getLogger(RenderEngine::class.java)
@@ -39,11 +42,13 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
     private val rectangleRenderer = RectangleRenderer()
     private val lineRenderer = LineRenderer()
     private val barcodeRenderer = BarcodeRenderer()
-    private val spacerRenderer = SpacerRenderer()
     private val conditionalRenderer = ConditionalRenderer(this)
     private val loopRenderer = LoopRenderer(this)
     private val containerRenderer = ContainerRenderer(this)
-    private val pageBreakRenderer = com.pdfgenerator.adapter.openpdf.PageBreakRenderer    private val linkRenderer = LinkRenderer()
+    
+    private val spacerRenderer = SpacerRenderer()
+    private val linkRenderer = LinkRenderer()
+
     fun render(
         element: Element,
         context: RenderContext,
@@ -68,10 +73,12 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
             is RectangleElement -> rectangleRenderer.render(element, context)
             is LineElement -> lineRenderer.render(element, context)
             is BarcodeElement -> barcodeRenderer.render(element, context)
-            is SpacerElement -> spacerRenderer.render(element, context)
             is ConditionalElement -> conditionalRenderer.render(element, context)
             is LoopElement -> loopRenderer.render(element, context)
             is ContainerElement -> containerRenderer.render(element, context)
-            is PageBreakElement -> pageBreakRenderer.render(element, context)            is LinkElement -> linkRenderer.render(element, context)        }
+            is PageBreakElement -> PageBreakRenderer.render(element, context)
+            is SpacerElement -> spacerRenderer.render(element, context)
+            is LinkElement -> linkRenderer.render(element, context)
+        }
     }
 }
