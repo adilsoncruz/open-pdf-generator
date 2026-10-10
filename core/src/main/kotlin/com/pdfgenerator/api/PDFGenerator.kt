@@ -18,6 +18,7 @@ import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.SpacerElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.Template
@@ -532,6 +533,7 @@ class PDFGenerator(
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
             is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
+            is SpacerElement -> element.copy(x = adjustedX, y = adjustedY)
         }
     }
 
@@ -636,6 +638,7 @@ class PDFGenerator(
                     } ?: 0f
                 kotlin.math.max(element.height, contentHeight)
             }
+            is SpacerElement -> element.height
         }
     }
 
