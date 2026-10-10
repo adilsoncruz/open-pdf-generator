@@ -15,6 +15,7 @@ import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
@@ -534,8 +535,8 @@ class PDFGenerator(
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
             is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
-            is PageBreakElement -> element.copy(x = adjustedX, y = adjustedY)            is SpacerElement -> element.copy(x = adjustedX, y = adjustedY)        }
-    }
+            is PageBreakElement -> element.copy(x = adjustedX, y = adjustedY)            is SpacerElement -> element.copy(x = adjustedX, y = adjustedY)        }            is LinkElement -> element.copy(x = adjustedX, y = adjustedY)
+        }    }
 
     private fun getElementHeight(
         element: Element,
@@ -543,8 +544,7 @@ class PDFGenerator(
         context: RenderContext,
     ): Float {
         return when (element) {
-            is RichTextElement -> {
-                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
+            is RichTextElement -> {            is LinkElement -> {                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
                 if (element.style?.multiline == true && element.width != null) {
                     val text = resolveTextForHeight(element.dataBinding, element.value, data)
                     if (text != null) {
@@ -696,6 +696,7 @@ class PDFGenerator(
             val y = element.y
             val height =
                 when (element) {
+                    is LinkElement -> element.height ?: 20f
                     is TextElement -> element.height ?: 20f
                     is RichTextElement -> element.height ?: 20f
                     is StaticTextElement -> element.height ?: 20f
