@@ -237,15 +237,7 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
             <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
           
-{pdfData && (
-            <button
-              onClick={() => window.electronAPI.openBase64PDF(pdfData)}
-              className="p-1.5 rounded theme-hover theme-text-muted hover:theme-text"
-              title="Open external window"
-            >
-              <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-            </button>
-          )}
+
           
           {onClose && (
             <button
