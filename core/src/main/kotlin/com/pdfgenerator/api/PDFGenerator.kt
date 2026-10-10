@@ -15,6 +15,7 @@ import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
@@ -532,6 +533,7 @@ class PDFGenerator(
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
             is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
+            is LinkElement -> element.copy(x = adjustedX, y = adjustedY)
         }
     }
 
@@ -541,6 +543,34 @@ class PDFGenerator(
         context: RenderContext,
     ): Float {
         return when (element) {
+            is LinkElement -> {
+                val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
+                if (element.style?.multiline == true && element.width != null) {
+                    val text = resolveTextForHeight(element.dataBinding, element.value, data)
+                    if (text != null) {
+                        TextRenderer
+                            .getOrMeasureMultilineLayout(
+                                elementId = element.id,
+                                resolvedText = text,
+                                styleHash = element.style?.hashCode() ?: 0,
+                                boxWidth = element.width,
+                                fontSize = element.style?.fontSize ?: 12f,
+                                lineHeight = element.style?.lineHeight,
+                                paddingTop = element.style?.paddingTop ?: 0f,
+                                paddingBottom = element.style?.paddingBottom ?: 0f,
+                                paddingLeft = element.style?.paddingLeft ?: 0f,
+                                paddingRight = element.style?.paddingRight ?: 0f,
+                                firstLineIndent = element.style?.firstLineIndent ?: 0f,
+                                fontFamily = element.style?.fontFamily ?: "Helvetica",
+                                cache = context.textLayoutCache,
+                            ).contentHeight
+                    } else {
+                        definedHeight
+                    }
+                } else {
+                    definedHeight
+                }
+            }
             is TextElement -> {
                 val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
                 if (element.style?.multiline == true && element.width != null) {
@@ -666,6 +696,7 @@ class PDFGenerator(
             val y = element.y
             val height =
                 when (element) {
+                    is LinkElement -> element.height ?: 20f
                     is TextElement -> element.height ?: 20f
                     is StaticTextElement -> element.height ?: 20f
                     is ImageElement -> {
