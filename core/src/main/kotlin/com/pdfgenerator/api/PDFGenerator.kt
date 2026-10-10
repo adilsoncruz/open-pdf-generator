@@ -15,17 +15,17 @@ import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.LoopElement
+import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.RichTextElement
+import com.pdfgenerator.model.SpacerElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TextElement
-import com.pdfgenerator.model.PageBreakElement
-import com.pdfgenerator.model.SpacerElement
-import com.pdfgenerator.model.RichTextElement
-import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
 import com.pdfgenerator.util.withSyntheticBindings
@@ -37,6 +37,7 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.concurrent.ConcurrentHashMap
 
+@Suppress("LargeClass")
 class PDFGenerator(
     private val config: PDFGeneratorConfig = PDFGeneratorConfig(),
 ) {
@@ -504,7 +505,6 @@ class PDFGenerator(
         groupIndex: Map<String, ElementGroup>,
         data: Map<String, Any?>,
     ): Boolean {
-
         val group = groupIndex[element.id]
 
         if (group != null && group.printCondition != null) {
@@ -515,16 +515,17 @@ class PDFGenerator(
             }
         }
 
-        val elementCondition = when (element) {
-            is TextElement -> element.printCondition
-            is BarcodeElement -> element.printCondition
-            is LoopElement -> element.printCondition
-            is PageBreakElement -> element.printCondition
-            is RichTextElement -> element.printCondition
-            is LinkElement -> element.printCondition
-            else -> null
-        }
-        
+        val elementCondition =
+            when (element) {
+                is TextElement -> element.printCondition
+                is BarcodeElement -> element.printCondition
+                is LoopElement -> element.printCondition
+                is PageBreakElement -> element.printCondition
+                is RichTextElement -> element.printCondition
+                is LinkElement -> element.printCondition
+                else -> null
+            }
+
         if (elementCondition != null) {
             val shouldRenderElement = ConditionEvaluator.evaluate(elementCondition, data)
             if (!shouldRenderElement) {

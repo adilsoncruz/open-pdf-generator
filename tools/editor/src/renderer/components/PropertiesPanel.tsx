@@ -901,53 +901,54 @@ export default function PropertiesPanel() {
             </div>
 
                     {/* Style Buttons - B I U S */}
-                    <div className="flex gap-1">
-                <button
-                  onClick={() => {
-                    const currentWeight = selectedElement.style?.fontWeight || 'normal'
-                    handleStyleUpdate('fontWeight', currentWeight === 'bold' ? 'normal' : 'bold')
-                  }}
-                        className={`w-10 h-10 text-sm font-bold border rounded transition ${
-                    selectedElement.style?.fontWeight === 'bold'
-                            ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
-                            : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
-                  }`}
-                        title="Bold"
-                >
-                  B
-                </button>
-                <button
-                  onClick={() => {
-                    const currentStyle = selectedElement.style?.fontStyle || 'normal'
-                    handleStyleUpdate('fontStyle', currentStyle === 'italic' ? 'normal' : 'italic')
-                  }}
-                        className={`w-10 h-10 text-sm italic border rounded transition ${
-                    selectedElement.style?.fontStyle === 'italic'
-                            ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
-                            : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
-                  }`}
-                        title="Italic"
-                >
-                  I
-                </button>
-                <button
-                  onClick={() => {
-                    const currentDecoration = selectedElement.style?.textDecoration || 'none'
-                    handleStyleUpdate('textDecoration', currentDecoration === 'underline' ? 'none' : 'underline')
-                  }}
-                        className={`w-10 h-10 text-sm underline border rounded transition ${
-                    selectedElement.style?.textDecoration === 'underline'
-                            ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
-                            : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
-                  }`}
-                        title="Underline"
-                >
-                  U
-                </button>
-                      <button
-                        onClick={() => {
-                          const currentDecoration = selectedElement.style?.textDecoration || 'none'
-                          handleStyleUpdate('textDecoration', currentDecoration === 'line-through' ? 'none' : 'line-through')
+                    {selectedElement.type !== 'rich_text' && (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => {
+                            const currentWeight = selectedElement.style?.fontWeight || 'normal'
+                            handleStyleUpdate('fontWeight', currentWeight === 'bold' ? 'normal' : 'bold')
+                          }}
+                          className={`w-10 h-10 text-sm font-bold border rounded transition ${
+                            selectedElement.style?.fontWeight === 'bold'
+                              ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
+                              : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
+                          }`}
+                          title="Bold"
+                        >
+                          B
+                        </button>
+                        <button
+                          onClick={() => {
+                            const currentStyle = selectedElement.style?.fontStyle || 'normal'
+                            handleStyleUpdate('fontStyle', currentStyle === 'italic' ? 'normal' : 'italic')
+                          }}
+                          className={`w-10 h-10 text-sm italic border rounded transition ${
+                            selectedElement.style?.fontStyle === 'italic'
+                              ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
+                              : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
+                          }`}
+                          title="Italic"
+                        >
+                          I
+                        </button>
+                        <button
+                          onClick={() => {
+                            const currentDecoration = selectedElement.style?.textDecoration || 'none'
+                            handleStyleUpdate('textDecoration', currentDecoration === 'underline' ? 'none' : 'underline')
+                          }}
+                          className={`w-10 h-10 text-sm underline border rounded transition ${
+                            selectedElement.style?.textDecoration === 'underline'
+                              ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
+                              : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
+                          }`}
+                          title="Underline"
+                        >
+                          U
+                        </button>
+                        <button
+                          onClick={() => {
+                            const currentDecoration = selectedElement.style?.textDecoration || 'none'
+                            handleStyleUpdate('textDecoration', currentDecoration === 'line-through' ? 'none' : 'line-through')
                         }}
                         className={`w-10 h-10 text-sm line-through border rounded transition ${
                           selectedElement.style?.textDecoration === 'line-through'
@@ -958,7 +959,8 @@ export default function PropertiesPanel() {
                       >
                         S
                 </button>
-                </div>
+                      </div>
+                    )}
 
                     {/* Alignment Section */}
             <div>

@@ -16,7 +16,10 @@ import com.pdfgenerator.util.ExpressionProcessor
 import com.pdfgenerator.util.FontCache
 
 class RichTextRenderer : Renderer<RichTextElement> {
-    override fun render(element: RichTextElement, context: RenderContext) {
+    override fun render(
+        element: RichTextElement,
+        context: RenderContext,
+    ) {
         if (!ConditionEvaluator.evaluate(element.printCondition, context.data, context.loopContext)) {
             return
         }
@@ -30,31 +33,39 @@ class RichTextRenderer : Renderer<RichTextElement> {
         val x = context.resolveX(element.x)
         val y = context.resolveY(element.y)
         val width = element.resolveWidth(context.document.pageSize.width - context.document.leftMargin() - context.document.rightMargin())
-        val height = element.height ?: 50f
-        
+        val overflow = element.style?.overflow?.lowercase() ?: "visible"
         val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
-        val yBottom = yTop - height
-        
-        val contentByte = if (context.useContentUnder) {
-            context.writer.directContentUnder
-        } else {
-            context.writer.directContent
-        }
+        val renderHeight =
+            if (overflow == "hidden") {
+                element.height ?: 50f
+            } else {
+                yTop - context.document.bottomMargin()
+            }
+        val yBottom = yTop - renderHeight
+
+        val contentByte =
+            if (context.useContentUnder) {
+                context.writer.directContentUnder
+            } else {
+                context.writer.directContent
+            }
 
         val paragraph = Paragraph()
-        val alignment = when (element.style?.alignment?.lowercase()) {
-            "center" -> Element.ALIGN_CENTER
-            "right" -> Element.ALIGN_RIGHT
-            "justify" -> Element.ALIGN_JUSTIFIED
-            else -> Element.ALIGN_LEFT
-        }
+        val alignment =
+            when (element.style?.alignment?.lowercase()) {
+                "center" -> Element.ALIGN_CENTER
+                "right" -> Element.ALIGN_RIGHT
+                "justify" -> Element.ALIGN_JUSTIFIED
+                else -> Element.ALIGN_LEFT
+            }
         paragraph.alignment = alignment
 
-        val baseFontName = when {
-            element.style?.fontFamily?.lowercase()?.contains("times") == true -> BaseFont.TIMES_ROMAN
-            element.style?.fontFamily?.lowercase()?.contains("courier") == true -> BaseFont.COURIER
-            else -> BaseFont.HELVETICA
-        }
+        val baseFontName =
+            when {
+                element.style?.fontFamily?.lowercase()?.contains("times") == true -> BaseFont.TIMES_ROMAN
+                element.style?.fontFamily?.lowercase()?.contains("courier") == true -> BaseFont.COURIER
+                else -> BaseFont.HELVETICA
+            }
         val baseFont = FontCache.getFont(baseFontName)
         val fontSize = element.style?.fontSize ?: 12f
         val color = ColorUtil.hexToColor(element.style?.color ?: "#000000")
@@ -73,15 +84,20 @@ class RichTextRenderer : Renderer<RichTextElement> {
         ct.go()
     }
 
-    private fun resolveText(element: RichTextElement, context: RenderContext): String? {
-        val dataBindingText = element.dataBinding?.let { binding ->
-            val resolvedValue = DataBindingResolver.resolve(binding, context.data, context.loopContext)
-            resolvedValue?.toString()
-        }
+    private fun resolveText(
+        element: RichTextElement,
+        context: RenderContext,
+    ): String? {
+        val dataBindingText =
+            element.dataBinding?.let { binding ->
+                val resolvedValue = DataBindingResolver.resolve(binding, context.data, context.loopContext)
+                resolvedValue?.toString()
+            }
 
-        val valueText = element.value?.let { value ->
-            ExpressionProcessor.process(value, context.data, context.loopContext)
-        }
+        val valueText =
+            element.value?.let { value ->
+                ExpressionProcessor.process(value, context.data, context.loopContext)
+            }
 
         return dataBindingText ?: valueText
     }
@@ -91,21 +107,22 @@ class RichTextRenderer : Renderer<RichTextElement> {
         normalFont: Font,
         boldFont: Font,
         italicFont: Font,
-        boldItalicFont: Font
+        boldItalicFont: Font,
     ): List<Chunk> {
         val chunks = mutableListOf<Chunk>()
         var currentIdx = 0
         while (currentIdx < text.length) {
             val boldIdx = text.indexOf("**", currentIdx)
             val italicIdx = text.indexOf("*", currentIdx)
-            
+
             val validItalicIdx = if (italicIdx != -1 && italicIdx == boldIdx) text.indexOf("*", boldIdx + 2) else italicIdx
             val hasBold = boldIdx != -1
             val hasItalic = validItalicIdx != -1 && (boldIdx == -1 || validItalicIdx < boldIdx || validItalicIdx > boldIdx + 1)
-            
+
             if (!hasBold && !hasItalic) {
                 chunks.add(Chunk(text.substring(currentIdx), normalFont))
-                break
+                currentIdx = text.length
+                continue
             }
 
             if (hasBold && (!hasItalic || boldIdx <= validItalicIdx)) {
@@ -118,7 +135,7 @@ class RichTextRenderer : Renderer<RichTextElement> {
                     currentIdx = endBoldIdx + 2
                 } else {
                     chunks.add(Chunk(text.substring(boldIdx), normalFont))
-                    break
+                    currentIdx = text.length
                 }
             } else if (hasItalic) {
                 if (validItalicIdx > currentIdx) {
@@ -126,7 +143,7 @@ class RichTextRenderer : Renderer<RichTextElement> {
                 }
                 val endItalicIdx = text.indexOf("*", validItalicIdx + 1)
                 var realEndItalicIdx = endItalicIdx
-                while(realEndItalicIdx != -1 && realEndItalicIdx + 1 < text.length && text[realEndItalicIdx + 1] == '*') {
+                while (realEndItalicIdx != -1 && realEndItalicIdx + 1 < text.length && text[realEndItalicIdx + 1] == '*') {
                     realEndItalicIdx = text.indexOf("*", realEndItalicIdx + 2)
                 }
 
@@ -135,7 +152,7 @@ class RichTextRenderer : Renderer<RichTextElement> {
                     currentIdx = realEndItalicIdx + 1
                 } else {
                     chunks.add(Chunk(text.substring(validItalicIdx), normalFont))
-                    break
+                    currentIdx = text.length
                 }
             }
         }

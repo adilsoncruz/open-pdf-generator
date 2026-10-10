@@ -9,7 +9,7 @@ data class SpacerElement(
     override val relativeOffsetY: Float? = null,
     val width: Any = "100%",
     val height: Float = 0f,
-    val printCondition: String? = null
+    val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {
@@ -25,6 +25,6 @@ data class SpacerElement(
             else -> containerWidth
         }
     }
-    
+
     override fun validate(pageSettings: PageSettings): List<ValidationError> = emptyList()
 }

@@ -1,7 +1,7 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.engine.RenderContext
+import com.pdfgenerator.model.PageBreakElement
 
 object PageBreakRenderer {
     fun render(

@@ -45,7 +45,7 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
     private val conditionalRenderer = ConditionalRenderer(this)
     private val loopRenderer = LoopRenderer(this)
     private val containerRenderer = ContainerRenderer(this)
-    
+
     private val spacerRenderer = SpacerRenderer()
     private val linkRenderer = LinkRenderer()
 
