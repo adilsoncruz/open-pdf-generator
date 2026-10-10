@@ -209,3 +209,8 @@ ktlint {
     outputToConsole.set(true)
     ignoreFailures.set(false)
 }
+
+tasks.register<JavaExec>("runTestSpacer") {
+    mainClass.set("com.pdfgenerator.TestSpacerKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}
