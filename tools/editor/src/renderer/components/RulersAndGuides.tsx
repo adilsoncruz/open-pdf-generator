@@ -226,6 +226,10 @@ export function RulersAndGuides({ width, height, scale, guides, setGuides }: Rul
             }),
           }}
           onMouseDown={e => handleGuideMouseDown(e, guide)}
+          onDoubleClick={(e) => {
+            e.stopPropagation()
+            setGuides(prev => prev.filter(g => g.id !== guide.id))
+          }}
         >
           <div 
             style={{
