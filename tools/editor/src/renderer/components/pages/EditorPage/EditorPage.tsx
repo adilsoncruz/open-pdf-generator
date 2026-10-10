@@ -30,6 +30,7 @@ export function EditorPage() {
   
   const {
     template,
+    testData,
     undo,
     redo,
     canUndo,
@@ -264,6 +265,7 @@ export function EditorPage() {
     clearSelection,
     selectAllElements,
     template,
+    testData,
     copyElement,
     pasteElement,
     copiedElements,
@@ -331,6 +333,24 @@ export function EditorPage() {
   const { isPropertiesPanelPinned } = useTemplateStore()
 
   // Determine if properties panel should be shown
+
+  const { isExternalActive, refreshTrigger } = usePreviewStore()
+
+  useEffect(() => {
+    const generateAndSaveExternal = async () => {
+      const result = await window.electronAPI.generatePDFPreview(JSON.stringify(template), JSON.stringify(testData))
+      if (result.success && result.pdfBase64) {
+        usePreviewStore.getState().setPdfData(result.pdfBase64)
+        window.electronAPI.openBase64PDF(result.pdfBase64, false)
+      }
+    }
+    
+    if (isExternalActive && refreshTrigger > 0) {
+      generateAndSaveExternal()
+    }
+  }, [refreshTrigger, isExternalActive, template,
+    testData, testData])
+
   const showPropertiesPanel =
     isPropertiesPanelPinned ||
     selectedElementIds.length > 0 ||

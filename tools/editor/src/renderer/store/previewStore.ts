@@ -9,6 +9,9 @@ interface PreviewState {
   error: string | null
   lastGeneratedAt: Date | null
   refreshTrigger: number  // Incrementado quando deve atualizar o preview
+  isExternalActive: boolean
+  setIsExternalActive: (active: boolean) => void
+
   
   // Actions
   setMode: (mode: PreviewMode) => void
@@ -26,6 +29,9 @@ export const usePreviewStore = create<PreviewState>((set) => ({
   error: null,
   lastGeneratedAt: null,
   refreshTrigger: 0,
+  isExternalActive: false,
+  setIsExternalActive: (active) => set({ isExternalActive: active }),
+
   
   setMode: (mode) => set({ mode }),
   
