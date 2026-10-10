@@ -823,6 +823,20 @@ export default function PropertiesPanel() {
               />
             </div>
                     
+                    
+                    {selectedElement.type === 'link' && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium theme-text-muted">Link URL</label>
+                        <Input
+                          value={selectedElement.url || ''}
+                          onChange={(e) => handleUpdate('url', e.target.value)}
+                          placeholder="e.g., https://example.com"
+                          size="sm"
+                          className="font-mono text-blue-500"
+                        />
+                      </div>
+                    )}
+
                     {selectedElement.type === 'text' && (
                       <div className="space-y-1">
                         <label className="text-xs font-medium theme-text-muted">Data Binding</label>
