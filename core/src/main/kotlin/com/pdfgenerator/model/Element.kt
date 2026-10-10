@@ -593,6 +593,7 @@ class ElementDeserializer : JsonDeserializer<Element> {
             "conditional" -> gson.fromJson(json, ConditionalElement::class.java)
             "loop" -> gson.fromJson(json, LoopElement::class.java)
             "container" -> gson.fromJson(json, ContainerElement::class.java)
+            "page_break" -> gson.fromJson(json, PageBreakElement::class.java)
             else -> throw IllegalArgumentException("Unknown element type: $type")
         }
     }

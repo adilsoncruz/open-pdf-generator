@@ -22,6 +22,7 @@ import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TextElement
+import com.pdfgenerator.model.PageBreakElement
 import org.slf4j.LoggerFactory
 
 class RenderEngine(private val config: PDFGeneratorConfig) {
@@ -36,6 +37,7 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
     private val conditionalRenderer = ConditionalRenderer(this)
     private val loopRenderer = LoopRenderer(this)
     private val containerRenderer = ContainerRenderer(this)
+    private val pageBreakRenderer = com.pdfgenerator.adapter.openpdf.PageBreakRenderer
 
     fun render(
         element: Element,
@@ -63,6 +65,7 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
             is ConditionalElement -> conditionalRenderer.render(element, context)
             is LoopElement -> loopRenderer.render(element, context)
             is ContainerElement -> containerRenderer.render(element, context)
+            is PageBreakElement -> pageBreakRenderer.render(element, context)
         }
     }
 }

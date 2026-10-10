@@ -22,6 +22,7 @@ import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TextElement
+import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
 import com.pdfgenerator.util.withSyntheticBindings
@@ -532,6 +533,7 @@ class PDFGenerator(
             is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
             is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
             is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
+            is PageBreakElement -> element.copy(x = adjustedX, y = adjustedY)
         }
     }
 
@@ -636,6 +638,7 @@ class PDFGenerator(
                     } ?: 0f
                 kotlin.math.max(element.height, contentHeight)
             }
+            is PageBreakElement -> 0f
         }
     }
 
