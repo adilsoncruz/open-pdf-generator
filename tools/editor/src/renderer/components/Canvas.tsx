@@ -93,7 +93,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   }
 
   const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialX: 0, initialY: 0, initialOffsetY: 10 })
   const [isResizing, setIsResizing] = useState<string | null>(null)
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, initialW: 100, initialH: 20 })
 
@@ -112,10 +112,15 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
 
   const handleMouseDown = (e: ReactMouseEvent) => {
     e.stopPropagation()
-    console.log(`mouseDown ${containerId} - ${child.id}`)
     selectContainerChild(containerId, child.id, location)
     setIsDragging(true)
-    setDragStart({ x: e.clientX - child.x, y: e.clientY - child.y })
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      initialX: child.x || 0,
+      initialY: child.y || 0,
+      initialOffsetY: typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 10
+    })
   }
 
   const handleResizeMouseDown = (e: ReactMouseEvent, direction: string) => {
@@ -133,17 +138,19 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       const childWidth = resolveWidth(child.width)
       const childHeight = resolveHeight(child.height)
       
-      let newX = e.clientX - dragStart.x
-      let newY = e.clientY - dragStart.y
+      const deltaX = e.clientX - dragStart.x
+      const deltaY = e.clientY - dragStart.y
+      
+      let newX = dragStart.initialX + deltaX
+      let newY = dragStart.initialY + deltaY
       
       newX = Math.max(0, Math.min(newX, Math.max(0, containerWidth - childWidth)))
       newY = Math.max(0, Math.min(newY, Math.max(0, containerHeight - childHeight)))
       
       const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
       if (isChildRelative && effectiveY !== undefined) {
-        const deltaMoveY = e.clientY - dragStart.y
-        const currentOffset = typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 10
-        updateContainerChildElement(containerId, child.id, { x: newX, y: newY, relativeOffsetY: Math.max(0, currentOffset + deltaMoveY) }, location)
+        const newOffsetY = Math.max(0, dragStart.initialOffsetY + deltaY)
+        updateContainerChildElement(containerId, child.id, { x: newX, y: newY, relativeOffsetY: newOffsetY }, location)
       } else {
         updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
       }
@@ -195,7 +202,9 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
     switch (child.type) {
       case 'text':
       case 'static_text': {
-        const textWidth = child.width ? resolveWidth(child.width) : undefined
+        const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
+        const rawW = isChildRelative && effectiveWidth !== undefined ? effectiveWidth : child.width
+        const textWidth = rawW ? resolveWidth(rawW) : undefined
         const textHeight = child.height ? resolveHeight(child.height) : undefined
         const displayText = resolveChildDisplayText(child, child.type === 'text' ? 'campo' : 'Texto')
         return (
@@ -1419,7 +1428,7 @@ export default function Canvas() {
                 .filter((element) => !element.hidden)
                 .map((element) => {
                   const isRelativeFlow =
-                    (element.positionMode === 'RELATIVE' || element.position === 'relative') &&
+                    ((element.positionMode || element.position || '') as string).toUpperCase() === 'RELATIVE' &&
                     element.type !== 'container'
 
                   let effectiveY: number | undefined = undefined
@@ -1432,10 +1441,10 @@ export default function Canvas() {
                       effectiveY = typeof element.y === 'number' && element.y > 0 ? element.y : offsetY
                     } else {
                       effectiveY = currentFlowY + offsetY
-                      if (lastFlowX !== undefined && (element.x === undefined || element.x === 0 || element.x === 40)) {
+                      if (lastFlowX !== undefined) {
                         effectiveX = lastFlowX
                       }
-                      if (lastFlowWidth !== undefined && (element.width === undefined || element.width === 200)) {
+                      if (lastFlowWidth !== undefined) {
                         effectiveWidth = lastFlowWidth
                       }
                     }
@@ -1873,7 +1882,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
   const testData = useTemplateStore(state => state.testData)
   const saveSnapshot = useTemplateStore(state => state.saveSnapshot)
   const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialPositions: {} as Record<string, {x: number, y: number}> })
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialPositions: {} as Record<string, {x: number, y: number}>, initialOffsetY: 10 })
   const [isResizing, setIsResizing] = useState<string | null>(null)
   const [resizeStart, setResizeStart] = useState({ 
     x: 0, y: 0, 
@@ -2033,7 +2042,8 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
     setDragStart({
       x: e.clientX,
       y: e.clientY,
-      initialPositions
+      initialPositions,
+      initialOffsetY: typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10
     })
   }
 
@@ -2105,8 +2115,8 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         
         const isRelative = (element.positionMode || element.position || '').toUpperCase() === 'RELATIVE'
         if (isRelative && effectiveY !== undefined) {
-          const currentOffset = typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10
-          onUpdate({ x: newX, y: newY, relativeOffsetY: Math.max(0, currentOffset + deltaY) })
+          const newOffset = Math.max(0, dragStart.initialOffsetY + deltaY)
+          onUpdate({ x: newX, y: newY, relativeOffsetY: newOffset })
         } else {
           onUpdate({ x: newX, y: newY })
         }
@@ -2240,7 +2250,9 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
   const renderElement = () => {
     switch (element.type) {
       case 'text':
-      case 'static_text': {
+      case 'static_text':
+      case 'rich_text':
+      case 'link': {
         // Mapear verticalAlignment para CSS
         const getVerticalAlign = (vAlign: string | undefined) => {
           switch (vAlign) {
@@ -2282,8 +2294,10 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         const textBorderStyle = element.style?.borderStyle || 'solid'
         const textBgColor = element.style?.backgroundColor || 'transparent'
 
+        const isElRelative = (element.positionMode || element.position || '').toUpperCase() === 'RELATIVE'
+        const resolvedElWidth = (isElRelative && effectiveWidth !== undefined) ? effectiveWidth : (element.width || 'auto')
         const textStyles: CSSProperties = {
-          width: element.width || 'auto',
+          width: resolvedElWidth,
           height: element.height || 'auto',
           fontSize: element.style?.fontSize || 12,
           fontWeight: element.style?.fontWeight || 'normal',
@@ -2956,10 +2970,10 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                                 effectiveChildY = typeof child.y === 'number' && child.y > 0 ? child.y : offset
                               } else {
                                 effectiveChildY = containerFlowY + offset
-                                if (lastChildX !== undefined && (child.x === undefined || child.x === 0 || child.x === 40)) {
+                                if (lastChildX !== undefined) {
                                   effectiveChildX = lastChildX
                                 }
-                                if (lastChildWidth !== undefined && (child.width === undefined || child.width === 200)) {
+                                if (lastChildWidth !== undefined) {
                                   effectiveChildWidth = lastChildWidth
                                 }
                               }

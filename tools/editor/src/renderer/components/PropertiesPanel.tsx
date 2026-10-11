@@ -31,7 +31,7 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) 
 
 interface ElementInspectorProps {
   element: Element
-  onUpdate: (field: string, value: any) => void
+  onUpdate: (field: string | Record<string, any>, value?: any) => void
   onStyleUpdate: (field: string, value: any) => void
   parentName?: string
 }
@@ -136,8 +136,10 @@ function StudioSlateElementInspector({ element, onUpdate, onStyleUpdate, parentN
                 <button
                   type="button"
                   onClick={() => {
-                    onUpdate('positionMode', 'ABSOLUTE')
-                    onUpdate('position', 'absolute')
+                    onUpdate({
+                      positionMode: 'ABSOLUTE',
+                      position: 'absolute',
+                    })
                   }}
                   className={`py-1 text-xs font-medium rounded transition text-center ${
                     (((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) !== 'RELATIVE'
@@ -150,11 +152,11 @@ function StudioSlateElementInspector({ element, onUpdate, onStyleUpdate, parentN
                 <button
                   type="button"
                   onClick={() => {
-                    onUpdate('positionMode', 'RELATIVE')
-                    onUpdate('position', 'relative')
-                    if (element.relativeOffsetY === undefined) {
-                      onUpdate('relativeOffsetY', 10)
-                    }
+                    onUpdate({
+                      positionMode: 'RELATIVE',
+                      position: 'relative',
+                      relativeOffsetY: typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10,
+                    })
                   }}
                   className={`py-1 text-xs font-medium rounded transition text-center ${
                     (((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE'
@@ -783,7 +785,8 @@ export default function PropertiesPanel() {
             element={childElement}
             parentName="Loop"
             onUpdate={(field, value) => {
-              updateLoopChildElement(selectedLoopParentId, selectedLoopChildId, { [field]: value }, selectedElementLocation)
+              const updates = typeof field === 'string' ? { [field]: value } : field
+              updateLoopChildElement(selectedLoopParentId, selectedLoopChildId, updates, selectedElementLocation)
             }}
             onStyleUpdate={(field, value) => {
               updateLoopChildElement(selectedLoopParentId, selectedLoopChildId, { style: { ...childElement.style, [field]: value } }, selectedElementLocation)
@@ -816,7 +819,8 @@ export default function PropertiesPanel() {
               element={childElement}
               parentName={containerElement.name || 'Container'}
               onUpdate={(field, value) => {
-                updateContainerChildElement(selectedContainerParentId, selectedContainerChildId, { [field]: value }, selectedElementLocation)
+                const updates = typeof field === 'string' ? { [field]: value } : field
+                updateContainerChildElement(selectedContainerParentId, selectedContainerChildId, updates, selectedElementLocation)
               }}
               onStyleUpdate={(field, value) => {
                 updateContainerChildElement(selectedContainerParentId, selectedContainerChildId, { style: { ...childElement.style, [field]: value } }, selectedElementLocation)
@@ -1032,10 +1036,11 @@ export default function PropertiesPanel() {
       <StudioSlateElementInspector
         element={selectedElement}
         onUpdate={(field, value) => {
+          const updates = typeof field === 'string' ? { [field]: value } : field
           if (isMultiSelection) {
-            updateSelectedElements({ [field]: value })
+            updateSelectedElements(updates)
           } else {
-            handleUpdate(field, value)
+            updateElement(selectedElement.id, updates, selectedElementLocation)
           }
         }}
         onStyleUpdate={(field, value) => {
