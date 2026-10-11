@@ -593,7 +593,7 @@ export default function Sidebar() {
             <div className="grid grid-cols-3 gap-2">
               {/* Container */}
               <button
-                onClick={() => addElement({ type: 'container', id: `container-${Date.now()}`, name: 'Container', x: 0, y: 40, width: '100%', height: 120, elements: [] }, currentSection)}
+                onClick={() => addElement({ type: 'container', id: `container-${Date.now()}`, name: 'Container', x: 0, width: '100%', height: 120, elements: [] }, currentSection)}
                 className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
                 title="Container"
               >
@@ -801,7 +801,7 @@ export default function Sidebar() {
                     <button
                       onClick={() => {
                         const id = `container-${Date.now()}`
-                        addElement({ type: 'container', id, name: 'Container', x: 0, y: 0, width: '100%', height: 120, elements: [] }, currentSection)
+                        addElement({ type: 'container', id, name: 'Container', x: 0, width: '100%', height: 120, elements: [] }, currentSection)
                         setShowAddBandDropdown(false)
                       }}
                       className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 transition text-slate-300"

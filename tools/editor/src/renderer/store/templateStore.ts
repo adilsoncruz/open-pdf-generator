@@ -309,11 +309,31 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         else if (location === 'footer') sectionHeight = footerHeight
         else if (location === 'body') sectionHeight -= (headerHeight + footerHeight)
         
+        // Obter os elementos atuais da seção para posicionar o novo container abaixo do anterior
+        let sectionElements: Element[] = []
+        if (location === 'header') sectionElements = state.template.pageSettings.header?.elements || []
+        else if (location === 'footer') sectionElements = state.template.pageSettings.footer?.elements || []
+        else if (location === 'bodyBackground') sectionElements = state.template.pageSettings.bodyBackground?.elements || []
+        else if (location === 'summary') sectionElements = state.template.summaryPage?.elements || []
+        else sectionElements = state.template.page || []
+
+        const containers = sectionElements.filter(el => el.type === 'container')
+        let nextY = 0
+        if (containers.length > 0) {
+          const lastContainer = containers[containers.length - 1]
+          const lastY = typeof lastContainer.y === 'number' ? lastContainer.y : 0
+          const lastHeight = typeof lastContainer.height === 'number' ? lastContainer.height : 120
+          nextY = lastY + lastHeight
+        } else if (typeof element.y === 'number' && element.y > 0) {
+          nextY = element.y
+        }
+
         normalizedElement = {
           ...element,
           x: 0,
+          y: nextY,
           width: '100%',
-          height: Math.min(typeof element.height === 'number' ? element.height : 150, Math.max(0, sectionHeight))
+          height: Math.min(typeof element.height === 'number' ? element.height : 120, Math.max(0, sectionHeight))
         }
       }
       const selectedId = state.selectedElementIds[0]
