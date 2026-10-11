@@ -48,9 +48,13 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     setTemplate,
     setCurrentFilePath,
     markClean,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useTemplateStore()
   
-  const { theme, toggleTheme } = useUIStore()
+  const { theme, toggleTheme, zoom, setZoom, snapToGuides, toggleSnapToGuides } = useUIStore()
   const { mode: previewModeFromStore, triggerRefresh, refreshTrigger } = usePreviewStore()
   
   // Use previewMode from store if not passed as prop
@@ -372,35 +376,32 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   }))
 
   return (
-    <div className="theme-bg-secondary border-b theme-border px-4 py-2 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-glow-sm">
-            <Icon name="file-text" size="md" className="text-white" />
+    <div className="bg-slate-900 border-b border-slate-800 px-4 py-2 flex items-center justify-between h-14 text-slate-200">
+      {/* 1. SEÇÃO ESQUERDA: Logo + Menu Arquivo + Nome do Template + Status Salvo */}
+      <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2 pr-2 border-r border-slate-800">
+          <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm shadow-indigo-500/30">
+            <Icon name="file-text" size="sm" className="text-white" />
           </div>
-          <h1 className="text-lg font-semibold theme-text">
-            PDF Template Editor
-          </h1>
+          <span className="text-xs font-semibold tracking-wider uppercase text-slate-300">
+            Open PDF
+          </span>
         </div>
 
-        {/* File Menu */}
+        {/* Menu Arquivo */}
         <DropdownMenu
           isOpen={showFileMenu}
           onOpenChange={setShowFileMenu}
           trigger={
             <button
-              className="px-3 py-1.5 text-sm theme-text-secondary hover:theme-surface-hover rounded transition flex items-center gap-2"
-              title={currentFilePath || t.toolbar.file}
+              className="px-2.5 py-1 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded transition flex items-center gap-1.5"
+              title={t.toolbar.file}
             >
-              {currentFilePath ? (
-                <>
-                  <Icon name="file-text" size="sm" />
-                  <span className="max-w-[200px] truncate">{currentFilePath.split('/').pop()}</span>
-                </>
-              ) : (
-                t.toolbar.file
-              )}
+              <Icon name="file-text" size="sm" />
+              <span>{t.toolbar.file}</span>
+              <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
           }
         >
@@ -410,87 +411,167 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
           <MenuItem shortcut="Ctrl+O" onClick={() => { handleOpen(); setShowFileMenu(false) }}>
             {t.toolbar.open}
           </MenuItem>
-          <div className="border-t theme-border my-1" />
+          <div className="border-t border-slate-800 my-1" />
           <MenuItem shortcut="Ctrl+S" onClick={() => { handleSave(); setShowFileMenu(false) }}>
             {t.toolbar.save}
           </MenuItem>
           <MenuItem shortcut="Ctrl+Shift+S" onClick={() => { handleSaveAs(); setShowFileMenu(false) }}>
             {t.toolbar.saveAs}
           </MenuItem>
-          <div className="border-t theme-border my-1" />
+          <div className="border-t border-slate-800 my-1" />
           <MenuItem onClick={() => { handleExport(); setShowFileMenu(false) }}>
             {t.toolbar.export}
           </MenuItem>
         </DropdownMenu>
 
-        <div className="flex items-center space-x-2">
-          {/* Changes status */}
-          {isDirty && (
-            <Badge variant="warning">• {t.common.unsaved}</Badge>
+        {/* Nome do Documento */}
+        <div className="flex items-center gap-2 bg-slate-950/60 px-2.5 py-1 rounded border border-slate-800">
+          <span className="text-xs text-slate-300 font-mono truncate max-w-[180px]">
+            {currentFilePath ? currentFilePath.split('/').pop() : template.metadata?.name || 'template.json'}
+          </span>
+          {isDirty ? (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              {t.common.unsaved}
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Salvo
+            </span>
           )}
         </div>
         
-        {/* Update Notification */}
         <UpdateNotification />
       </div>
 
-      <div className="flex items-center space-x-3">
-        {/* CLI Status Indicator */}
-        {cliStatus && !cliStatus.installed && (
-          <Button
-            onClick={() => setShowCLIModal(true)}
-            variant="ghost"
-            leftIcon={<Icon name="warning" size="sm" />}
-            className="px-3 py-1.5 text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30"
-            title={t.toolbar.cliNotInstalled}
-          >
-            {t.toolbar.cliNotInstalled}
-          </Button>
-        )}
-        
-
-
-
-        {/* 4. Preview Toggle Button */}
-        {onTogglePreview && (
-          <Button
-            onClick={onTogglePreview}
-            variant={effectivePreviewMode !== 'hidden' ? 'primary' : 'secondary'}
-            leftIcon={<Icon name={effectivePreviewMode === 'split' ? 'split' : 'preview'} size="sm" />}
-            title={`${t.toolbar.preview} (Ctrl+Shift+P)`}
-          >
-            {t.toolbar.preview}
-          </Button>
-        )}
-        
-        {/* 3. Test Data */}
-        <Button
-          onClick={onToggleDataPanel}
-          variant="secondary"
-          leftIcon={<Icon name="data" size="sm" />}
+      {/* 2. SEÇÃO CENTRAL: Undo/Redo + Zoom Controls + Snap Toggle */}
+      <div className="flex items-center space-x-1 bg-slate-950/40 p-1 rounded-lg border border-slate-800/80">
+        <button
+          onClick={undo}
+          disabled={!canUndo}
+          className="p-1.5 rounded hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition"
+          title="Desfazer (Ctrl+Z)"
         >
-          {t.toolbar.testData}
-        </Button>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a5 5 0 015 5v2M3 10l6 6m-6-6l6-6" />
+          </svg>
+        </button>
+        <button
+          onClick={redo}
+          disabled={!canRedo}
+          className="p-1.5 rounded hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition"
+          title="Refazer (Ctrl+Y)"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a5 5 0 00-5 5v2m15-7l-6-6m6 6l-6 6" />
+          </svg>
+        </button>
 
-        <div className="w-px h-8 theme-border"></div>
-        
-        {/* 2. Theme Toggle */}
-        <IconButton
-          icon={theme === 'dark' ? 'sun' : 'moon'}
-          iconSize="md"
-          onClick={toggleTheme}
-          tooltip={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-          className="w-10 h-10 theme-surface border theme-border hover:border-primary-500"
-        />
-        
-        {/* 1. Settings Button */}
-        <IconButton
-          icon="settings"
-          iconSize="md"
+        <div className="w-px h-4 bg-slate-800 mx-1" />
+
+        {/* Zoom */}
+        <button
+          onClick={() => setZoom(zoom - 10)}
+          className="px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 rounded transition font-medium"
+          title="Diminuir Zoom"
+        >
+          -
+        </button>
+        <span className="text-xs font-mono font-medium text-slate-200 min-w-[42px] text-center">
+          {zoom}%
+        </span>
+        <button
+          onClick={() => setZoom(zoom + 10)}
+          className="px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 rounded transition font-medium"
+          title="Aumentar Zoom"
+        >
+          +
+        </button>
+        <button
+          onClick={() => setZoom(100)}
+          className="px-2 py-1 text-[11px] text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded transition"
+          title="Resetar 100%"
+        >
+          100%
+        </button>
+
+        <div className="w-px h-4 bg-slate-800 mx-1" />
+
+        {/* Magnet / Snap */}
+        <button
+          onClick={toggleSnapToGuides}
+          className={`p-1.5 rounded transition ${
+            snapToGuides
+              ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+              : 'text-slate-400 hover:bg-slate-800'
+          }`}
+          title={snapToGuides ? 'Magnetismo em Guias: Ativo' : 'Magnetismo em Guias: Inativo'}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* 3. SEÇÃO DIREITA: Test Data + Split Preview + Gerar PDF Principal */}
+      <div className="flex items-center space-x-2">
+        {/* Indicador de Status CLI */}
+        {cliStatus && !cliStatus.installed && (
+          <button
+            onClick={() => setShowCLIModal(true)}
+            className="px-2.5 py-1 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded flex items-center gap-1.5 hover:bg-amber-500/20"
+          >
+            <Icon name="warning" size="sm" />
+            <span>{t.toolbar.cliNotInstalled}</span>
+          </button>
+        )}
+
+        {/* Dados de Teste */}
+        <button
+          onClick={onToggleDataPanel}
+          className="px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800 border border-slate-800 rounded-lg transition flex items-center gap-1.5"
+        >
+          <Icon name="data" size="sm" />
+          <span>{t.toolbar.testData}</span>
+        </button>
+
+        {/* Alternar Preview / Split View */}
+        {onTogglePreview && (
+          <button
+            onClick={onTogglePreview}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition flex items-center gap-1.5 ${
+              effectivePreviewMode !== 'hidden'
+                ? 'bg-slate-800 text-indigo-400 border-indigo-500/40'
+                : 'text-slate-300 border-slate-800 hover:bg-slate-800'
+            }`}
+            title="Alternar Visualização (Ctrl+Shift+P)"
+          >
+            <Icon name={effectivePreviewMode === 'split' ? 'split' : 'preview'} size="sm" />
+            <span>{t.toolbar.preview}</span>
+          </button>
+        )}
+
+        {/* Ação Primária: Gerar PDF */}
+        <button
+          onClick={handleGeneratePDF}
+          className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm shadow-indigo-600/30 transition flex items-center gap-1.5"
+          title="Exportar/Gerar arquivo PDF final"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Gerar PDF</span>
+        </button>
+
+        <div className="w-px h-6 bg-slate-800 mx-1" />
+
+        {/* Botão Configurações */}
+        <button
           onClick={() => setShowCLIModal(true)}
-          tooltip={t.toolbar.settings}
-          className="w-10 h-10 theme-surface border theme-border hover:border-primary-500"
-        />
+          className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg border border-slate-800 transition"
+          title={t.toolbar.settings}
+        >
+          <Icon name="settings" size="sm" />
+        </button>
       </div>
       
       {/* CLI Installation Modal */}

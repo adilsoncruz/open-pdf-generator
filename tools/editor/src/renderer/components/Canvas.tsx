@@ -1,5 +1,6 @@
 import { useState, useEffect, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
 import { useTemplateStore, type Element, type ElementLocation } from '../store/templateStore'
+import { useUIStore } from '../store/uiStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
 import { Select, Button, Divider } from './atoms'
 import { IconButton } from './molecules'
@@ -615,7 +616,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
 
 export default function Canvas() {
   const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, currentSection, setCurrentSection, clearSelection } = useTemplateStore()
-  const [zoom, setZoom] = useState(100) // Zoom em porcentagem
+  const { zoom, setZoom } = useUIStore()
 
   let pageSize;
   switch(template.pageSettings.size) {
@@ -734,61 +735,7 @@ export default function Canvas() {
 
   return (
     <div className="flex-1 flex flex-col theme-bg relative overflow-hidden">
-      {/* Zoom Controls - Fixed at bottom (outside scrollable area) */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 theme-surface rounded-xl shadow-lg border theme-border p-2 flex items-center gap-2">
-        <IconButton
-          icon="zoom-out"
-          iconSize="md"
-          onClick={handleZoomOut}
-          tooltip="Zoom Out (Ctrl+-)"
-          className="hover:bg-primary-500/20"
-        />
-        
-        <Select
-          value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
-          size="sm"
-          className="w-20"
-          options={[
-            { value: '25', label: '25%' },
-            { value: '50', label: '50%' },
-            { value: '75', label: '75%' },
-            { value: '100', label: '100%' },
-            { value: '125', label: '125%' },
-            { value: '150', label: '150%' },
-            { value: '175', label: '175%' },
-            { value: '200', label: '200%' },
-          ]}
-        />
-        
-        <IconButton
-          icon="zoom-in"
-          iconSize="md"
-          onClick={handleZoomIn}
-          tooltip="Zoom In (Ctrl++)"
-          className="hover:bg-primary-500/20"
-        />
-        
-        <Divider orientation="vertical" className="h-6 mx-1" />
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleZoomFit}
-          title="Fit to Screen"
-        >
-          Fit
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleZoomReset}
-          title="Actual Size (100%)"
-        >
-          100%
-        </Button>
-      </div>
+
       
       {/* Scrollable content area */}
       <div className="flex-1 overflow-auto p-8">
