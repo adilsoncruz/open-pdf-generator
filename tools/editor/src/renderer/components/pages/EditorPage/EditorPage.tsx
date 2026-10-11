@@ -425,6 +425,7 @@ export function EditorPage() {
                 </svg>
               </button>
               <button 
+                onClick={() => toolbarRef.current?.openSettings()}
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
                 title="Configurações"
               >
@@ -456,8 +457,8 @@ export function EditorPage() {
             </div>
           )}
 
-          {/* Right Panel - Properties */}
-          <PropertiesPanel />
+          {/* Right Panel - Properties (oculto quando a aba de propriedades do documento estiver ativa) */}
+          {sidebarTab !== 'document' && <PropertiesPanel />}
         </div>
 
         {/* Status Bar */}

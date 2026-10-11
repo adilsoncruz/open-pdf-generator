@@ -36,6 +36,7 @@ export interface ToolbarRef {
   handleSaveAs: () => void
   handleExport: () => void
   handleGeneratePDF: () => void
+  openSettings: () => void
 }
 
 const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTogglePreview, previewMode = 'hidden' }, ref) => {
@@ -376,7 +377,8 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     handleSave,
     handleSaveAs,
     handleExport,
-    handleGeneratePDF
+    handleGeneratePDF,
+    openSettings: () => setShowCLIModal(true),
   }))
 
   return (
@@ -569,17 +571,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           <span>Gerar PDF</span>
-        </button>
-
-        <div className="w-px h-6 bg-slate-800 mx-1" />
-
-        {/* Botão Configurações */}
-        <button
-          onClick={() => setShowCLIModal(true)}
-          className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg border border-slate-800 transition"
-          title={t.toolbar.settings}
-        >
-          <Icon name="settings" size="sm" />
         </button>
       </div>
       
