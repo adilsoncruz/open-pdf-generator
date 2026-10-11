@@ -1,4 +1,4 @@
-import { useState, type DragEvent } from 'react'
+import { useState, useEffect, type DragEvent } from 'react'
 import { useTemplateStore, type Element, type ElementGroup } from '../store/templateStore'
 import { useTranslation } from '../i18n'
 import { Icon, Input, Select, Button, Divider, type IconName } from './atoms'
