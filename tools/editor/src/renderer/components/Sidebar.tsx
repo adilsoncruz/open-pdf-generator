@@ -27,8 +27,203 @@ export default function Sidebar() {
   const [pageSettingsExpanded, setPageSettingsExpanded] = useState(false)
   const [sectionsExpanded, setSectionsExpanded] = useState(true)
   const [activeTab, setActiveTab] = useState<'elements' | 'layers'>('layers')
+  const { 
+    selectedElementIds, 
+    selectElement, 
+    selectedContainerParentId, 
+    addElement,
+    deleteElement,
+    toggleElementVisibility,
+    selectContainerChild,
+    deleteLoopChildElement,
+    selectedContainerChildId
+  } = useTemplateStore()
+
+  const [expandedBands, setExpandedBands] = useState<Record<string, boolean>>({
+    header: true,
+    body: true,
+    summary: true,
+    footer: true,
+    bodyBackground: true,
+  })
+  const [expandedContainers, setExpandedContainers] = useState<Record<string, boolean>>({})
+
   const [showAddBandDropdown, setShowAddBandDropdown] = useState(false)
-  const { selectedElementIds, selectElement, selectedContainerParentId, addElement } = useTemplateStore()
+
+  const renderElementRow = (el: Element, sectionKey: ElementLocation, parentContainerId?: string) => {
+    const isSelected = selectedElementIds.includes(el.id) || (parentContainerId && selectedContainerChildId === el.id)
+    const getIcon = () => {
+      switch (el.type) {
+        case 'text': return 'T'
+        case 'rich_text': return '¶'
+        case 'link': return '🔗'
+        case 'image': return '🖼'
+        case 'table': return '▦'
+        case 'barcode': return '▥'
+        case 'rectangle': return '▭'
+        case 'spacer': return '↕'
+        case 'page_break': return '✂'
+        default: return '•'
+      }
+    }
+
+    const getLabel = () => {
+      if (el.type === 'text' || el.type === 'rich_text' || el.type === 'link') {
+        return (el.value as string) || el.id
+      }
+      if (el.type === 'table') {
+        return `Tabela (${(el as any).columns?.length || 0} col)`
+      }
+      if (el.type === 'barcode') {
+        return `Barcode (${el.barcodeType || 'code128'})`
+      }
+      return el.name || el.id
+    }
+
+    return (
+      <div
+        key={el.id}
+        onClick={(e) => {
+          e.stopPropagation()
+          setCurrentSection(sectionKey)
+          if (parentContainerId) {
+            selectContainerChild(parentContainerId, el.id, sectionKey)
+          } else {
+            selectElement(el.id, sectionKey)
+          }
+        }}
+        className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-pointer transition group ${
+          isSelected
+            ? 'bg-indigo-600/30 text-indigo-200 border border-indigo-500/40'
+            : 'hover:bg-slate-800/60 text-slate-300'
+        }`}
+      >
+        <div className="flex items-center gap-2 truncate">
+          <span className="text-[10px] font-mono text-slate-400 w-3 text-center">{getIcon()}</span>
+          <span className="truncate">{getLabel()}</span>
+        </div>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleElementVisibility(el.id, sectionKey)
+            }}
+            className="text-slate-400 hover:text-slate-200"
+            title={el.hidden ? 'Mostrar' : 'Ocultar'}
+          >
+            <Icon name={el.hidden ? 'eye-off' : 'eye'} size="xs" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (parentContainerId) {
+                deleteLoopChildElement(parentContainerId, el.id, sectionKey)
+              } else {
+                deleteElement(el.id, sectionKey)
+              }
+            }}
+            className="text-slate-400 hover:text-red-400"
+            title="Excluir"
+          >
+            <Icon name="trash" size="xs" />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const renderBandElements = (elements: Element[] | undefined, sectionKey: ElementLocation) => {
+    if (!elements || elements.length === 0) {
+      return (
+        <div className="text-[10px] text-slate-500 py-0.5 pl-6 italic">
+          Vazio
+        </div>
+      )
+    }
+
+    return (
+      <div className="pl-3 pr-1 border-l border-slate-800 ml-3 space-y-0.5 py-0.5">
+        {elements.map((el) => {
+          if (el.type === 'container') {
+            const isContainerSelected = selectedElementIds.includes(el.id)
+            const isContainerExpanded = expandedContainers[el.id] !== false
+            const childElements = el.elements || []
+
+            return (
+              <div key={el.id} className="space-y-0.5">
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCurrentSection(sectionKey)
+                    selectElement(el.id, sectionKey)
+                  }}
+                  className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-pointer transition ${
+                    isContainerSelected
+                      ? 'bg-indigo-600/30 text-indigo-200 border border-indigo-500/40'
+                      : 'hover:bg-slate-800/60 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 truncate">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setExpandedContainers((prev) => ({
+                          ...prev,
+                          [el.id]: !isContainerExpanded,
+                        }))
+                      }}
+                      className="text-[9px] text-slate-400 hover:text-white p-0.5"
+                    >
+                      {isContainerExpanded ? '▼' : '▶'}
+                    </button>
+                    <span className="text-[11px] text-indigo-400">⊞</span>
+                    <span className="truncate font-medium">{el.name || el.id}</span>
+                    <span className="text-[9px] text-slate-500">({childElements.length})</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-slate-400">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleElementVisibility(el.id, sectionKey)
+                      }}
+                      className="hover:text-slate-200"
+                      title={el.hidden ? 'Mostrar' : 'Ocultar'}
+                    >
+                      <Icon name={el.hidden ? 'eye-off' : 'eye'} size="xs" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteElement(el.id, sectionKey)
+                      }}
+                      className="hover:text-red-400"
+                      title="Excluir"
+                    >
+                      <Icon name="trash" size="xs" />
+                    </button>
+                  </div>
+                </div>
+
+                {isContainerExpanded && (
+                  <div className="pl-3 border-l border-slate-800/80 ml-3 space-y-0.5">
+                    {childElements.length === 0 ? (
+                      <div className="text-[10px] text-slate-500 py-0.5 italic">
+                        Container vazio
+                      </div>
+                    ) : (
+                      childElements.map((child) => renderElementRow(child, sectionKey, el.id))
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          return renderElementRow(el, sectionKey)
+        })}
+      </div>
+    )
+  }
   const getSectionElements = () => {
     if (currentSection === 'header') return template.pageSettings.header?.elements || []
     if (currentSection === 'footer') return template.pageSettings.footer?.elements || []
@@ -473,87 +668,96 @@ export default function Sidebar() {
             <div className="space-y-1 text-xs">
               {/* Background Layer (se adicionado) */}
               {template.pageSettings.bodyBackground && (
-                <div 
-                  onClick={() => setCurrentSection('bodyBackground')}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'bodyBackground' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="text-slate-400 text-[10px]">▼</span>
-                    <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="2 2" />
-                    </svg>
-                    <span className="truncate font-medium">Background Layer</span>
+                <div>
+                  <div 
+                    onClick={() => setCurrentSection('bodyBackground')}
+                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'bodyBackground' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleBandExpand('bodyBackground')
+                        }}
+                        className="text-slate-400 hover:text-white text-[10px] p-0.5"
+                      >
+                        {expandedBands.bodyBackground ? '▼' : '▶'}
+                      </button>
+                      <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="2 2" />
+                      </svg>
+                      <span className="truncate font-medium">Background Layer</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                      <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                    <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </div>
+                  {expandedBands.bodyBackground && renderBandElements(template.pageSettings.bodyBackground.elements, 'bodyBackground')}
                 </div>
               )}
 
               {/* 1. Header (apenas se existir) */}
               {template.pageSettings.header && (
-                <div 
-                  onClick={() => setCurrentSection('header')}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'header' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="text-slate-400 text-[10px]">▼</span>
-                    <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="3" width="18" height="6" rx="1" />
-                    </svg>
-                    <span className="truncate font-medium">Header ({template.pageSettings.header.height}pt)</span>
+                <div>
+                  <div 
+                    onClick={() => setCurrentSection('header')}
+                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'header' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleBandExpand('header')
+                        }}
+                        className="text-slate-400 hover:text-white text-[10px] p-0.5"
+                      >
+                        {expandedBands.header ? '▼' : '▶'}
+                      </button>
+                      <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="6" rx="1" />
+                      </svg>
+                      <span className="truncate font-medium">Header ({template.pageSettings.header.height}pt)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                      <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth="2"/>
+                        <circle cx="12" cy="7" r="3" strokeWidth="2"/>
+                      </svg>
+                      <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                    <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth="2"/>
-                      <circle cx="12" cy="7" r="3" strokeWidth="2"/>
-                    </svg>
-                    <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </div>
+                  {expandedBands.header && renderBandElements(template.pageSettings.header.elements, 'header')}
                 </div>
               )}
 
               {/* 2. Body Content (sempre presente) */}
-              <div 
-                onClick={() => setCurrentSection('body')}
-                className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'body' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <span className="text-slate-400 text-[10px]">▼</span>
-                  <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="4" y1="6" x2="20" y2="6"/>
-                    <line x1="4" y1="12" x2="20" y2="12"/>
-                    <line x1="4" y1="18" x2="20" y2="18"/>
-                  </svg>
-                  <span className="truncate font-medium">Body Content</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                  <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* 3. Summary Band (apenas se existir) */}
-              {template.summaryPage && (
+              <div>
                 <div 
-                  onClick={() => setCurrentSection('summary')}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'summary' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                  onClick={() => setCurrentSection('body')}
+                  className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'body' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <span className="text-slate-400 text-[10px]">▶</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleBandExpand('body')
+                      }}
+                      className="text-slate-400 hover:text-white text-[10px] p-0.5"
+                    >
+                      {expandedBands.body ? '▼' : '▶'}
+                    </button>
                     <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="4" y1="6" x2="20" y2="6"/>
+                      <line x1="4" y1="12" x2="20" y2="12"/>
+                      <line x1="4" y1="18" x2="20" y2="18"/>
                     </svg>
-                    <span className="truncate font-medium">Summary Band</span>
+                    <span className="truncate font-medium">Body Content</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
                     <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -561,32 +765,78 @@ export default function Sidebar() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   </div>
+                </div>
+                {expandedBands.body && renderBandElements(template.page, 'body')}
+              </div>
+
+              {/* 3. Summary Band (apenas se existir) */}
+              {template.summaryPage && (
+                <div>
+                  <div 
+                    onClick={() => setCurrentSection('summary')}
+                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'summary' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleBandExpand('summary')
+                        }}
+                        className="text-slate-400 hover:text-white text-[10px] p-0.5"
+                      >
+                        {expandedBands.summary ? '▼' : '▶'}
+                      </button>
+                      <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                      <span className="truncate font-medium">Summary Band</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                      <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                  {expandedBands.summary && renderBandElements(template.summaryPage.elements, 'summary')}
                 </div>
               )}
 
               {/* 4. Footer (apenas se existir) */}
               {template.pageSettings.footer && (
-                <div 
-                  onClick={() => setCurrentSection('footer')}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'footer' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="text-slate-400 text-[10px]">▼</span>
-                    <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="15" width="18" height="6" rx="1" />
-                    </svg>
-                    <span className="truncate font-medium">Footer ({template.pageSettings.footer.height}pt)</span>
+                <div>
+                  <div 
+                    onClick={() => setCurrentSection('footer')}
+                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'footer' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleBandExpand('footer')
+                        }}
+                        className="text-slate-400 hover:text-white text-[10px] p-0.5"
+                      >
+                        {expandedBands.footer ? '▼' : '▶'}
+                      </button>
+                      <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="15" width="18" height="6" rx="1" />
+                      </svg>
+                      <span className="truncate font-medium">Footer ({template.pageSettings.footer.height}pt)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                      <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth="2"/>
+                        <circle cx="12" cy="7" r="3" strokeWidth="2"/>
+                      </svg>
+                      <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                    <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth="2"/>
-                      <circle cx="12" cy="7" r="3" strokeWidth="2"/>
-                    </svg>
-                    <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </div>
+                  {expandedBands.footer && renderBandElements(template.pageSettings.footer.elements, 'footer')}
                 </div>
               )}
             </div>
