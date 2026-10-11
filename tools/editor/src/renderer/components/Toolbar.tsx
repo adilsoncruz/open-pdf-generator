@@ -73,6 +73,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   
   // Check CLI status on mount
   const checkCLIStatus = useCallback(async () => {
+    if (!window.electronAPI?.getCLIStatus) return
     try {
       const status = await window.electronAPI.getCLIStatus()
       setCLIStatus(status)
@@ -87,6 +88,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
   useEffect(() => {
     const loadVersions = async () => {
+      if (!window.electronAPI?.getAppVersions) return
       try {
         const versions = await window.electronAPI.getAppVersions()
         setAppVersions(versions)

@@ -274,7 +274,8 @@ export function EditorPage() {
 
   // Menu events from Electron
   useEffect(() => {
-    window.electronAPI.onMenuUndo(() => {
+    if (!window.electronAPI) return
+    window.electronAPI.onMenuUndo?.(() => {
       if (canUndo()) undo()
     })
     window.electronAPI.onMenuRedo(() => {
