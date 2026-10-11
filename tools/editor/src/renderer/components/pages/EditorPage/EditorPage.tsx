@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTemplateStore, type Element } from '../../../store/templateStore'
 import { useUIStore } from '../../../store/uiStore'
 import { usePreviewStore } from '../../../store/previewStore'
+import { Icon } from '../../atoms'
 import {
   Toolbar,
   Sidebar,

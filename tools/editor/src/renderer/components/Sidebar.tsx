@@ -333,30 +333,37 @@ export default function Sidebar() {
               {/* Text */}
               <button
                 onClick={() => addElement({ type: 'text', id: `text-${Date.now()}`, value: 'Novo Texto', x: 40, y: 40, width: 200, height: 25, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' } }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Texto (Suporta variáveis e bindings)"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Texto"
               >
-                <span className="text-xl font-serif text-slate-300 group-hover:text-indigo-400 mb-1">T</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Text</span>
               </button>
 
               {/* Rich Text */}
               <button
                 onClick={() => addElement({ type: 'rich_text', id: `rich_text-${Date.now()}`, value: '**Texto** em *Markdown*', x: 40, y: 40, width: 200, height: 30, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' } }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Rich Text (Markdown formatado)"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Rich Text"
               >
-                <span className="text-xl font-serif text-slate-300 group-hover:text-indigo-400 mb-1">¶</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 6h16M4 12h10M4 18h14"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Rich Text</span>
               </button>
 
               {/* Hyperlink */}
               <button
                 onClick={() => addElement({ type: 'link', id: `link-${Date.now()}`, value: 'Clique aqui', url: 'https://exemplo.com', x: 40, y: 40, width: 140, height: 25, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#3b82f6' } }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Hiperlink clicável"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Hyperlink"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">🔗</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Hyperlink</span>
               </button>
             </div>
@@ -371,36 +378,43 @@ export default function Sidebar() {
               {/* Container */}
               <button
                 onClick={() => addElement({ type: 'container', id: `container-${Date.now()}`, name: 'Container', x: 0, y: 40, width: '100%', height: 120, elements: [] }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Container de agrupamento"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Container"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">⊞</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="3" y="3" width="18" height="18" rx="3" strokeDasharray="3 3"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Container</span>
               </button>
 
               {/* Spacer */}
               <button
                 onClick={() => addElement({ type: 'spacer', id: `spacer-${Date.now()}`, x: 0, width: '100%', height: 40 }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Espaçador vertical"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Spacer"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">↕</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M7 3h10M7 21h10M12 7v10M9 10l3-3 3 3M9 14l3 3 3-3"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Spacer</span>
               </button>
 
               {/* Page Break */}
               <button
                 onClick={() => addElement({ type: 'page_break', id: `page_break-${Date.now()}`, x: 0, width: '100%', height: 20 }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Quebra de página"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Page Break"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">✂</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 12h16M14 3l4 4H14V3z"/>
+                  <path d="M5 21h14a2 2 0 0 0 2-2V7l-5-5H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Page Break</span>
               </button>
             </div>
           </div>
 
-          {/* Categoria 3: Media & Data */}
+          {/* Categoria 3: Media */}
           <div>
             <div className="text-[11px] font-medium text-slate-400 mb-2 px-0.5">
               Media
@@ -409,50 +423,68 @@ export default function Sidebar() {
               {/* Image */}
               <button
                 onClick={() => addElement({ type: 'image', id: `image-${Date.now()}`, width: 120, height: 80, source: '', fit: 'contain' }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Imagem estática ou dinâmica"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Image"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">🖼</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Image</span>
               </button>
 
               {/* Table */}
               <button
                 onClick={() => addElement({ type: 'table', id: `table-${Date.now()}`, width: 400, dataBinding: '', columns: [{ header: 'Coluna 1', field: 'item', width: 200 }], style: { headerBackground: '#f3f4f6', headerColor: '#000000', borderWidth: 1 } }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Tabela de dados"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Table"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">▦</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Table</span>
               </button>
 
-              {/* Barcode / QR */}
+              {/* Barcodes / QR */}
               <button
                 onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 100, height: 100, barcodeType: 'qrcode', dataBinding: '' }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="QR Code"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Barcodes / QR"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">☵</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/>
+                  <rect x="14" y="14" width="4" height="4"/>
+                  <path d="M18 18h3v3h-3z"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Barcodes/QR</span>
               </button>
 
               {/* Barcode 1D */}
               <button
                 onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 140, height: 50, barcodeType: 'code128', dataBinding: '' }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Código de barras 1D"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Barcode / QR"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">▥</span>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Barcode</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 5v14M7 5v14M10 5v14M13 5v14M16 5v14M19 5v14"/>
+                </svg>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Barcode/QR</span>
               </button>
 
-              {/* Shape / Rectangle */}
+              {/* Shape */}
               <button
                 onClick={() => addElement({ type: 'rectangle', id: `rect-${Date.now()}`, x: 40, y: 40, width: 100, height: 60, style: { fillColor: '#e2e8f0', borderColor: '#94a3b8', borderWidth: 1 } }, currentSection)}
-                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Forma geométrica / Retângulo"
+                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Shape"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">▢</span>
+                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="4" y="4" width="12" height="12" rx="2"/>
+                  <rect x="8" y="8" width="12" height="12" rx="2" strokeDasharray="2 2"/>
+                </svg>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Shape</span>
               </button>
             </div>
@@ -472,64 +504,94 @@ export default function Sidebar() {
             </div>
 
             <div className="space-y-1 text-xs">
-              {/* Header */}
+              {/* 1. Header (Banda Irmã) */}
               <div 
                 onClick={() => setCurrentSection('header')}
                 className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'header' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
               >
-                <div className="flex items-center gap-1.5 truncate">
+                <div className="flex items-center gap-2 truncate">
                   <span className="text-slate-400 text-[10px]">▼</span>
-                  <span className="text-slate-400">▢</span>
-                  <span className="truncate">Header ({template.pageSettings.header ? `${template.pageSettings.header.height}mm` : '65mm'})</span>
+                  <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="6" rx="1" />
+                  </svg>
+                  <span className="truncate font-medium">Header ({template.pageSettings.header ? `${template.pageSettings.header.height}mm` : '65mm'})</span>
                 </div>
-                <div className="flex items-center gap-1 text-slate-400">
-                  <span className="text-[11px]">🔒</span>
-                  <span className="text-[11px]">👁</span>
+                <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                  <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth="2"/>
+                    <circle cx="12" cy="7" r="3" strokeWidth="2"/>
+                  </svg>
+                  <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
                 </div>
               </div>
 
-              {/* Body Content */}
+              {/* 2. Body Content (Banda Irmã - NÃO aninhada no Header) */}
               <div 
                 onClick={() => setCurrentSection('body')}
-                className={`flex items-center justify-between pl-5 pr-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'body' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'body' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
               >
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="text-slate-400 text-[10px]">▶</span>
-                  <span className="text-slate-400">|||</span>
-                  <span className="truncate">Body Content</span>
+                <div className="flex items-center gap-2 truncate">
+                  <span className="text-slate-400 text-[10px]">▼</span>
+                  <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="4" y1="6" x2="20" y2="6"/>
+                    <line x1="4" y1="12" x2="20" y2="12"/>
+                    <line x1="4" y1="18" x2="20" y2="18"/>
+                  </svg>
+                  <span className="truncate font-medium">Body Content</span>
                 </div>
-                <div className="flex items-center gap-1 text-slate-400">
-                  <span className="text-[11px]">👁</span>
+                <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                  <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
                 </div>
               </div>
 
-              {/* Summary Band */}
+              {/* 3. Summary Band (Banda Irmã - NÃO aninhada no Header) */}
               <div 
                 onClick={() => setCurrentSection('summary')}
-                className={`flex items-center justify-between pl-8 pr-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'summary' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'summary' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
               >
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="text-slate-400">≡</span>
-                  <span className="truncate">Summary Band</span>
+                <div className="flex items-center gap-2 truncate">
+                  <span className="text-slate-400 text-[10px]">▶</span>
+                  <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                  <span className="truncate font-medium">Summary Band</span>
                 </div>
-                <div className="flex items-center gap-1 text-slate-400">
-                  <span className="text-[11px]">👁</span>
+                <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                  <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
                 </div>
               </div>
 
-              {/* Footer */}
+              {/* 4. Footer (Banda Irmã) */}
               <div 
                 onClick={() => setCurrentSection('footer')}
                 className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'footer' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
               >
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="text-slate-400 text-[10px]">▶</span>
-                  <span className="text-slate-400">▢</span>
-                  <span className="truncate">Footer ({template.pageSettings.footer ? `${template.pageSettings.footer.height}mm` : '25mm'})</span>
+                <div className="flex items-center gap-2 truncate">
+                  <span className="text-slate-400 text-[10px]">▼</span>
+                  <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="15" width="18" height="6" rx="1" />
+                  </svg>
+                  <span className="truncate font-medium">Footer ({template.pageSettings.footer ? `${template.pageSettings.footer.height}mm` : '25mm'})</span>
                 </div>
-                <div className="flex items-center gap-1 text-slate-400">
-                  <span className="text-[11px]">🔒</span>
-                  <span className="text-[11px]">👁</span>
+                <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                  <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth="2"/>
+                    <circle cx="12" cy="7" r="3" strokeWidth="2"/>
+                  </svg>
+                  <svg className="w-3.5 h-3.5 hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
                 </div>
               </div>
             </div>
