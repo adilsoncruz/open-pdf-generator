@@ -122,6 +122,64 @@ function StudioSlateElementInspector({ element, onUpdate, onStyleUpdate, parentN
               <span className="text-slate-500 text-[10px]">pt</span>
             </div>
           </div>
+
+          {/* Position Mode (Absolute / Relative) */}
+          <div className="mt-2.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-400 font-medium">Position</span>
+              <span className="text-[10px] font-mono text-slate-500">
+                {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' ? 'Relativo' : 'Absoluto'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 bg-slate-950 border border-slate-800 rounded-lg p-0.5 gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdate('positionMode', 'ABSOLUTE')
+                  onUpdate('position', 'absolute')
+                }}
+                className={`py-1 text-xs font-medium rounded transition text-center ${
+                  (((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) !== 'RELATIVE'
+                    ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                }`}
+              >
+                Absolute
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdate('positionMode', 'RELATIVE')
+                  onUpdate('position', 'relative')
+                  if (element.relativeOffsetY === undefined) {
+                    onUpdate('relativeOffsetY', 10)
+                  }
+                }}
+                className={`py-1 text-xs font-medium rounded transition text-center ${
+                  (((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                }`}
+              >
+                Relative
+              </button>
+            </div>
+
+            {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' && (
+              <div className="flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 mt-1.5">
+                <span className="text-slate-400 text-xs">Offset Y</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={(element.relativeOffsetY as number) ?? 10}
+                    onChange={(e) => onUpdate('relativeOffsetY', parseFloat(e.target.value) || 0)}
+                    className="w-16 bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+                  />
+                  <span className="text-slate-500 text-[10px]">pt</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 3. Typography Section (for text elements) */}
