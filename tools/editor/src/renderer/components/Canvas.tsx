@@ -21,9 +21,12 @@ interface ContainerChildElementProps {
   location: ElementLocation
   containerWidth: number
   containerHeight: number
+  effectiveY?: number
+  effectiveX?: number
+  effectiveWidth?: number | string
 }
 
-function ContainerChildElement({ child, containerId, location, containerWidth, containerHeight }: ContainerChildElementProps) {
+function ContainerChildElement({ child, containerId, location, containerWidth, containerHeight, effectiveY, effectiveX, effectiveWidth }: ContainerChildElementProps) {
   const {
     selectedContainerChildId,
     selectedContainerParentId,
@@ -136,7 +139,14 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       newX = Math.max(0, Math.min(newX, Math.max(0, containerWidth - childWidth)))
       newY = Math.max(0, Math.min(newY, Math.max(0, containerHeight - childHeight)))
       
-      updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
+      const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
+      if (isChildRelative && effectiveY !== undefined) {
+        const deltaMoveY = e.clientY - dragStart.y
+        const currentOffset = typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 10
+        updateContainerChildElement(containerId, child.id, { x: newX, y: newY, relativeOffsetY: Math.max(0, currentOffset + deltaMoveY) }, location)
+      } else {
+        updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
+      }
     }
 
     const handleMouseUp = () => {
@@ -363,8 +373,9 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
     <div
       className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500 ring-offset-1' : ''}`}
       style={{
-        left: child.x || 0,
-        top: child.y || 0,
+        left: effectiveX !== undefined ? effectiveX : (child.x || 0),
+        top: effectiveY !== undefined ? effectiveY : (child.y || 0),
+        ...(effectiveWidth !== undefined && !child.width ? { width: effectiveWidth } : {}),
       }}
       onMouseDown={handleMouseDown}
     >
@@ -1402,6 +1413,8 @@ export default function Canvas() {
           >
             {(() => {
               let currentFlowY = 0
+              let lastFlowX: number | undefined = undefined
+              let lastFlowWidth: number | string | undefined = undefined
               return template.page
                 .filter((element) => !element.hidden)
                 .map((element) => {
@@ -1410,9 +1423,22 @@ export default function Canvas() {
                     element.type !== 'container'
 
                   let effectiveY: number | undefined = undefined
+                  let effectiveX: number | undefined = undefined
+                  let effectiveWidth: number | string | undefined = undefined
+
                   if (isRelativeFlow) {
                     const offsetY = typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10
-                    effectiveY = currentFlowY + offsetY
+                    if (currentFlowY === 0) {
+                      effectiveY = typeof element.y === 'number' && element.y > 0 ? element.y : offsetY
+                    } else {
+                      effectiveY = currentFlowY + offsetY
+                      if (lastFlowX !== undefined && (element.x === undefined || element.x === 0 || element.x === 40)) {
+                        effectiveX = lastFlowX
+                      }
+                      if (lastFlowWidth !== undefined && (element.width === undefined || element.width === 200)) {
+                        effectiveWidth = lastFlowWidth
+                      }
+                    }
                   }
 
                   const elHeight =
@@ -1420,12 +1446,16 @@ export default function Canvas() {
                       ? element.height
                       : element.type === 'container'
                       ? 150
-                      : 24
+                      : 25
 
                   if (isRelativeFlow && effectiveY !== undefined) {
                     currentFlowY = effectiveY + elHeight
+                    lastFlowX = effectiveX !== undefined ? effectiveX : element.x
+                    lastFlowWidth = effectiveWidth !== undefined ? effectiveWidth : element.width
                   } else {
-                    currentFlowY = Math.max(currentFlowY, element.y + elHeight)
+                    currentFlowY = Math.max(currentFlowY, (element.y || 0) + elHeight)
+                    lastFlowX = element.x
+                    lastFlowWidth = element.width
                   }
 
                   return (
@@ -1433,6 +1463,8 @@ export default function Canvas() {
                       key={element.id}
                       element={element}
                       effectiveY={effectiveY}
+                      effectiveX={effectiveX}
+                      effectiveWidth={effectiveWidth}
                       scale={scale}
                       isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'body'}
                       onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'body') : selectElement(element.id, 'body')}
@@ -1804,6 +1836,8 @@ export default function Canvas() {
 interface CanvasElementProps {
   element: Element
   effectiveY?: number
+  effectiveX?: number
+  effectiveWidth?: number | string
   scale?: number
   isSelected: boolean
   onSelect: (ctrlKey: boolean) => void
@@ -1834,7 +1868,7 @@ function getFontFamily(pdfFont?: string): string {
   return fontMap[pdfFont] || 'Arial, sans-serif'
 }
 
-function CanvasElement({ element, effectiveY, scale = 1, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
+function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale = 1, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
   const template = useTemplateStore(state => state.template)
   const testData = useTemplateStore(state => state.testData)
   const saveSnapshot = useTemplateStore(state => state.saveSnapshot)
@@ -2069,7 +2103,13 @@ function CanvasElement({ element, effectiveY, scale = 1, isSelected, onSelect, o
           if (element.height !== '100%') newY = snapped.y
         }
         
-        onUpdate({ x: newX, y: newY })
+        const isRelative = (element.positionMode || element.position || '').toUpperCase() === 'RELATIVE'
+        if (isRelative && effectiveY !== undefined) {
+          const currentOffset = typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10
+          onUpdate({ x: newX, y: newY, relativeOffsetY: Math.max(0, currentOffset + deltaY) })
+        } else {
+          onUpdate({ x: newX, y: newY })
+        }
       }
     }
 
@@ -2900,16 +2940,57 @@ function CanvasElement({ element, effectiveY, scale = 1, isSelected, onSelect, o
                     ) : (
                       <>
 
-                        {containerElements.map((child: Element) => (
-                          <ContainerChildElement
-                            key={child.id}
-                            child={child}
-                            containerId={element.id}
-                            location={location}
-                            containerWidth={containerWidth}
-                            containerHeight={containerHeight}
-                          />
-                        ))}
+                        {(() => {
+                          let containerFlowY = 0
+                          let lastChildX: number | undefined = undefined
+                          let lastChildWidth: number | string | undefined = undefined
+                          return containerElements.map((child: Element) => {
+                            const isRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
+                            let effectiveChildY: number | undefined = undefined
+                            let effectiveChildX: number | undefined = undefined
+                            let effectiveChildWidth: number | string | undefined = undefined
+
+                            if (isRelative) {
+                              const offset = typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 10
+                              if (containerFlowY === 0) {
+                                effectiveChildY = typeof child.y === 'number' && child.y > 0 ? child.y : offset
+                              } else {
+                                effectiveChildY = containerFlowY + offset
+                                if (lastChildX !== undefined && (child.x === undefined || child.x === 0 || child.x === 40)) {
+                                  effectiveChildX = lastChildX
+                                }
+                                if (lastChildWidth !== undefined && (child.width === undefined || child.width === 200)) {
+                                  effectiveChildWidth = lastChildWidth
+                                }
+                              }
+                            }
+
+                            const chHeight = typeof child.height === 'number' ? child.height : 25
+                            if (isRelative && effectiveChildY !== undefined) {
+                              containerFlowY = effectiveChildY + chHeight
+                              lastChildX = effectiveChildX !== undefined ? effectiveChildX : child.x
+                              lastChildWidth = effectiveChildWidth !== undefined ? effectiveChildWidth : child.width
+                            } else {
+                              containerFlowY = Math.max(containerFlowY, (child.y || 0) + chHeight)
+                              lastChildX = child.x
+                              lastChildWidth = child.width
+                            }
+
+                            return (
+                              <ContainerChildElement
+                                key={child.id}
+                                child={child}
+                                effectiveY={effectiveChildY}
+                                effectiveX={effectiveChildX}
+                                effectiveWidth={effectiveChildWidth}
+                                containerId={element.id}
+                                location={location}
+                                containerWidth={containerWidth}
+                                containerHeight={containerHeight}
+                              />
+                            )
+                          })
+                        })()}
                       </>
                     )}
                   </div>
@@ -3013,8 +3094,9 @@ function CanvasElement({ element, effectiveY, scale = 1, isSelected, onSelect, o
     <div
       className="absolute"
       style={{
-        left: element.x,
+        left: effectiveX !== undefined ? effectiveX : element.x,
         top: effectiveY !== undefined ? effectiveY : element.y,
+        ...(effectiveWidth !== undefined && element.width === undefined ? { width: effectiveWidth } : {}),
       }}
     >
       <div ref={elementWrapperRef} className="relative">

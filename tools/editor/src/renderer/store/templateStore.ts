@@ -342,15 +342,71 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           (el) => el.id === selectedId && el.type === 'container'
         )
         if (selectedContainer && normalizedElement.type !== 'container') {
+          const containerChildren = selectedContainer.elements || []
+          let childY = normalizedElement.y ?? 20
+          let childX = normalizedElement.x ?? 20
+          let childWidth = normalizedElement.width
+          if (containerChildren.length > 0) {
+            const lastChild = containerChildren[containerChildren.length - 1]
+            const lastY = typeof lastChild.y === 'number' ? lastChild.y : 0
+            const lastH = typeof lastChild.height === 'number' ? lastChild.height : 25
+            childY = lastY + lastH + 10
+            childX = lastChild.x ?? childX
+            if (typeof lastChild.width === 'number') {
+              childWidth = lastChild.width
+            }
+            if ((lastChild.positionMode || lastChild.position || '').toUpperCase() === 'RELATIVE') {
+              normalizedElement.positionMode = 'RELATIVE'
+              normalizedElement.position = 'relative'
+              normalizedElement.relativeOffsetY = 10
+            }
+          }
+          const adaptedChild = {
+            ...normalizedElement,
+            x: childX,
+            y: childY,
+            ...(childWidth !== undefined ? { width: childWidth } : {})
+          }
           return {
             newElements: elements.map((el) =>
               el.id === selectedContainer.id
-                ? { ...el, elements: [...(el.elements || []), normalizedElement] }
+                ? { ...el, elements: [...containerChildren, adaptedChild] }
                 : el
             ),
             newSelectedId: selectedContainer.id
           }
         }
+
+        // Se adicionando elemento regular na secao
+        let refElement: Element | undefined = undefined
+        if (selectedId) {
+          refElement = elements.find(el => el.id === selectedId)
+        }
+        if (!refElement && elements.length > 0) {
+          refElement = elements[elements.length - 1]
+        }
+
+        if (refElement && refElement.type !== 'container' && normalizedElement.type !== 'container') {
+          const isRefRelative = (refElement.positionMode || refElement.position || '').toUpperCase() === 'RELATIVE'
+          const isNewRelative = (normalizedElement.positionMode || normalizedElement.position || '').toUpperCase() === 'RELATIVE'
+
+          const refY = typeof refElement.y === 'number' ? refElement.y : 40
+          const refH = typeof refElement.height === 'number' ? refElement.height : 25
+          const nextY = refY + refH + 10
+
+          normalizedElement = {
+            ...normalizedElement,
+            x: refElement.x ?? normalizedElement.x,
+            y: nextY,
+            width: refElement.width ?? normalizedElement.width,
+            ...(isRefRelative || isNewRelative ? {
+              positionMode: 'RELATIVE',
+              position: 'relative',
+              relativeOffsetY: 10,
+            } : {})
+          }
+        }
+
         return {
           newElements: [...elements, normalizedElement],
           newSelectedId: normalizedElement.id
