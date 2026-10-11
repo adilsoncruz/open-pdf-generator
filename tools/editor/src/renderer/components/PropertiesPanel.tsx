@@ -224,6 +224,69 @@ function StudioSlateElementInspector({ element, onUpdate, onStyleUpdate, parentN
                 ))}
               </div>
 
+              {/* Text Margins / Paddings (Top, Right, Bottom, Left) */}
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Margens Internas (pt)</label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  <div className="flex flex-col bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 focus-within:border-indigo-500">
+                    <span className="text-[9px] text-slate-500 font-mono">TOP</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={(element.style?.paddingTop ?? element.style?.marginTop ?? 0) as number}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0
+                        onStyleUpdate('paddingTop', val)
+                        onStyleUpdate('marginTop', val)
+                      }}
+                      className="bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right"
+                    />
+                  </div>
+                  <div className="flex flex-col bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 focus-within:border-indigo-500">
+                    <span className="text-[9px] text-slate-500 font-mono">RIGHT</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={(element.style?.paddingRight ?? element.style?.marginRight ?? 0) as number}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0
+                        onStyleUpdate('paddingRight', val)
+                        onStyleUpdate('marginRight', val)
+                      }}
+                      className="bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right"
+                    />
+                  </div>
+                  <div className="flex flex-col bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 focus-within:border-indigo-500">
+                    <span className="text-[9px] text-slate-500 font-mono">BOTTOM</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={(element.style?.paddingBottom ?? element.style?.marginBottom ?? 0) as number}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0
+                        onStyleUpdate('paddingBottom', val)
+                        onStyleUpdate('marginBottom', val)
+                      }}
+                      className="bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right"
+                    />
+                  </div>
+                  <div className="flex flex-col bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 focus-within:border-indigo-500">
+                    <span className="text-[9px] text-slate-500 font-mono">LEFT</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={(element.style?.paddingLeft ?? element.style?.marginLeft ?? 0) as number}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0
+                        onStyleUpdate('paddingLeft', val)
+                        onStyleUpdate('marginLeft', val)
+                      }}
+                      className="bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Text Value */}
               <div>
                 <label className="text-[10px] text-slate-400 block mb-1">Conteúdo do Texto</label>
@@ -421,32 +484,53 @@ function StudioSlateElementInspector({ element, onUpdate, onStyleUpdate, parentN
           </div>
         </div>
 
-        {/* 5. Data Binding Section */}
+        {/* 5. Data Binding Section (Não exibido para Container) */}
+        {element.type !== 'container' && (
+          <div>
+            <div className="text-xs font-semibold text-slate-200 mb-2">
+              Data Binding
+            </div>
+            <div className="relative flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
+              <input
+                type="text"
+                value={element.dataBinding || ''}
+                onChange={(e) => onUpdate('dataBinding', e.target.value)}
+                placeholder="{{ invoice.items }}"
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none pr-6"
+              />
+              {/* Emerald indicator dot when bound or active */}
+              <div className="absolute right-3 flex items-center">
+                <span className={`w-2 h-2 rounded-full ${
+                  element.dataBinding ? 'bg-emerald-400 shadow-sm shadow-emerald-500/50' : 'bg-slate-600'
+                }`} />
+              </div>
+            </div>
+            {element.dataBinding && (
+              <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-emerald-400/90 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Vinculado a dados dinâmicos</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 6. Print Condition Section (Todos os elementos) */}
         <div>
           <div className="text-xs font-semibold text-slate-200 mb-2">
-            Data Binding
+            Print Condition
           </div>
-          <div className="relative flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
+          <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
             <input
               type="text"
-              value={element.dataBinding || ''}
-              onChange={(e) => onUpdate('dataBinding', e.target.value)}
-              placeholder="{{ invoice.items }}"
-              className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none pr-6"
+              value={element.printCondition || ''}
+              onChange={(e) => onUpdate('printCondition', e.target.value || null)}
+              placeholder="Ex: invoice.total > 1000"
+              className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
             />
-            {/* Emerald indicator dot when bound or active */}
-            <div className="absolute right-3 flex items-center">
-              <span className={`w-2 h-2 rounded-full ${
-                element.dataBinding ? 'bg-emerald-400 shadow-sm shadow-emerald-500/50' : 'bg-slate-600'
-              }`} />
-            </div>
           </div>
-          {element.dataBinding && (
-            <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-emerald-400/90 font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span>Vinculado a dados dinâmicos</span>
-            </div>
-          )}
+          <span className="text-[10px] text-slate-500 mt-1 block">
+            Deixe vazio para imprimir sempre
+          </span>
         </div>
       </div>
     </div>
