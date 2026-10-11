@@ -1341,25 +1341,54 @@ export default function Canvas() {
               }
             }}
           >
-            {template.page
-              .filter((element) => !element.hidden)
-              .map((element) => (
-                <CanvasElement
-                  key={element.id}
-                  element={element}
-                  isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'body'}
-                  onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'body') : selectElement(element.id, 'body')}
-                  onUpdate={(updates) => updateElement(element.id, updates, 'body')}
-                        location="body"
-                  margins={margins}
-                  pageSize={pageSize}
-                  selectedElementIds={selectedElementIds}
-                  selectedElementLocation={selectedElementLocation}
-                  allElements={template.page}
-                  onUpdateMultiple={() => {}}
-                  updateElement={updateElement}
-                />
-              ))}
+            {(() => {
+              let currentFlowY = 0
+              return template.page
+                .filter((element) => !element.hidden)
+                .map((element) => {
+                  const isRelativeFlow =
+                    (element.positionMode === 'RELATIVE' || element.position === 'relative') &&
+                    element.type !== 'container'
+
+                  let effectiveY: number | undefined = undefined
+                  if (isRelativeFlow) {
+                    const offsetY = typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10
+                    effectiveY = currentFlowY + offsetY
+                  }
+
+                  const elHeight =
+                    typeof element.height === 'number'
+                      ? element.height
+                      : element.type === 'container'
+                      ? 150
+                      : 24
+
+                  if (isRelativeFlow && effectiveY !== undefined) {
+                    currentFlowY = effectiveY + elHeight
+                  } else {
+                    currentFlowY = Math.max(currentFlowY, element.y + elHeight)
+                  }
+
+                  return (
+                    <CanvasElement
+                      key={element.id}
+                      element={element}
+                      effectiveY={effectiveY}
+                      isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'body'}
+                      onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'body') : selectElement(element.id, 'body')}
+                      onUpdate={(updates) => updateElement(element.id, updates, 'body')}
+                      location="body"
+                      margins={margins}
+                      pageSize={pageSize}
+                      selectedElementIds={selectedElementIds}
+                      selectedElementLocation={selectedElementLocation}
+                      allElements={template.page}
+                      onUpdateMultiple={() => {}}
+                      updateElement={updateElement}
+                    />
+                  )
+                })
+            })()}
             
             
             {currentSection !== 'body' && (
@@ -1714,6 +1743,7 @@ export default function Canvas() {
 
 interface CanvasElementProps {
   element: Element
+  effectiveY?: number
   isSelected: boolean
   onSelect: (ctrlKey: boolean) => void
   onUpdate: (updates: Partial<Element>) => void
@@ -1743,7 +1773,7 @@ function getFontFamily(pdfFont?: string): string {
   return fontMap[pdfFont] || 'Arial, sans-serif'
 }
 
-function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
+function CanvasElement({ element, effectiveY, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
   const template = useTemplateStore(state => state.template)
   const testData = useTemplateStore(state => state.testData)
   const saveSnapshot = useTemplateStore(state => state.saveSnapshot)
@@ -2917,7 +2947,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
       className="absolute"
       style={{
         left: element.x,
-        top: element.y,
+        top: effectiveY !== undefined ? effectiveY : element.y,
       }}
     >
       <div className="relative">
