@@ -272,7 +272,8 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
   const handleSaveAs = async () => {
     const content = JSON.stringify(template, null, 2)
-    const fileName = template.metadata.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json'
+    const rawName = template?.metadata?.name || 'template'
+    const fileName = rawName.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json'
 
     const result = await window.electronAPI.saveFile(content, fileName)
     if (result) {
@@ -287,7 +288,8 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
   const handleExport = async () => {
     const content = JSON.stringify(template, null, 2)
-    const fileName = template.metadata.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json'
+    const rawName = template?.metadata?.name || 'template'
+    const fileName = rawName.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json'
 
     await window.electronAPI.saveFile(content, fileName)
   }
@@ -429,17 +431,22 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         {/* Nome do Documento */}
         <div className="flex items-center gap-2 bg-slate-950/60 px-2.5 py-1 rounded border border-slate-800">
           <span className="text-xs text-slate-300 font-mono truncate max-w-[180px]">
-            {currentFilePath ? currentFilePath.split('/').pop() : template.metadata?.name || 'template.json'}
+            {currentFilePath ? currentFilePath.split('/').pop() : template?.metadata?.name || 'template.json'}
           </span>
-          {isDirty ? (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              {t.common.unsaved}
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Salvo
-            </span>
-          )}
+          <button
+            onClick={handleSave}
+            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer ${
+              isDirty
+                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20'
+                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+            }`}
+            title="Salvar template (Ctrl+S / Cmd+S)"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            <span>{isDirty ? t.common.unsaved : 'Salvo'}</span>
+          </button>
         </div>
         
         <UpdateNotification />

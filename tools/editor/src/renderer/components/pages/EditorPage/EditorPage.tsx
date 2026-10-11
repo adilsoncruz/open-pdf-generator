@@ -236,6 +236,17 @@ export function EditorPage() {
         }
       }
 
+      // Ctrl+S / Cmd+S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        if (e.shiftKey) {
+          toolbarRef.current?.handleSaveAs()
+        } else {
+          toolbarRef.current?.handleSave()
+        }
+        return
+      }
+
       // Ctrl+Z: Undo
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !isInputField) {
         e.preventDefault()

@@ -7,11 +7,111 @@ import './index.css'
 if (typeof window !== 'undefined' && !window.electronAPI) {
   console.warn('⚠️ [Browser Fallback] window.electronAPI is NOT present, using mock fallback!');
   (window as unknown as { electronAPI: unknown }).electronAPI = {
-    openFile: async () => null,
-    openDataFile: async () => null,
-    saveFile: async () => null,
+    openFile: async () => {
+      return new Promise((resolve) => {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = '.json,.jrxml'
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0]
+          if (!file) {
+            resolve(null)
+            return
+          }
+          try {
+            const content = await file.text()
+            resolve({
+              path: file.name,
+              content,
+            })
+          } catch {
+            resolve(null)
+          }
+        }
+        input.oncancel = () => resolve(null)
+        input.click()
+      })
+    },
+    openDataFile: async () => {
+      return new Promise((resolve) => {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = '.json'
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0]
+          if (!file) {
+            resolve(null)
+            return
+          }
+          try {
+            const content = await file.text()
+            resolve({
+              path: file.name,
+              content,
+            })
+          } catch {
+            resolve(null)
+          }
+        }
+        input.oncancel = () => resolve(null)
+        input.click()
+      })
+    },
+    saveFile: async (content: string, defaultPath?: string) => {
+      try {
+        const fileName = defaultPath || 'template.json'
+        if ('showSaveFilePicker' in window) {
+          try {
+            const handle = await (window as unknown as { showSaveFilePicker: (options: unknown) => Promise<FileSystemFileHandle> }).showSaveFilePicker({
+              suggestedName: fileName,
+              types: [{
+                description: 'JSON Template',
+                accept: { 'application/json': ['.json'] },
+              }],
+            })
+            const writable = await handle.createWritable()
+            await writable.write(content)
+            await writable.close()
+            return handle.name || fileName
+          } catch (pickerErr: unknown) {
+            if (pickerErr && typeof pickerErr === 'object' && 'name' in pickerErr && (pickerErr as { name: string }).name === 'AbortError') {
+              return null
+            }
+          }
+        }
+        const blob = new Blob([content], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = fileName
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        return fileName
+      } catch (err) {
+        console.error('Error in browser saveFile:', err)
+        return null
+      }
+    },
     readFile: async () => ({ success: false }),
-    writeFile: async () => ({ success: false }),
+    writeFile: async (filePath: string, content: string) => {
+      try {
+        const fileName = filePath.split('/').pop() || filePath || 'template.json'
+        const blob = new Blob([content], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = fileName
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        return { success: true }
+      } catch (err) {
+        return { success: false, error: (err as Error).message }
+      }
+    },
     getCLIStatus: async () => ({
       installed: true,
       version: '1.0.0',
