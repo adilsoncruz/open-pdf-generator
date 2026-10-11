@@ -176,42 +176,40 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-full text-slate-200">
-      {/* 1. Header do Painel com Abas: 'Elementos' e 'Camadas' + Botão '+' */}
-      <div className="p-2 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-950/40">
-        <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+    <div className="w-[280px] bg-slate-900 border-r border-slate-800 flex flex-col h-full text-slate-200 select-none shrink-0">
+      {/* 1. Header com Abas Estilo Linear/Figma: "Library" e "Structure / Layers" */}
+      <div className="flex items-center justify-between border-b border-slate-800 px-3 pt-2 bg-slate-950/40 shrink-0">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => setActiveTab('elements')}
-            className={`px-2.5 py-1 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
+            className={`pb-2.5 text-xs font-medium border-b-2 transition -mb-[1px] ${
               activeTab === 'elements'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'border-indigo-500 text-white font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Icon name="plus" size="xs" />
-            <span>Elementos</span>
+            Library
           </button>
           <button
             onClick={() => setActiveTab('layers')}
-            className={`px-2.5 py-1 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
+            className={`pb-2.5 text-xs font-medium border-b-2 transition -mb-[1px] ${
               activeTab === 'layers'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'border-indigo-500 text-white font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Icon name="layers" size="xs" />
-            <span>Camadas</span>
+            Structure / Layers
           </button>
         </div>
 
-        <div className="flex items-center gap-1 relative">
-          {/* Botão '+' com Dropdown para Adicionar Bandas */}
+        <div className="flex items-center gap-1 pb-2 relative">
+          {/* Botão '+' para adicionar seções ou elementos */}
           <button
             onClick={() => setShowAddBandDropdown(!showAddBandDropdown)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 transition shadow-sm"
+            className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800 transition"
             title="Adicionar Seção / Banda"
           >
-            <Icon name="plus" size="sm" />
+            <Icon name="plus" size="xs" />
           </button>
 
           {/* Menu Dropdown do Botão '+' */}
@@ -323,155 +321,119 @@ export default function Sidebar() {
           />
         </div>
       </div>
-      {/* Conteúdo da Aba "Elementos" (Biblioteca categorizada) */}
+      {/* Conteúdo da Aba "Library" (Grid compacto estilo Figma) */}
       {activeTab === 'elements' && (
         <div className="flex-1 overflow-y-auto p-3 space-y-4">
-          {/* Categoria 1: Tipografia & Links */}
+          {/* Categoria 1: Standard */}
           <div>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 px-1">
-              Básicos
+            <div className="text-[11px] font-medium text-slate-400 mb-2 px-0.5">
+              Standard
             </div>
-            <div className="grid grid-cols-1 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
+              {/* Text */}
               <button
                 onClick={() => addElement({ type: 'text', id: `text-${Date.now()}`, value: 'Novo Texto', x: 40, y: 40, width: 200, height: 25, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' } }, currentSection)}
-                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Texto (Suporta variáveis e bindings)"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs font-serif text-slate-300 group-hover:text-indigo-400">T</span>
-                  <div>
-                    <div className="text-xs font-medium text-slate-200">Texto</div>
-                    <div className="text-[10px] text-slate-400">Suporta variáveis e bindings</div>
-                  </div>
-                </div>
-                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+                <span className="text-xl font-serif text-slate-300 group-hover:text-indigo-400 mb-1">T</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Text</span>
               </button>
 
+              {/* Rich Text */}
               <button
                 onClick={() => addElement({ type: 'rich_text', id: `rich_text-${Date.now()}`, value: '**Texto** em *Markdown*', x: 40, y: 40, width: 200, height: 30, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' } }, currentSection)}
-                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Rich Text (Markdown formatado)"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs font-serif text-slate-300 group-hover:text-indigo-400">¶</span>
-                  <div>
-                    <div className="text-xs font-medium text-slate-200">Rich Text</div>
-                    <div className="text-[10px] text-slate-400">Formatação em Markdown</div>
-                  </div>
-                </div>
-                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+                <span className="text-xl font-serif text-slate-300 group-hover:text-indigo-400 mb-1">¶</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Rich Text</span>
               </button>
 
+              {/* Hyperlink */}
               <button
                 onClick={() => addElement({ type: 'link', id: `link-${Date.now()}`, value: 'Clique aqui', url: 'https://exemplo.com', x: 40, y: 40, width: 140, height: 25, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#3b82f6' } }, currentSection)}
-                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Hiperlink clicável"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">🔗</span>
-                  <div>
-                    <div className="text-xs font-medium text-slate-200">Hiperlink</div>
-                    <div className="text-[10px] text-slate-400">Link clicável externo</div>
-                  </div>
-                </div>
-                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">🔗</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Hyperlink</span>
               </button>
             </div>
           </div>
 
-          {/* Categoria 2: Estrutura & Fluxo */}
+          {/* Categoria 2: Layout */}
           <div>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 px-1">
-              Estrutura & Fluxo
+            <div className="text-[11px] font-medium text-slate-400 mb-2 px-0.5">
+              Layout
             </div>
-            <div className="grid grid-cols-1 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
+              {/* Container */}
               <button
                 onClick={() => addElement({ type: 'container', id: `container-${Date.now()}`, name: 'Container', x: 0, y: 40, width: '100%', height: 120, elements: [] }, currentSection)}
-                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Container de agrupamento"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">⊞</span>
-                  <div>
-                    <div className="text-xs font-medium text-slate-200">Container</div>
-                    <div className="text-[10px] text-slate-400">Bloco de posicionamento</div>
-                  </div>
-                </div>
-                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">⊞</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Container</span>
               </button>
 
+              {/* Spacer */}
               <button
                 onClick={() => addElement({ type: 'spacer', id: `spacer-${Date.now()}`, x: 0, width: '100%', height: 40 }, currentSection)}
-                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Espaçador vertical"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">↕</span>
-                  <div>
-                    <div className="text-xs font-medium text-slate-200">Espaçador</div>
-                    <div className="text-[10px] text-slate-400">Espaço vertical relativo</div>
-                  </div>
-                </div>
-                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">↕</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Spacer</span>
               </button>
 
+              {/* Page Break */}
               <button
                 onClick={() => addElement({ type: 'page_break', id: `page_break-${Date.now()}`, x: 0, width: '100%', height: 20 }, currentSection)}
-                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Quebra de página"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">✂</span>
-                  <div>
-                    <div className="text-xs font-medium text-slate-200">Quebra de Página</div>
-                    <div className="text-[10px] text-slate-400">Força salto para próxima página</div>
-                  </div>
-                </div>
-                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">✂</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Page Break</span>
               </button>
             </div>
           </div>
 
-          {/* Categoria 3: Mídia & Tabelas */}
+          {/* Categoria 3: Media & Data */}
           <div>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 px-1">
-              Mídia & Tabelas
+            <div className="text-[11px] font-medium text-slate-400 mb-2 px-0.5">
+              Media
             </div>
-            <div className="grid grid-cols-1 gap-1.5">
-              <button
-                onClick={() => addElement({ type: 'table', id: `table-${Date.now()}`, width: 400, dataBinding: '', columns: [{ header: 'Coluna 1', field: 'item', width: 200 }], style: { headerBackground: '#f3f4f6', headerColor: '#000000', borderWidth: 1 } }, currentSection)}
-                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">▦</span>
-                  <div>
-                    <div className="text-xs font-medium text-slate-200">Tabela</div>
-                    <div className="text-[10px] text-slate-400">Grade dinâmica para listas</div>
-                  </div>
-                </div>
-                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
-              </button>
-
+            <div className="grid grid-cols-3 gap-2">
+              {/* Image */}
               <button
                 onClick={() => addElement({ type: 'image', id: `image-${Date.now()}`, width: 120, height: 80, source: '', fit: 'contain' }, currentSection)}
-                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Imagem estática ou dinâmica"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">🖼</span>
-                  <div>
-                    <div className="text-xs font-medium text-slate-200">Imagem</div>
-                    <div className="text-[10px] text-slate-400">URL estática ou Base64</div>
-                  </div>
-                </div>
-                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">🖼</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Image</span>
               </button>
 
+              {/* Table */}
+              <button
+                onClick={() => addElement({ type: 'table', id: `table-${Date.now()}`, width: 400, dataBinding: '', columns: [{ header: 'Coluna 1', field: 'item', width: 200 }], style: { headerBackground: '#f3f4f6', headerColor: '#000000', borderWidth: 1 } }, currentSection)}
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Tabela de dados"
+              >
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">▦</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Table</span>
+              </button>
+
+              {/* Barcode / QR */}
               <button
                 onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 100, height: 100, barcodeType: 'qrcode', dataBinding: '' }, currentSection)}
-                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Código de barras ou QR Code"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">▥</span>
-                  <div>
-                    <div className="text-xs font-medium text-slate-200">Barcode / QR</div>
-                    <div className="text-[10px] text-slate-400">Código de barras e QR code</div>
-                  </div>
-                </div>
-                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">▥</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Barcodes/QR</span>
               </button>
             </div>
           </div>
