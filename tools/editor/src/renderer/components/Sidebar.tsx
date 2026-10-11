@@ -33,25 +33,57 @@ export default function Sidebar() {
     selectedContainerParentId, 
     addElement,
     deleteElement,
+    reorderElement,
     toggleElementVisibility,
     selectContainerChild,
     deleteLoopChildElement,
     selectedContainerChildId
   } = useTemplateStore()
 
-  const [expandedBands, setExpandedBands] = useState<Record<string, boolean>>({
-    header: true,
-    body: true,
-    summary: true,
-    footer: true,
-    bodyBackground: true,
-  })
+  // Somente uma layer aberta por vez (Accordion)
+  const [openLayer, setOpenLayer] = useState<string>(currentSection)
   const [expandedContainers, setExpandedContainers] = useState<Record<string, boolean>>({})
+  const [draggedElementId, setDraggedElementId] = useState<string | null>(null)
+  const [dragOverElementId, setDragOverElementId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (currentSection) {
+      setOpenLayer(currentSection)
+    }
+  }, [currentSection])
+
+  const toggleLayer = (layerName: string) => {
+    setOpenLayer(prev => prev === layerName ? '' : layerName)
+    setCurrentSection(layerName as ElementLocation)
+  }
 
   const [showAddBandDropdown, setShowAddBandDropdown] = useState(false)
 
-  const renderElementRow = (el: Element, sectionKey: ElementLocation, parentContainerId?: string) => {
+  const renderElementRow = (
+    el: Element, 
+    sectionKey: ElementLocation, 
+    index: number, 
+    totalCount: number, 
+    parentContainerId?: string
+  ) => {
     const isSelected = selectedElementIds.includes(el.id) || (parentContainerId && selectedContainerChildId === el.id)
+    const isDraggingThis = draggedElementId === el.id
+    const isDragOverThis = dragOverElementId === el.id
+
+    const handleMoveUp = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (index > 0) {
+        reorderElement(el.id, index - 1, sectionKey)
+      }
+    }
+
+    const handleMoveDown = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (index < totalCount - 1) {
+        reorderElement(el.id, index + 1, sectionKey)
+      }
+    }
+
     const getIcon = () => {
       switch (el.type) {
         case 'text': return 'T'
@@ -83,6 +115,40 @@ export default function Sidebar() {
     return (
       <div
         key={el.id}
+        draggable
+        onDragStart={(e) => {
+          e.stopPropagation()
+          setDraggedElementId(el.id)
+          e.dataTransfer.setData('text/plain', el.id)
+          e.dataTransfer.effectAllowed = 'move'
+        }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          e.dataTransfer.dropEffect = 'move'
+          if (dragOverElementId !== el.id) {
+            setDragOverElementId(el.id)
+          }
+        }}
+        onDragLeave={(e) => {
+          e.stopPropagation()
+          if (dragOverElementId === el.id) {
+            setDragOverElementId(null)
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (draggedElementId && draggedElementId !== el.id) {
+            reorderElement(draggedElementId, index, sectionKey)
+          }
+          setDraggedElementId(null)
+          setDragOverElementId(null)
+        }}
+        onDragEnd={() => {
+          setDraggedElementId(null)
+          setDragOverElementId(null)
+        }}
         onClick={(e) => {
           e.stopPropagation()
           setCurrentSection(sectionKey)
@@ -92,23 +158,44 @@ export default function Sidebar() {
             selectElement(el.id, sectionKey)
           }
         }}
-        className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-pointer transition group ${
+        className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-grab active:cursor-grabbing transition group ${
+          isDraggingThis ? 'opacity-40 bg-slate-800' : ''
+        } ${
+          isDragOverThis ? 'border-t-2 border-indigo-400 bg-indigo-950/40' : ''
+        } ${
           isSelected
             ? 'bg-indigo-600/30 text-indigo-200 border border-indigo-500/40'
             : 'hover:bg-slate-800/60 text-slate-300'
         }`}
       >
-        <div className="flex items-center gap-2 truncate">
+        <div className="flex items-center gap-1.5 truncate flex-1 min-w-0">
+          <span className="text-[10px] text-slate-500 hover:text-slate-300 cursor-grab select-none">⠿</span>
           <span className="text-[10px] font-mono text-slate-400 w-3 text-center">{getIcon()}</span>
           <span className="truncate">{getLabel()}</span>
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button
+            onClick={handleMoveUp}
+            disabled={index === 0}
+            className={`p-0.5 rounded ${index === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+            title="Mover para cima"
+          >
+            <span className="text-[9px]">▲</span>
+          </button>
+          <button
+            onClick={handleMoveDown}
+            disabled={index === totalCount - 1}
+            className={`p-0.5 rounded ${index === totalCount - 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+            title="Mover para baixo"
+          >
+            <span className="text-[9px]">▼</span>
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation()
               toggleElementVisibility(el.id, sectionKey)
             }}
-            className="text-slate-400 hover:text-slate-200"
+            className="text-slate-400 hover:text-slate-200 p-0.5"
             title={el.hidden ? 'Mostrar' : 'Ocultar'}
           >
             <Icon name={el.hidden ? 'eye-off' : 'eye'} size="xs" />
@@ -122,7 +209,7 @@ export default function Sidebar() {
                 deleteElement(el.id, sectionKey)
               }
             }}
-            className="text-slate-400 hover:text-red-400"
+            className="text-slate-400 hover:text-red-400 p-0.5"
             title="Excluir"
           >
             <Icon name="trash" size="xs" />
@@ -143,27 +230,74 @@ export default function Sidebar() {
 
     return (
       <div className="pl-3 pr-1 border-l border-slate-800 ml-3 space-y-0.5 py-0.5">
-        {elements.map((el) => {
+        {elements.map((el, index) => {
           if (el.type === 'container') {
             const isContainerSelected = selectedElementIds.includes(el.id)
             const isContainerExpanded = expandedContainers[el.id] !== false
             const childElements = el.elements || []
 
+            const handleMoveUp = (e: React.MouseEvent) => {
+              e.stopPropagation()
+              if (index > 0) reorderElement(el.id, index - 1, sectionKey)
+            }
+            const handleMoveDown = (e: React.MouseEvent) => {
+              e.stopPropagation()
+              if (index < elements.length - 1) reorderElement(el.id, index + 1, sectionKey)
+            }
+
             return (
-              <div key={el.id} className="space-y-0.5">
+              <div 
+                key={el.id} 
+                className="space-y-0.5"
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation()
+                  setDraggedElementId(el.id)
+                  e.dataTransfer.setData('text/plain', el.id)
+                  e.dataTransfer.effectAllowed = 'move'
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  e.dataTransfer.dropEffect = 'move'
+                  if (dragOverElementId !== el.id) setDragOverElementId(el.id)
+                }}
+                onDragLeave={(e) => {
+                  e.stopPropagation()
+                  if (dragOverElementId === el.id) setDragOverElementId(null)
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (draggedElementId && draggedElementId !== el.id) {
+                    reorderElement(draggedElementId, index, sectionKey)
+                  }
+                  setDraggedElementId(null)
+                  setDragOverElementId(null)
+                }}
+                onDragEnd={() => {
+                  setDraggedElementId(null)
+                  setDragOverElementId(null)
+                }}
+              >
                 <div
                   onClick={(e) => {
                     e.stopPropagation()
                     setCurrentSection(sectionKey)
                     selectElement(el.id, sectionKey)
                   }}
-                  className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-pointer transition ${
+                  className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-pointer transition group ${
+                    draggedElementId === el.id ? 'opacity-40 bg-slate-800' : ''
+                  } ${
+                    dragOverElementId === el.id ? 'border-t-2 border-indigo-400 bg-indigo-950/40' : ''
+                  } ${
                     isContainerSelected
                       ? 'bg-indigo-600/30 text-indigo-200 border border-indigo-500/40'
                       : 'hover:bg-slate-800/60 text-slate-300'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 truncate">
+                  <div className="flex items-center gap-1.5 truncate flex-1 min-w-0">
+                    <span className="text-[10px] text-slate-500 hover:text-slate-300 cursor-grab select-none">⠿</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
@@ -180,13 +314,29 @@ export default function Sidebar() {
                     <span className="truncate font-medium">{el.name || el.id}</span>
                     <span className="text-[9px] text-slate-500">({childElements.length})</span>
                   </div>
-                  <div className="flex items-center gap-1 text-slate-400">
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 shrink-0">
+                    <button
+                      onClick={handleMoveUp}
+                      disabled={index === 0}
+                      className={`p-0.5 rounded ${index === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                      title="Mover para cima"
+                    >
+                      <span className="text-[9px]">▲</span>
+                    </button>
+                    <button
+                      onClick={handleMoveDown}
+                      disabled={index === elements.length - 1}
+                      className={`p-0.5 rounded ${index === elements.length - 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                      title="Mover para baixo"
+                    >
+                      <span className="text-[9px]">▼</span>
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         toggleElementVisibility(el.id, sectionKey)
                       }}
-                      className="hover:text-slate-200"
+                      className="hover:text-slate-200 p-0.5"
                       title={el.hidden ? 'Mostrar' : 'Ocultar'}
                     >
                       <Icon name={el.hidden ? 'eye-off' : 'eye'} size="xs" />
@@ -196,7 +346,7 @@ export default function Sidebar() {
                         e.stopPropagation()
                         deleteElement(el.id, sectionKey)
                       }}
-                      className="hover:text-red-400"
+                      className="hover:text-red-400 p-0.5"
                       title="Excluir"
                     >
                       <Icon name="trash" size="xs" />
@@ -211,7 +361,9 @@ export default function Sidebar() {
                         Container vazio
                       </div>
                     ) : (
-                      childElements.map((child) => renderElementRow(child, sectionKey, el.id))
+                      childElements.map((child, cIdx) => 
+                        renderElementRow(child, sectionKey, cIdx, childElements.length, el.id)
+                      )
                     )}
                   </div>
                 )}
@@ -219,7 +371,7 @@ export default function Sidebar() {
             )
           }
 
-          return renderElementRow(el, sectionKey)
+          return renderElementRow(el, sectionKey, index, elements.length)
         })}
       </div>
     )
@@ -670,19 +822,13 @@ export default function Sidebar() {
               {template.pageSettings.bodyBackground && (
                 <div>
                   <div 
-                    onClick={() => setCurrentSection('bodyBackground')}
-                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'bodyBackground' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                    onClick={() => toggleLayer('bodyBackground')}
+                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${openLayer === 'bodyBackground' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleBandExpand('bodyBackground')
-                        }}
-                        className="text-slate-400 hover:text-white text-[10px] p-0.5"
-                      >
-                        {expandedBands.bodyBackground ? '▼' : '▶'}
-                      </button>
+                      <span className="text-slate-400 hover:text-white text-[10px] p-0.5 select-none">
+                        {openLayer === 'bodyBackground' ? '▼' : '▶'}
+                      </span>
                       <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="2 2" />
                       </svg>
@@ -695,7 +841,7 @@ export default function Sidebar() {
                       </svg>
                     </div>
                   </div>
-                  {expandedBands.bodyBackground && renderBandElements(template.pageSettings.bodyBackground.elements, 'bodyBackground')}
+                  {openLayer === 'bodyBackground' && renderBandElements(template.pageSettings.bodyBackground.elements, 'bodyBackground')}
                 </div>
               )}
 
@@ -703,19 +849,13 @@ export default function Sidebar() {
               {template.pageSettings.header && (
                 <div>
                   <div 
-                    onClick={() => setCurrentSection('header')}
-                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'header' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                    onClick={() => toggleLayer('header')}
+                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${openLayer === 'header' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleBandExpand('header')
-                        }}
-                        className="text-slate-400 hover:text-white text-[10px] p-0.5"
-                      >
-                        {expandedBands.header ? '▼' : '▶'}
-                      </button>
+                      <span className="text-slate-400 hover:text-white text-[10px] p-0.5 select-none">
+                        {openLayer === 'header' ? '▼' : '▶'}
+                      </span>
                       <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="3" width="18" height="6" rx="1" />
                       </svg>
@@ -732,26 +872,20 @@ export default function Sidebar() {
                       </svg>
                     </div>
                   </div>
-                  {expandedBands.header && renderBandElements(template.pageSettings.header.elements, 'header')}
+                  {openLayer === 'header' && renderBandElements(template.pageSettings.header.elements, 'header')}
                 </div>
               )}
 
               {/* 2. Body Content (sempre presente) */}
               <div>
                 <div 
-                  onClick={() => setCurrentSection('body')}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'body' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                  onClick={() => toggleLayer('body')}
+                  className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${openLayer === 'body' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleBandExpand('body')
-                      }}
-                      className="text-slate-400 hover:text-white text-[10px] p-0.5"
-                    >
-                      {expandedBands.body ? '▼' : '▶'}
-                    </button>
+                    <span className="text-slate-400 hover:text-white text-[10px] p-0.5 select-none">
+                      {openLayer === 'body' ? '▼' : '▶'}
+                    </span>
                     <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="4" y1="6" x2="20" y2="6"/>
                       <line x1="4" y1="12" x2="20" y2="12"/>
@@ -766,26 +900,20 @@ export default function Sidebar() {
                     </svg>
                   </div>
                 </div>
-                {expandedBands.body && renderBandElements(template.page, 'body')}
+                {openLayer === 'body' && renderBandElements(template.page, 'body')}
               </div>
 
               {/* 3. Summary Band (apenas se existir) */}
               {template.summaryPage && (
                 <div>
                   <div 
-                    onClick={() => setCurrentSection('summary')}
-                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'summary' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                    onClick={() => toggleLayer('summary')}
+                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${openLayer === 'summary' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleBandExpand('summary')
-                        }}
-                        className="text-slate-400 hover:text-white text-[10px] p-0.5"
-                      >
-                        {expandedBands.summary ? '▼' : '▶'}
-                      </button>
+                      <span className="text-slate-400 hover:text-white text-[10px] p-0.5 select-none">
+                        {openLayer === 'summary' ? '▼' : '▶'}
+                      </span>
                       <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
@@ -799,7 +927,7 @@ export default function Sidebar() {
                       </svg>
                     </div>
                   </div>
-                  {expandedBands.summary && renderBandElements(template.summaryPage.elements, 'summary')}
+                  {openLayer === 'summary' && renderBandElements(template.summaryPage.elements, 'summary')}
                 </div>
               )}
 
@@ -807,19 +935,13 @@ export default function Sidebar() {
               {template.pageSettings.footer && (
                 <div>
                   <div 
-                    onClick={() => setCurrentSection('footer')}
-                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'footer' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                    onClick={() => toggleLayer('footer')}
+                    className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${openLayer === 'footer' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleBandExpand('footer')
-                        }}
-                        className="text-slate-400 hover:text-white text-[10px] p-0.5"
-                      >
-                        {expandedBands.footer ? '▼' : '▶'}
-                      </button>
+                      <span className="text-slate-400 hover:text-white text-[10px] p-0.5 select-none">
+                        {openLayer === 'footer' ? '▼' : '▶'}
+                      </span>
                       <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="15" width="18" height="6" rx="1" />
                       </svg>
@@ -836,7 +958,7 @@ export default function Sidebar() {
                       </svg>
                     </div>
                   </div>
-                  {expandedBands.footer && renderBandElements(template.pageSettings.footer.elements, 'footer')}
+                  {openLayer === 'footer' && renderBandElements(template.pageSettings.footer.elements, 'footer')}
                 </div>
               )}
             </div>

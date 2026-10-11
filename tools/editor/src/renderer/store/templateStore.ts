@@ -1243,15 +1243,29 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
   reorderElement: (id, newIndex, location = 'body') =>
     set((state) => {
-      const reorder = (elements: Element[]) => {
+      const reorder = (elements: Element[]): Element[] => {
         const oldIndex = elements.findIndex((el) => el.id === id)
-        if (oldIndex < 0 || oldIndex === newIndex) return elements
-        
-        const newElements = [...elements]
-        const [element] = newElements.splice(oldIndex, 1)
-        newElements.splice(newIndex, 0, element)
-        
-        return newElements
+        if (oldIndex >= 0) {
+          if (oldIndex === newIndex) return elements
+          const newElements = [...elements]
+          const [element] = newElements.splice(oldIndex, 1)
+          newElements.splice(newIndex, 0, element)
+          return newElements
+        }
+
+        return elements.map(el => {
+          if (el.type === 'container' && el.elements) {
+            const childIdx = el.elements.findIndex(c => c.id === id)
+            if (childIdx >= 0) {
+              if (childIdx === newIndex) return el
+              const newChildren = [...el.elements]
+              const [movedChild] = newChildren.splice(childIdx, 1)
+              newChildren.splice(newIndex, 0, movedChild)
+              return { ...el, elements: newChildren }
+            }
+          }
+          return el
+        })
       }
 
       const historyState = saveToHistory(state, state.template)
@@ -1297,6 +1311,18 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
                 ...state.template.pageSettings.bodyBackground,
                 elements: reorder(state.template.pageSettings.bodyBackground.elements),
               },
+            },
+          },
+          isDirty: true,
+        }
+      } else if (location === 'summary' && state.template.summaryPage) {
+        return {
+          ...historyState,
+          template: {
+            ...state.template,
+            summaryPage: {
+              ...state.template.summaryPage,
+              elements: reorder(state.template.summaryPage.elements),
             },
           },
           isDirty: true,
