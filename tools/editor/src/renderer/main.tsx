@@ -5,6 +5,7 @@ import './index.css'
 
 // Fallback para desenvolvimento no browser sem Electron
 if (typeof window !== 'undefined' && !window.electronAPI) {
+  console.warn('⚠️ [Browser Fallback] window.electronAPI is NOT present, using mock fallback!');
   (window as unknown as { electronAPI: unknown }).electronAPI = {
     openFile: async () => null,
     openDataFile: async () => null,
@@ -27,8 +28,32 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
     installCLI: async () => ({ success: false }),
     installCLIFromFile: async () => ({ success: false }),
     getCLIInstallPath: async () => '',
-    generatePDF: async () => ({ success: false }),
-    generatePDFPreview: async () => ({ success: false }),
+    generatePDF: async (templateJson: string, dataJson: string) => {
+      try {
+        const response = await fetch('/api/generate-preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ templateJson, dataJson }),
+        })
+        return await response.json()
+      } catch (err) {
+        console.error('Failed to generate PDF via dev server:', err)
+        return { success: false, errorCode: 'ERROR_GENERATING_PDF' }
+      }
+    },
+    generatePDFPreview: async (templateJson: string, dataJson: string) => {
+      try {
+        const response = await fetch('/api/generate-preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ templateJson, dataJson }),
+        })
+        return await response.json()
+      } catch (err) {
+        console.error('Failed to generate preview via dev server:', err)
+        return { success: false, errorCode: 'ERROR_GENERATING_PDF' }
+      }
+    },
     openPDF: async () => ({ success: false }),
     openBase64PDF: async () => ({ success: false }),
     validateTemplate: async () => ({ valid: true }),
