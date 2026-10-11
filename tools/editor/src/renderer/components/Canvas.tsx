@@ -1,4 +1,4 @@
-import { useState, useEffect, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
+import { useState, useEffect, useRef, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
 import { useTemplateStore, type Element, type ElementLocation } from '../store/templateStore'
 import { useUIStore } from '../store/uiStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
@@ -91,6 +91,8 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
 
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [isResizing, setIsResizing] = useState<string | null>(null)
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, initialW: 100, initialH: 20 })
 
   // Resolve dimensions (support for "100%")
   const resolveWidth = (value: string | number | undefined): number => {
@@ -111,6 +113,14 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
     selectContainerChild(containerId, child.id, location)
     setIsDragging(true)
     setDragStart({ x: e.clientX - child.x, y: e.clientY - child.y })
+  }
+
+  const handleResizeMouseDown = (e: ReactMouseEvent, direction: string) => {
+    e.stopPropagation()
+    setIsResizing(direction)
+    const initialW = resolveWidth(child.width)
+    const initialH = resolveHeight(child.height)
+    setResizeStart({ x: e.clientX, y: e.clientY, initialW, initialH })
   }
 
   useEffect(() => {
@@ -142,6 +152,33 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       window.removeEventListener('mouseup', handleMouseUp)
     }
   }, [isDragging, dragStart, containerId, child.id, location, updateContainerChildElement, saveSnapshot])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
+      const deltaX = e.clientX - resizeStart.x
+      const deltaY = e.clientY - resizeStart.y
+      
+      const newWidth = Math.max(10, Math.min(containerWidth - (child.x || 0), resizeStart.initialW + deltaX))
+      const newHeight = Math.max(10, Math.min(containerHeight - (child.y || 0), resizeStart.initialH + deltaY))
+      
+      updateContainerChildElement(containerId, child.id, { width: newWidth, height: newHeight }, location)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(null)
+      saveSnapshot()
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, resizeStart, containerId, child.id, child.x, child.y, containerWidth, containerHeight, location, updateContainerChildElement, saveSnapshot])
 
   // Renderizar baseado no tipo
   const renderContent = () => {
@@ -332,11 +369,28 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       onMouseDown={handleMouseDown}
     >
       {renderContent()}
-      {/* Label do elemento */}
+      {/* Label do elemento e handles de redimensionamento */}
       {isSelected && (
-        <div className="absolute -top-4 left-0 text-[9px] bg-purple-500 text-white px-1 rounded">
-          {child.type}
-        </div>
+        <>
+          <div className="absolute -top-4 left-0 text-[9px] bg-purple-500 text-white px-1 rounded z-30">
+            {child.type}
+          </div>
+          {/* Resize handle canto inferior direito */}
+          <div
+            className="absolute -right-1 -bottom-1 w-2.5 h-2.5 bg-white border-2 border-purple-500 rounded-full cursor-se-resize z-40"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
+          />
+          {/* Resize handle lateral direita */}
+          <div
+            className="absolute -right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white border-2 border-purple-500 rounded-full cursor-e-resize z-40"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
+          />
+          {/* Resize handle borda inferior */}
+          <div
+            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-2 border-purple-500 rounded-full cursor-s-resize z-40"
+            onMouseDown={(e) => handleResizeMouseDown(e, 's')}
+          />
+        </>
       )}
     </div>
   )
@@ -872,6 +926,7 @@ export default function Canvas() {
                       <CanvasElement
                         key={element.id}
                         element={element}
+                        scale={scale}
                         isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'bodyBackground'}
                         onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'bodyBackground') : selectElement(element.id, 'bodyBackground')}
                         onUpdate={(updates) => updateElement(element.id, updates, 'bodyBackground')}
@@ -1009,6 +1064,7 @@ export default function Canvas() {
                     <CanvasElement
                       key={element.id}
                       element={element}
+                      scale={scale}
                       isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
                       onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
                       onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
@@ -1040,6 +1096,7 @@ export default function Canvas() {
                       <CanvasElement
                         key={element.id}
                         element={element}
+                        scale={scale}
                         isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
                         onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
                         onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
@@ -1254,6 +1311,7 @@ export default function Canvas() {
                   <CanvasElement
                     key={element.id}
                     element={element}
+                    scale={scale}
                     isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'header'}
                     onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'header') : selectElement(element.id, 'header')}
                     onUpdate={(updates) => updateElement(element.id, updates, 'header')}
@@ -1301,6 +1359,7 @@ export default function Canvas() {
                   <CanvasElement
                     key={element.id}
                     element={element}
+                    scale={scale}
                     isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'footer'}
                     onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'footer') : selectElement(element.id, 'footer')}
                     onUpdate={(updates) => updateElement(element.id, updates, 'footer')}
@@ -1374,6 +1433,7 @@ export default function Canvas() {
                       key={element.id}
                       element={element}
                       effectiveY={effectiveY}
+                      scale={scale}
                       isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'body'}
                       onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'body') : selectElement(element.id, 'body')}
                       onUpdate={(updates) => updateElement(element.id, updates, 'body')}
@@ -1744,6 +1804,7 @@ export default function Canvas() {
 interface CanvasElementProps {
   element: Element
   effectiveY?: number
+  scale?: number
   isSelected: boolean
   onSelect: (ctrlKey: boolean) => void
   onUpdate: (updates: Partial<Element>) => void
@@ -1773,7 +1834,7 @@ function getFontFamily(pdfFont?: string): string {
   return fontMap[pdfFont] || 'Arial, sans-serif'
 }
 
-function CanvasElement({ element, effectiveY, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
+function CanvasElement({ element, effectiveY, scale = 1, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
   const template = useTemplateStore(state => state.template)
   const testData = useTemplateStore(state => state.testData)
   const saveSnapshot = useTemplateStore(state => state.saveSnapshot)
@@ -1942,20 +2003,30 @@ function CanvasElement({ element, effectiveY, isSelected, onSelect, onUpdate, ma
     })
   }
 
+  const elementWrapperRef = useRef<HTMLDivElement>(null)
+
+  const getElementDimensions = () => {
+    const el = elementWrapperRef.current
+    const w = typeof element.width === 'number' ? element.width : (el && el.offsetWidth > 0 ? el.offsetWidth : 120)
+    const h = typeof element.height === 'number' ? element.height : (el && el.offsetHeight > 0 ? el.offsetHeight : 24)
+    return { width: Math.max(10, w), height: Math.max(10, h) }
+  }
+
   const handleResizeMouseDown = (e: ReactMouseEvent<HTMLDivElement>, direction: string) => {
     if (e.button !== 0) return
     
     e.stopPropagation()
-    onSelect(false) 
+    e.preventDefault()
     
     setIsResizing(direction)
+    const dims = getElementDimensions()
     setResizeStart({
       x: e.clientX,
       y: e.clientY,
       elementX: element.x || 0,
-      elementY: element.y || 0,
-      elementWidth: typeof element.width === 'number' ? element.width : 100,
-      elementHeight: typeof element.height === 'number' ? element.height : 100,
+      elementY: (effectiveY !== undefined ? effectiveY : element.y) || 0,
+      elementWidth: dims.width,
+      elementHeight: dims.height,
     })
   }
 
@@ -1963,13 +2034,13 @@ function CanvasElement({ element, effectiveY, isSelected, onSelect, onUpdate, ma
     if (!isDragging) return
 
     const handleMouseMove = (e: globalThis.MouseEvent) => {
-      // Calcular delta do movimento
-      const deltaX = e.clientX - dragStart.x
-      const deltaY = e.clientY - dragStart.y
+      const currentScale = scale || 1
+      // Calcular delta do movimento com compensacao de zoom
+      const deltaX = (e.clientX - dragStart.x) / currentScale
+      const deltaY = (e.clientY - dragStart.y) / currentScale
       
       if (isMultiSelection && Object.keys(dragStart.initialPositions).length > 1) {
         // Mover todos os elementos selecionados juntos
-        
         Object.keys(dragStart.initialPositions).forEach(id => {
           const initialPos = dragStart.initialPositions[id]
           const newX = initialPos.x + deltaX
@@ -1977,24 +2048,18 @@ function CanvasElement({ element, effectiveY, isSelected, onSelect, onUpdate, ma
           updateElement(id, { x: newX, y: newY }, selectedElementLocation ?? undefined)
         })
       } else {
-        
         const initialPos = dragStart.initialPositions[element.id]
-        
         if (!initialPos) return 
         
         let newX = initialPos.x + deltaX
         let newY = initialPos.y + deltaY
         
-        
         if (element.width === '100%') {
           newX = 0
         }
-        
-        
         if (element.height === '100%') {
           newY = 0
         }
-        
         
         if (element.width !== '100%' || element.height !== '100%') {
           const width = typeof element.width === 'number' ? element.width : 0
@@ -2020,14 +2085,15 @@ function CanvasElement({ element, effectiveY, isSelected, onSelect, onUpdate, ma
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, dragStart, onUpdate, onUpdateMultiple, isMultiSelection, selectedElementLocation, element.id, element.x, element.y, element.width, element.height, saveSnapshot])
+  }, [isDragging, dragStart, scale, onUpdate, isMultiSelection, selectedElementLocation, element.id, element.width, element.height, saveSnapshot])
 
   useEffect(() => {
     if (!isResizing) return
 
     const handleMouseMove = (e: globalThis.MouseEvent): void => {
-      const deltaX = e.clientX - resizeStart.x
-      const deltaY = e.clientY - resizeStart.y
+      const currentScale = scale || 1
+      const deltaX = (e.clientX - resizeStart.x) / currentScale
+      const deltaY = (e.clientY - resizeStart.y) / currentScale
       
       const updates: Partial<Element> = {}
 
@@ -2085,8 +2151,8 @@ function CanvasElement({ element, effectiveY, isSelected, onSelect, onUpdate, ma
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
-  }
-  }, [isResizing, resizeStart, onUpdate, saveSnapshot])
+    }
+  }, [isResizing, resizeStart, scale, onUpdate, saveSnapshot])
 
   // Helper to calculate border values dynamically
   const getHeaderBorderValues = (style: Record<string, unknown> | undefined) => {
@@ -2884,8 +2950,9 @@ function CanvasElement({ element, effectiveY, isSelected, onSelect, onUpdate, ma
       zIndex: 10,
     }
 
-    const width = typeof element.width === 'string' ? 100 : (element.width || 100)
-    const height = typeof element.height === 'string' ? 100 : (element.height || 100)
+    const dims = getElementDimensions()
+    const width = dims.width
+    const height = dims.height
 
     return (
       <>
@@ -2950,7 +3017,7 @@ function CanvasElement({ element, effectiveY, isSelected, onSelect, onUpdate, ma
         top: effectiveY !== undefined ? effectiveY : element.y,
       }}
     >
-      <div className="relative">
+      <div ref={elementWrapperRef} className="relative">
         {renderElement()}
         {renderResizeHandles()}
         

@@ -284,6 +284,120 @@ function StudioSlateElementInspector({ element, onUpdate, onStyleUpdate, parentN
                 ))}
               </div>
 
+              {/* Vertical Alignment & Text Decoration */}
+              <div className="flex items-center gap-2">
+                {/* Vertical Align */}
+                <div className="flex flex-1 bg-slate-950 border border-slate-800 rounded-lg p-0.5 gap-0.5">
+                  {[
+                    { val: 'top', title: 'Topo', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4h16M7 8h10M9 12h6" /> },
+                    { val: 'center', title: 'Meio', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 12h16M7 7h10M7 17h10" /> },
+                    { val: 'bottom', title: 'Base', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 20h16M7 16h10M9 12h6" /> },
+                  ].map(({ val, title, icon }) => (
+                    <button
+                      key={val}
+                      onClick={() => onStyleUpdate('verticalAlignment', val)}
+                      className={`flex-1 py-1 flex items-center justify-center rounded text-xs transition ${
+                        (element.style?.verticalAlignment || 'center') === val
+                          ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      }`}
+                      title={title}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {icon}
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Text Decoration (Underline, Line-through) */}
+                <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-0.5 gap-0.5">
+                  <button
+                    onClick={() => {
+                      const cur = element.style?.textDecoration || 'none'
+                      onStyleUpdate('textDecoration', cur === 'underline' ? 'none' : 'underline')
+                    }}
+                    className={`w-7 h-7 flex items-center justify-center rounded text-xs font-serif underline transition ${
+                      element.style?.textDecoration === 'underline'
+                        ? 'bg-slate-800 text-indigo-400 border border-slate-700'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    }`}
+                    title="Sublinhado"
+                  >
+                    U
+                  </button>
+                  <button
+                    onClick={() => {
+                      const cur = element.style?.textDecoration || 'none'
+                      onStyleUpdate('textDecoration', cur === 'line-through' ? 'none' : 'line-through')
+                    }}
+                    className={`w-7 h-7 flex items-center justify-center rounded text-xs font-serif line-through transition ${
+                      element.style?.textDecoration === 'line-through'
+                        ? 'bg-slate-800 text-indigo-400 border border-slate-700'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    }`}
+                    title="Tachado"
+                  >
+                    S
+                  </button>
+                </div>
+              </div>
+
+              {/* Line Wrap (Multiline) & Flow Settings */}
+              <div className="bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-slate-300 font-medium">Quebra de Linha (Wrap)</span>
+                  <input
+                    type="checkbox"
+                    checked={element.style?.multiline === true}
+                    onChange={(e) => onStyleUpdate('multiline', e.target.checked)}
+                    className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-500 focus:ring-0 cursor-pointer"
+                  />
+                </div>
+
+                {element.style?.multiline && (
+                  <div className="pt-2 border-t border-slate-800/60 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col bg-slate-950/80 border border-slate-800 rounded px-2 py-1 focus-within:border-indigo-500">
+                        <span className="text-[9px] text-slate-500 font-mono">ALTURA LINHA</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0.5"
+                          max="3"
+                          value={(element.style?.lineHeight as number) ?? 1.2}
+                          onChange={(e) => onStyleUpdate('lineHeight', parseFloat(e.target.value) || 1.2)}
+                          className="bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right"
+                        />
+                      </div>
+                      <div className="flex flex-col bg-slate-950/80 border border-slate-800 rounded px-2 py-1 focus-within:border-indigo-500">
+                        <span className="text-[9px] text-slate-500 font-mono">RECUO 1ª LINHA</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={(element.style?.firstLineIndent as number) ?? 0}
+                          onChange={(e) => onStyleUpdate('firstLineIndent', parseFloat(e.target.value) || 0)}
+                          className="bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400 text-[10px]">Overflow</span>
+                      <select
+                        value={(element.style?.overflow as string) || 'visible'}
+                        onChange={(e) => onStyleUpdate('overflow', e.target.value)}
+                        className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
+                      >
+                        <option value="visible">Visible</option>
+                        <option value="hidden">Hidden (clip)</option>
+                        <option value="auto">Auto (ajusta altura)</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Text Margins / Paddings (Top, Right, Bottom, Left) */}
               <div>
                 <label className="text-[10px] text-slate-400 block mb-1">Margens Internas (pt)</label>
