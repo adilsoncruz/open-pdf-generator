@@ -691,6 +691,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
 export default function Canvas() {
   const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, currentSection, setCurrentSection, clearSelection } = useTemplateStore()
   const { zoom, setZoom } = useUIStore()
+  const pageRef = useRef<HTMLDivElement>(null)
 
   let pageSize;
   switch(template.pageSettings.size) {
@@ -707,10 +708,10 @@ export default function Canvas() {
   const scale = zoom / 100 // Converte porcentagem para escala
   const margins = template.pageSettings.margins
 
-  // Estados para réguas e linhas guias interativas
-  const [horizontalGuides, setHorizontalGuides] = useState<number[]>([150, 400])
-  const [verticalGuides, setVerticalGuides] = useState<number[]>([100, 300])
-  const [draggingGuide, setDraggingGuide] = useState<{ type: 'h' | 'v'; index: number } | null>(null)
+  // Estados para réguas e linhas guias interativas (inicia vazio)
+  const [horizontalGuides, setHorizontalGuides] = useState<number[]>([])
+  const [verticalGuides, setVerticalGuides] = useState<number[]>([])
+  const [draggingGuide, setDraggingGuide] = useState<{ type: 'h' | 'v'; index: number; isNew?: boolean } | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
 
   const addHorizontalGuide = (yPos: number) => {
@@ -728,6 +729,93 @@ export default function Canvas() {
       setVerticalGuides((prev) => prev.filter((_, i) => i !== index))
     }
   }
+
+  // Puxar linha guia horizontal a partir da régua superior
+  const handleRulerMouseDownH = (e: ReactMouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const pageRect = pageRef.current?.getBoundingClientRect()
+    const initialY = pageRect
+      ? Math.max(0, Math.min(pageSize.height, Math.round((e.clientY - pageRect.top) / scale)))
+      : 0
+    const newIndex = horizontalGuides.length
+    setHorizontalGuides((prev) => [...prev, initialY])
+    setDraggingGuide({ type: 'h', index: newIndex, isNew: true })
+  }
+
+  // Puxar linha guia vertical a partir da régua esquerda
+  const handleRulerMouseDownV = (e: ReactMouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const pageRect = pageRef.current?.getBoundingClientRect()
+    const initialX = pageRect
+      ? Math.max(0, Math.min(pageSize.width, Math.round((e.clientX - pageRect.left) / scale)))
+      : 0
+    const newIndex = verticalGuides.length
+    setVerticalGuides((prev) => [...prev, initialX])
+    setDraggingGuide({ type: 'v', index: newIndex, isNew: true })
+  }
+
+  // Monitora arrasto de guias no escopo global da janela
+  useEffect(() => {
+    if (!draggingGuide) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const pageRect = pageRef.current?.getBoundingClientRect()
+      if (!pageRect) return
+
+      if (draggingGuide.type === 'h') {
+        const rawY = (e.clientY - pageRect.top) / scale
+        const clampedY = Math.max(0, Math.min(pageSize.height, Math.round(rawY)))
+        setHorizontalGuides((prev) =>
+          prev.map((g, i) => (i === draggingGuide.index ? clampedY : g))
+        )
+      } else {
+        const rawX = (e.clientX - pageRect.left) / scale
+        const clampedX = Math.max(0, Math.min(pageSize.width, Math.round(rawX)))
+        setVerticalGuides((prev) =>
+          prev.map((g, i) => (i === draggingGuide.index ? clampedX : g))
+        )
+      }
+    }
+
+    const handleMouseUp = (e: MouseEvent) => {
+      const pageRect = pageRef.current?.getBoundingClientRect()
+      if (pageRect) {
+        if (draggingGuide.type === 'h') {
+          const rawY = (e.clientY - pageRect.top) / scale
+          if (draggingGuide.isNew && rawY < 0) {
+            // Se apenas clicou na régua sem arrastar para dentro da folha, coloca na margem superior
+            setHorizontalGuides((prev) =>
+              prev.map((g, i) => (i === draggingGuide.index ? Math.round(margins.top) : g))
+            )
+          } else if (rawY < 0 || rawY > pageSize.height) {
+            // Se soltou fora da folha ou de volta na régua, remove a guia
+            setHorizontalGuides((prev) => prev.filter((_, i) => i !== draggingGuide.index))
+          }
+        } else {
+          const rawX = (e.clientX - pageRect.left) / scale
+          if (draggingGuide.isNew && rawX < 0) {
+            // Se apenas clicou na régua sem arrastar para dentro da folha, coloca na margem esquerda
+            setVerticalGuides((prev) =>
+              prev.map((g, i) => (i === draggingGuide.index ? Math.round(margins.left) : g))
+            )
+          } else if (rawX < 0 || rawX > pageSize.width) {
+            // Se soltou fora da folha ou de volta na régua, remove a guia
+            setVerticalGuides((prev) => prev.filter((_, i) => i !== draggingGuide.index))
+          }
+        }
+      }
+      setDraggingGuide(null)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [draggingGuide, scale, pageSize.width, pageSize.height, margins.top, margins.left])
 
   // Detect if any BODY element is touching the margins
   const checkMarginSnap = () => {
@@ -830,33 +918,15 @@ export default function Canvas() {
   }, [])
 
   return (
-    <div 
-      className="flex-1 flex flex-col h-full overflow-hidden select-none bg-slate-950"
-      onMouseMove={(e) => {
-        if (!draggingGuide) return
-        const canvasContainer = e.currentTarget.getBoundingClientRect()
-        if (draggingGuide.type === 'h') {
-          const newY = Math.max(0, Math.min(pageSize.height, (e.clientY - canvasContainer.top - 24) / scale))
-          setHorizontalGuides((prev) => prev.map((g, i) => i === draggingGuide.index ? Math.round(newY) : g))
-        } else {
-          const newX = Math.max(0, Math.min(pageSize.width, (e.clientX - canvasContainer.left - 24) / scale))
-          setVerticalGuides((prev) => prev.map((g, i) => i === draggingGuide.index ? Math.round(newX) : g))
-        }
-      }}
-      onMouseUp={() => setDraggingGuide(null)}
-    >
+    <div className={`flex-1 flex flex-col h-full overflow-hidden select-none bg-slate-950 ${draggingGuide ? (draggingGuide.type === 'h' ? 'cursor-ns-resize' : 'cursor-ew-resize') : ''}`}>
       {/* RÉGUA SUPERIOR (HORIZONTAL RULER) */}
       <div 
-        className="h-6 bg-slate-950 border-b border-slate-800 flex items-center relative overflow-hidden select-none cursor-pointer text-slate-400 pl-6 z-20 shrink-0"
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect()
-          const clickY = e.clientY - rect.bottom
-          addHorizontalGuide(Math.max(20, Math.min(pageSize.height - 20, clickY + 80)))
-        }}
-        title="Clique na régua para adicionar uma nova guia horizontal"
+        className="h-6 bg-slate-950 border-b border-slate-800 flex items-center relative overflow-hidden select-none cursor-row-resize text-slate-400 pl-6 z-20 shrink-0 hover:bg-slate-900 transition-colors"
+        onMouseDown={handleRulerMouseDownH}
+        title="Arraste para baixo para criar uma nova linha guia horizontal"
       >
-        <div className="absolute left-1 text-[9px] font-mono text-slate-400">pt</div>
-        <div className="flex-1 flex items-end h-full">
+        <div className="absolute left-1 text-[9px] font-mono text-slate-400 pointer-events-none">pt</div>
+        <div className="flex-1 flex items-end h-full pointer-events-none">
           {Array.from({ length: 30 }).map((_, i) => (
             <div key={i} className="flex-1 border-r border-slate-800 h-2 relative">
               {i % 2 === 0 && (
@@ -873,15 +943,11 @@ export default function Canvas() {
       <div className="flex-1 flex overflow-hidden relative">
         {/* RÉGUA VERTICAL (LEFT VERTICAL RULER) */}
         <div 
-          className="w-6 bg-slate-950 border-r border-slate-800 flex flex-col relative select-none cursor-pointer text-slate-400 z-20 shrink-0 overflow-hidden"
-          onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect()
-            const clickX = e.clientX - rect.right
-            addVerticalGuide(Math.max(20, Math.min(pageSize.width - 20, clickX + 120)))
-          }}
-          title="Clique na régua para adicionar uma nova guia vertical"
+          className="w-6 bg-slate-950 border-r border-slate-800 flex flex-col relative select-none cursor-col-resize text-slate-400 z-20 shrink-0 overflow-hidden hover:bg-slate-900 transition-colors"
+          onMouseDown={handleRulerMouseDownV}
+          title="Arraste para a direita para criar uma nova linha guia vertical"
         >
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col pointer-events-none">
             {Array.from({ length: 40 }).map((_, i) => (
               <div key={i} className="flex-1 border-b border-slate-800 w-2 relative">
                 {i % 2 === 0 && (
@@ -906,7 +972,7 @@ export default function Canvas() {
           }}
         >
         
-        <div className="relative" style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
+        <div ref={pageRef} className="relative" style={{ width: pageSize.width, height: pageSize.height, transform: `scale(${scale})`, transformOrigin: 'top center' }}>
           
           
           {currentSection === 'bodyBackground' && template.pageSettings.bodyBackground ? (
@@ -1643,45 +1709,6 @@ export default function Canvas() {
               <span>Fluxo do Corpo (Body)</span>
             </div>
           </div>
-
-          {/* LINHAS GUIAS INTERATIVAS (CYAN #06b6d4) COM TOOLTIPS */}
-          <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 40 }}>
-            {/* Guias Horizontais */}
-            {horizontalGuides.map((yPos, idx) => (
-              <div
-                key={`h-guide-${idx}`}
-                className="absolute left-0 right-0 pointer-events-auto cursor-ns-resize group"
-                style={{ top: yPos }}
-                onMouseDown={() => setDraggingGuide({ type: 'h', index: idx })}
-                onDoubleClick={() => removeGuide('h', idx)}
-                title="Arraste para mover ou clique duplo para remover"
-              >
-                <div className="h-0.5 bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
-                  <div className="absolute left-2 -top-5 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Y: {Math.round(yPos)}pt
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Guias Verticais */}
-            {verticalGuides.map((xPos, idx) => (
-              <div
-                key={`v-guide-${idx}`}
-                className="absolute top-0 bottom-0 pointer-events-auto cursor-ew-resize group"
-                style={{ left: xPos }}
-                onMouseDown={() => setDraggingGuide({ type: 'v', index: idx })}
-                onDoubleClick={() => removeGuide('v', idx)}
-                title="Arraste para mover ou clique duplo para remover"
-              >
-                <div className="w-0.5 h-full bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
-                  <div className="absolute -left-6 top-2 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    X: {Math.round(xPos)}pt
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
           
             </>
@@ -1831,6 +1858,57 @@ export default function Canvas() {
               </div>
             </>
           )}
+
+          {/* LINHAS GUIAS INTERATIVAS (CYAN #06b6d4) COM TOOLTIPS */}
+          <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 50, width: pageSize.width, height: pageSize.height }}>
+            {/* Guias Horizontais */}
+            {horizontalGuides.map((yPos, idx) => (
+              <div
+                key={`h-guide-${idx}`}
+                className="absolute left-0 right-0 pointer-events-auto cursor-ns-resize group"
+                style={{ top: yPos }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  setDraggingGuide({ type: 'h', index: idx })
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation()
+                  removeGuide('h', idx)
+                }}
+                title="Arraste para mover ou clique duplo para remover"
+              >
+                <div className="h-0.5 bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
+                  <div className={`absolute left-2 -top-5 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 transition-opacity ${draggingGuide?.type === 'h' && draggingGuide?.index === idx ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    Y: {Math.round(yPos)}pt
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Guias Verticais */}
+            {verticalGuides.map((xPos, idx) => (
+              <div
+                key={`v-guide-${idx}`}
+                className="absolute top-0 bottom-0 pointer-events-auto cursor-ew-resize group"
+                style={{ left: xPos }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  setDraggingGuide({ type: 'v', index: idx })
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation()
+                  removeGuide('v', idx)
+                }}
+                title="Arraste para mover ou clique duplo para remover"
+              >
+                <div className="w-0.5 h-full bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
+                  <div className={`absolute -left-6 top-2 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 transition-opacity whitespace-nowrap ${draggingGuide?.type === 'v' && draggingGuide?.index === idx ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    X: {Math.round(xPos)}pt
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
         {/* Fim do container com scale */}
         </div>
