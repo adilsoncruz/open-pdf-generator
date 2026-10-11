@@ -373,9 +373,6 @@ export function EditorPage() {
             </div>
           )}
 
-          {/* Right Toolbar - Add Elements */}
-          <ElementsToolbar />
-
           {/* Right Panel - Properties */}
           {showPropertiesPanel && <PropertiesPanel />}
         </div>

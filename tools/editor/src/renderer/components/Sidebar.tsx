@@ -26,7 +26,9 @@ export default function Sidebar() {
 
   const [pageSettingsExpanded, setPageSettingsExpanded] = useState(false)
   const [sectionsExpanded, setSectionsExpanded] = useState(true)
-  const { selectedElementIds, selectElement, selectedContainerParentId } = useTemplateStore()
+  const [activeTab, setActiveTab] = useState<'elements' | 'layers'>('layers')
+  const [showAddBandDropdown, setShowAddBandDropdown] = useState(false)
+  const { selectedElementIds, selectElement, selectedContainerParentId, addElement } = useTemplateStore()
   const getSectionElements = () => {
     if (currentSection === 'header') return template.pageSettings.header?.elements || []
     if (currentSection === 'footer') return template.pageSettings.footer?.elements || []
@@ -174,389 +176,394 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-64 theme-bg-secondary border-r theme-border flex flex-col h-full">
-      <div className="p-3 border-b theme-border flex items-center justify-between shrink-0">
-        <h2 className="text-sm font-semibold theme-text">Navigator</h2>
-        <div className="flex items-center gap-1">
-          <IconButton
-            icon={isSidebarPinned ? 'pin' : 'pin-off'}
-            onClick={toggleSidebarPinned}
-            tooltip={isSidebarPinned ? 'Unpin sidebar' : 'Pin sidebar'}
-            variant={isSidebarPinned ? 'default' : 'ghost'}
-            size="sm"
-            className={isSidebarPinned ? 'text-blue-500' : ''}
-          />
+    <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-full text-slate-200">
+      {/* 1. Header do Painel com Abas: 'Elementos' e 'Camadas' + Botão '+' */}
+      <div className="p-2 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-950/40">
+        <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+          <button
+            onClick={() => setActiveTab('elements')}
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
+              activeTab === 'elements'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Icon name="plus" size="xs" />
+            <span>Elementos</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('layers')}
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
+              activeTab === 'layers'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Icon name="layers" size="xs" />
+            <span>Camadas</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1 relative">
+          {/* Botão '+' com Dropdown para Adicionar Bandas */}
+          <button
+            onClick={() => setShowAddBandDropdown(!showAddBandDropdown)}
+            className="w-7 h-7 flex items-center justify-center rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 transition shadow-sm"
+            title="Adicionar Seção / Banda"
+          >
+            <Icon name="plus" size="sm" />
+          </button>
+
+          {/* Menu Dropdown do Botão '+' */}
+          {showAddBandDropdown && (
+            <div className="absolute top-full right-0 mt-1 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 py-1.5 backdrop-blur-md">
+              <div className="px-3 py-1 text-[10px] font-semibold tracking-wider text-slate-400 uppercase border-b border-slate-800/80 mb-1">
+                Adicionar Seção
+              </div>
+              
+              <button
+                disabled={!!template.pageSettings.header}
+                onClick={() => {
+                  if (!template.pageSettings.header) addHeader()
+                  setShowAddBandDropdown(false)
+                }}
+                className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent transition text-slate-300"
+              >
+                <span>🏷</span>
+                <div>
+                  <div className="font-medium">Header Band</div>
+                  <div className="text-[10px] text-slate-500">Faixa fixa superior</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setCurrentSection('body')
+                  setShowAddBandDropdown(false)
+                }}
+                className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 transition text-slate-300"
+              >
+                <span>📄</span>
+                <div>
+                  <div className="font-medium">Page Body Band</div>
+                  <div className="text-[10px] text-slate-500">Fluxo principal dinâmico</div>
+                </div>
+              </button>
+
+              <button
+                disabled={!!template.summaryPage}
+                onClick={() => {
+                  if (!template.summaryPage) addSummaryPage()
+                  setShowAddBandDropdown(false)
+                }}
+                className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent transition text-slate-300"
+              >
+                <span>📊</span>
+                <div>
+                  <div className="font-medium">Summary Band</div>
+                  <div className="text-[10px] text-slate-500">Totais e assinaturas finais</div>
+                </div>
+              </button>
+
+              <button
+                disabled={!!template.pageSettings.footer}
+                onClick={() => {
+                  if (!template.pageSettings.footer) addFooter()
+                  setShowAddBandDropdown(false)
+                }}
+                className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent transition text-slate-300"
+              >
+                <span>🏷</span>
+                <div>
+                  <div className="font-medium">Footer Band</div>
+                  <div className="text-[10px] text-slate-500">Faixa fixa no rodapé</div>
+                </div>
+              </button>
+
+              <button
+                disabled={!!template.pageSettings.bodyBackground}
+                onClick={() => {
+                  if (!template.pageSettings.bodyBackground) addBodyBackground()
+                  setShowAddBandDropdown(false)
+                }}
+                className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent transition text-slate-300"
+              >
+                <span>🖼</span>
+                <div>
+                  <div className="font-medium">Background Layer</div>
+                  <div className="text-[10px] text-slate-500">Marca d'água / Timbrado</div>
+                </div>
+              </button>
+
+              <div className="border-t border-slate-800 my-1" />
+
+              <button
+                onClick={() => {
+                  const id = `container-${Date.now()}`
+                  addElement({ type: 'container', id, name: 'Novo Container', x: 0, y: 0, width: '100%', height: 120, elements: [] }, currentSection)
+                  setShowAddBandDropdown(false)
+                }}
+                className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 transition text-slate-300"
+              >
+                <span>⊞</span>
+                <div>
+                  <div className="font-medium">Novo Container</div>
+                  <div className="text-[10px] text-slate-500">Bloco de agrupamento</div>
+                </div>
+              </button>
+            </div>
+          )}
+
           <IconButton
             icon="chevron-left"
             onClick={toggleSidebarMinimized}
-            tooltip="Minimize sidebar"
+            tooltip="Minimizar barra"
             size="sm"
+            className="text-slate-400 hover:text-white"
           />
         </div>
       </div>
-      <div className="p-4 flex-shrink-0">
-        {/* Page Settings */}
-        <div className="mb-4 p-3 theme-bg-tertiary border theme-border rounded-xl">
-          <div 
-            className="flex items-center justify-between cursor-pointer"
-            onClick={() => setPageSettingsExpanded(!pageSettingsExpanded)}
-          >
-            <h2 className="section-header flex items-center gap-2">
-              <Icon name="page" size="sm" />
-              {t.sidebar.pageSettings}
-            </h2>
-            <button
-              className="theme-text-muted hover:theme-surface rounded p-0.5"
-              title={pageSettingsExpanded ? t.sidebar.collapse : t.sidebar.expand}
-            >
-              {pageSettingsExpanded ? '▼' : '▶'}
-            </button>
-          </div>
-          
-          {pageSettingsExpanded && (
-            <>
-              {/* Page Size */}
-              <div className="mb-3 mt-3 space-y-1">
-                <label className="text-xs font-medium theme-text-secondary">
-                  {t.sidebar.size}
-                </label>
-                <Select
-                  value={template.pageSettings.size}
-                  onChange={(e) => {
-                    const { updateTemplate } = useTemplateStore.getState()
-                    updateTemplate({
-                      pageSettings: {
-                        ...template.pageSettings,
-                        size: e.target.value as 'A4' | 'Letter'
-                      }
-                    })
-                  }}
-                  options={[
-                    { value: 'A4', label: 'A4 (595 × 842 pt)' },
-                    { value: 'Letter', label: 'Letter (612 × 792 pt)' },
-                  ]}
-                />
-              </div>
-
-              {/* Margins */}
-              <div className="mb-2">
-                <label className="block text-xs font-medium theme-text-secondary mb-2">
-                  {t.sidebar.margins}
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <NumberField
-                    label={
-                      <span className="flex items-center gap-1">
-                        <Icon name="arrow-up" size="xs" />
-                        {t.sidebar.top}
-                      </span>
-                    }
-                    value={template.pageSettings.margins.top}
-                    onValueChange={(value) => {
-                      const { updateTemplate } = useTemplateStore.getState()
-                      updateTemplate({
-                        pageSettings: {
-                          ...template.pageSettings,
-                          margins: {
-                            ...template.pageSettings.margins,
-                            top: value || 0
-                          }
-                        }
-                      })
-                    }}
-                  />
-                  <NumberField
-                    label={
-                      <span className="flex items-center gap-1">
-                        <Icon name="arrow-down" size="xs" />
-                        {t.sidebar.bottom}
-                      </span>
-                    }
-                    value={template.pageSettings.margins.bottom}
-                    onValueChange={(value) => {
-                      const { updateTemplate } = useTemplateStore.getState()
-                      updateTemplate({
-                        pageSettings: {
-                          ...template.pageSettings,
-                          margins: {
-                            ...template.pageSettings.margins,
-                            bottom: value || 0
-                          }
-                        }
-                      })
-                    }}
-                  />
-                  <NumberField
-                    label={
-                      <span className="flex items-center gap-1">
-                        <Icon name="arrow-left" size="xs" />
-                        {t.sidebar.left}
-                      </span>
-                    }
-                    value={template.pageSettings.margins.left}
-                    onValueChange={(value) => {
-                      const { updateTemplate } = useTemplateStore.getState()
-                      updateTemplate({
-                        pageSettings: {
-                          ...template.pageSettings,
-                          margins: {
-                            ...template.pageSettings.margins,
-                            left: value || 0
-                          }
-                        }
-                      })
-                    }}
-                  />
-                  <NumberField
-                    label={
-                      <span className="flex items-center gap-1">
-                        <Icon name="arrow-right" size="xs" />
-                        {t.sidebar.right}
-                      </span>
-                    }
-                    value={template.pageSettings.margins.right}
-                    onValueChange={(value) => {
-                      const { updateTemplate } = useTemplateStore.getState()
-                      updateTemplate({
-                        pageSettings: {
-                          ...template.pageSettings,
-                          margins: {
-                            ...template.pageSettings.margins,
-                            right: value || 0
-                          }
-                        }
-                      })
-                    }}
-                  />
+      {/* Conteúdo da Aba "Elementos" (Biblioteca categorizada) */}
+      {activeTab === 'elements' && (
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+          {/* Categoria 1: Tipografia & Links */}
+          <div>
+            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 px-1">
+              Básicos
+            </div>
+            <div className="grid grid-cols-1 gap-1.5">
+              <button
+                onClick={() => addElement({ type: 'text', id: `text-${Date.now()}`, value: 'Novo Texto', x: 40, y: 40, width: 200, height: 25, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' } }, currentSection)}
+                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs font-serif text-slate-300 group-hover:text-indigo-400">T</span>
+                  <div>
+                    <div className="text-xs font-medium text-slate-200">Texto</div>
+                    <div className="text-[10px] text-slate-400">Suporta variáveis e bindings</div>
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </div>
+                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+              </button>
 
-        {/* Section Selector */}
-        <div className="mb-4 p-3 theme-bg-tertiary border theme-border rounded-xl">
-          <div 
-            className={`flex items-center justify-between cursor-pointer ${sectionsExpanded ? 'mb-3' : 'mb-0'}`}
-            onClick={() => setSectionsExpanded(!sectionsExpanded)}
-          >
-            <h2 className="section-header flex items-center gap-2 mb-0">
-              <Icon name="section" size="sm" />
-              {t.sidebar.section}
-            </h2>
-            <button
-              className="theme-text-muted hover:theme-surface rounded p-0.5"
-              title={sectionsExpanded ? t.sidebar.collapse : t.sidebar.expand}
-            >
-              {sectionsExpanded ? '▼' : '▶'}
-            </button>
+              <button
+                onClick={() => addElement({ type: 'rich_text', id: `rich_text-${Date.now()}`, value: '**Texto** em *Markdown*', x: 40, y: 40, width: 200, height: 30, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' } }, currentSection)}
+                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs font-serif text-slate-300 group-hover:text-indigo-400">¶</span>
+                  <div>
+                    <div className="text-xs font-medium text-slate-200">Rich Text</div>
+                    <div className="text-[10px] text-slate-400">Formatação em Markdown</div>
+                  </div>
+                </div>
+                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+              </button>
+
+              <button
+                onClick={() => addElement({ type: 'link', id: `link-${Date.now()}`, value: 'Clique aqui', url: 'https://exemplo.com', x: 40, y: 40, width: 140, height: 25, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#3b82f6' } }, currentSection)}
+                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">🔗</span>
+                  <div>
+                    <div className="text-xs font-medium text-slate-200">Hiperlink</div>
+                    <div className="text-[10px] text-slate-400">Link clicável externo</div>
+                  </div>
+                </div>
+                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+              </button>
+            </div>
           </div>
-          
-          {sectionsExpanded && (
-          <div className="space-y-2">
-            {/* Header */}
-            {template.pageSettings.header ? (
-              <div className="relative">
-                <button
-                  onClick={() => setCurrentSection('header')}
-                  className={`w-full px-3 py-2 text-xs font-medium rounded-lg transition text-left ${
-                    currentSection === 'header'
-                      ? 'bg-blue-500 text-white shadow-sm'
-                      : 'theme-surface border theme-border theme-text hover:border-primary-500/50'
-                  }`}
-                >
-                  {t.sidebar.header}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (confirm(t.sidebar.removeHeaderConfirm)) {
-                      removeHeader()
-                    }
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center theme-surface hover:bg-red-500/20 text-red-500 hover:text-red-400 rounded transition"
-                  title={t.common.remove}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed theme-border rounded-lg p-2 flex items-center justify-between hover:border-primary-500/50 transition">
-                <span className="text-xs theme-text-muted">{t.sidebar.header}</span>
-                <button
-                  onClick={addHeader}
-                  className="w-6 h-6 flex items-center justify-center theme-surface hover:bg-primary-500/20 rounded transition"
-                  title={t.sidebar.addHeader}
-                >
-                  <Icon name="plus" size="sm" />
-                </button>
-              </div>
-            )}
 
-            {/* Page */}
-            <button
-              onClick={() => setCurrentSection('body')}
-              className={`w-full px-3 py-2 text-xs font-medium rounded-lg transition text-left ${
-                currentSection === 'body'
-                  ? 'bg-primary-500 text-white shadow-sm shadow-primary-500/30'
-                  : 'theme-surface border theme-border theme-text hover:border-primary-500/50'
-              }`}
-            >
-              {t.sidebar.page}
-            </button>
+          {/* Categoria 2: Estrutura & Fluxo */}
+          <div>
+            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 px-1">
+              Estrutura & Fluxo
+            </div>
+            <div className="grid grid-cols-1 gap-1.5">
+              <button
+                onClick={() => addElement({ type: 'container', id: `container-${Date.now()}`, name: 'Container', x: 0, y: 40, width: '100%', height: 120, elements: [] }, currentSection)}
+                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">⊞</span>
+                  <div>
+                    <div className="text-xs font-medium text-slate-200">Container</div>
+                    <div className="text-[10px] text-slate-400">Bloco de posicionamento</div>
+                  </div>
+                </div>
+                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+              </button>
 
-            {/* Footer */}
-            {template.pageSettings.footer ? (
-              <div className="relative">
-                <button
-                  onClick={() => setCurrentSection('footer')}
-                  className={`w-full px-3 py-2 text-xs font-medium rounded-lg transition text-left ${
-                    currentSection === 'footer'
-                      ? 'bg-blue-500 text-white shadow-sm'
-                      : 'theme-surface border theme-border theme-text hover:border-primary-500/50'
-                  }`}
-                >
-                  {t.sidebar.footer}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (confirm(t.sidebar.removeFooterConfirm)) {
-                      removeFooter()
-                    }
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center theme-surface hover:bg-red-500/20 text-red-500 hover:text-red-400 rounded transition"
-                  title={t.common.remove}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed theme-border rounded-lg p-2 flex items-center justify-between hover:border-primary-500/50 transition">
-                <span className="text-xs theme-text-muted">{t.sidebar.footer}</span>
-                <button
-                  onClick={addFooter}
-                  className="w-6 h-6 flex items-center justify-center theme-surface hover:bg-primary-500/20 rounded transition"
-                  title={t.sidebar.addFooter}
-                >
-                  <Icon name="plus" size="sm" />
-                </button>
-              </div>
-            )}
+              <button
+                onClick={() => addElement({ type: 'spacer', id: `spacer-${Date.now()}`, x: 0, width: '100%', height: 40 }, currentSection)}
+                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">↕</span>
+                  <div>
+                    <div className="text-xs font-medium text-slate-200">Espaçador</div>
+                    <div className="text-[10px] text-slate-400">Espaço vertical relativo</div>
+                  </div>
+                </div>
+                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+              </button>
 
-            {/* Summary */}
-            {template.summaryPage ? (
-              <div className="relative">
-                <button
-                  onClick={() => setCurrentSection('summary')}
-                  className={`w-full px-3 py-2 text-xs font-medium rounded-lg transition text-left ${
-                    currentSection === 'summary'
-                      ? 'bg-green-500 text-white shadow-sm'
-                      : 'theme-surface border theme-border theme-text hover:border-green-500/50'
-                  }`}
-                >
-                  {t.sidebar.summary}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (confirm(t.sidebar.removeSummaryConfirm)) {
-                      removeSummaryPage()
-                    }
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center theme-surface hover:bg-red-500/20 text-red-500 hover:text-red-400 rounded transition"
-                  title={t.common.remove}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed theme-border rounded-lg p-2 flex items-center justify-between hover:border-green-500/50 transition">
-                <span className="text-xs theme-text-muted">{t.sidebar.summary}</span>
-                <button
-                  onClick={addSummaryPage}
-                  className="w-6 h-6 flex items-center justify-center theme-surface hover:bg-green-500/20 rounded transition"
-                  title={t.sidebar.addSummary}
-                >
-                  <Icon name="plus" size="sm" />
-                </button>
-              </div>
-            )}
+              <button
+                onClick={() => addElement({ type: 'page_break', id: `page_break-${Date.now()}`, x: 0, width: '100%', height: 20 }, currentSection)}
+                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">✂</span>
+                  <div>
+                    <div className="text-xs font-medium text-slate-200">Quebra de Página</div>
+                    <div className="text-[10px] text-slate-400">Força salto para próxima página</div>
+                  </div>
+                </div>
+                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+              </button>
+            </div>
+          </div>
 
-            {/* Background */}
-            {template.pageSettings.bodyBackground ? (
-              <div className="relative">
+          {/* Categoria 3: Mídia & Tabelas */}
+          <div>
+            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 px-1">
+              Mídia & Tabelas
+            </div>
+            <div className="grid grid-cols-1 gap-1.5">
+              <button
+                onClick={() => addElement({ type: 'table', id: `table-${Date.now()}`, width: 400, dataBinding: '', columns: [{ header: 'Coluna 1', field: 'item', width: 200 }], style: { headerBackground: '#f3f4f6', headerColor: '#000000', borderWidth: 1 } }, currentSection)}
+                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">▦</span>
+                  <div>
+                    <div className="text-xs font-medium text-slate-200">Tabela</div>
+                    <div className="text-[10px] text-slate-400">Grade dinâmica para listas</div>
+                  </div>
+                </div>
+                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+              </button>
+
+              <button
+                onClick={() => addElement({ type: 'image', id: `image-${Date.now()}`, width: 120, height: 80, source: '', fit: 'contain' }, currentSection)}
+                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">🖼</span>
+                  <div>
+                    <div className="text-xs font-medium text-slate-200">Imagem</div>
+                    <div className="text-[10px] text-slate-400">URL estática ou Base64</div>
+                  </div>
+                </div>
+                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+              </button>
+
+              <button
+                onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 100, height: 100, barcodeType: 'qrcode', dataBinding: '' }, currentSection)}
+                className="w-full px-2.5 py-2 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/80 transition text-left flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-800 flex items-center justify-center text-xs text-slate-300 group-hover:text-indigo-400">▥</span>
+                  <div>
+                    <div className="text-xs font-medium text-slate-200">Barcode / QR</div>
+                    <div className="text-[10px] text-slate-400">Código de barras e QR code</div>
+                  </div>
+                </div>
+                <Icon name="plus" size="xs" className="text-slate-400 group-hover:text-indigo-400" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conteúdo da Aba "Camadas" (Árvore de Bandas e Elementos) */}
+      {activeTab === 'layers' && (
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="p-3 border-b border-slate-800 flex-shrink-0 bg-slate-950/30">
+            {/* Seletor Rápido de Seções / Bandas Irmãs */}
+            <div className="space-y-1.5">
+              <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                Estrutura de Bandas
+              </div>
+
+              {/* 1. Background Layer */}
+              <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-slate-700">
                 <button
                   onClick={() => setCurrentSection('bodyBackground')}
-                  className={`w-full px-3 py-2 text-xs font-medium rounded-lg transition text-left ${
-                    currentSection === 'bodyBackground'
-                      ? 'bg-purple-500 text-white shadow-sm'
-                      : 'theme-surface border theme-border theme-text hover:border-purple-500/50'
-                  }`}
+                  className={`flex items-center gap-2 text-xs font-medium flex-1 text-left ${currentSection === 'bodyBackground' ? 'text-indigo-400' : 'text-slate-300'}`}
                 >
-                  {t.sidebar.background}
+                  <span>🖼</span>
+                  <span>Background</span>
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (confirm(t.sidebar.removeBackgroundConfirm)) {
-                      removeBodyBackground()
-                    }
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center theme-surface hover:bg-red-500/20 text-red-500 hover:text-red-400 rounded transition"
-                  title={t.common.remove}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+                <span className="text-[10px] text-slate-400">{template.pageSettings.bodyBackground ? 'Ativo' : 'Vazio'}</span>
               </div>
-            ) : (
-              <div className="border-2 border-dashed theme-border rounded-lg p-2 flex items-center justify-between hover:border-purple-500/50 transition">
-                <span className="text-xs theme-text-muted">{t.sidebar.background}</span>
+
+              {/* 2. Header Band */}
+              <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-slate-700">
                 <button
-                  onClick={addBodyBackground}
-                  className="w-6 h-6 flex items-center justify-center theme-surface hover:bg-purple-500/20 rounded transition"
-                  title={t.sidebar.addBackground}
+                  onClick={() => setCurrentSection('header')}
+                  className={`flex items-center gap-2 text-xs font-medium flex-1 text-left ${currentSection === 'header' ? 'text-indigo-400' : 'text-slate-300'}`}
                 >
-                  <Icon name="plus" size="sm" />
+                  <span>🏷</span>
+                  <span>Header</span>
                 </button>
+                <span className="text-[10px] text-slate-400">{template.pageSettings.header ? `${template.pageSettings.header.height || 60}pt` : 'Off'}</span>
               </div>
-            )}
+
+              {/* 3. Body Band */}
+              <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-slate-700">
+                <button
+                  onClick={() => setCurrentSection('body')}
+                  className={`flex items-center gap-2 text-xs font-medium flex-1 text-left ${currentSection === 'body' ? 'text-indigo-400' : 'text-slate-300'}`}
+                >
+                  <span>📄</span>
+                  <span>Page Body</span>
+                </button>
+                <span className="text-[10px] text-indigo-400 font-mono">Fluxo</span>
+              </div>
+
+              {/* 4. Summary Band */}
+              <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-slate-700">
+                <button
+                  onClick={() => setCurrentSection('summary')}
+                  className={`flex items-center gap-2 text-xs font-medium flex-1 text-left ${currentSection === 'summary' ? 'text-indigo-400' : 'text-slate-300'}`}
+                >
+                  <span>📊</span>
+                  <span>Summary</span>
+                </button>
+                <span className="text-[10px] text-slate-400">{template.summaryPage ? 'Ativo' : 'Off'}</span>
+              </div>
+
+              {/* 5. Footer Band */}
+              <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-slate-700">
+                <button
+                  onClick={() => setCurrentSection('footer')}
+                  className={`flex items-center gap-2 text-xs font-medium flex-1 text-left ${currentSection === 'footer' ? 'text-indigo-400' : 'text-slate-300'}`}
+                >
+                  <span>🏷</span>
+                  <span>Footer</span>
+                </button>
+                <span className="text-[10px] text-slate-400">{template.pageSettings.footer ? `${template.pageSettings.footer.height || 40}pt` : 'Off'}</span>
+              </div>
+            </div>
           </div>
-          )}
-        </div>
-      </div>
 
-      {/* Containers + Elements Header and Group Button */}
-      <div className="px-4 py-3 border-t theme-border">
-        {['body', 'header', 'footer', 'summary'].includes(currentSection) && (
-          <ContainersPanel
-            selectedContainerId={selectedContainerId}
-            onSelectContainer={(id) => selectElement(id, currentSection)}
-          />
-        )}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="section-header flex items-center gap-2">
-            <Icon name="layers" size="sm" />
-            {t.sidebar.elementsTitle}
-          </h2>
-        </div>
-        <GroupButton selectedContainerId={selectedContainerId} />
-      </div>
+          {/* Containers e Elementos na Seção Ativa */}
+          <div className="p-3 border-b border-slate-800 flex items-center justify-between shrink-0">
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+              Elementos em {currentSection.toUpperCase()}
+            </span>
+            <GroupButton selectedContainerId={selectedContainerId} />
+          </div>
 
-      {/* Elements List - WITH SCROLL */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-4 pb-4">
-          <ElementsList selectedContainerId={selectedContainerId} />
+          <div className="flex-1 overflow-y-auto p-3">
+            <ElementsList selectedContainerId={selectedContainerId} />
+          </div>
         </div>
-      </div>
+      )}
+
     </div>
   )
 }
