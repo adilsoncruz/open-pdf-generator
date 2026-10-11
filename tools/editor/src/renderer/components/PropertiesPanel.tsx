@@ -29,6 +29,430 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) 
   )
 }
 
+interface ElementInspectorProps {
+  element: Element
+  onUpdate: (field: string, value: any) => void
+  onStyleUpdate: (field: string, value: any) => void
+  parentName?: string
+}
+
+function StudioSlateElementInspector({ element, onUpdate, onStyleUpdate, parentName }: ElementInspectorProps) {
+  const isTextElement = ['text', 'rich_text', 'link', 'static_text'].includes(element.type)
+  const isMediaElement = ['image', 'barcode'].includes(element.type)
+  const isShapeOrContainer = ['rectangle', 'container', 'line', 'spacer'].includes(element.type)
+
+  const fillColor = element.style?.color || element.style?.fillColor || (isTextElement ? '#000000' : '#ffffff')
+  const strokeColor = element.style?.strokeColor || element.style?.borderColor || '#374151'
+  const strokeWidth = element.style?.strokeWidth ?? element.style?.borderWidth ?? 0
+  const borderStyle = (element.style?.borderStyle as string) || 'solid'
+
+  return (
+    <div className="w-[300px] bg-slate-900 border-l border-slate-800 flex flex-col h-full shrink-0 select-none text-slate-200">
+      {/* 1. Header */}
+      <div className="border-b border-slate-800 bg-slate-950/40 shrink-0 px-3.5 pt-2.5 pb-0">
+        <div className="flex items-center justify-between">
+          <div className="relative pb-2">
+            <span className="text-xs font-semibold text-slate-200 tracking-wide">
+              Properties Panel
+            </span>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
+          </div>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50 uppercase">
+            {parentName ? `${parentName} / ${element.type}` : element.type}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
+        {/* 2. Transform Section */}
+        <div>
+          <div className="text-xs font-semibold text-slate-200 mb-2">
+            Transform
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {/* X */}
+            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+              <span className="text-slate-500 font-mono text-xs w-4">X</span>
+              <input
+                type="number"
+                value={element.x ?? 0}
+                onChange={(e) => onUpdate('x', parseFloat(e.target.value) || 0)}
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+              />
+              <span className="text-slate-500 text-[10px]">pt</span>
+            </div>
+
+            {/* Y */}
+            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+              <span className="text-slate-500 font-mono text-xs w-4">Y</span>
+              <input
+                type="number"
+                value={element.y ?? 0}
+                onChange={(e) => onUpdate('y', parseFloat(e.target.value) || 0)}
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+              />
+              <span className="text-slate-500 text-[10px]">pt</span>
+            </div>
+
+            {/* W */}
+            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+              <span className="text-slate-500 font-mono text-xs w-4">W</span>
+              {element.width === '100%' ? (
+                <span className="w-full text-slate-200 font-mono text-xs text-right pr-1">100%</span>
+              ) : (
+                <input
+                  type="number"
+                  value={typeof element.width === 'number' ? element.width : 100}
+                  onChange={(e) => onUpdate('width', parseFloat(e.target.value) || 0)}
+                  className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+                />
+              )}
+              <span className="text-slate-500 text-[10px]">pt</span>
+            </div>
+
+            {/* H */}
+            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+              <span className="text-slate-500 font-mono text-xs w-4">H</span>
+              <input
+                type="number"
+                value={typeof element.height === 'number' ? element.height : 30}
+                onChange={(e) => onUpdate('height', parseFloat(e.target.value) || 0)}
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+              />
+              <span className="text-slate-500 text-[10px]">pt</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Typography Section (for text elements) */}
+        {isTextElement && (
+          <div>
+            <div className="text-xs font-semibold text-slate-200 mb-2">
+              Typography
+            </div>
+            <div className="space-y-2">
+              {/* Font Family */}
+              <div className="relative">
+                <select
+                  value={element.style?.fontFamily || 'Helvetica'}
+                  onChange={(e) => onStyleUpdate('fontFamily', e.target.value)}
+                  className="w-full appearance-none bg-slate-950/70 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none pr-8 cursor-pointer"
+                >
+                  <option value="Inter">Inter</option>
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="Times-Roman">Times New Roman</option>
+                  <option value="Courier">Courier</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Font Size & Weight */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="relative">
+                  <select
+                    value={element.style?.fontSize || 12}
+                    onChange={(e) => onStyleUpdate('fontSize', parseFloat(e.target.value))}
+                    className="w-full appearance-none bg-slate-950/70 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none pr-8 cursor-pointer font-mono"
+                  >
+                    {[8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48].map((size) => (
+                      <option key={size} value={size}>{size}pt</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <select
+                    value={element.style?.fontWeight === 'bold' ? 'Bold' : (element.style?.fontStyle === 'italic' ? 'Italic' : 'Regular')}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      if (val === 'Bold') {
+                        onStyleUpdate('fontWeight', 'bold')
+                        onStyleUpdate('fontStyle', 'normal')
+                      } else if (val === 'Italic') {
+                        onStyleUpdate('fontWeight', 'normal')
+                        onStyleUpdate('fontStyle', 'italic')
+                      } else {
+                        onStyleUpdate('fontWeight', 'normal')
+                        onStyleUpdate('fontStyle', 'normal')
+                      }
+                    }}
+                    className="w-full appearance-none bg-slate-950/70 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none pr-8 cursor-pointer"
+                  >
+                    <option value="Regular">Regular</option>
+                    <option value="Bold">Bold</option>
+                    <option value="Italic">Italic</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Segmented Control Alignment */}
+              <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-1 gap-1">
+                {[
+                  { align: 'left', title: 'Alinhar à Esquerda', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h10M4 18h14" /> },
+                  { align: 'center', title: 'Centralizar', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M7 12h10M5 18h14" /> },
+                  { align: 'right', title: 'Alinhar à Direita', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M10 12h10M6 18h14" /> },
+                  { align: 'justify', title: 'Justificar', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /> },
+                ].map(({ align, title, icon }) => (
+                  <button
+                    key={align}
+                    onClick={() => onStyleUpdate('alignment', align)}
+                    className={`flex-1 py-1.5 flex items-center justify-center rounded transition ${
+                      (element.style?.alignment || 'left') === align
+                        ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    }`}
+                    title={title}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {icon}
+                    </svg>
+                  </button>
+                ))}
+              </div>
+
+              {/* Text Value */}
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Conteúdo do Texto</label>
+                <textarea
+                  value={(element.value as string) || ''}
+                  onChange={(e) => onUpdate('value', e.target.value)}
+                  rows={2}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans resize-none"
+                  placeholder="Texto..."
+                />
+              </div>
+
+              {/* URL for Link */}
+              {element.type === 'link' && (
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">URL de Destino</label>
+                  <input
+                    type="text"
+                    value={(element.url as string) || ''}
+                    onChange={(e) => onUpdate('url', e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Media Properties (Image / Barcode) */}
+        {element.type === 'image' && (
+          <div>
+            <div className="text-xs font-semibold text-slate-200 mb-2">Image Source</div>
+            <input
+              type="text"
+              value={(element.url as string) || (element.value as string) || ''}
+              onChange={(e) => {
+                onUpdate('url', e.target.value)
+                onUpdate('value', e.target.value)
+              }}
+              placeholder="https://exemplo.com/imagem.png"
+              className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+            />
+          </div>
+        )}
+
+        {element.type === 'barcode' && (
+          <div>
+            <div className="text-xs font-semibold text-slate-200 mb-2">Barcode Settings</div>
+            <div className="space-y-2">
+              <div className="relative">
+                <select
+                  value={element.barcodeType || 'code128'}
+                  onChange={(e) => onUpdate('barcodeType', e.target.value)}
+                  className="w-full appearance-none bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="code128">Code 128 (1D)</option>
+                  <option value="qrcode">QR Code (2D)</option>
+                  <option value="ean13">EAN-13</option>
+                  <option value="pdf417">PDF417</option>
+                </select>
+              </div>
+              <input
+                type="text"
+                value={(element.value as string) || ''}
+                onChange={(e) => onUpdate('value', e.target.value)}
+                placeholder="Valor do código..."
+                className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Container specific */}
+        {element.type === 'container' && (
+          <div>
+            <div className="text-xs font-semibold text-slate-200 mb-2">Container Settings</div>
+            <div>
+              <label className="text-[10px] text-slate-400 block mb-1">Nome do Container</label>
+              <input
+                type="text"
+                value={(element.name as string) || ''}
+                onChange={(e) => onUpdate('name', e.target.value)}
+                placeholder="Container 1"
+                className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 4. Appearance Section */}
+        <div>
+          <div className="text-xs font-semibold text-slate-200 mb-2">
+            Appearance
+          </div>
+          <div className="space-y-2.5">
+            {/* Fill Color Swatch + Hex Input */}
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={fillColor.startsWith('#') && fillColor.length === 7 ? fillColor : '#ffffff'}
+                onChange={(e) => {
+                  if (isTextElement) {
+                    onStyleUpdate('color', e.target.value)
+                  } else {
+                    onStyleUpdate('fillColor', e.target.value)
+                  }
+                }}
+                className="w-8 h-8 rounded-lg border border-slate-700 bg-slate-950 cursor-pointer p-0.5 shrink-0"
+              />
+              <div className="flex-1 flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500">
+                <span className="text-slate-500 text-xs font-mono">#</span>
+                <input
+                  type="text"
+                  value={fillColor.replace('#', '')}
+                  onChange={(e) => {
+                    const hex = `#${e.target.value.replace('#', '')}`
+                    if (isTextElement) {
+                      onStyleUpdate('color', hex)
+                    } else {
+                      onStyleUpdate('fillColor', hex)
+                    }
+                  }}
+                  className="w-full bg-transparent text-slate-200 font-mono text-xs uppercase focus:outline-none ml-1"
+                />
+              </div>
+            </div>
+
+            {/* Stroke row */}
+            <div className="flex items-center justify-between text-xs gap-2">
+              <span className="text-slate-400 w-14 shrink-0">Stroke</span>
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <input
+                  type="color"
+                  value={strokeColor.startsWith('#') && strokeColor.length === 7 ? strokeColor : '#ffffff'}
+                  onChange={(e) => onStyleUpdate('strokeColor', e.target.value)}
+                  className="w-7 h-7 rounded border border-slate-700 bg-slate-950 cursor-pointer p-0.5 shrink-0"
+                />
+                <span className="text-slate-500 font-mono">/</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={strokeWidth}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0
+                    onStyleUpdate('strokeWidth', val)
+                    onStyleUpdate('borderWidth', val)
+                  }}
+                  className="w-16 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-indigo-500 text-center"
+                />
+              </div>
+            </div>
+
+            {/* Border row */}
+            <div className="flex items-center justify-between text-xs gap-2">
+              <span className="text-slate-400 w-14 shrink-0">Border</span>
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <input
+                  type="color"
+                  value={(element.style?.borderColor as string)?.startsWith('#') ? (element.style.borderColor as string) : '#374151'}
+                  onChange={(e) => onStyleUpdate('borderColor', e.target.value)}
+                  className="w-7 h-7 rounded border border-slate-700 bg-slate-950 cursor-pointer p-0.5 shrink-0"
+                />
+                <select
+                  value={borderStyle}
+                  onChange={(e) => onStyleUpdate('borderStyle', e.target.value)}
+                  className="flex-1 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="solid">━━ Solido</option>
+                  <option value="dashed">╍╍ Tracejado</option>
+                  <option value="dotted">┈┈ Pontilhado</option>
+                  <option value="none">Nenhum</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Corner Radius for Containers / Shapes */}
+            {isShapeOrContainer && (
+              <div className="flex items-center justify-between text-xs gap-2">
+                <span className="text-slate-400 w-14 shrink-0">Radius</span>
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <input
+                    type="number"
+                    min={0}
+                    max={50}
+                    value={element.style?.cornerRadius || 0}
+                    onChange={(e) => onStyleUpdate('cornerRadius', parseFloat(e.target.value) || 0)}
+                    className="w-20 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-indigo-500 text-center"
+                  />
+                  <span className="text-slate-500 text-[10px]">px</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 5. Data Binding Section */}
+        <div>
+          <div className="text-xs font-semibold text-slate-200 mb-2">
+            Data Binding
+          </div>
+          <div className="relative flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
+            <input
+              type="text"
+              value={element.dataBinding || ''}
+              onChange={(e) => onUpdate('dataBinding', e.target.value)}
+              placeholder="{{ invoice.items }}"
+              className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none pr-6"
+            />
+            {/* Emerald indicator dot when bound or active */}
+            <div className="absolute right-3 flex items-center">
+              <span className={`w-2 h-2 rounded-full ${
+                element.dataBinding ? 'bg-emerald-400 shadow-sm shadow-emerald-500/50' : 'bg-slate-600'
+              }`} />
+            </div>
+          </div>
+          {element.dataBinding && (
+            <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-emerald-400/90 font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>Vinculado a dados dinâmicos</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function PropertiesPanel() {
   // HOOKS DEVEM VIR PRIMEIRO (antes de qualquer return)
   const [activeTab, setActiveTab] = useState<string>('appearance')
@@ -96,11 +520,15 @@ export default function PropertiesPanel() {
       const childElement = loopElement.elements.find((c: Element) => c.id === selectedLoopChildId)
       if (childElement) {
         return (
-          <LoopChildPropertiesPanel
-            loopId={selectedLoopParentId}
-            child={childElement}
-            location={selectedElementLocation}
-            loopElement={loopElement}
+          <StudioSlateElementInspector
+            element={childElement}
+            parentName="Loop"
+            onUpdate={(field, value) => {
+              updateLoopChildElement(selectedLoopParentId, selectedLoopChildId, { [field]: value }, selectedElementLocation)
+            }}
+            onStyleUpdate={(field, value) => {
+              updateLoopChildElement(selectedLoopParentId, selectedLoopChildId, { style: { ...childElement.style, [field]: value } }, selectedElementLocation)
+            }}
           />
         )
       }
@@ -125,11 +553,15 @@ export default function PropertiesPanel() {
         const childElement = containerElement.elements.find((c: Element) => c.id === selectedContainerChildId)
         if (childElement) {
           return (
-            <LoopChildPropertiesPanel
-              loopId={selectedContainerParentId}
-              child={childElement}
-              location={selectedElementLocation}
-              loopElement={containerElement}
+            <StudioSlateElementInspector
+              element={childElement}
+              parentName={containerElement.name || 'Container'}
+              onUpdate={(field, value) => {
+                updateLoopChildElement(selectedContainerParentId, selectedContainerChildId, { [field]: value }, selectedElementLocation)
+              }}
+              onStyleUpdate={(field, value) => {
+                updateLoopChildElement(selectedContainerParentId, selectedContainerChildId, { style: { ...childElement.style, [field]: value } }, selectedElementLocation)
+              }}
             />
           )
         }
@@ -334,6 +766,28 @@ export default function PropertiesPanel() {
       ]
     }
     return [{ id: 'appearance', label: 'Appearance' }]
+  }
+
+  if (selectedElement && selectedElement.type !== 'table') {
+    return (
+      <StudioSlateElementInspector
+        element={selectedElement}
+        onUpdate={(field, value) => {
+          if (isMultiSelection) {
+            updateSelectedElements({ [field]: value })
+          } else {
+            handleUpdate(field, value)
+          }
+        }}
+        onStyleUpdate={(field, value) => {
+          if (isMultiSelection) {
+            updateSelectedElements({ style: { ...selectedElement.style, [field]: value } })
+          } else {
+            handleStyleUpdate(field, value)
+          }
+        }}
+      />
+    )
   }
 
   const tabs = getTabs()
