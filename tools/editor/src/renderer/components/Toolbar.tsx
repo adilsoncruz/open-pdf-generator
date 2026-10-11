@@ -454,73 +454,9 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         <UpdateNotification />
       </div>
 
-      {/* 2. SEÇÃO CENTRAL: Undo/Redo + Zoom Controls + Snap Toggle */}
-      <div className="flex items-center space-x-1 bg-slate-950/40 p-1 rounded-lg border border-slate-800/80">
-        <button
-          onClick={undo}
-          disabled={!canUndo}
-          className="p-1.5 rounded hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition"
-          title="Desfazer (Ctrl+Z)"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a5 5 0 015 5v2M3 10l6 6m-6-6l6-6" />
-          </svg>
-        </button>
-        <button
-          onClick={redo}
-          disabled={!canRedo}
-          className="p-1.5 rounded hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition"
-          title="Refazer (Ctrl+Y)"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a5 5 0 00-5 5v2m15-7l-6-6m6 6l-6 6" />
-          </svg>
-        </button>
-
-        <div className="w-px h-4 bg-slate-800 mx-1" />
-
-        {/* Zoom */}
-        <button
-          onClick={() => setZoom(zoom - 10)}
-          className="px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 rounded transition font-medium"
-          title="Diminuir Zoom"
-        >
-          -
-        </button>
-        <span className="text-xs font-mono font-medium text-slate-200 min-w-[42px] text-center">
-          {zoom}%
-        </span>
-        <button
-          onClick={() => setZoom(zoom + 10)}
-          className="px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 rounded transition font-medium"
-          title="Aumentar Zoom"
-        >
-          +
-        </button>
-        <button
-          onClick={() => setZoom(100)}
-          className="px-2 py-1 text-[11px] text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded transition"
-          title="Resetar 100%"
-        >
-          100%
-        </button>
-
-        <div className="w-px h-4 bg-slate-800 mx-1" />
-
-        {/* Magnet / Snap */}
-        <button
-          onClick={toggleSnapToGuides}
-          className={`p-1.5 rounded transition ${
-            snapToGuides
-              ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-              : 'text-slate-400 hover:bg-slate-800'
-          }`}
-          title={snapToGuides ? 'Magnetismo em Guias: Ativo' : 'Magnetismo em Guias: Inativo'}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </button>
+      {/* 2. SEÇÃO CENTRAL: Espaço reservado para Abas (Multi-tabs) */}
+      <div className="flex-1 flex items-center justify-start px-4 min-w-0">
+        {/* Container flexível para abas de templates */}
       </div>
 
       {/* 3. SEÇÃO DIREITA: Test Data + Split Preview + Gerar PDF Principal */}

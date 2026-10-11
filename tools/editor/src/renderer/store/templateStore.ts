@@ -663,7 +663,6 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     set((state) => {
       const loc = location || state.selectedElementLocation
       
-      
       const updateGroupsAfterDelete = (groups: ElementGroup[] | undefined) => {
         if (!groups) return undefined
         
@@ -676,77 +675,66 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           .filter(group => group.elementIds.length > 0) // Remover grupos vazios
       }
       
+      let newTemplate: Template
+
       if (loc === 'header' && state.template.pageSettings.header) {
-        return {
-          template: {
-            ...state.template,
-            pageSettings: {
-              ...state.template.pageSettings,
-              header: {
-                ...state.template.pageSettings.header,
-                elements: state.template.pageSettings.header.elements.filter((el) => el.id !== id),
-                groups: updateGroupsAfterDelete(state.template.pageSettings.header.groups),
-              },
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            header: {
+              ...state.template.pageSettings.header,
+              elements: state.template.pageSettings.header.elements.filter((el) => el.id !== id),
+              groups: updateGroupsAfterDelete(state.template.pageSettings.header.groups),
             },
           },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
         }
       } else if (loc === 'footer' && state.template.pageSettings.footer) {
-        return {
-          template: {
-            ...state.template,
-            pageSettings: {
-              ...state.template.pageSettings,
-              footer: {
-                ...state.template.pageSettings.footer,
-                elements: state.template.pageSettings.footer.elements.filter((el) => el.id !== id),
-                groups: updateGroupsAfterDelete(state.template.pageSettings.footer.groups),
-              },
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            footer: {
+              ...state.template.pageSettings.footer,
+              elements: state.template.pageSettings.footer.elements.filter((el) => el.id !== id),
+              groups: updateGroupsAfterDelete(state.template.pageSettings.footer.groups),
             },
           },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
         }
       } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
-        return {
-          template: {
-            ...state.template,
-            pageSettings: {
-              ...state.template.pageSettings,
-              bodyBackground: {
-                ...state.template.pageSettings.bodyBackground,
-                elements: state.template.pageSettings.bodyBackground.elements.filter((el) => el.id !== id),
-                groups: updateGroupsAfterDelete(state.template.pageSettings.bodyBackground.groups),
-              },
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: state.template.pageSettings.bodyBackground.elements.filter((el) => el.id !== id),
+              groups: updateGroupsAfterDelete(state.template.pageSettings.bodyBackground.groups),
             },
           },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
         }
       } else if (loc === 'summary' && state.template.summaryPage) {
-        return {
-          template: {
-            ...state.template,
-            summaryPage: {
-              ...state.template.summaryPage,
-              elements: state.template.summaryPage.elements.filter((el) => el.id !== id),
-              groups: updateGroupsAfterDelete(state.template.summaryPage.groups),
-            },
+        newTemplate = {
+          ...state.template,
+          summaryPage: {
+            ...state.template.summaryPage,
+            elements: state.template.summaryPage.elements.filter((el) => el.id !== id),
+            groups: updateGroupsAfterDelete(state.template.summaryPage.groups),
           },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
         }
       } else {
-        return {
-          template: {
-            ...state.template,
-            page: state.template.page.filter((el) => el.id !== id),
-            groups: updateGroupsAfterDelete(state.template.groups),
-          },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
+        newTemplate = {
+          ...state.template,
+          page: state.template.page.filter((el) => el.id !== id),
+          groups: updateGroupsAfterDelete(state.template.groups),
         }
+      }
+
+      return {
+        template: newTemplate,
+        selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
       }
     }),
 
@@ -1732,11 +1720,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       if (state.historyIndex <= 0) return state
       
       const newIndex = state.historyIndex - 1
-      const previousTemplate = state.history[newIndex]
+      const previousTemplate = JSON.parse(JSON.stringify(state.history[newIndex]))
       
       return {
         template: previousTemplate,
         historyIndex: newIndex,
+        selectedElementIds: [],
+        selectedContainerChildId: null,
+        selectedLoopChildId: null,
         isDirty: true,
       }
     }),
@@ -1746,11 +1737,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       if (state.historyIndex >= state.history.length - 1) return state
       
       const newIndex = state.historyIndex + 1
-      const nextTemplate = state.history[newIndex]
+      const nextTemplate = JSON.parse(JSON.stringify(state.history[newIndex]))
       
       return {
         template: nextTemplate,
         historyIndex: newIndex,
+        selectedElementIds: [],
+        selectedContainerChildId: null,
+        selectedLoopChildId: null,
         isDirty: true,
       }
     }),
