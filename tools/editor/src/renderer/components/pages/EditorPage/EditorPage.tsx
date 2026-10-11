@@ -11,6 +11,7 @@ import {
   PDFPreview,
   HelpModal,
   ElementsToolbar,
+  StatusBar,
 } from '../../organisms'
 import type { ToolbarRef } from '../../organisms'
 
@@ -375,8 +376,11 @@ export function EditorPage() {
           )}
 
           {/* Right Panel - Properties */}
-          {showPropertiesPanel && <PropertiesPanel />}
+          <PropertiesPanel />
         </div>
+
+        {/* Status Bar */}
+        <StatusBar />
 
         {/* Data Panel Modal */}
         {showDataPanel && <DataPanel onClose={() => setShowDataPanel(false)} />}
