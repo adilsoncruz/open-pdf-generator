@@ -1,5 +1,6 @@
 import { useState, useEffect, type DragEvent } from 'react'
 import { useTemplateStore, type Element, type ElementGroup } from '../store/templateStore'
+import { useUIStore } from '../store/uiStore'
 import { useTranslation } from '../i18n'
 import { Icon, Input, Select, Button, Divider, type IconName } from './atoms'
 import { NumberField, IconButton, SidebarButton } from './molecules'
@@ -23,6 +24,8 @@ export default function Sidebar() {
     toggleSidebarPinned,
     toggleSidebarMinimized,
   } = useTemplateStore()
+
+  const { sidebarTab, setSidebarTab } = useUIStore()
 
   const [pageSettingsExpanded, setPageSettingsExpanded] = useState(false)
   const [sectionsExpanded, setSectionsExpanded] = useState(true)
@@ -522,13 +525,260 @@ export default function Sidebar() {
     )
   }
 
+function DocumentPropertiesContent() {
+  const { template, updatePageSettings, updateMetadata } = useTemplateStore()
+  const { margins, size, orientation } = template.pageSettings
+  const { name, description, author } = template.metadata || { name: '', description: '', author: '' }
+
+  const handleSizeChange = (newSize: string) => {
+    updatePageSettings({ size: newSize })
+  }
+
+  const handleOrientationChange = (newOrientation: string) => {
+    updatePageSettings({ orientation: newOrientation })
+  }
+
+  const handleMarginChange = (side: 'top' | 'right' | 'bottom' | 'left', val: number) => {
+    updatePageSettings({
+      margins: {
+        ...margins,
+        [side]: Math.max(0, val)
+      }
+    })
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto p-3.5 space-y-4 text-xs">
+      {/* 1. Metadados do Template */}
+      <div>
+        <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <Icon name="file-text" size="xs" className="text-indigo-400" />
+          <span>Informações do Template</span>
+        </div>
+        <div className="space-y-2">
+          <div>
+            <label className="text-[10px] text-slate-400 block mb-1">Nome do Documento</label>
+            <input
+              type="text"
+              value={name || ''}
+              onChange={(e) => updateMetadata({ name: e.target.value })}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none transition"
+              placeholder="Ex: Fatura Comercial"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] text-slate-400 block mb-1">Descrição</label>
+            <textarea
+              value={description || ''}
+              onChange={(e) => updateMetadata({ description: e.target.value })}
+              rows={2}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none transition resize-none"
+              placeholder="Descrição do template..."
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-slate-400 block mb-1">Autor</label>
+              <input
+                type="text"
+                value={author || ''}
+                onChange={(e) => updateMetadata({ author: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none transition"
+                placeholder="Autor"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 block mb-1">Versão</label>
+              <input
+                type="text"
+                value={template.version || '1.0'}
+                readOnly
+                className="w-full bg-slate-950/50 border border-slate-800/60 rounded px-2 py-1 text-xs text-slate-500 cursor-not-allowed font-mono"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-800/80 my-2" />
+
+      {/* 2. Formato e Orientação da Página */}
+      <div>
+        <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <Icon name="settings" size="xs" className="text-indigo-400" />
+          <span>Configuração da Página</span>
+        </div>
+        
+        <div className="space-y-2">
+          <div>
+            <label className="text-[10px] text-slate-400 block mb-1">Tamanho do Papel</label>
+            <select
+              value={size || 'A4'}
+              onChange={(e) => handleSizeChange(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none cursor-pointer"
+            >
+              <option value="A4">A4 (595 × 842 pt)</option>
+              <option value="PORTRAIT">Letter (612 × 792 pt)</option>
+              <option value="CUSTOM">Personalizado (Custom)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-[10px] text-slate-400 block mb-1">Orientação</label>
+            <div className="grid grid-cols-2 gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800">
+              <button
+                type="button"
+                onClick={() => handleOrientationChange('portrait')}
+                className={`py-1.5 rounded text-xs font-medium transition flex items-center justify-center gap-1.5 ${
+                  (orientation || 'portrait') === 'portrait'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>Retrato</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOrientationChange('landscape')}
+                className={`py-1.5 rounded text-xs font-medium transition flex items-center justify-center gap-1.5 ${
+                  orientation === 'landscape'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>Paisagem</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-800/80 my-2" />
+
+      {/* 3. Margens da Folha */}
+      <div>
+        <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <Icon name="layers" size="xs" className="text-indigo-400" />
+          <span>Margens do Documento (pt)</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          {/* Top */}
+          <div className="bg-slate-950 border border-slate-800 rounded-lg p-2 focus-within:border-indigo-500 transition">
+            <span className="text-[10px] text-slate-500 block mb-0.5">Superior (Top)</span>
+            <div className="flex items-center">
+              <input
+                type="number"
+                value={margins.top ?? 30}
+                onChange={(e) => handleMarginChange('top', parseFloat(e.target.value) || 0)}
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+              />
+              <span className="text-[10px] text-slate-500 font-mono">pt</span>
+            </div>
+          </div>
+
+          {/* Bottom */}
+          <div className="bg-slate-950 border border-slate-800 rounded-lg p-2 focus-within:border-indigo-500 transition">
+            <span className="text-[10px] text-slate-500 block mb-0.5">Inferior (Bottom)</span>
+            <div className="flex items-center">
+              <input
+                type="number"
+                value={margins.bottom ?? 30}
+                onChange={(e) => handleMarginChange('bottom', parseFloat(e.target.value) || 0)}
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+              />
+              <span className="text-[10px] text-slate-500 font-mono">pt</span>
+            </div>
+          </div>
+
+          {/* Left */}
+          <div className="bg-slate-950 border border-slate-800 rounded-lg p-2 focus-within:border-indigo-500 transition">
+            <span className="text-[10px] text-slate-500 block mb-0.5">Esquerda (Left)</span>
+            <div className="flex items-center">
+              <input
+                type="number"
+                value={margins.left ?? 30}
+                onChange={(e) => handleMarginChange('left', parseFloat(e.target.value) || 0)}
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+              />
+              <span className="text-[10px] text-slate-500 font-mono">pt</span>
+            </div>
+          </div>
+
+          {/* Right */}
+          <div className="bg-slate-950 border border-slate-800 rounded-lg p-2 focus-within:border-indigo-500 transition">
+            <span className="text-[10px] text-slate-500 block mb-0.5">Direita (Right)</span>
+            <div className="flex items-center">
+              <input
+                type="number"
+                value={margins.right ?? 30}
+                onChange={(e) => handleMarginChange('right', parseFloat(e.target.value) || 0)}
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+              />
+              <span className="text-[10px] text-slate-500 font-mono">pt</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-800/80 my-2" />
+
+      {/* 4. Resumo das Seções */}
+      <div>
+        <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2">
+          Seções do Documento
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
+            <span className="text-slate-300 text-xs">Header (Cabeçalho)</span>
+            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${template.pageSettings.header ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-500'}`}>
+              {template.pageSettings.header ? `${template.pageSettings.header.height}pt` : 'Desativado'}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
+            <span className="text-slate-300 text-xs">Body Flow (Corpo)</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              {template.page?.length || 0} elemento(s)
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
+            <span className="text-slate-300 text-xs">Footer (Rodapé)</span>
+            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${template.pageSettings.footer ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-500'}`}>
+              {template.pageSettings.footer ? `${template.pageSettings.footer.height}pt` : 'Desativado'}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
+            <span className="text-slate-300 text-xs">Background Layer</span>
+            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${template.pageSettings.bodyBackground ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-slate-800 text-slate-500'}`}>
+              {template.pageSettings.bodyBackground ? 'Ativo' : 'Desativado'}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
+            <span className="text-slate-300 text-xs">Summary Page</span>
+            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${template.summaryPage ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-500'}`}>
+              {template.summaryPage ? 'Ativo' : 'Desativado'}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
   return (
     <div className="w-[280px] bg-slate-900 border-r border-slate-800 flex flex-col h-full text-slate-200 select-none shrink-0">
-      {/* 1. Header do Painel (Elements Library) */}
+      {/* 1. Header do Painel */}
       <div className="flex items-center justify-between border-b border-slate-800 px-3.5 py-3 bg-slate-950/40 shrink-0">
-        <h2 className="text-xs font-semibold text-slate-200">
-          Elements Library
-        </h2>
+        <div className="flex items-center gap-2">
+          <Icon name={sidebarTab === 'document' ? 'file-text' : 'layers'} size="sm" className="text-indigo-400" />
+          <h2 className="text-xs font-semibold text-slate-200">
+            {sidebarTab === 'document' ? 'Propriedades do Documento' : 'Elements Library'}
+          </h2>
+        </div>
 
         <IconButton
           icon="chevron-left"
@@ -538,8 +788,12 @@ export default function Sidebar() {
           className="text-slate-400 hover:text-white"
         />
       </div>
-      {/* Elements Library Content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+
+      {sidebarTab === 'document' ? (
+        <DocumentPropertiesContent />
+      ) : (
+        /* Elements Library Content */
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
           {/* Categoria 1: Standard */}
           <div>
             <div className="text-[11px] font-medium text-slate-400 mb-2 px-0.5">
@@ -964,9 +1218,10 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
-      </div>
-    )
-  }
+      )}
+    </div>
+  )
+}
 
 function ContainersPanel({
   selectedContainerId,

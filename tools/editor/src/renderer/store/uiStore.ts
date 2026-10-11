@@ -2,15 +2,18 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type Theme = 'light' | 'dark'
+export type SidebarTab = 'elements' | 'document'
 
 interface UIStore {
   theme: Theme
   zoom: number
   snapToGuides: boolean
+  sidebarTab: SidebarTab
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
   setZoom: (zoom: number) => void
   toggleSnapToGuides: () => void
+  setSidebarTab: (tab: SidebarTab) => void
 }
 
 export const useUIStore = create<UIStore>()(
@@ -19,6 +22,8 @@ export const useUIStore = create<UIStore>()(
       theme: 'dark', // Default to dark theme
       zoom: 100,
       snapToGuides: true,
+      sidebarTab: 'elements',
+      setSidebarTab: (sidebarTab) => set({ sidebarTab }),
       
       setTheme: (theme) => {
         set({ theme })

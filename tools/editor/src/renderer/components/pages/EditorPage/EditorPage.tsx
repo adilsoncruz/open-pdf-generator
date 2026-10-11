@@ -54,7 +54,7 @@ export function EditorPage() {
     deleteLoopChildElement,
   } = useTemplateStore()
 
-  const { theme } = useUIStore()
+  const { theme, sidebarTab, setSidebarTab } = useUIStore()
   const { mode: previewMode, setMode: setPreviewMode, clearPreview } = usePreviewStore()
   const toolbarRef = useRef<ToolbarRef>(null)
 
@@ -372,13 +372,26 @@ export function EditorPage() {
             {/* Top Navigation Icons */}
             <div className="flex flex-col items-center gap-4 text-slate-400">
               <button 
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800/80 transition"
-                title="Templates / Documentos"
+                onClick={() => {
+                  setSidebarTab('document')
+                  clearSelection()
+                }}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
+                  sidebarTab === 'document'
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+                title="Propriedades do Documento"
               >
                 <Icon name="file-text" size="sm" />
               </button>
               <button 
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-indigo-400 bg-indigo-600/20 border border-indigo-500/30 transition shadow-sm"
+                onClick={() => setSidebarTab('elements')}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
+                  sidebarTab === 'elements'
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
                 title="Biblioteca de Componentes"
               >
                 <Icon name="layers" size="sm" />

@@ -110,6 +110,8 @@ interface TemplateStore {
   // Actions
   setTemplate: (template: Template) => void
   updateTemplate: (updates: Partial<Template>) => void
+  updatePageSettings: (updates: Partial<Template['pageSettings']>) => void
+  updateMetadata: (updates: Partial<Template['metadata']>) => void
   addElement: (element: Element, location?: ElementLocation) => void
   updateElement: (id: string, updates: Partial<Element>, location?: ElementLocation) => void
   deleteElement: (id: string, location?: ElementLocation) => void
@@ -289,7 +291,39 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       const newTemplate = { ...state.template, ...updates }
       return {
         template: newTemplate,
-      isDirty: true,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
+    }),
+
+  updatePageSettings: (updates) =>
+    set((state) => {
+      const newTemplate = {
+        ...state.template,
+        pageSettings: {
+          ...state.template.pageSettings,
+          ...updates,
+        },
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
+    }),
+
+  updateMetadata: (updates) =>
+    set((state) => {
+      const newTemplate = {
+        ...state.template,
+        metadata: {
+          ...state.template.metadata,
+          ...updates,
+        },
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
         ...saveToHistory(state, newTemplate),
       }
     }),
