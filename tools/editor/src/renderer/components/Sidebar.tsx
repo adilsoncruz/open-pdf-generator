@@ -430,11 +430,108 @@ export default function Sidebar() {
               <button
                 onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 100, height: 100, barcodeType: 'qrcode', dataBinding: '' }, currentSection)}
                 className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Código de barras ou QR Code"
+                title="QR Code"
               >
-                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">▥</span>
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">☵</span>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Barcodes/QR</span>
               </button>
+
+              {/* Barcode 1D */}
+              <button
+                onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 140, height: 50, barcodeType: 'code128', dataBinding: '' }, currentSection)}
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Código de barras 1D"
+              >
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">▥</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Barcode</span>
+              </button>
+
+              {/* Shape / Rectangle */}
+              <button
+                onClick={() => addElement({ type: 'rectangle', id: `rect-${Date.now()}`, x: 40, y: 40, width: 100, height: 60, style: { fillColor: '#e2e8f0', borderColor: '#94a3b8', borderWidth: 1 } }, currentSection)}
+                className="h-20 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                title="Forma geométrica / Retângulo"
+              >
+                <span className="text-base text-slate-300 group-hover:text-indigo-400 mb-1">▢</span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Shape</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Seção Inferior: Layer Tree (sempre visível no rodapé da sidebar conforme mockup) */}
+          <div className="pt-3 border-t border-slate-800/80">
+            <div className="flex items-center justify-between mb-2 px-0.5">
+              <span className="text-[11px] font-medium text-slate-300">Layer</span>
+              <button
+                onClick={() => setShowAddBandDropdown(!showAddBandDropdown)}
+                className="text-slate-400 hover:text-white transition p-0.5"
+                title="Adicionar Seção"
+              >
+                <Icon name="plus" size="xs" />
+              </button>
+            </div>
+
+            <div className="space-y-1 text-xs">
+              {/* Header */}
+              <div 
+                onClick={() => setCurrentSection('header')}
+                className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'header' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="text-slate-400 text-[10px]">▼</span>
+                  <span className="text-slate-400">▢</span>
+                  <span className="truncate">Header ({template.pageSettings.header ? `${template.pageSettings.header.height}mm` : '65mm'})</span>
+                </div>
+                <div className="flex items-center gap-1 text-slate-400">
+                  <span className="text-[11px]">🔒</span>
+                  <span className="text-[11px]">👁</span>
+                </div>
+              </div>
+
+              {/* Body Content */}
+              <div 
+                onClick={() => setCurrentSection('body')}
+                className={`flex items-center justify-between pl-5 pr-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'body' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="text-slate-400 text-[10px]">▶</span>
+                  <span className="text-slate-400">|||</span>
+                  <span className="truncate">Body Content</span>
+                </div>
+                <div className="flex items-center gap-1 text-slate-400">
+                  <span className="text-[11px]">👁</span>
+                </div>
+              </div>
+
+              {/* Summary Band */}
+              <div 
+                onClick={() => setCurrentSection('summary')}
+                className={`flex items-center justify-between pl-8 pr-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'summary' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="text-slate-400">≡</span>
+                  <span className="truncate">Summary Band</span>
+                </div>
+                <div className="flex items-center gap-1 text-slate-400">
+                  <span className="text-[11px]">👁</span>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div 
+                onClick={() => setCurrentSection('footer')}
+                className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition ${currentSection === 'footer' ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' : 'hover:bg-slate-800/60 text-slate-300'}`}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="text-slate-400 text-[10px]">▶</span>
+                  <span className="text-slate-400">▢</span>
+                  <span className="truncate">Footer ({template.pageSettings.footer ? `${template.pageSettings.footer.height}mm` : '25mm'})</span>
+                </div>
+                <div className="flex items-center gap-1 text-slate-400">
+                  <span className="text-[11px]">🔒</span>
+                  <span className="text-[11px]">👁</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
