@@ -404,7 +404,15 @@ export function EditorPage() {
                 <span className="font-mono text-xs font-semibold">{`{ }`}</span>
               </button>
               <button 
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
+                onClick={() => {
+                  setSidebarTab('history')
+                  clearSelection()
+                }}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
+                  sidebarTab === 'history'
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
                 title="Histórico / Versões"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -457,8 +465,8 @@ export function EditorPage() {
             </div>
           )}
 
-          {/* Right Panel - Properties (oculto quando a aba de propriedades do documento estiver ativa) */}
-          {sidebarTab !== 'document' && <PropertiesPanel />}
+          {/* Right Panel - Properties (exibido somente na aba de elementos/componentes) */}
+          {sidebarTab === 'elements' && <PropertiesPanel />}
         </div>
 
         {/* Status Bar */}

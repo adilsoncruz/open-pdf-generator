@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type Theme = 'light' | 'dark'
-export type SidebarTab = 'elements' | 'document'
+export type SidebarTab = 'elements' | 'document' | 'history'
 
 interface UIStore {
   theme: Theme
