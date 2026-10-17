@@ -1,11 +1,13 @@
 import { useState, forwardRef, useImperativeHandle, useEffect, useCallback } from 'react'
 import { useTemplateStore } from '../store/templateStore'
+import { useTabStore } from '../store/tabStore'
 import { useUIStore } from '../store/uiStore'
 import { usePreviewStore } from '../store/previewStore'
 import { UpdateNotification } from './UpdateNotification'
 import { useTranslation } from '../i18n'
 import { Icon, Badge, Button } from './atoms'
 import { MenuItem, DropdownMenu, IconButton } from './molecules'
+import { TabBar } from './TabBar'
 
 // CLI status interface
 interface CLIStatus {
@@ -155,15 +157,17 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   }
 
   const handleNew = () => {
-    if (isDirty) {
-      const confirmed = confirm(t.toolbar.unsavedChanges)
-      if (!confirmed) return
-    }
 
-    setTemplate({
-      version: '1.0',
-      metadata: {
-        name: 'New Template',
+    useTabStore.getState().addTab({
+      name: 'New Template',
+      path: null,
+      isDirty: false,
+      stateSnapshot: {
+        ...useTemplateStore.getState(),
+        template: {
+          version: '1.0',
+          metadata: {
+            name: 'New Template',
         description: '',
         author: '',
         created: new Date().toISOString(),
@@ -176,16 +180,19 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         margins: { top: 30, right: 30, bottom: 30, left: 30 },
       },
       page: [],
+        },
+        currentFilePath: null,
+        isDirty: false,
+        history: [],
+        historyIndex: 0,
+        selectedElementIds: [],
+      }
     })
     setCurrentFilePath(null)
   }
 
   const handleOpen = async () => {
       console.log("handleOpen 0")
-    if (isDirty) {
-      const confirmed = confirm(t.toolbar.unsavedChanges)
-      if (!confirmed) return
-    }
     console.log("handleOpen 0.1")
     // Loop to keep file dialog open until valid template or user cancels
     let keepTrying = true
@@ -232,8 +239,20 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         }
         
         // Valid template - load it and exit loop
-        setTemplate(loadedTemplate)
-        setCurrentFilePath(result.convertedFromJasper ? null : result.path)
+        useTabStore.getState().addTab({
+          name: loadedTemplate.metadata?.name || 'Opened Template',
+          path: result.convertedFromJasper ? null : result.path,
+          isDirty: false,
+          stateSnapshot: {
+            ...useTemplateStore.getState(),
+            template: loadedTemplate,
+            currentFilePath: result.convertedFromJasper ? null : result.path,
+            isDirty: false,
+            history: [loadedTemplate],
+            historyIndex: 0,
+            selectedElementIds: [],
+          }
+        })
         if (result.convertedFromJasper) {
           alert('Template JASPER (.jrxml) convertido para JSON. Use "Save As" para salvar o template convertido.')
         }
@@ -373,57 +392,31 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
   return (
     <div className="theme-bg-secondary border-b theme-border px-4 py-2 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 flex-1 min-w-0 mr-4">
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 pr-4 border-r theme-border">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-glow-sm">
             <Icon name="file-text" size="md" className="text-white" />
           </div>
-          <h1 className="text-lg font-semibold theme-text">
+          <h1 className="text-lg font-semibold theme-text hidden lg:block whitespace-nowrap">
             PDF Template Editor
           </h1>
         </div>
 
-        {/* File Menu */}
-        <DropdownMenu
-          isOpen={showFileMenu}
-          onOpenChange={setShowFileMenu}
-          trigger={
-            <button
-              className="px-3 py-1.5 text-sm theme-text-secondary hover:theme-surface-hover rounded transition flex items-center gap-2"
-              title={currentFilePath || t.toolbar.file}
-            >
-              {currentFilePath ? (
-                <>
-                  <Icon name="file-text" size="sm" />
-                  <span className="max-w-[200px] truncate">{currentFilePath.split('/').pop()}</span>
-                </>
-              ) : (
-                t.toolbar.file
-              )}
-            </button>
-          }
-        >
-          <MenuItem shortcut="Ctrl+N" onClick={() => { handleNew(); setShowFileMenu(false) }}>
-            {t.toolbar.new}
-          </MenuItem>
-          <MenuItem shortcut="Ctrl+O" onClick={() => { handleOpen(); setShowFileMenu(false) }}>
-            {t.toolbar.open}
-          </MenuItem>
-          <div className="border-t theme-border my-1" />
-          <MenuItem shortcut="Ctrl+S" onClick={() => { handleSave(); setShowFileMenu(false) }}>
-            {t.toolbar.save}
-          </MenuItem>
-          <MenuItem shortcut="Ctrl+Shift+S" onClick={() => { handleSaveAs(); setShowFileMenu(false) }}>
-            {t.toolbar.saveAs}
-          </MenuItem>
-          <div className="border-t theme-border my-1" />
-          <MenuItem onClick={() => { handleExport(); setShowFileMenu(false) }}>
-            {t.toolbar.export}
-          </MenuItem>
-        </DropdownMenu>
+        {/* Quick Actions */}
+        <div className="flex items-center space-x-1 pr-2 border-r theme-border flex-shrink-0">
+           <IconButton icon="plus" size="sm" onClick={handleNew} title={t.toolbar.new} variant="ghost" />
+           <IconButton icon="folder" size="sm" onClick={handleOpen} title={t.toolbar.open} variant="ghost" />
+           <IconButton icon="save" size="sm" onClick={handleSave} title={t.toolbar.save} variant="ghost" />
+           <IconButton icon="download" size="sm" onClick={handleExport} title={t.toolbar.export} variant="ghost" />
+        </div>
 
-        <div className="flex items-center space-x-2">
+        {/* Tab Bar */}
+        <div className="flex-1 min-w-0 h-full flex items-center">
+          <TabBar />
+        </div>
+
+        <div className="flex items-center space-x-2 pl-2 border-l theme-border flex-shrink-0">
           {/* Changes status */}
           {isDirty && (
             <Badge variant="warning">• {t.common.unsaved}</Badge>
