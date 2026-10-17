@@ -3,7 +3,7 @@ import { useTemplateStore, type Element, type ElementLocation } from '../store/t
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
 import { Select, Button, Divider } from './atoms'
 import { IconButton } from './molecules'
-
+import { RulersAndGuides, type Guide } from './RulersAndGuides'
 // Component to render Loop child elements
 interface LoopChildElementProps {
   child: Element
@@ -678,6 +678,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
 export default function Canvas() {
   const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, currentSection, setCurrentSection, clearSelection } = useTemplateStore()
   const [zoom, setZoom] = useState(100) // Zoom em porcentagem
+  const [guides, setGuides] = useState<Guide[]>([])
 
   let pageSize;
   switch(template.pageSettings.size) {
@@ -882,6 +883,7 @@ export default function Canvas() {
         
         <div className="relative" style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
           
+          <RulersAndGuides width={pageSize.width} height={pageSize.height} scale={scale} guides={guides} setGuides={setGuides} />
           
           {currentSection === 'bodyBackground' && template.pageSettings.bodyBackground ? (
             
