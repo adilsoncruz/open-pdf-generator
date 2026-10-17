@@ -1868,43 +1868,6 @@ export default function Canvas() {
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
           </svg>
-
-          {/* DIVISORES VISUAIS DE BANDAS COM BADGES (ESTILO FIGMA / STUDIO SLATE) */}
-          <div className="absolute inset-0 pointer-events-none select-none" style={{ zIndex: 15 }}>
-            {/* Header Band Indicator */}
-            {template.pageSettings.header && (
-              <div 
-                className="absolute left-0 right-0 border-b border-dashed border-indigo-500/60"
-                style={{ top: margins.top + template.pageSettings.header.height }}
-              >
-                <div className="absolute right-2 -top-5 flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900/90 border border-indigo-500/50 shadow-sm text-[10px] font-mono text-indigo-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                  <span>Header: {template.pageSettings.header.height}pt</span>
-                </div>
-              </div>
-            )}
-
-            {/* Footer Band Indicator */}
-            {template.pageSettings.footer && (
-              <div 
-                className="absolute left-0 right-0 border-t border-dashed border-indigo-500/60"
-                style={{ top: pageSize.height - margins.bottom - template.pageSettings.footer.height }}
-              >
-                <div className="absolute right-2 top-1 flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900/90 border border-indigo-500/50 shadow-sm text-[10px] font-mono text-indigo-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                  <span>Footer: {template.pageSettings.footer.height}pt</span>
-                </div>
-              </div>
-            )}
-
-            {/* Body Flow Indicator badge */}
-            <div 
-              className="absolute left-2 flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900/80 border border-slate-700/60 text-[10px] font-mono text-slate-400"
-              style={{ top: margins.top + (template.pageSettings.header?.height || 0) + 6 }}
-            >
-              <span>Fluxo do Corpo (Body)</span>
-            </div>
-          </div>
         </div>
           
             </>
