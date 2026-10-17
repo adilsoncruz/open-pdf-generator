@@ -170,7 +170,7 @@ interface TemplateStore {
   reorderLoopChildren: (loopId: string, fromIndex: number, toIndex: number, location?: ElementLocation) => void
 
   // Container Element Actions
-  addElementToLoop: (containerId: string, element: Element, location?: ElementLocation) => void
+  addElementToContainer: (containerId: string, element: Element, location?: ElementLocation) => void
   updateContainerChildElement: (containerId: string, childId: string, updates: Partial<Element>, location?: ElementLocation) => void
   deleteContainerChildElement: (containerId: string, childId: string, location?: ElementLocation) => void
   selectContainerChild: (containerId: string, childId: string, location?: ElementLocation) => void
@@ -210,24 +210,45 @@ const defaultTemplate: Template = {
 const normalizeBodyContainers = (template: Template): Template => ({
   ...template,
   page: (template.page || []).map((el) =>
-    el.type === 'container' ? { ...el, x: 0, width: '100%' } : el
+    (el.type === 'container' || el.type === 'page_break' || el.type === 'spacer') ? { ...el, x: 0, width: '100%' } : el
   ),
 })
 
-const restackBodyContainers = (elements: Element[]): Element[] => {
-  let currentY = 0
+const restackBodyContainers = (elements: Element[], template?: Template): Element[] => {
+  let currentY = 0;
+  let usableHeight = 842;
+  
+  if (template) {
+    const size = template.pageSettings?.size || 'A4';
+    const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 };
+    const margins = template.pageSettings?.margins || { top: 30, bottom: 30, left: 30, right: 30 };
+    const headerHeight = template.pageSettings?.header?.height || 0;
+    const footerHeight = template.pageSettings?.footer?.height || 0;
+    usableHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0) - headerHeight - footerHeight;
+  }
+
   return elements.map((el) => {
-    if (el.type !== 'container') return el
+    if (el.type !== 'container' && el.type !== 'page_break' && el.type !== 'spacer') return el;
+    
     const next = {
       ...el,
       x: 0,
       y: currentY,
       width: '100%',
+    };
+    
+    const h = typeof el.height === 'number' ? el.height : (el.type === 'page_break' ? 20 : (el.type === 'spacer' ? 50 : 150));
+    
+    if (el.type === 'page_break') {
+      currentY += h;
+      const currentPageIndex = Math.floor((currentY - 0.1) / usableHeight);
+      currentY = (currentPageIndex + 1) * usableHeight;
+    } else {
+      currentY += h;
     }
-    const h = typeof el.height === 'number' ? el.height : 150
-    currentY += h
-    return next
-  })
+    
+    return next;
+  });
 }
 
 
@@ -297,7 +318,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   addElement: (element, location = 'body') =>
     set((state) => {
       let normalizedElement = { ...element }
-      if (element.type === 'container') {
+      if (element.type === 'container' || element.type === 'page_break' || element.type === 'spacer') {
         const size = state.template.pageSettings.size
         const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 }
         const margins = state.template.pageSettings.margins
@@ -313,7 +334,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           ...element,
           x: 0,
           width: '100%',
-          height: Math.min(typeof element.height === 'number' ? element.height : 150, Math.max(0, sectionHeight))
+          height: element.type === 'page_break' ? 20 : (element.type === 'spacer' ? 50 : Math.min(typeof element.height === 'number' ? element.height : 150, Math.max(0, sectionHeight)))
         }
       }
       const selectedId = state.selectedElementIds[0]
@@ -321,7 +342,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         const selectedContainer = elements.find(
           (el) => el.id === selectedId && el.type === 'container'
         )
-        if (selectedContainer && normalizedElement.type !== 'container') {
+        if (selectedContainer && normalizedElement.type !== 'container' && normalizedElement.type !== 'page_break') {
           return {
             newElements: elements.map((el) =>
               el.id === selectedContainer.id
@@ -415,7 +436,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         const { newElements, newSelectedId } = insertIntoElements(state.template.page)
         newTemplate = {
           ...state.template,
-          page: newElements,
+          page: restackBodyContainers(newElements, state.template),
         }
         return {
           template: newTemplate,
@@ -539,7 +560,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: {
             ...state.template,
-            page: applyUpdates(state.template.page),
+            page: restackBodyContainers(applyUpdates(state.template.page), state.template),
             groups: updateGroups(state.template.groups),
           },
           selectedElementIds: newSelectedElementIds,
@@ -630,7 +651,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: {
             ...state.template,
-            page: state.template.page.filter((el) => el.id !== id),
+            page: restackBodyContainers(state.template.page.filter((el) => el.id !== id), state.template),
             groups: updateGroupsAfterDelete(state.template.groups),
           },
           selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
@@ -772,7 +793,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       } else {
         newTemplate = {
           ...template,
-          page: filterElements(template.page),
+          page: restackBodyContainers(filterElements(template.page), template),
           groups: updateGroupsAfterDelete(template.groups),
         }
       }
@@ -1185,7 +1206,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: {
             ...state.template,
-            page: moveToTop(state.template.page),
+            page: restackBodyContainers(moveToTop(state.template.page), state.template),
           },
           isDirty: true,
         }
@@ -1234,7 +1255,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: {
             ...state.template,
-            page: moveToBottom(state.template.page),
+            page: restackBodyContainers(moveToBottom(state.template.page), state.template),
           },
           isDirty: true,
         }
@@ -1306,7 +1327,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           ...historyState,
           template: {
             ...state.template,
-            page: reorder(state.template.page),
+            page: restackBodyContainers(reorder(state.template.page), state.template),
           },
           isDirty: true,
         }
@@ -1372,7 +1393,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           ...historyState,
           template: {
             ...state.template,
-            page: toggleInElements(state.template.page),
+            page: restackBodyContainers(toggleInElements(state.template.page), state.template),
           },
           isDirty: true,
         }
@@ -1526,7 +1547,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         } else {
           newTemplate = {
             ...template,
-            page: insertIntoContainer(template.page),
+            page: restackBodyContainers(insertIntoContainer(template.page), template),
           }
         }
         
@@ -1576,7 +1597,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       } else {
         newTemplate = {
           ...template,
-          page: [...template.page, ...newElements],
+          page: restackBodyContainers([...template.page, ...newElements], template),
         }
       }
       
@@ -2083,6 +2104,9 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       const historyState = saveToHistory(state, state.template)
       
       const addToLoop = (elements: Element[]): Element[] => {
+        if (element.type === 'page_break') {
+          return elements; // silently ignore
+        }
         return elements.map(el => {
           if (el.id === loopId && (el.type === 'loop' || el.type === 'container')) {
             return {
