@@ -103,7 +103,6 @@ interface TemplateStore {
   history: Template[]
   historyIndex: number
   copiedElements: { elements: Element[]; location: ElementLocation; isChild?: boolean; parentId?: string | null } | null
-  isPropertiesPanelPinned: boolean
   isSidebarPinned: boolean
   isSidebarMinimized: boolean
 
@@ -179,7 +178,6 @@ interface TemplateStore {
   reorderContainerChildren: (containerId: string, fromIndex: number, toIndex: number, location?: ElementLocation) => void
   
   // UI State Actions
-  togglePropertiesPanelPinned: () => void
   toggleSidebarPinned: () => void
   toggleSidebarMinimized: () => void
 }
@@ -290,7 +288,6 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   history: [JSON.parse(JSON.stringify(defaultTemplate))],
   historyIndex: 0,
   copiedElements: null,
-  isPropertiesPanelPinned: true,
   isSidebarPinned: true,
   isSidebarMinimized: false,
 
@@ -2408,10 +2405,6 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     }),
 
   // UI State Actions
-  togglePropertiesPanelPinned: () =>
-    set((state) => ({
-      isPropertiesPanelPinned: !state.isPropertiesPanelPinned,
-    })),
 
   toggleSidebarPinned: () =>
     set((state) => ({

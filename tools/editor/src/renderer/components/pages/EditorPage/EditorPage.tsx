@@ -328,11 +328,8 @@ export function EditorPage() {
     copiedElements,
   ])
 
-  const { isPropertiesPanelPinned } = useTemplateStore()
 
-  // Determine if properties panel should be shown
   const showPropertiesPanel =
-    isPropertiesPanelPinned ||
     selectedElementIds.length > 0 ||
     selectedGroupId ||
     (currentSection === 'header' && template.pageSettings.header) ||

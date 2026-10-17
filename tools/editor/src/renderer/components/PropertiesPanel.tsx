@@ -8,8 +8,6 @@ import { NumberField, ColorField, PropertyGroup, PropertyRow, TabBar, IconButton
  * Reusable panel header component with pin button
  */
 function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  const { isPropertiesPanelPinned, togglePropertiesPanelPinned } = useTemplateStore()
-  
   return (
     <div className="p-3 border-b theme-border flex items-center justify-between shrink-0">
       <div className="flex-1 min-w-0">
@@ -18,13 +16,6 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) 
           <p className="text-xs theme-text-muted mt-0.5 truncate">{subtitle}</p>
         )}
       </div>
-      <IconButton
-        icon={isPropertiesPanelPinned ? 'pin' : 'pin-off'}
-        onClick={togglePropertiesPanelPinned}
-        tooltip={isPropertiesPanelPinned ? 'Unpin panel' : 'Pin panel'}
-        variant={isPropertiesPanelPinned ? 'default' : 'ghost'}
-        className={isPropertiesPanelPinned ? 'text-blue-500' : ''}
-      />
     </div>
   )
 }
@@ -35,8 +26,6 @@ export default function PropertiesPanel() {
   
   
   const store = useTemplateStore()
-  const isPropertiesPanelPinned = store.isPropertiesPanelPinned
-  const togglePropertiesPanelPinned = store.togglePropertiesPanelPinned
   
   const template = store.template
   const selectedElementIds = store.selectedElementIds
@@ -294,13 +283,6 @@ export default function PropertiesPanel() {
             <p className="text-xs theme-text-muted mt-0.5">{selectedElement.type}</p>
           )}
         </div>
-        <IconButton
-          icon={isPropertiesPanelPinned ? 'pin' : 'pin-off'}
-          onClick={togglePropertiesPanelPinned}
-          tooltip={isPropertiesPanelPinned ? 'Unpin panel' : 'Pin panel'}
-          variant={isPropertiesPanelPinned ? 'default' : 'ghost'}
-          className={isPropertiesPanelPinned ? 'text-blue-500' : ''}
-        />
       </div>
 
       {/* Tabs */}
