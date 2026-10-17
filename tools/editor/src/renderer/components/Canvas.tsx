@@ -26,6 +26,51 @@ interface ContainerChildElementProps {
   effectiveWidth?: number | string
 }
 
+function getHeaderBorderValues(style: Record<string, unknown> | undefined) {
+  const borderWidth = (style?.headerBorderWidth as number) ?? (style?.borderWidth as number) ?? 1
+  const borderType = style?.headerBorderType
+
+  switch (borderType) {
+    case 'none':
+      return { top: 0, right: 0, bottom: 0, left: 0 }
+    case 'row':
+      return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
+    case 'columns':
+    case 'cells':
+    case 'all':
+      return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
+    case 'top-bottom':
+      return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
+    case 'left-right':
+      return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
+    default:
+      return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
+  }
+}
+
+function getCellBorderValues(style: Record<string, unknown> | undefined) {
+  const borderWidth = (style?.borderWidth as number) ?? 1
+  const borderType = style?.cellBorderType
+
+  switch (borderType) {
+    case 'none':
+      return { top: 0, right: 0, bottom: 0, left: 0 }
+    case 'row':
+      return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
+    case 'columns':
+      return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
+    case 'cells':
+    case 'all':
+      return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
+    case 'top-bottom':
+      return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
+    case 'left-right':
+      return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
+    default:
+      return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
+  }
+}
+
 function ContainerChildElement({ child, containerId, location, containerWidth, containerHeight, effectiveY, effectiveX, effectiveWidth }: ContainerChildElementProps) {
   const {
     selectedContainerChildId,
@@ -372,6 +417,157 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
                      */}
                    </div>
                  )
+      }
+      case 'table': {
+        const columns = Array.isArray(child.columns) ? child.columns : []
+        const hasValidColumns = columns.length > 0 && columns.every((col: unknown) => col && typeof col === 'object')
+        const tableStyle = child.style || {}
+        const headerBg = tableStyle.headerBackground || '#f0f0f0'
+        const headerColor = tableStyle.headerColor || '#000000'
+        const headerFontSize = (tableStyle.headerFontSize as number) || 12
+        const fontSize = (tableStyle.fontSize as number) || 10
+        const cellColor = tableStyle.cellColor || '#000000'
+        const cellBg = (tableStyle.cellBackground as string) || '#ffffff'
+        const borderColor = (tableStyle.borderColor as string) || '#cccccc'
+        const headerBorderColor = (tableStyle.headerBorderColor as string) || borderColor
+        const borderStyle = (tableStyle.borderStyle as string) || 'solid'
+        const headerPadding = (tableStyle.headerPadding as number) ?? 5
+        const cellPadding = (tableStyle.cellPadding as number) ?? 5
+        const headerBorderValues = getHeaderBorderValues(tableStyle)
+        const cellBorderValues = getCellBorderValues(tableStyle)
+        const headerBorderType = (tableStyle.headerBorderType as string) || 'all'
+        const cellBorderType = (tableStyle.cellBorderType as string) || 'all'
+        const columnWidths = columns.map((col: Record<string, unknown>) => (col.width as number) || 100)
+        const totalWidth = columnWidths.reduce((sum: number, w: number) => sum + w, 0)
+        const rawW = child.width ?? 400
+        const resolvedW = rawW === '100%' ? containerWidth : (typeof rawW === 'number' ? rawW : 400)
+        const proportionalWidths = columnWidths.map((w: number) => totalWidth > 0 ? (w / totalWidth) * resolvedW : (columns.length > 0 ? resolvedW / columns.length : 100))
+
+        return (
+          <div
+            style={{
+              width: resolvedW,
+              minHeight: 40,
+            }}
+          >
+            {hasValidColumns ? (
+              <table className="w-full pointer-events-none border-collapse" style={{ tableLayout: 'fixed' }}>
+                <thead>
+                  <tr style={{ backgroundColor: headerBg === 'transparent' ? 'transparent' : headerBg, color: headerColor, fontSize: `${headerFontSize}px` }}>
+                    {columns.map((col: Record<string, unknown>, i: number) => {
+                      const isFirst = i === 0
+                      const isLast = i === columns.length - 1
+                      let hLeft = headerBorderValues.left
+                      let hRight = headerBorderValues.right
+
+                      if (headerBorderType === 'columns') {
+                        hLeft = isFirst ? headerBorderValues.left : headerBorderValues.left / 2
+                        hRight = isLast ? headerBorderValues.right : headerBorderValues.right / 2
+                      } else if (headerBorderType === 'row') {
+                        hLeft = isFirst ? headerBorderValues.left : 0
+                        hRight = isLast ? headerBorderValues.right : 0
+                      } else if (headerBorderType === 'none') {
+                        hLeft = 0
+                        hRight = 0
+                      }
+
+                      return (
+                        <th
+                          key={`ch-th-${i}`}
+                          className="font-semibold"
+                          style={{
+                            width: proportionalWidths[i],
+                            padding: `${headerPadding}px`,
+                            borderTopWidth: `${headerBorderValues.top}px`,
+                            borderTopStyle: borderStyle as any,
+                            borderTopColor: headerBorderColor,
+                            borderBottomWidth: `${headerBorderValues.bottom}px`,
+                            borderBottomStyle: borderStyle as any,
+                            borderBottomColor: headerBorderColor,
+                            borderLeftWidth: `${hLeft}px`,
+                            borderLeftStyle: borderStyle as any,
+                            borderLeftColor: headerBorderColor,
+                            borderRightWidth: `${hRight}px`,
+                            borderRightStyle: borderStyle as any,
+                            borderRightColor: headerBorderColor,
+                            textAlign: (col.headerAlignment as any) || (col.alignment as any) || 'left',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {String(col?.header || 'Header')}
+                        </th>
+                      )
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ fontSize: `${fontSize}px`, color: cellColor, backgroundColor: cellBg === 'transparent' ? 'transparent' : cellBg }}>
+                    {columns.map((col: Record<string, unknown>, i: number) => {
+                      const isFirst = i === 0
+                      const isLast = i === columns.length - 1
+                      let cLeft = cellBorderValues.left
+                      let cRight = cellBorderValues.right
+                      let cTop = cellBorderValues.top
+                      let cBottom = cellBorderValues.bottom
+
+                      if (cellBorderType === 'cells' || cellBorderType === 'all') {
+                        cLeft = isFirst ? cellBorderValues.left : cellBorderValues.left / 2
+                        cRight = isLast ? cellBorderValues.right : cellBorderValues.right / 2
+                      } else if (cellBorderType === 'row') {
+                        cLeft = isFirst ? cellBorderValues.left : 0
+                        cRight = isLast ? cellBorderValues.right : 0
+                      } else if (cellBorderType === 'columns') {
+                        cTop = 0
+                        cBottom = 0
+                        cLeft = isFirst ? cellBorderValues.left : cellBorderValues.left / 2
+                        cRight = isLast ? cellBorderValues.right : cellBorderValues.right / 2
+                      } else if (cellBorderType === 'none') {
+                        cTop = 0
+                        cBottom = 0
+                        cLeft = 0
+                        cRight = 0
+                      }
+
+                      return (
+                        <td
+                          key={`ch-td-${i}`}
+                          style={{
+                            width: proportionalWidths[i],
+                            padding: `${cellPadding}px`,
+                            borderTopWidth: `${cTop}px`,
+                            borderTopStyle: borderStyle as any,
+                            borderTopColor: borderColor,
+                            borderBottomWidth: `${cBottom}px`,
+                            borderBottomStyle: borderStyle as any,
+                            borderBottomColor: borderColor,
+                            borderLeftWidth: `${cLeft}px`,
+                            borderLeftStyle: borderStyle as any,
+                            borderLeftColor: borderColor,
+                            borderRightWidth: `${cRight}px`,
+                            borderRightStyle: borderStyle as any,
+                            borderRightColor: borderColor,
+                            textAlign: (col.alignment as any) || 'left',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {String(col?.field || 'field')}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            ) : (
+              <div className="w-full min-h-[40px] flex items-center justify-center text-slate-400 text-xs border border-dashed border-slate-600 rounded bg-slate-900/40 p-2">
+                📊 Tabela sem colunas (configure no painel)
+              </div>
+            )}
+          </div>
+        )
       }
       default:
         return <div className="w-10 h-10 bg-gray-300" />
@@ -961,7 +1157,7 @@ export default function Canvas() {
         </div>
 
         {/* Scrollable content area */}
-        <div className="flex-1 overflow-auto p-8 bg-slate-950/80">
+        <div id="canvas-scroll-container" className="flex-1 overflow-auto p-8 bg-slate-950/80">
           <div className="inline-block min-w-full min-h-full">
         {/* Wrapper que define o tamanho real para scroll funcionar com zoom */}
         <div 
@@ -1959,6 +2155,8 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
   const template = useTemplateStore(state => state.template)
   const testData = useTemplateStore(state => state.testData)
   const saveSnapshot = useTemplateStore(state => state.saveSnapshot)
+  const selectedContainerChildId = useTemplateStore(state => state.selectedContainerChildId)
+  const selectedLoopChildId = useTemplateStore(state => state.selectedLoopChildId)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialPositions: {} as Record<string, {x: number, y: number}>, initialOffsetY: 10 })
   const [isResizing, setIsResizing] = useState<string | null>(null)
@@ -2099,7 +2297,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
     }
     
     
-    if (!isSelected) {
+    if (!isSelected || selectedContainerChildId || selectedLoopChildId) {
       onSelect(false)
     }
     
@@ -2281,49 +2479,6 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
       document.removeEventListener('mouseup', handleMouseUp)
     }
   }, [isResizing, resizeStart, scale, onUpdate, saveSnapshot])
-
-  // Helper to calculate border values dynamically
-  const getHeaderBorderValues = (style: Record<string, unknown> | undefined) => {
-    const borderWidth = style?.headerBorderWidth ?? style?.borderWidth ?? 1
-    const borderType = style?.headerBorderType
-    
-    switch (borderType) {
-      case 'none':
-        return { top: 0, right: 0, bottom: 0, left: 0 }
-      case 'row':
-      case 'all':
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-      case 'columns':
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-      case 'top-bottom':
-        return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
-      case 'left-right':
-        return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
-      default:
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-    }
-  }
-  
-  const getCellBorderValues = (style: Record<string, unknown> | undefined) => {
-    const borderWidth = style?.borderWidth ?? 1
-    const borderType = style?.cellBorderType
-    
-    switch (borderType) {
-      case 'none':
-        return { top: 0, right: 0, bottom: 0, left: 0 }
-      case 'row':
-      case 'all':
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-      case 'cells':
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-      case 'top-bottom':
-        return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
-      case 'left-right':
-        return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
-      default:
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-    }
-  }
 
   const renderElement = () => {
     switch (element.type) {
@@ -2911,11 +3066,14 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
             style={{
               width: loopWidth,
               height: loopHeight,
-              backgroundColor: 'rgba(139, 92, 246, 0.03)',
-              borderWidth: element.style?.borderWidth || 2,
+              backgroundColor:
+                (element.style?.fillColor || element.style?.backgroundColor) === 'transparent'
+                  ? 'transparent'
+                  : (element.style?.fillColor || element.style?.backgroundColor || 'transparent'),
+              borderWidth: element.style?.borderStyle === 'none' ? 0 : (element.style?.borderWidth ?? element.style?.strokeWidth ?? 2),
               borderStyle: (element.style?.borderStyle as string) || 'dashed',
-              borderColor: element.style?.borderColor || '#8b5cf6',
-              borderRadius: 4,
+              borderColor: element.style?.borderColor || element.style?.strokeColor || '#8b5cf6',
+              borderRadius: element.style?.cornerRadius ?? 4,
             }}
             onMouseDown={handleMouseDown}
           >
@@ -2994,11 +3152,14 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                   style={{
                     width: containerWidth,
                     height: containerHeight,
-                    backgroundColor: 'rgba(139, 92, 246, 0.03)',
-                    borderWidth: element.style?.borderWidth || 2,
+                    backgroundColor:
+                      (element.style?.fillColor || element.style?.backgroundColor) === 'transparent'
+                        ? 'transparent'
+                        : (element.style?.fillColor || element.style?.backgroundColor || 'transparent'),
+                    borderWidth: element.style?.borderStyle === 'none' ? 0 : (element.style?.borderWidth ?? element.style?.strokeWidth ?? 2),
                     borderStyle: (element.style?.borderStyle as string) || 'dashed',
-                    borderColor: element.style?.borderColor || '#8b5cf6',
-                    borderRadius: 4,
+                    borderColor: element.style?.borderColor || element.style?.strokeColor || '#8b5cf6',
+                    borderRadius: element.style?.cornerRadius ?? 4,
                   }}
                   onMouseDown={handleMouseDown}
                 >

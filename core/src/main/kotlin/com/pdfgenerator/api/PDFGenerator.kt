@@ -500,6 +500,10 @@ class PDFGenerator(
         groupIndex: Map<String, ElementGroup>,
         data: Map<String, Any?>,
     ): Boolean {
+        if (element is ContainerElement && !ConditionEvaluator.evaluate(element.printCondition, data)) {
+            return false
+        }
+
         if (groupIndex.isEmpty()) return true
 
         val group = groupIndex[element.id] ?: return true

@@ -52,9 +52,11 @@ export function EditorPage() {
     selectedLoopChildId,
     selectedLoopParentId,
     deleteLoopChildElement,
+    isSidebarMinimized,
+    setSidebarMinimized,
   } = useTemplateStore()
 
-  const { theme, sidebarTab, setSidebarTab } = useUIStore()
+  const { theme, toggleTheme, sidebarTab, setSidebarTab } = useUIStore()
   const { mode: previewMode, setMode: setPreviewMode, clearPreview } = usePreviewStore()
   const toolbarRef = useRef<ToolbarRef>(null)
 
@@ -373,11 +375,16 @@ export function EditorPage() {
             <div className="flex flex-col items-center gap-4 text-slate-400">
               <button 
                 onClick={() => {
-                  setSidebarTab('document')
-                  clearSelection()
+                  if (sidebarTab === 'document' && !isSidebarMinimized) {
+                    setSidebarMinimized(true)
+                  } else {
+                    setSidebarTab('document')
+                    setSidebarMinimized(false)
+                    clearSelection()
+                  }
                 }}
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
-                  sidebarTab === 'document'
+                  sidebarTab === 'document' && !isSidebarMinimized
                     ? 'bg-indigo-600 text-white shadow-indigo-500/30'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
                 }`}
@@ -386,9 +393,16 @@ export function EditorPage() {
                 <Icon name="file-text" size="sm" />
               </button>
               <button 
-                onClick={() => setSidebarTab('elements')}
+                onClick={() => {
+                  if (sidebarTab === 'elements' && !isSidebarMinimized) {
+                    setSidebarMinimized(true)
+                  } else {
+                    setSidebarTab('elements')
+                    setSidebarMinimized(false)
+                  }
+                }}
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
-                  sidebarTab === 'elements'
+                  sidebarTab === 'elements' && !isSidebarMinimized
                     ? 'bg-indigo-600 text-white shadow-indigo-500/30'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
                 }`}
@@ -405,11 +419,16 @@ export function EditorPage() {
               </button>
               <button 
                 onClick={() => {
-                  setSidebarTab('history')
-                  clearSelection()
+                  if (sidebarTab === 'history' && !isSidebarMinimized) {
+                    setSidebarMinimized(true)
+                  } else {
+                    setSidebarTab('history')
+                    setSidebarMinimized(false)
+                    clearSelection()
+                  }
                 }}
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
-                  sidebarTab === 'history'
+                  sidebarTab === 'history' && !isSidebarMinimized
                     ? 'bg-indigo-600 text-white shadow-indigo-500/30'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
                 }`}
@@ -421,8 +440,15 @@ export function EditorPage() {
               </button>
             </div>
 
-            {/* Bottom Actions: Lock, Settings, Help */}
+            {/* Bottom Actions: Theme, Help, Settings */}
             <div className="flex flex-col items-center gap-3 text-slate-400">
+              <button
+                onClick={toggleTheme}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
+                title={theme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
+              >
+                <Icon name={theme === 'dark' ? 'sun' : 'moon'} size="sm" />
+              </button>
               <button 
                 onClick={() => setShowHelpModal(true)}
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"

@@ -21,6 +21,26 @@ export function StatusBar() {
     (template.pageSettings.footer?.elements?.length || 0) +
     (template.summaryPage?.elements?.length || 0)
 
+  const handleFit = () => {
+    const container = document.getElementById('canvas-scroll-container')
+    const isLandscape = template.pageSettings?.orientation === 'landscape'
+    const pageWidth = isLandscape ? 842 : (template.pageSettings?.size === 'PORTRAIT' ? 612 : 595)
+    const pageHeight = isLandscape ? 595 : (template.pageSettings?.size === 'PORTRAIT' ? 792 : 842)
+
+    if (container && container.clientWidth > 0 && container.clientHeight > 0) {
+      const availableWidth = container.clientWidth - 80
+      const availableHeight = container.clientHeight - 80
+      const fitZoom = Math.min(
+        (availableWidth / pageWidth) * 100,
+        (availableHeight / pageHeight) * 100
+      )
+      const finalZoom = Math.min(200, Math.max(25, Math.round(fitZoom)))
+      setZoom(finalZoom)
+    } else {
+      setZoom(75)
+    }
+  }
+
   return (
     <footer className="h-9 bg-slate-950 border-t border-slate-800 px-4 text-xs text-slate-400 flex items-center justify-between select-none shrink-0 z-30">
       {/* Esquerda: Documento e elementos */}
@@ -86,6 +106,15 @@ export function StatusBar() {
           title="Aumentar Zoom"
         >
           +
+        </button>
+
+        {/* Fit */}
+        <button
+          onClick={handleFit}
+          className="px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded transition font-medium"
+          title="Ajustar Canvas à Tela (Fit)"
+        >
+          Fit
         </button>
 
         {/* Reset 100% */}

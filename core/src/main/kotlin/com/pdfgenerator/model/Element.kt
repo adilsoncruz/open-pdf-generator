@@ -304,15 +304,23 @@ data class RectangleStyle(
     val cornerRadius: Float = 0f,
     val penStyle: String? = null,
     val borderStyle: String? = null,
+    val backgroundColor: String? = null,
+    val strokeColor: String? = null,
+    val strokeWidth: Float? = null,
 ) {
+    fun getEffectiveFillColor(): String? = fillColor ?: backgroundColor
+
     fun getEffectivePenStyle(): String? = penStyle ?: borderStyle
 
+    fun getEffectiveBorderWidth(): Float = strokeWidth ?: borderWidth
+
     fun getEffectiveBorderColor(): String? {
-        return borderColor ?: if (borderWidth > 0) "#000000" else null
+        return borderColor ?: strokeColor ?: if (getEffectiveBorderWidth() > 0) "#000000" else null
     }
 
     fun shouldDrawBorder(): Boolean {
-        return borderColor != null || borderWidth > 0
+        if (getEffectivePenStyle()?.lowercase() == "none") return false
+        return borderColor != null || strokeColor != null || getEffectiveBorderWidth() > 0
     }
 }
 
@@ -519,6 +527,8 @@ data class ContainerElement(
     val width: Any = 400f,
     val height: Float = 50f,
     val elements: List<Element>,
+    val style: RectangleStyle? = null,
+    val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {

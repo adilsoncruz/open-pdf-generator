@@ -29,6 +29,7 @@ export default function Sidebar() {
 
   const [pageSettingsExpanded, setPageSettingsExpanded] = useState(false)
   const [sectionsExpanded, setSectionsExpanded] = useState(true)
+  const [isElementsCollapsed, setIsElementsCollapsed] = useState(false)
   const [activeTab, setActiveTab] = useState<'elements' | 'layers'>('layers')
   const { 
     selectedElementIds, 
@@ -90,12 +91,16 @@ export default function Sidebar() {
     const getIcon = () => {
       switch (el.type) {
         case 'text': return 'T'
+        case 'static_text': return 'S'
         case 'rich_text': return '¶'
         case 'link': return '🔗'
         case 'image': return '🖼'
         case 'table': return '▦'
         case 'barcode': return '▥'
         case 'rectangle': return '▭'
+        case 'line': return '―'
+        case 'loop': return '⟳'
+        case 'container': return '⊞'
         case 'spacer': return '↕'
         case 'page_break': return '✂'
         default: return '•'
@@ -103,8 +108,14 @@ export default function Sidebar() {
     }
 
     const getLabel = () => {
-      if (el.type === 'text' || el.type === 'rich_text' || el.type === 'link') {
+      if (el.type === 'text' || el.type === 'static_text' || el.type === 'rich_text' || el.type === 'link') {
         return (el.value as string) || el.id
+      }
+      if (el.type === 'line') {
+        return `Linha (${el.width || 200}px)`
+      }
+      if (el.type === 'loop') {
+        return `Loop (${(el as any).elements?.length || 0} itens)`
       }
       if (el.type === 'table') {
         return `Tabela (${(el as any).columns?.length || 0} col)`
@@ -161,7 +172,7 @@ export default function Sidebar() {
             selectElement(el.id, sectionKey)
           }
         }}
-        className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-grab active:cursor-grabbing transition group ${
+        className={`flex items-center justify-between px-1.5 py-0.5 rounded text-[11px] cursor-grab active:cursor-grabbing transition group ${
           isDraggingThis ? 'opacity-40 bg-slate-800' : ''
         } ${
           isDragOverThis ? 'border-t-2 border-indigo-400 bg-indigo-950/40' : ''
@@ -225,14 +236,14 @@ export default function Sidebar() {
   const renderBandElements = (elements: Element[] | undefined, sectionKey: ElementLocation) => {
     if (!elements || elements.length === 0) {
       return (
-        <div className="text-[10px] text-slate-500 py-0.5 pl-6 italic">
+        <div className="text-[10px] text-slate-500 py-0.5 pl-3 italic">
           Vazio
         </div>
       )
     }
 
     return (
-      <div className="pl-3 pr-1 border-l border-slate-800 ml-3 space-y-0.5 py-0.5">
+      <div className="pl-2 pr-0.5 border-l border-slate-800 ml-1.5 space-y-0.5 py-0.5">
         {elements.map((el, index) => {
           if (el.type === 'container') {
             const isContainerSelected = selectedElementIds.includes(el.id)
@@ -358,7 +369,7 @@ export default function Sidebar() {
                 </div>
 
                 {isContainerExpanded && (
-                  <div className="pl-3 border-l border-slate-800/80 ml-3 space-y-0.5">
+                  <div className="pl-2 border-l border-slate-800/80 ml-1.5 space-y-0.5">
                     {childElements.length === 0 ? (
                       <div className="text-[10px] text-slate-500 py-0.5 italic">
                         Container vazio
@@ -391,138 +402,8 @@ export default function Sidebar() {
     ? selectedContainerParentId || (getSectionElements().find(el => el.id === selectedElementIds[0] && el.type === 'container')?.id || null)
     : null
 
-  if (isSidebarMinimized && !isSidebarPinned) {
-    return (
-      <div className="w-14 theme-bg-secondary border-r theme-border flex flex-col items-center py-2 gap-1">
-        {/* Expand Button */}
-        <IconButton
-          icon="chevron-right"
-          onClick={toggleSidebarMinimized}
-          tooltip={t.sidebar.expand}
-          size="sm"
-        />
-        
-        <Divider orientation="horizontal" className="w-8 my-1" />
-        
-        {/* Page Settings */}
-        <SidebarButton
-          icon="settings"
-          label={t.sidebar.settings}
-          tooltip={t.sidebar.pageSettings}
-          onClick={() => {
-            toggleSidebarMinimized()
-            setPageSettingsExpanded(true)
-          }}
-          variant="primary"
-        />
-
-        {/* Section Buttons */}
-        <div className="flex flex-col items-center gap-1">
-          {/* Header */}
-          {template.pageSettings.header ? (
-            <SidebarButton
-              icon="arrow-up"
-              label={t.sidebar.header}
-              tooltip={t.sidebar.header}
-              onClick={() => setCurrentSection('header')}
-              isActive={currentSection === 'header'}
-              variant="blue"
-            />
-          ) : (
-            <SidebarButton
-              icon="plus"
-              label={t.sidebar.header}
-              tooltip={t.sidebar.addHeader}
-              onClick={addHeader}
-              variant="add"
-            />
-          )}
-
-          {/* Page/Body */}
-          <SidebarButton
-            icon="page"
-            label={t.sidebar.page}
-            tooltip={t.sidebar.page}
-            onClick={() => setCurrentSection('body')}
-            isActive={currentSection === 'body'}
-            variant="primary"
-          />
-
-          {/* Footer */}
-          {template.pageSettings.footer ? (
-            <SidebarButton
-              icon="arrow-down"
-              label={t.sidebar.footer}
-              tooltip={t.sidebar.footer}
-              onClick={() => setCurrentSection('footer')}
-              isActive={currentSection === 'footer'}
-              variant="blue"
-            />
-          ) : (
-            <SidebarButton
-              icon="plus"
-              label={t.sidebar.footer}
-              tooltip={t.sidebar.addFooter}
-              onClick={addFooter}
-              variant="add"
-            />
-          )}
-
-          <Divider orientation="horizontal" className="w-8 my-1" />
-
-          {/* Summary */}
-          {template.summaryPage ? (
-            <SidebarButton
-              icon="layers"
-              label={t.sidebar.summary}
-              tooltip={t.sidebar.summary}
-              onClick={() => setCurrentSection('summary')}
-              isActive={currentSection === 'summary'}
-              variant="green"
-            />
-          ) : (
-            <SidebarButton
-              icon="plus"
-              label={t.sidebar.summary}
-              tooltip={t.sidebar.addSummary}
-              onClick={addSummaryPage}
-              variant="add"
-            />
-          )}
-
-          {/* Background */}
-          {template.pageSettings.bodyBackground ? (
-            <SidebarButton
-              icon="rectangle"
-              label={t.sidebar.background}
-              tooltip={t.sidebar.background}
-              onClick={() => setCurrentSection('bodyBackground')}
-              isActive={currentSection === 'bodyBackground'}
-              variant="purple"
-            />
-          ) : (
-            <SidebarButton
-              icon="plus"
-              label={t.sidebar.background}
-              tooltip={t.sidebar.addBackground}
-              onClick={addBodyBackground}
-              variant="add"
-            />
-          )}
-        </div>
-
-        <Divider orientation="horizontal" className="w-8 my-1" />
-
-        {/* Elements */}
-        <SidebarButton
-          icon="layers"
-          label={t.sidebar.elementsTitle}
-          tooltip={t.sidebar.elementsTitle}
-          onClick={toggleSidebarMinimized}
-          variant="primary"
-        />
-      </div>
-    )
+  if (isSidebarMinimized) {
+    return null
   }
 
 function DocumentPropertiesContent() {
@@ -995,17 +876,31 @@ function HistoryContent() {
             className="text-indigo-400" 
           />
           <h2 className="text-xs font-semibold text-slate-200">
-            {sidebarTab === 'document' ? 'Propriedades do Documento' : sidebarTab === 'history' ? 'Histórico & Versões' : 'Elements Library'}
+            {sidebarTab === 'document' 
+              ? 'Propriedades do Documento' 
+              : sidebarTab === 'history' 
+              ? 'Histórico & Versões' 
+              : isElementsCollapsed ? 'Camadas (Layers)' : 'Elements Library'}
           </h2>
         </div>
 
-        <IconButton
-          icon="chevron-left"
-          onClick={toggleSidebarMinimized}
-          tooltip="Minimizar barra"
-          size="sm"
-          className="text-slate-400 hover:text-white"
-        />
+        {sidebarTab === 'elements' ? (
+          <IconButton
+            icon={isElementsCollapsed ? "chevron-down" : "chevron-up"}
+            onClick={() => setIsElementsCollapsed(!isElementsCollapsed)}
+            tooltip={isElementsCollapsed ? "Expandir Elementos" : "Recolher Elementos (mais espaço para Camadas)"}
+            size="sm"
+            className="text-slate-400 hover:text-white"
+          />
+        ) : (
+          <IconButton
+            icon="chevron-left"
+            onClick={toggleSidebarMinimized}
+            tooltip="Minimizar barra"
+            size="sm"
+            className="text-slate-400 hover:text-white"
+          />
+        )}
       </div>
 
       {sidebarTab === 'document' ? (
@@ -1014,182 +909,230 @@ function HistoryContent() {
         <HistoryContent />
       ) : (
         /* Elements Library Content */
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Elements Library Grid (Recolhível - sem barra de rolagem) */}
+          {!isElementsCollapsed && (
+            <div className="p-2.5 space-y-2.5 border-b border-slate-800/80 shrink-0">
           {/* Categoria 1: Standard */}
           <div>
-            <div className="text-[11px] font-medium text-slate-400 mb-2 px-0.5">
+            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5">
               Standard
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {/* Text */}
               <button
                 onClick={() => addElement({ type: 'text', id: `text-${Date.now()}`, value: 'Novo Texto', x: 40, y: 40, width: 200, height: 25, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' } }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Texto"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
+                title="Texto Dinâmico / Expressão"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Text</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Text</span>
+              </button>
+
+              {/* Static Text */}
+              <button
+                onClick={() => addElement({ type: 'static_text', id: `static_text-${Date.now()}`, value: 'Texto Fixo', x: 40, y: 40, width: 200, height: 25, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' } }, currentSection)}
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
+                title="Texto Estático / Rótulo"
+              >
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 6h16M4 10h16M4 14h12M4 18h8" strokeLinecap="round" />
+                </svg>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Static Text</span>
               </button>
 
               {/* Rich Text */}
               <button
                 onClick={() => addElement({ type: 'rich_text', id: `rich_text-${Date.now()}`, value: '**Texto** em *Markdown*', x: 40, y: 40, width: 200, height: 30, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' } }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Rich Text"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M4 6h16M4 12h10M4 18h14"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Rich Text</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Rich Text</span>
               </button>
 
               {/* Hyperlink */}
               <button
                 onClick={() => addElement({ type: 'link', id: `link-${Date.now()}`, value: 'Clique aqui', url: 'https://exemplo.com', x: 40, y: 40, width: 140, height: 25, style: { fontSize: 12, fontFamily: 'Helvetica', color: '#3b82f6' } }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Hyperlink"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Hyperlink</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Hyperlink</span>
               </button>
             </div>
           </div>
 
           {/* Categoria 2: Layout */}
           <div>
-            <div className="text-[11px] font-medium text-slate-400 mb-2 px-0.5">
+            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5">
               Layout
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {/* Container */}
               <button
                 onClick={() => addElement({ type: 'container', id: `container-${Date.now()}`, name: 'Container', x: 0, width: '100%', height: 120, elements: [] }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Container"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <rect x="3" y="3" width="18" height="18" rx="3" strokeDasharray="3 3"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Container</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Container</span>
+              </button>
+
+              {/* Loop */}
+              <button
+                onClick={() => addElement({ type: 'loop', id: `loop-${Date.now()}`, width: 400, height: 120, dataBinding: '', itemSpacing: 10, elements: [], style: { borderColor: '#8b5cf6', borderWidth: 1, borderStyle: 'dashed' } }, currentSection)}
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
+                title="Loop Repetidor de Dados"
+              >
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <polyline points="17 1 21 5 17 9" />
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                  <polyline points="7 23 3 19 7 15" />
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                </svg>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Loop</span>
               </button>
 
               {/* Spacer */}
               <button
                 onClick={() => addElement({ type: 'spacer', id: `spacer-${Date.now()}`, x: 0, width: '100%', height: 40 }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Spacer"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M7 3h10M7 21h10M12 7v10M9 10l3-3 3 3M9 14l3 3 3-3"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Spacer</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Spacer</span>
               </button>
 
               {/* Page Break */}
               <button
                 onClick={() => addElement({ type: 'page_break', id: `page_break-${Date.now()}`, x: 0, width: '100%', height: 20 }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Page Break"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M4 12h16M14 3l4 4H14V3z"/>
                   <path d="M5 21h14a2 2 0 0 0 2-2V7l-5-5H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Page Break</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Page Break</span>
               </button>
             </div>
           </div>
 
-          {/* Categoria 3: Media */}
+          {/* Categoria 3: Media & Shapes */}
           <div>
-            <div className="text-[11px] font-medium text-slate-400 mb-2 px-0.5">
-              Media
+            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5">
+              Media & Shapes
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {/* Image */}
               <button
                 onClick={() => addElement({ type: 'image', id: `image-${Date.now()}`, width: 120, height: 80, source: '', fit: 'contain' }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Image"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
                   <circle cx="8.5" cy="8.5" r="1.5"/>
                   <polyline points="21 15 16 10 5 21"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Image</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Image</span>
               </button>
 
               {/* Table */}
               <button
                 onClick={() => addElement({ type: 'table', id: `table-${Date.now()}`, width: 400, dataBinding: '', columns: [{ header: 'Coluna 1', field: 'item', width: 200 }], style: { headerBackground: '#f3f4f6', headerColor: '#000000', borderWidth: 1 } }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Table"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
                   <path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Table</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Table</span>
+              </button>
+
+              {/* Shape / Rectangle */}
+              <button
+                onClick={() => addElement({ type: 'rectangle', id: `rect-${Date.now()}`, x: 40, y: 40, width: 100, height: 60, style: { fillColor: '#e2e8f0', borderColor: '#94a3b8', borderWidth: 1 } }, currentSection)}
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
+                title="Shape (Retângulo)"
+              >
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                </svg>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Shape</span>
+              </button>
+
+              {/* Line */}
+              <button
+                onClick={() => addElement({ type: 'line', id: `line-${Date.now()}`, x: 40, y: 40, width: 200, height: 0, style: { strokeColor: '#000000', strokeWidth: 1 } }, currentSection)}
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
+                title="Linha Divisória"
+              >
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <line x1="3" y1="12" x2="21" y2="12" strokeWidth="2.5" strokeLinecap="round" />
+                </svg>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Line</span>
               </button>
 
               {/* Barcodes / QR */}
               <button
                 onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 100, height: 100, barcodeType: 'qrcode', dataBinding: '' }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Barcodes / QR"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <rect x="3" y="3" width="7" height="7" rx="1"/>
                   <rect x="14" y="3" width="7" height="7" rx="1"/>
                   <rect x="3" y="14" width="7" height="7" rx="1"/>
                   <rect x="14" y="14" width="4" height="4"/>
                   <path d="M18 18h3v3h-3z"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Barcodes/QR</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">QR Code</span>
               </button>
 
               {/* Barcode 1D */}
               <button
                 onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 140, height: 50, barcodeType: 'code128', dataBinding: '' }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Barcode / QR"
+                className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
+                title="Código de Barras 1D"
               >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M4 5v14M7 5v14M10 5v14M13 5v14M16 5v14M19 5v14"/>
                 </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Barcode/QR</span>
-              </button>
-
-              {/* Shape */}
-              <button
-                onClick={() => addElement({ type: 'rectangle', id: `rect-${Date.now()}`, x: 40, y: 40, width: 100, height: 60, style: { fillColor: '#e2e8f0', borderColor: '#94a3b8', borderWidth: 1 } }, currentSection)}
-                className="h-20 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1.5 group"
-                title="Shape"
-              >
-                <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <rect x="4" y="4" width="12" height="12" rx="2"/>
-                  <rect x="8" y="8" width="12" height="12" rx="2" strokeDasharray="2 2"/>
-                </svg>
-                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Shape</span>
+                <span className="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200">Barcode</span>
               </button>
             </div>
           </div>
 
-          {/* Seção Inferior: Layer Tree (mostra apenas camadas adicionadas) */}
-          <div className="pt-3 border-t border-slate-800/80">
-            <div className="flex items-center justify-between mb-2 px-0.5 relative">
+            </div>
+          )}
+
+          {/* Seção Inferior: Layer Tree (ocupa todo o espaço quando elementos recolhidos) */}
+          <div className="flex-1 flex flex-col min-h-0 p-3 overflow-hidden">
+            <div className="flex items-center justify-between mb-2 px-0.5 relative shrink-0 z-30">
               <span className="text-[11px] font-medium text-slate-300">Layer</span>
               
               {/* Botão '+' com Dropdown Popover anexo a ele */}
               <div className="relative">
                 <button
-                  onClick={() => setShowAddBandDropdown(!showAddBandDropdown)}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowAddBandDropdown(!showAddBandDropdown)
+                  }}
                   className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 hover:text-white transition"
                   title="Adicionar Seção ou Container"
                 >
@@ -1198,10 +1141,18 @@ function HistoryContent() {
 
                 {/* Popover anexo ao botão '+' */}
                 {showAddBandDropdown && (
-                  <div className="absolute bottom-full right-0 mb-1 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 py-1.5 backdrop-blur-md">
-                    <div className="px-3 py-1 text-[10px] font-semibold tracking-wider text-slate-400 uppercase border-b border-slate-800/80 mb-1">
-                      Adicionar Seção
-                    </div>
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40 cursor-default" 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowAddBandDropdown(false)
+                      }} 
+                    />
+                    <div className="absolute top-full right-0 mt-1 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 py-1.5 backdrop-blur-md">
+                      <div className="px-3 py-1 text-[10px] font-semibold tracking-wider text-slate-400 uppercase border-b border-slate-800/80 mb-1">
+                        Adicionar Seção
+                      </div>
                     
                     {!template.pageSettings.header && (
                       <button
@@ -1210,12 +1161,17 @@ function HistoryContent() {
                           setCurrentSection('header')
                           setShowAddBandDropdown(false)
                         }}
-                        className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 transition text-slate-300"
+                        className="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
                       >
-                        <span className="text-sm">🏷</span>
+                        <div className="w-6 h-6 rounded-md bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 group-hover:border-indigo-500/40">
+                          <svg className="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="3" width="18" height="6" rx="1" fill="currentColor" fillOpacity="0.2" />
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                          </svg>
+                        </div>
                         <div>
-                          <div className="font-medium">Header Band</div>
-                          <div className="text-[10px] text-slate-500">Faixa fixa superior</div>
+                          <div className="font-medium text-slate-200 group-hover:text-white">Header Band</div>
+                          <div className="text-[10px] text-slate-400">Faixa fixa superior</div>
                         </div>
                       </button>
                     )}
@@ -1227,12 +1183,19 @@ function HistoryContent() {
                           setCurrentSection('summary')
                           setShowAddBandDropdown(false)
                         }}
-                        className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 transition text-slate-300"
+                        className="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
                       >
-                        <span className="text-sm">📊</span>
+                        <div className="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 group-hover:border-emerald-500/40">
+                          <svg className="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                          </svg>
+                        </div>
                         <div>
-                          <div className="font-medium">Summary Band</div>
-                          <div className="text-[10px] text-slate-500">Totais e assinaturas</div>
+                          <div className="font-medium text-slate-200 group-hover:text-white">Summary Band</div>
+                          <div className="text-[10px] text-slate-400">Totais e assinaturas</div>
                         </div>
                       </button>
                     )}
@@ -1244,12 +1207,17 @@ function HistoryContent() {
                           setCurrentSection('footer')
                           setShowAddBandDropdown(false)
                         }}
-                        className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 transition text-slate-300"
+                        className="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
                       >
-                        <span className="text-sm">🏷</span>
+                        <div className="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:border-blue-500/40">
+                          <svg className="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="15" width="18" height="6" rx="1" fill="currentColor" fillOpacity="0.2" />
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                          </svg>
+                        </div>
                         <div>
-                          <div className="font-medium">Footer Band</div>
-                          <div className="text-[10px] text-slate-500">Faixa fixa no rodapé</div>
+                          <div className="font-medium text-slate-200 group-hover:text-white">Footer Band</div>
+                          <div className="text-[10px] text-slate-400">Faixa fixa no rodapé</div>
                         </div>
                       </button>
                     )}
@@ -1261,12 +1229,18 @@ function HistoryContent() {
                           setCurrentSection('bodyBackground')
                           setShowAddBandDropdown(false)
                         }}
-                        className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 transition text-slate-300"
+                        className="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
                       >
-                        <span className="text-sm">🖼</span>
+                        <div className="w-6 h-6 rounded-md bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 group-hover:border-purple-500/40">
+                          <svg className="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="2 2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                          </svg>
+                        </div>
                         <div>
-                          <div className="font-medium">Background Layer</div>
-                          <div className="text-[10px] text-slate-500">Marca d'água / Timbrado</div>
+                          <div className="font-medium text-slate-200 group-hover:text-white">Background Layer</div>
+                          <div className="text-[10px] text-slate-400">Marca d'água / Timbrado</div>
                         </div>
                       </button>
                     )}
@@ -1279,20 +1253,26 @@ function HistoryContent() {
                         addElement({ type: 'container', id, name: 'Container', x: 0, width: '100%', height: 120, elements: [] }, currentSection)
                         setShowAddBandDropdown(false)
                       }}
-                      className="w-full px-3 py-1.5 text-xs text-left flex items-center gap-2 hover:bg-slate-800 transition text-slate-300"
+                      className="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
                     >
-                      <span className="text-sm">⊞</span>
+                      <div className="w-6 h-6 rounded-md bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0 group-hover:border-cyan-500/40">
+                        <svg className="w-3.5 h-3.5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="3 3"/>
+                          <path d="M3 9h18M3 15h18M9 3v18M15 3v18" strokeWidth="1.2" strokeOpacity="0.5"/>
+                        </svg>
+                      </div>
                       <div>
-                        <div className="font-medium">Container (em {currentSection.toUpperCase()})</div>
-                        <div className="text-[10px] text-slate-500">Agrupador dentro da camada</div>
+                        <div className="font-medium text-slate-200 group-hover:text-white">Container (em {currentSection.toUpperCase()})</div>
+                        <div className="text-[10px] text-slate-400">Agrupador dentro da camada</div>
                       </div>
                     </button>
                   </div>
+                </>
                 )}
               </div>
             </div>
 
-            <div className="space-y-1 text-xs">
+            <div className="flex-1 overflow-y-auto space-y-1 text-xs pr-0.5">
               {/* Background Layer (se adicionado) */}
               {template.pageSettings.bodyBackground && (
                 <div>

@@ -45,7 +45,8 @@ class RectangleRenderer : Renderer<RectangleElement> {
 
         cb.saveState()
 
-        element.style?.fillColor?.let { fillColor ->
+        val fillColor = element.style?.getEffectiveFillColor()
+        if (!fillColor.isNullOrBlank() && !fillColor.equals("transparent", ignoreCase = true)) {
             cb.setColorFill(ColorUtil.hexToColor(fillColor))
 
             if (element.style.cornerRadius > 0) {
