@@ -694,8 +694,8 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
-    backgroundColor: '#f3f4f6',
-    title: 'PDF Template Editor',
+    backgroundColor: '#0b0f19',
+    title: 'Open PDF Template Studio',
   })
   
   createMenu()
@@ -733,9 +733,6 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // Mostrar splash screen imediatamente
-  createSplashWindow()
-  
   // Set dock icon on macOS
   if (process.platform === 'darwin') {
     const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'

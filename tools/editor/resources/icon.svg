@@ -1,62 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <defs>
-    <!-- Light background gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#F8FAFC"/>
-      <stop offset="50%" style="stop-color:#F1F5F9"/>
-      <stop offset="100%" style="stop-color:#E2E8F0"/>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
     </linearGradient>
-    
-    <!-- Gradient for internal icon -->
-    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFFFFF"/>
-      <stop offset="100%" style="stop-color:#FAFAFF"/>
+    <linearGradient id="stemGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4338CA"/>
     </linearGradient>
+    <linearGradient id="loopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="50%" stop-color="#A855F7"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+    <linearGradient id="gridAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#FB923C"/>
+    </linearGradient>
+    <filter id="glow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#4F46E5" flood-opacity="0.45"/>
+    </filter>
   </defs>
-  
-  <!-- Rounded background - Light color -->
-  <rect x="24" y="24" width="464" height="464" rx="100" ry="100" fill="url(#bgGrad)"/>
-  
-  <!-- Top highlight - purple tone -->
-  <ellipse cx="256" cy="140" rx="180" ry="80" fill="#A78BFA" opacity="0.4"/>
-  
-  <!-- Central icon: Stylized document -->
-  <g transform="translate(140, 100)">
-    <!-- Soft shadow -->
-    <path d="M 20 8 L 170 8 L 220 58 L 220 308 Q 220 328 200 328 L 20 328 Q 0 328 0 308 L 0 28 Q 0 8 20 8 Z" 
-          fill="black" 
-          opacity="0.1"/>
-    
-    <!-- Main document -->
-    <path d="M 20 0 L 170 0 L 220 50 L 220 300 Q 220 320 200 320 L 20 320 Q 0 320 0 300 L 0 20 Q 0 0 20 0 Z" 
-          fill="url(#iconGrad)"/>
-    
-    <!-- Folded corner -->
-    <path d="M 170 0 L 170 50 L 220 50 Z" fill="#E0E7FF"/>
-    
-    <!-- Template lines -->
-    <rect x="30" y="80" width="100" height="12" rx="6" fill="#818CF8"/>
-    <rect x="30" y="105" width="160" height="12" rx="6" fill="#C4B5FD"/>
-    <rect x="30" y="130" width="130" height="12" rx="6" fill="#DDD6FE"/>
-    
-    <!-- Stylized data/table area -->
-    <rect x="30" y="165" width="160" height="80" rx="10" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="2"/>
-    
-    <!-- Grid icon inside -->
-    <rect x="45" y="180" width="30" height="20" rx="4" fill="#818CF8"/>
-    <rect x="85" y="180" width="30" height="20" rx="4" fill="#A78BFA"/>
-    <rect x="125" y="180" width="50" height="20" rx="4" fill="#C4B5FD"/>
-    <rect x="45" y="210" width="50" height="20" rx="4" fill="#DDD6FE"/>
-    <rect x="105" y="210" width="70" height="20" rx="4" fill="#A78BFA"/>
-    
-    <!-- Highlight element -->
-    <rect x="30" y="265" width="70" height="12" rx="6" fill="#818CF8"/>
-    <rect x="110" y="265" width="80" height="12" rx="6" fill="#6366F1"/>
+
+  <!-- Squircle Base -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bg2)"/>
+  <!-- Subtle Golden Ratio Grid Lines -->
+  <g stroke="#6366F1" stroke-opacity="0.16" stroke-width="2">
+    <line x1="148" y1="40" x2="148" y2="472"/>
+    <line x1="232" y1="40" x2="232" y2="472"/>
+    <line x1="364" y1="40" x2="364" y2="472"/>
+    <line x1="40" y1="120" x2="472" y2="120"/>
+    <line x1="40" y1="296" x2="472" y2="296"/>
+    <line x1="40" y1="392" x2="472" y2="392"/>
   </g>
-  
-  <!-- RED PDF badge -->
-  <g transform="translate(320, 370)">
-    <rect x="0" y="0" width="90" height="40" rx="10" fill="#DC2626"/>
-    <text x="45" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="bold" fill="white" text-anchor="middle">PDF</text>
+  <rect x="26" y="26" width="460" height="460" rx="110" stroke="#818CF8" stroke-opacity="0.35" stroke-width="4"/>
+
+  <!-- Geometric P Monogram + Layout Blocks -->
+  <g filter="url(#glow2)">
+    <!-- P Loop Ribbon -->
+    <path d="M 148 120 H 288 C 336 120 372 156 372 208 C 372 260 336 296 288 296 H 212 V 232 H 280 C 296 232 308 222 308 208 C 308 194 296 184 280 184 H 148 Z" fill="url(#loopGrad)"/>
+
+    <!-- Vertical Stem Pillar -->
+    <rect x="148" y="120" width="64" height="272" rx="32" fill="url(#stemGrad)"/>
+
+    <!-- Floating Studio Template Nodes (Bottom Right Counter-Balance) -->
+    <rect x="244" y="324" width="68" height="68" rx="18" fill="url(#gridAccent)"/>
+    <rect x="328" y="324" width="36" height="30" rx="10" fill="#38BDF8" fill-opacity="0.9"/>
+    <rect x="328" y="362" width="36" height="30" rx="10" fill="#818CF8" fill-opacity="0.9"/>
+  </g>
+
+  <!-- Corner Precision Crosshairs -->
+  <g stroke="#38BDF8" stroke-width="3" stroke-linecap="round" stroke-opacity="0.8">
+    <path d="M 140 120 H 156 M 148 112 V 128"/>
+    <path d="M 364 208 H 380 M 372 200 V 216"/>
+    <path d="M 236 324 H 252 M 244 316 V 332"/>
   </g>
 </svg>

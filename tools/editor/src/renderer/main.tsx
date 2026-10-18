@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { EditorPage } from './components/pages'
+import { useEffect, useState } from 'react'
+import { EditorPage, HomePage, LoadingPage } from './components/pages'
+import { useTabStore } from './store/tabStore'
 import './index.css'
 
 // Fallback para desenvolvimento no browser sem Electron
@@ -186,9 +188,57 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
   }
 }
 
+function App() {
+  const [screen, setScreen] = useState<'loading' | 'home' | 'editor'>('loading')
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setScreen('home'), 2200)
+    return () => window.clearTimeout(timer)
+  }, [])
+
+  if (screen === 'loading') return <LoadingPage />
+  if (screen === 'home') {
+    return (
+      <HomePage
+        onNewTemplate={() => {
+          useTabStore.getState().createNewTemplateTab()
+          setScreen('editor')
+        }}
+        onOpenFile={async () => {
+          const result = await window.electronAPI.openFile()
+          if (!result) return
+          try {
+            const loadedTemplate = JSON.parse(result.content)
+            useTabStore.getState().addTab({
+              name: result.path.split(/[/\\]/).pop() || 'Opened Template',
+              path: result.path,
+              isDirty: false,
+              stateSnapshot: {
+                template: loadedTemplate,
+                currentFilePath: result.path,
+                isDirty: false,
+                history: [loadedTemplate],
+                historyIndex: 0,
+                selectedElementIds: [],
+                selectedElementLocation: 'body',
+                selectedGroupId: null,
+                currentSection: 'body',
+              },
+            })
+            setScreen('editor')
+          } catch {
+            window.alert('Não foi possível abrir este template. Verifique se o arquivo é um JSON válido.')
+          }
+        }}
+      />
+    )
+  }
+  return <EditorPage />
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <EditorPage />
+    <App />
   </React.StrictMode>,
 )
 
