@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "pageSettings": { "size": "A4", "orientation": "portrait", "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 } },
+  "pageElements": [
+    { "type": "text", "id": "t1", "x": 0, "y": 0, "dataBinding": "textData", "width": 100 }
+  ]
+}

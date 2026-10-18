@@ -10,6 +10,10 @@ const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
   { type: 'line', label: 'Line', icon: 'line' },
   { type: 'barcode', label: 'Barcode/QR', icon: 'barcode' },
   { type: 'loop', label: 'Loop', icon: 'loop' },
+  { type: 'page_break', label: 'Page Break', icon: 'page-break' },
+  { type: 'spacer', label: 'Spacer', icon: 'spacer' },
+  { type: 'rich_text', label: 'Rich Text', icon: 'markdown' },
+  { type: 'link', label: 'Link', icon: 'link' },
 ]
 
 export default function ElementsToolbar() {
@@ -60,7 +64,7 @@ export default function ElementsToolbar() {
       case 'image':
         element = {
           ...baseElement,
-          width: 100,
+          width: '100%',
           height: 100,
           source: '',
           fit: 'contain',
@@ -110,7 +114,7 @@ export default function ElementsToolbar() {
       case 'barcode':
         element = {
           ...baseElement,
-          width: 100,
+          width: '100%',
           height: 100,
           barcodeType: 'qrcode', // 'qrcode' ou 'barcode'
           dataBinding: '', 
@@ -131,6 +135,55 @@ export default function ElementsToolbar() {
             borderColor: '#8b5cf6',
             borderWidth: 1,
             borderStyle: 'dashed',
+          },
+        }
+        break
+      case 'page_break':
+        element = {
+          ...baseElement,
+          x: 0,
+          width: '100%',
+          height: 20,
+          positionMode: 'RELATIVE',
+          relativeOffsetY: 0
+        }
+        break
+      case 'spacer':
+        element = {
+          ...baseElement,
+          x: 0,
+          width: '100%',
+          height: 50,
+          positionMode: 'RELATIVE',
+          relativeOffsetY: 0
+        }
+        break
+      case 'rich_text':
+        element = {
+          ...baseElement,
+          value: '**Rich** *Text*',
+          width: 200,
+          height: 30,
+          style: {
+            fontSize: 12,
+            fontFamily: 'Helvetica',
+            color: '#000000',
+            alignment: 'left',
+          },
+        }
+        break
+      case 'link':
+        element = {
+          ...baseElement,
+          value: 'Click here',
+          url: 'https://example.com',
+          width: 150,
+          height: 30,
+          style: {
+            fontSize: 12,
+            fontFamily: 'Helvetica',
+            color: '#0000FF',
+            alignment: 'left',
           },
         }
         break

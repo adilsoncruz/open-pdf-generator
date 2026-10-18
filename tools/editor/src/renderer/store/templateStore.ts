@@ -103,7 +103,6 @@ interface TemplateStore {
   history: Template[]
   historyIndex: number
   copiedElements: { elements: Element[]; location: ElementLocation; isChild?: boolean; parentId?: string | null } | null
-  isPropertiesPanelPinned: boolean
   isSidebarPinned: boolean
   isSidebarMinimized: boolean
 
@@ -173,7 +172,7 @@ interface TemplateStore {
   reorderLoopChildren: (loopId: string, fromIndex: number, toIndex: number, location?: ElementLocation) => void
 
   // Container Element Actions
-  addElementToLoop: (containerId: string, element: Element, location?: ElementLocation) => void
+  addElementToContainer: (containerId: string, element: Element, location?: ElementLocation) => void
   updateContainerChildElement: (containerId: string, childId: string, updates: Partial<Element>, location?: ElementLocation) => void
   deleteContainerChildElement: (containerId: string, childId: string, location?: ElementLocation) => void
   selectContainerChild: (containerId: string, childId: string, location?: ElementLocation) => void
@@ -182,7 +181,6 @@ interface TemplateStore {
   reorderContainerChildren: (containerId: string, fromIndex: number, toIndex: number, location?: ElementLocation) => void
   
   // UI State Actions
-  togglePropertiesPanelPinned: () => void
   toggleSidebarPinned: () => void
   toggleSidebarMinimized: () => void
   setSidebarMinimized: (minimized: boolean) => void
@@ -250,15 +248,20 @@ const ensureContainersInSection = (elements: Element[] | undefined, defaultName:
     }]
   }
 
-  const looseElements = elements.filter((el) => el.type !== 'container')
+  const looseElements = elements.filter((el) => el.type !== 'container' && el.type !== 'page_break' && el.type !== 'spacer')
   if (looseElements.length > 0) {
-    const containers = elements.filter((el) => el.type === 'container')
-    return containers.map((c, i) =>
-      i === 0 ? { ...c, elements: [...(c.elements || []), ...looseElements], x: 0, width: '100%' } : { ...c, x: 0, width: '100%' }
-    )
+    const topElements = elements.filter((el) => el.type === 'container' || el.type === 'page_break' || el.type === 'spacer')
+    let attached = false
+    return topElements.map((c) => {
+      if (!attached && c.type === 'container') {
+        attached = true
+        return { ...c, elements: [...(c.elements || []), ...looseElements], x: 0, width: '100%' }
+      }
+      return { ...c, x: 0, width: '100%' }
+    })
   }
 
-  return elements.map((el) => (el.type === 'container' ? { ...el, x: 0, width: '100%' } : el))
+  return elements.map((el) => (el.type === 'container' || el.type === 'page_break' || el.type === 'spacer' ? { ...el, x: 0, width: '100%' } : el))
 }
 
 const normalizeBodyContainers = (template: Template): Template => ({
@@ -293,6 +296,42 @@ const normalizeBodyContainers = (template: Template): Template => ({
     : undefined,
 })
 
+const restackBodyContainers = (elements: Element[], template?: Template): Element[] => {
+  let currentY = 0;
+  let usableHeight = 842;
+  
+  if (template) {
+    const size = template.pageSettings?.size || 'A4';
+    const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 };
+    const margins = template.pageSettings?.margins || { top: 30, bottom: 30, left: 30, right: 30 };
+    const headerHeight = template.pageSettings?.header?.height || 0;
+    const footerHeight = template.pageSettings?.footer?.height || 0;
+    usableHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0) - headerHeight - footerHeight;
+  }
+
+  return elements.map((el) => {
+    if (el.type !== 'container' && el.type !== 'page_break' && el.type !== 'spacer') return el;
+    
+    const next = {
+      ...el,
+      x: 0,
+      y: currentY,
+      width: '100%',
+    };
+    
+    const h = typeof el.height === 'number' ? el.height : (el.type === 'page_break' ? 20 : (el.type === 'spacer' ? 50 : 150));
+    
+    if (el.type === 'page_break') {
+      currentY += h;
+      const currentPageIndex = Math.floor((currentY - 0.1) / usableHeight);
+      currentY = (currentPageIndex + 1) * usableHeight;
+    } else {
+      currentY += h;
+    }
+    
+    return next;
+  });
+}
 
 const saveToHistory = (state: TemplateStore, newTemplate: Template) => {
   const newHistory = state.history.slice(0, state.historyIndex + 1)
@@ -332,7 +371,6 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   history: [JSON.parse(JSON.stringify(defaultTemplate))],
   historyIndex: 0,
   copiedElements: null,
-  isPropertiesPanelPinned: true,
   isSidebarPinned: true,
   isSidebarMinimized: false,
 
@@ -392,7 +430,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   addElement: (element, location = 'body') =>
     set((state) => {
       let normalizedElement = { ...element }
-      if (element.type === 'container') {
+      if (element.type === 'container' || element.type === 'page_break' || element.type === 'spacer') {
         const size = state.template.pageSettings.size
         const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 }
         const margins = state.template.pageSettings.margins
@@ -428,15 +466,15 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           x: 0,
           y: nextY,
           width: '100%',
-          height: Math.min(typeof element.height === 'number' ? element.height : 120, Math.max(0, sectionHeight))
+          height: element.type === 'page_break' ? 20 : (element.type === 'spacer' ? 50 : Math.min(typeof element.height === 'number' ? element.height : 120, Math.max(0, sectionHeight)))
         }
       }
       const selectedId = state.selectedElementIds[0]
       const selectedParentId = state.selectedContainerParentId
 
       const insertIntoElements = (elements: Element[]) => {
-        // Se for um container, adiciona na raiz da seção
-        if (normalizedElement.type === 'container') {
+        // Se for um container, page_break ou spacer, adiciona na raiz da seção
+        if (normalizedElement.type === 'container' || normalizedElement.type === 'page_break' || normalizedElement.type === 'spacer') {
           return {
             newElements: [...elements, normalizedElement],
             newSelectedId: normalizedElement.id,
@@ -617,7 +655,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.page)
         newTemplate = {
           ...state.template,
-          page: newElements,
+          page: restackBodyContainers(newElements, state.template),
         }
         return {
           template: newTemplate,
@@ -743,7 +781,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: {
             ...state.template,
-            page: applyUpdates(state.template.page),
+            page: restackBodyContainers(applyUpdates(state.template.page), state.template),
             groups: updateGroups(state.template.groups),
           },
           selectedElementIds: newSelectedElementIds,
@@ -818,7 +856,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       } else {
         newTemplate = {
           ...state.template,
-          page: state.template.page.filter((el) => el.id !== id),
+          page: restackBodyContainers(state.template.page.filter((el) => el.id !== id), state.template),
           groups: updateGroupsAfterDelete(state.template.groups),
         }
       }
@@ -968,7 +1006,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       } else {
         newTemplate = {
           ...template,
-          page: filterElements(template.page),
+          page: restackBodyContainers(filterElements(template.page), template),
           groups: updateGroupsAfterDelete(template.groups),
         }
       }
@@ -1425,7 +1463,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: {
             ...state.template,
-            page: moveToTop(state.template.page),
+            page: restackBodyContainers(moveToTop(state.template.page), state.template),
           },
           isDirty: true,
         }
@@ -1474,7 +1512,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: {
             ...state.template,
-            page: moveToBottom(state.template.page),
+            page: restackBodyContainers(moveToBottom(state.template.page), state.template),
           },
           isDirty: true,
         }
@@ -1572,7 +1610,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           ...historyState,
           template: {
             ...state.template,
-            page: reorder(state.template.page),
+            page: restackBodyContainers(reorder(state.template.page), state.template),
           },
           isDirty: true,
         }
@@ -1638,7 +1676,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           ...historyState,
           template: {
             ...state.template,
-            page: toggleInElements(state.template.page),
+            page: restackBodyContainers(toggleInElements(state.template.page), state.template),
           },
           isDirty: true,
         }
@@ -1792,7 +1830,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         } else {
           newTemplate = {
             ...template,
-            page: insertIntoContainer(template.page),
+            page: restackBodyContainers(insertIntoContainer(template.page), template),
           }
         }
         
@@ -1842,7 +1880,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       } else {
         newTemplate = {
           ...template,
-          page: [...template.page, ...newElements],
+          page: restackBodyContainers([...template.page, ...newElements], template),
         }
       }
       
@@ -2369,6 +2407,9 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       const historyState = saveToHistory(state, state.template)
       
       const addToLoop = (elements: Element[]): Element[] => {
+        if (element.type === 'page_break') {
+          return elements; // silently ignore
+        }
         return elements.map(el => {
           if (el.id === loopId && (el.type === 'loop' || el.type === 'container')) {
             return {
@@ -2670,10 +2711,6 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     }),
 
   // UI State Actions
-  togglePropertiesPanelPinned: () =>
-    set((state) => ({
-      isPropertiesPanelPinned: !state.isPropertiesPanelPinned,
-    })),
 
   toggleSidebarPinned: () =>
     set((state) => ({

@@ -8,8 +8,6 @@ import { NumberField, ColorField, PropertyGroup, PropertyRow, TabBar, IconButton
  * Reusable panel header component with pin button
  */
 function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  const { isPropertiesPanelPinned, togglePropertiesPanelPinned } = useTemplateStore()
-  
   return (
     <div className="p-3 border-b theme-border flex items-center justify-between shrink-0">
       <div className="flex-1 min-w-0">
@@ -18,13 +16,6 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) 
           <p className="text-xs theme-text-muted mt-0.5 truncate">{subtitle}</p>
         )}
       </div>
-      <IconButton
-        icon={isPropertiesPanelPinned ? 'pin' : 'pin-off'}
-        onClick={togglePropertiesPanelPinned}
-        tooltip={isPropertiesPanelPinned ? 'Unpin panel' : 'Pin panel'}
-        variant={isPropertiesPanelPinned ? 'default' : 'ghost'}
-        className={isPropertiesPanelPinned ? 'text-blue-500' : ''}
-      />
     </div>
   )
 }
@@ -1622,8 +1613,6 @@ export default function PropertiesPanel() {
   
   
   const store = useTemplateStore()
-  const isPropertiesPanelPinned = store.isPropertiesPanelPinned
-  const togglePropertiesPanelPinned = store.togglePropertiesPanelPinned
   
   const template = store.template
   const selectedElementIds = store.selectedElementIds
@@ -1898,7 +1887,7 @@ export default function PropertiesPanel() {
 
   // Define tabs based on element type
   const getTabs = () => {
-    if (selectedElement.type === 'text' || selectedElement.type === 'static_text') {
+    if (selectedElement.type === 'text' || selectedElement.type === 'static_text' || selectedElement.type === 'rich_text' || selectedElement.type === 'link') {
       return [
         { id: 'appearance', label: 'Appearance' },
         { id: 'borders', label: 'Borders' },
@@ -1986,13 +1975,6 @@ export default function PropertiesPanel() {
             <p className="text-xs theme-text-muted mt-0.5">{selectedElement.type}</p>
           )}
         </div>
-        <IconButton
-          icon={isPropertiesPanelPinned ? 'pin' : 'pin-off'}
-          onClick={togglePropertiesPanelPinned}
-          tooltip={isPropertiesPanelPinned ? 'Unpin panel' : 'Pin panel'}
-          variant={isPropertiesPanelPinned ? 'default' : 'ghost'}
-          className={isPropertiesPanelPinned ? 'text-blue-500' : ''}
-        />
       </div>
 
       {/* Tabs */}
@@ -2009,8 +1991,8 @@ export default function PropertiesPanel() {
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* TEXT ELEMENT TABS (inclui static_text) */}
-        {(selectedElement.type === 'text' || selectedElement.type === 'static_text') && (
+        {/* TEXT ELEMENT TABS (inclui static_text, rich_text, link) */}
+        {(selectedElement.type === 'text' || selectedElement.type === 'static_text' || selectedElement.type === 'rich_text' || selectedElement.type === 'link') && (
           <>
             {/* APPEARANCE TAB */}
             {activeTab === 'appearance' && (
@@ -2123,7 +2105,7 @@ export default function PropertiesPanel() {
                 </PropertyGroup>
 
                 
-                {selectedElement.type === 'text' && (
+                {(selectedElement.type === 'text' || selectedElement.type === 'rich_text' || selectedElement.type === 'link') && (
                   <PropertyGroup title="Print Condition" collapsible={false}>
                     <Input
                         value={selectedElement.printCondition || ''}
@@ -2515,6 +2497,20 @@ export default function PropertiesPanel() {
               />
             </div>
                     
+                    
+                    {selectedElement.type === 'link' && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium theme-text-muted">Link URL</label>
+                        <Input
+                          value={selectedElement.url || ''}
+                          onChange={(e) => handleUpdate('url', e.target.value)}
+                          placeholder="e.g., https://example.com"
+                          size="sm"
+                          className="font-mono text-blue-500"
+                        />
+                      </div>
+                    )}
+
                     {selectedElement.type === 'text' && (
                       <div className="space-y-1">
                         <label className="text-xs font-medium theme-text-muted">Data Binding</label>
@@ -2579,53 +2575,54 @@ export default function PropertiesPanel() {
             </div>
 
                     {/* Style Buttons - B I U S */}
-                    <div className="flex gap-1">
-                <button
-                  onClick={() => {
-                    const currentWeight = selectedElement.style?.fontWeight || 'normal'
-                    handleStyleUpdate('fontWeight', currentWeight === 'bold' ? 'normal' : 'bold')
-                  }}
-                        className={`w-10 h-10 text-sm font-bold border rounded transition ${
-                    selectedElement.style?.fontWeight === 'bold'
-                            ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
-                            : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
-                  }`}
-                        title="Bold"
-                >
-                  B
-                </button>
-                <button
-                  onClick={() => {
-                    const currentStyle = selectedElement.style?.fontStyle || 'normal'
-                    handleStyleUpdate('fontStyle', currentStyle === 'italic' ? 'normal' : 'italic')
-                  }}
-                        className={`w-10 h-10 text-sm italic border rounded transition ${
-                    selectedElement.style?.fontStyle === 'italic'
-                            ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
-                            : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
-                  }`}
-                        title="Italic"
-                >
-                  I
-                </button>
-                <button
-                  onClick={() => {
-                    const currentDecoration = selectedElement.style?.textDecoration || 'none'
-                    handleStyleUpdate('textDecoration', currentDecoration === 'underline' ? 'none' : 'underline')
-                  }}
-                        className={`w-10 h-10 text-sm underline border rounded transition ${
-                    selectedElement.style?.textDecoration === 'underline'
-                            ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
-                            : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
-                  }`}
-                        title="Underline"
-                >
-                  U
-                </button>
-                      <button
-                        onClick={() => {
-                          const currentDecoration = selectedElement.style?.textDecoration || 'none'
-                          handleStyleUpdate('textDecoration', currentDecoration === 'line-through' ? 'none' : 'line-through')
+                    {selectedElement.type !== 'rich_text' && (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => {
+                            const currentWeight = selectedElement.style?.fontWeight || 'normal'
+                            handleStyleUpdate('fontWeight', currentWeight === 'bold' ? 'normal' : 'bold')
+                          }}
+                          className={`w-10 h-10 text-sm font-bold border rounded transition ${
+                            selectedElement.style?.fontWeight === 'bold'
+                              ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
+                              : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
+                          }`}
+                          title="Bold"
+                        >
+                          B
+                        </button>
+                        <button
+                          onClick={() => {
+                            const currentStyle = selectedElement.style?.fontStyle || 'normal'
+                            handleStyleUpdate('fontStyle', currentStyle === 'italic' ? 'normal' : 'italic')
+                          }}
+                          className={`w-10 h-10 text-sm italic border rounded transition ${
+                            selectedElement.style?.fontStyle === 'italic'
+                              ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
+                              : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
+                          }`}
+                          title="Italic"
+                        >
+                          I
+                        </button>
+                        <button
+                          onClick={() => {
+                            const currentDecoration = selectedElement.style?.textDecoration || 'none'
+                            handleStyleUpdate('textDecoration', currentDecoration === 'underline' ? 'none' : 'underline')
+                          }}
+                          className={`w-10 h-10 text-sm underline border rounded transition ${
+                            selectedElement.style?.textDecoration === 'underline'
+                              ? 'bg-primary-100 dark:bg-primary-500/30 border-primary-500 text-primary-700 dark:text-primary-200'
+                              : 'bg-white dark:bg-gray-700 theme-border hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
+                          }`}
+                          title="Underline"
+                        >
+                          U
+                        </button>
+                        <button
+                          onClick={() => {
+                            const currentDecoration = selectedElement.style?.textDecoration || 'none'
+                            handleStyleUpdate('textDecoration', currentDecoration === 'line-through' ? 'none' : 'line-through')
                         }}
                         className={`w-10 h-10 text-sm line-through border rounded transition ${
                           selectedElement.style?.textDecoration === 'line-through'
@@ -2636,7 +2633,8 @@ export default function PropertiesPanel() {
                       >
                         S
                 </button>
-                </div>
+                      </div>
+                    )}
 
                     {/* Alignment Section */}
             <div>
@@ -2849,6 +2847,105 @@ export default function PropertiesPanel() {
               )}
                   </div>
               </PropertyGroup>
+              </>
+            )}
+          </>
+        )}
+        {/* PAGE_BREAK ELEMENT TABS */}
+        {selectedElement.type === 'page_break' && (
+          <>
+            {activeTab === 'appearance' && (
+              <>
+                {!isMultiSelection && (
+                  <>
+                    <div className="space-y-1 mb-3">
+                      <label className="text-xs font-medium theme-text-muted">ID</label>
+                      <Input
+                        value={selectedElement.id}
+                        onChange={(e) => handleUpdate('id', e.target.value)}
+                        size="sm"
+                      />
+                    </div>
+                    <Divider className="my-3" />
+                  </>
+                )}
+
+                {/* Location */}
+                <PropertyGroup title="Location" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="X"
+                      value={selectedElement.x}
+                      onValueChange={(value) => handleUpdate('x', value)}
+                      onBlur={handleInputBlur}
+                    />
+                    <NumberField
+                      label="Y"
+                      value={selectedElement.y}
+                      onValueChange={(value) => handleUpdate('y', value)}
+                      onBlur={handleInputBlur}
+                    />
+                  </div>
+                </PropertyGroup>
+
+                <PropertyGroup title="Print Condition" collapsible={false}>
+                  <Input
+                    value={selectedElement.printCondition || ''}
+                    onChange={(e) => handleUpdate('printCondition', e.target.value || null)}
+                    placeholder="Ex: invoice.total > 1000"
+                    size="sm"
+                  />
+                  <p className="text-xs theme-text-muted mt-1">
+                    Leave empty to always print
+                  </p>
+                  
+                  {/* Exemplos de Condicionais */}
+                  <div className="mt-2 p-2 theme-bg-tertiary rounded border theme-border">
+                    <p className="text-xs font-medium theme-text mb-1">Examples:</p>
+                    <div className="space-y-0.5 text-xs theme-text-secondary font-mono">
+                      <div>• invoice.total &gt; 1000</div>
+                      <div>• customer.type == 'VIP'</div>
+                    </div>
+                  </div>
+                </PropertyGroup>
+              </>
+            )}
+          </>
+        )}
+        {/* SPACER ELEMENT TABS */}
+        {selectedElement.type === 'spacer' && (
+          <>
+            {activeTab === 'appearance' && (
+              <>
+                {!isMultiSelection && (
+                  <>
+                    <div className="space-y-1 mb-3">
+                      <label className="text-xs font-medium theme-text-muted">ID</label>
+                      <Input
+                        value={selectedElement.id}
+                        onChange={(e) => handleUpdate('id', e.target.value)}
+                        size="sm"
+                      />
+                    </div>
+                    <Divider className="my-3" />
+                  </>
+                )}
+
+                {/* Size */}
+                <PropertyGroup title="Size" collapsible={false}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField
+                      label="W (Width)"
+                      value={selectedElement.width}
+                      onValueChange={(value) => handleUpdate('width', value)}
+                    />
+                    <NumberField
+                      label="H (Height)"
+                      value={selectedElement.height}
+                      onValueChange={(value) => handleUpdate('height', value)}
+                    />
+                  </div>
+                </PropertyGroup>
               </>
             )}
           </>

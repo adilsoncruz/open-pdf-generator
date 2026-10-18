@@ -3,6 +3,35 @@ import type { SVGProps } from 'react'
 type IconComponent = (props: SVGProps<SVGSVGElement>) => JSX.Element
 
 export const icons: Record<string, IconComponent> = {
+  link: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  ),
+  markdown: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
+      <path d="M7 15V9l2.5 2.5L12 9v6" />
+      <path d="M16 11v4l2-2" />
+      <path d="M16 11h3" />
+    </svg>
+  ),
+  'page-break': (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="3" y1="12" x2="21" y2="12" strokeDasharray="4 4"/>
+      <polyline points="8 8 12 4 16 8"/>
+      <polyline points="16 16 12 20 8 16"/>
+    </svg>
+  ),
+  spacer: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M7 15V3" />
+      <path d="M3 7l4-4 4 4" />
+      <path d="M17 9v12" />
+      <path d="M13 17l4 4 4-4" />
+    </svg>
+  ),
   data: (props) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
       <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />

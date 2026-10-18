@@ -55,8 +55,8 @@ class TemplateTest {
 
             assertEquals("1.0", template.version)
             assertEquals("A4", template.pageSettings.size)
-            assertEquals(1, template.pageElements.size)
-            assertEquals("title", template.pageElements[0].id)
+            assertEquals(1, template.bodyElements().size)
+            assertEquals("title", template.bodyElements()[0].id)
         }
 
         @Test
@@ -203,13 +203,13 @@ class TemplateTest {
 
             val template = Template.fromString(json)
 
-            assertEquals(6, template.pageElements.size)
-            assertEquals("text", template.pageElements[0].type)
-            assertEquals("image", template.pageElements[1].type)
-            assertEquals("rectangle", template.pageElements[2].type)
-            assertEquals("line", template.pageElements[3].type)
-            assertEquals("table", template.pageElements[4].type)
-            assertEquals("barcode", template.pageElements[5].type)
+            assertEquals(6, template.bodyElements().size)
+            assertEquals("text", template.bodyElements()[0].type)
+            assertEquals("image", template.bodyElements()[1].type)
+            assertEquals("rectangle", template.bodyElements()[2].type)
+            assertEquals("line", template.bodyElements()[3].type)
+            assertEquals("table", template.bodyElements()[4].type)
+            assertEquals("barcode", template.bodyElements()[5].type)
         }
 
         @Test
@@ -250,13 +250,13 @@ class TemplateTest {
 
             val template = Template.fromString(json)
 
-            assertEquals(2, template.pageElements.size)
+            assertEquals(2, template.bodyElements().size)
 
-            val conditional = template.pageElements[0] as ConditionalElement
+            val conditional = template.bodyElements()[0] as ConditionalElement
             assertEquals("showTitle == true", conditional.condition)
             assertEquals(1, conditional.elements.size)
 
-            val loop = template.pageElements[1] as LoopElement
+            val loop = template.bodyElements()[1] as LoopElement
             assertEquals("items", loop.dataBinding)
             assertEquals(1, loop.elements.size)
         }
@@ -290,8 +290,8 @@ class TemplateTest {
 
             val template = Template.fromString(json)
 
-            assertEquals(1, template.pageElements.size)
-            val container = template.pageElements[0] as ContainerElement
+            assertEquals(1, template.bodyElements().size)
+            val container = template.bodyElements()[0] as ContainerElement
             assertEquals("container1", container.id)
             assertEquals(1, container.elements.size)
         }
@@ -338,7 +338,7 @@ class TemplateTest {
                 """.trimIndent()
 
             val template = Template.fromString(json)
-            val line = template.pageElements[0] as LineElement
+            val line = template.bodyElements()[0] as LineElement
 
             assertEquals(555f, line.resolveWidth(555f)) // 100% of container
         }
@@ -508,7 +508,7 @@ class TemplateTest {
             assertEquals(original.metadata.name, restored.metadata.name)
             assertEquals(original.pageSettings.size, restored.pageSettings.size)
             assertEquals(original.pageSettings.orientation, restored.pageSettings.orientation)
-            assertEquals(original.pageElements.size, restored.pageElements.size)
+            assertEquals(original.bodyElements().size, restored.bodyElements().size)
         }
     }
 

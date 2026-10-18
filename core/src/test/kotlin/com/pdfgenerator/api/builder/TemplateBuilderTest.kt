@@ -21,7 +21,7 @@ class TemplateBuilderTest {
             assertEquals("1.0", template.version)
             assertEquals("A4", template.pageSettings.size)
             assertEquals("portrait", template.pageSettings.orientation)
-            assertEquals(0, template.pageElements.size)
+            assertEquals(0, template.bodyElements().size)
         }
 
         @Test
@@ -117,8 +117,8 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            assertEquals(1, template.pageElements.size)
-            val element = template.pageElements[0] as TextElement
+            assertEquals(1, template.bodyElements().size)
+            val element = template.bodyElements()[0] as TextElement
             assertEquals("text1", element.id)
             assertEquals(50f, element.x)
             assertEquals(100f, element.y)
@@ -137,7 +137,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as TextElement
+            val element = template.bodyElements()[0] as TextElement
             assertEquals("customer.name", element.dataBinding)
         }
 
@@ -158,7 +158,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as TextElement
+            val element = template.bodyElements()[0] as TextElement
             assertNotNull(element.style)
             assertEquals(24f, element.style?.fontSize)
             assertEquals("Arial", element.style?.fontFamily)
@@ -184,7 +184,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as TextElement
+            val element = template.bodyElements()[0] as TextElement
             assertEquals(200f, element.width)
             assertEquals(100f, element.height)
             assertEquals(true, element.style?.multiline)
@@ -209,8 +209,8 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            assertEquals(1, template.pageElements.size)
-            val element = template.pageElements[0] as ImageElement
+            assertEquals(1, template.bodyElements().size)
+            val element = template.bodyElements()[0] as ImageElement
             assertEquals("img1", element.id)
             assertEquals(50f, element.x)
             assertEquals(100f, element.y)
@@ -231,7 +231,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as ImageElement
+            val element = template.bodyElements()[0] as ImageElement
             assertEquals("product.image", element.dataBinding)
         }
 
@@ -248,7 +248,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as ImageElement
+            val element = template.bodyElements()[0] as ImageElement
             assertEquals("cover", element.fit)
             assertEquals("top-left", element.alignment)
         }
@@ -270,8 +270,8 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            assertEquals(1, template.pageElements.size)
-            val element = template.pageElements[0] as TableElement
+            assertEquals(1, template.bodyElements().size)
+            val element = template.bodyElements()[0] as TableElement
             assertEquals("table1", element.id)
             assertEquals("items", element.dataBinding)
             assertEquals(2, element.columns.size)
@@ -301,7 +301,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as TableElement
+            val element = template.bodyElements()[0] as TableElement
             assertEquals(400f, element.width)
         }
     }
@@ -321,8 +321,8 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            assertEquals(1, template.pageElements.size)
-            val element = template.pageElements[0] as RectangleElement
+            assertEquals(1, template.bodyElements().size)
+            val element = template.bodyElements()[0] as RectangleElement
             assertEquals("rect1", element.id)
             assertEquals(50f, element.x)
             assertEquals(100f, element.y)
@@ -347,7 +347,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as RectangleElement
+            val element = template.bodyElements()[0] as RectangleElement
             assertEquals("#FF0000", element.style?.fillColor)
             assertEquals("#000000", element.style?.borderColor)
             assertEquals(2f, element.style?.borderWidth)
@@ -370,8 +370,8 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            assertEquals(1, template.pageElements.size)
-            val element = template.pageElements[0] as LineElement
+            assertEquals(1, template.bodyElements().size)
+            val element = template.bodyElements()[0] as LineElement
             assertEquals("line1", element.id)
             assertEquals(50f, element.x)
             assertEquals(100f, element.y)
@@ -392,7 +392,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as LineElement
+            val element = template.bodyElements()[0] as LineElement
             assertEquals(150f, element.getEndX(500f))
             assertEquals(150f, element.getEndY(800f))
         }
@@ -410,7 +410,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as LineElement
+            val element = template.bodyElements()[0] as LineElement
             assertEquals(500f, element.resolveWidth(500f))
         }
 
@@ -430,7 +430,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as LineElement
+            val element = template.bodyElements()[0] as LineElement
             assertEquals("#FF0000", element.style?.color)
             assertEquals(2f, element.style?.width)
             assertEquals(listOf(5f, 3f), element.style?.dashPattern)
@@ -454,8 +454,8 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            assertEquals(1, template.pageElements.size)
-            val element = template.pageElements[0] as BarcodeElement
+            assertEquals(1, template.bodyElements().size)
+            val element = template.bodyElements()[0] as BarcodeElement
             assertEquals("barcode1", element.id)
             assertEquals(50f, element.x)
             assertEquals(100f, element.y)
@@ -477,7 +477,7 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            val element = template.pageElements[0] as BarcodeElement
+            val element = template.bodyElements()[0] as BarcodeElement
             assertEquals("H", element.style?.errorCorrection)
         }
     }
@@ -516,11 +516,11 @@ class TemplateBuilderTest {
                     }
                     .build()
 
-            assertEquals(4, template.pageElements.size)
-            assertEquals("text", template.pageElements[0].type)
-            assertEquals("line", template.pageElements[1].type)
-            assertEquals("table", template.pageElements[2].type)
-            assertEquals("rectangle", template.pageElements[3].type)
+            assertEquals(4, template.bodyElements().size)
+            assertEquals("text", template.bodyElements()[0].type)
+            assertEquals("line", template.bodyElements()[1].type)
+            assertEquals("table", template.bodyElements()[2].type)
+            assertEquals("rectangle", template.bodyElements()[3].type)
         }
 
         @Test
@@ -550,7 +550,7 @@ class TemplateBuilderTest {
             assertEquals("portrait", template.pageSettings.orientation)
             assertEquals(20f, template.pageSettings.margins.top)
             assertEquals("Test Template", template.metadata.name)
-            assertEquals(1, template.pageElements.size)
+            assertEquals(1, template.bodyElements().size)
         }
     }
 }
