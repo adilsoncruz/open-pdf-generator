@@ -1,5 +1,6 @@
 import { Icon } from '../../atoms'
 import { StudioLogo } from '../LoadingPage'
+import { useUIStore } from '../../../store/uiStore'
 
 interface HomePageProps {
   onNewTemplate: () => void
@@ -7,15 +8,26 @@ interface HomePageProps {
 }
 
 export function HomePage({ onNewTemplate, onOpenFile }: HomePageProps) {
+  const { theme, toggleTheme } = useUIStore()
+
   return (
-    <main className="min-h-screen overflow-auto bg-[#0b0f19] px-8 py-10 text-slate-100 animate-[fadeIn_0.35s_ease-out]">
+    <main className="min-h-screen overflow-auto bg-slate-950 px-8 py-10 text-slate-100 animate-[fadeIn_0.35s_ease-out]">
       <div className="mx-auto max-w-6xl">
-        <header className="flex items-center gap-5">
-          <StudioLogo className="h-20 w-20 rounded-2xl shadow-[0_0_30px_rgba(99,102,241,0.3)]" />
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Open PDF Template Studio</h1>
-            <p className="mt-1 text-sm text-slate-400">Studio Slate Template Editor</p>
+        <header className="flex items-center justify-between gap-5">
+          <div className="flex items-center gap-5">
+            <StudioLogo className="h-20 w-20 rounded-2xl shadow-[0_0_30px_rgba(99,102,241,0.3)]" />
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight">Open PDF Template Studio</h1>
+              <p className="mt-1 text-sm text-slate-400">Studio Slate Template Editor</p>
+            </div>
           </div>
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 transition hover:border-indigo-400 hover:bg-slate-800 hover:text-indigo-400"
+          >
+            <Icon name={theme === 'dark' ? 'sun' : 'moon'} size="md" />
+          </button>
         </header>
 
         <section className="mx-auto mt-16 max-w-5xl">

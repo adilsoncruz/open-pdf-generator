@@ -206,7 +206,7 @@ export function LoadingPage() {
     [...LOADING_STEPS].reverse().find((s) => progress >= s.threshold)?.label ?? LOADING_STEPS[0].label
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#0b0f19] text-slate-100 flex items-center justify-center select-none">
+    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100 flex items-center justify-center select-none">
       {/* Ambient Studio Glow */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <div className="h-[420px] w-[420px] rounded-full bg-indigo-600/12 blur-[110px]" />

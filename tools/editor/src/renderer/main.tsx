@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
 import { EditorPage, HomePage, LoadingPage } from './components/pages'
 import { useTabStore } from './store/tabStore'
+import { useUIStore } from './store/uiStore'
 import './index.css'
 
 // Fallback para desenvolvimento no browser sem Electron
@@ -190,6 +191,11 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
 
 function App() {
   const [screen, setScreen] = useState<'loading' | 'home' | 'editor'>('loading')
+  const theme = useUIStore((state) => state.theme)
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+  }, [theme])
 
   useEffect(() => {
     const timer = window.setTimeout(() => setScreen('home'), 2200)
