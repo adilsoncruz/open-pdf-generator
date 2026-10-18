@@ -1,11 +1,13 @@
 import { useState, forwardRef, useImperativeHandle, useEffect, useCallback } from 'react'
 import { useTemplateStore } from '../store/templateStore'
+import { useTabStore } from '../store/tabStore'
 import { useUIStore } from '../store/uiStore'
 import { usePreviewStore } from '../store/previewStore'
 import { UpdateNotification } from './UpdateNotification'
 import { useTranslation } from '../i18n'
 import { Icon, Badge, Button } from './atoms'
 import { MenuItem, DropdownMenu, IconButton } from './molecules'
+import { TabBar } from './TabBar'
 
 // CLI status interface
 interface CLIStatus {
@@ -162,15 +164,17 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   }
 
   const handleNew = () => {
-    if (isDirty) {
-      const confirmed = confirm(t.toolbar.unsavedChanges)
-      if (!confirmed) return
-    }
 
-    setTemplate({
-      version: '1.0',
-      metadata: {
-        name: 'New Template',
+    useTabStore.getState().addTab({
+      name: 'New Template',
+      path: null,
+      isDirty: false,
+      stateSnapshot: {
+        ...useTemplateStore.getState(),
+        template: {
+          version: '1.0',
+          metadata: {
+            name: 'New Template',
         description: '',
         author: '',
         created: new Date().toISOString(),
@@ -183,16 +187,19 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         margins: { top: 30, right: 30, bottom: 30, left: 30 },
       },
       page: [],
+        },
+        currentFilePath: null,
+        isDirty: false,
+        history: [],
+        historyIndex: 0,
+        selectedElementIds: [],
+      }
     })
     setCurrentFilePath(null)
   }
 
   const handleOpen = async () => {
       console.log("handleOpen 0")
-    if (isDirty) {
-      const confirmed = confirm(t.toolbar.unsavedChanges)
-      if (!confirmed) return
-    }
     console.log("handleOpen 0.1")
     // Loop to keep file dialog open until valid template or user cancels
     let keepTrying = true
@@ -239,8 +246,20 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         }
         
         // Valid template - load it and exit loop
-        setTemplate(loadedTemplate)
-        setCurrentFilePath(result.convertedFromJasper ? null : result.path)
+        useTabStore.getState().addTab({
+          name: loadedTemplate.metadata?.name || 'Opened Template',
+          path: result.convertedFromJasper ? null : result.path,
+          isDirty: false,
+          stateSnapshot: {
+            ...useTemplateStore.getState(),
+            template: loadedTemplate,
+            currentFilePath: result.convertedFromJasper ? null : result.path,
+            isDirty: false,
+            history: [loadedTemplate],
+            historyIndex: 0,
+            selectedElementIds: [],
+          }
+        })
         if (result.convertedFromJasper) {
           alert('Template JASPER (.jrxml) convertido para JSON. Use "Save As" para salvar o template convertido.')
         }
@@ -456,7 +475,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
       {/* 2. SEÇÃO CENTRAL: Espaço reservado para Abas (Multi-tabs) */}
       <div className="flex-1 flex items-center justify-start px-4 min-w-0">
-        {/* Container flexível para abas de templates */}
+        <TabBar />
       </div>
 
       {/* 3. SEÇÃO DIREITA: Test Data + Split Preview + Gerar PDF Principal */}

@@ -4,7 +4,7 @@ import { useUIStore } from '../store/uiStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
 import { Select, Button, Divider } from './atoms'
 import { IconButton } from './molecules'
-
+import { RulersAndGuides, type Guide } from './RulersAndGuides'
 // Component to render Loop child elements
 interface LoopChildElementProps {
   child: Element
@@ -246,7 +246,9 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   const renderContent = () => {
     switch (child.type) {
       case 'text':
-      case 'static_text': {
+      case 'static_text':
+      case 'rich_text':
+      case 'link': {
         const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
         const rawW = isChildRelative && effectiveWidth !== undefined ? effectiveWidth : child.width
         const textWidth = rawW ? resolveWidth(rawW) : undefined
@@ -259,6 +261,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
               fontFamily: child.style?.fontFamily || 'Helvetica',
               color: child.style?.color || '#000000',
               fontWeight: child.style?.fontWeight || 'normal',
+              textDecoration: child.type === 'link' ? 'underline' : 'none',
               width: textWidth || 'auto',
               height: textHeight || 'auto',
               overflow: 'hidden',
@@ -289,6 +292,34 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
           </div>
         )
       }
+            case 'page_break': {
+        const pbWidth = resolveWidth(child.width || '100%')
+        return (
+          <div
+            style={{
+              width: pbWidth,
+              height: 20,
+              borderBottom: '4px dashed #999',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative'
+            }}
+          >
+            <span style={{
+              background: 'white',
+              padding: '0 10px',
+              color: '#999',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              transform: 'translateY(10px)'
+            }}>
+              PAGE BREAK
+            </span>
+          </div>
+        )
+      }
+      case 'spacer':
       case 'rectangle': {
         const rectWidth = resolveWidth(child.width)
         const rectHeight = resolveHeight(child.height)
@@ -767,7 +798,9 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
   const renderContent = () => {
     switch (child.type) {
       case 'text':
-      case 'static_text': {
+      case 'static_text':
+      case 'rich_text':
+      case 'link': {
         const textWidth = child.width ? resolveWidth(child.width) : undefined
         const textHeight = child.height ? resolveHeight(child.height) : undefined
         const displayText = resolveChildDisplayText(child, child.type === 'text' ? 'campo' : 'Texto')
@@ -778,6 +811,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
               fontFamily: child.style?.fontFamily || 'Helvetica',
               color: child.style?.color || '#000000',
               fontWeight: child.style?.fontWeight || 'normal',
+              textDecoration: child.type === 'link' ? 'underline' : 'none',
               width: textWidth || 'auto',
               height: textHeight || 'auto',
               overflow: 'hidden',
@@ -808,6 +842,34 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
           </div>
         )
       }
+            case 'page_break': {
+        const pbWidth = resolveWidth(child.width || '100%')
+        return (
+          <div
+            style={{
+              width: pbWidth,
+              height: 20,
+              borderBottom: '4px dashed #999',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative'
+            }}
+          >
+            <span style={{
+              background: 'white',
+              padding: '0 10px',
+              color: '#999',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              transform: 'translateY(10px)'
+            }}>
+              PAGE BREAK
+            </span>
+          </div>
+        )
+      }
+      case 'spacer':
       case 'rectangle': {
         const rectWidth = resolveWidth(child.width)
         const rectHeight = resolveHeight(child.height)
@@ -888,6 +950,7 @@ export default function Canvas() {
   const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, currentSection, setCurrentSection, clearSelection } = useTemplateStore()
   const { zoom, setZoom } = useUIStore()
   const pageRef = useRef<HTMLDivElement>(null)
+  const [guides, setGuides] = useState<Guide[]>([])
 
   let pageSize;
   switch(template.pageSettings.size) {
@@ -900,6 +963,7 @@ export default function Canvas() {
       default:
         pageSize ={ width: 595, height: 842 };
   }
+
 
   const scale = zoom / 100 // Converte porcentagem para escala
   const margins = template.pageSettings.margins
@@ -981,23 +1045,19 @@ export default function Canvas() {
         if (draggingGuide.type === 'h') {
           const rawY = (e.clientY - pageRect.top) / scale
           if (draggingGuide.isNew && rawY < 0) {
-            // Se apenas clicou na régua sem arrastar para dentro da folha, coloca na margem superior
             setHorizontalGuides((prev) =>
               prev.map((g, i) => (i === draggingGuide.index ? Math.round(margins.top) : g))
             )
           } else if (rawY < 0 || rawY > pageSize.height) {
-            // Se soltou fora da folha ou de volta na régua, remove a guia
             setHorizontalGuides((prev) => prev.filter((_, i) => i !== draggingGuide.index))
           }
         } else {
           const rawX = (e.clientX - pageRect.left) / scale
           if (draggingGuide.isNew && rawX < 0) {
-            // Se apenas clicou na régua sem arrastar para dentro da folha, coloca na margem esquerda
             setVerticalGuides((prev) =>
               prev.map((g, i) => (i === draggingGuide.index ? Math.round(margins.left) : g))
             )
           } else if (rawX < 0 || rawX > pageSize.width) {
-            // Se soltou fora da folha ou de volta na régua, remove a guia
             setVerticalGuides((prev) => prev.filter((_, i) => i !== draggingGuide.index))
           }
         }
@@ -1012,6 +1072,20 @@ export default function Canvas() {
       window.removeEventListener('mouseup', handleMouseUp)
     }
   }, [draggingGuide, scale, pageSize.width, pageSize.height, margins.top, margins.left])
+
+  const headerHeight = template.pageSettings.header?.height || 0;
+  const footerHeight = template.pageSettings.footer?.height || 0;
+  const bodyUsableHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0) - headerHeight - footerHeight;
+
+  let maxBodyBottom = 0;
+  template.page.forEach(el => {
+    const h = typeof el.height === 'number' ? el.height : (el.type === 'page_break' ? 20 : (el.type === 'spacer' ? 50 : 150));
+    const bottom = (el.y || 0) + h;
+    if (bottom > maxBodyBottom) maxBodyBottom = bottom;
+  });
+
+  const numberOfPages = Math.max(1, Math.ceil(maxBodyBottom / bodyUsableHeight));
+  const totalCanvasHeight = margins.top + headerHeight + (numberOfPages * bodyUsableHeight) + footerHeight + margins.bottom;
 
   // Detect if any BODY element is touching the margins
   const checkMarginSnap = () => {
@@ -1060,11 +1134,11 @@ export default function Canvas() {
   const marginSnap = checkMarginSnap()
 
   const handleZoomIn = () => {
-    setZoom((prev) => Math.min(200, prev + 25))
+    setZoom(Math.min(200, zoom + 25))
   }
 
   const handleZoomOut = () => {
-    setZoom((prev) => Math.max(25, prev - 25))
+    setZoom(Math.max(25, zoom - 25))
   }
 
   const handleZoomReset = () => {
@@ -1170,6 +1244,7 @@ export default function Canvas() {
         
         <div ref={pageRef} className="relative" style={{ width: pageSize.width, height: pageSize.height, transform: `scale(${scale})`, transformOrigin: 'top center' }}>
           
+          <RulersAndGuides width={pageSize.width} height={pageSize.height} scale={scale} guides={guides} setGuides={setGuides} />
           
           {currentSection === 'bodyBackground' && template.pageSettings.bodyBackground ? (
             
@@ -1188,7 +1263,7 @@ export default function Canvas() {
                 className="bg-white shadow-lg relative border-2 border-purple-400"
                 style={{
                   width: pageSize.width,
-                  height: pageSize.height,
+              height: totalCanvasHeight,
                 }}
               >
                 {/* Container para elementos do Background - posicionado nas margens */}
@@ -1224,7 +1299,22 @@ export default function Canvas() {
                     ))}
                 </div>
 
-                {/* Margin guides - Linhas mostrando as margens */}
+                
+          {/* Page Separators */}
+          {numberOfPages > 1 && Array.from({ length: numberOfPages - 1 }).map((_, i) => (
+            <div key={i} className="absolute w-full pointer-events-none" style={{
+              top: margins.top + headerHeight + ((i + 1) * bodyUsableHeight),
+              left: 0,
+              borderTop: '2px dashed #cbd5e1',
+              zIndex: 5
+            }}>
+              <span className="absolute right-2 -top-3 bg-slate-100 text-slate-400 text-[10px] px-2 rounded-full border border-slate-200">
+                Página {i + 2}
+              </span>
+            </div>
+          ))}
+
+          {/* Margin guides - Linhas mostrando as margens */}
                 <svg
                   className="absolute inset-0 pointer-events-none"
                   width="100%"
@@ -1246,9 +1336,9 @@ export default function Canvas() {
                   {/* Margem Inferior */}
                   <line
                     x1={0}
-                    y1={pageSize.height - margins.bottom}
+                    y1={totalCanvasHeight - margins.bottom}
                     x2={pageSize.width}
-                    y2={pageSize.height - margins.bottom}
+                    y2={totalCanvasHeight - margins.bottom}
                     stroke="#a855f7"
                     strokeWidth="1"
                     strokeDasharray="5,5"
@@ -1260,7 +1350,7 @@ export default function Canvas() {
                     x1={margins.left}
                     y1={0}
                     x2={margins.left}
-                    y2={pageSize.height}
+                    y2={totalCanvasHeight}
                     stroke="#a855f7"
                     strokeWidth="1"
                     strokeDasharray="5,5"
@@ -1272,7 +1362,7 @@ export default function Canvas() {
                     x1={pageSize.width - margins.right}
                     y1={0}
                     x2={pageSize.width - margins.right}
-                    y2={pageSize.height}
+                    y2={totalCanvasHeight}
                     stroke="#a855f7"
                     strokeWidth="1"
                     strokeDasharray="5,5"
@@ -1309,7 +1399,7 @@ export default function Canvas() {
                   </text>
                   <text
                     x={margins.left + 5}
-                    y={pageSize.height - margins.bottom + 15}
+                    y={totalCanvasHeight - margins.bottom + 15}
                     fontSize="10"
                     fill="#a855f7"
                     opacity="0.7"
@@ -1336,7 +1426,7 @@ export default function Canvas() {
                 className="bg-white shadow-lg relative border-2 border-green-400"
                 style={{
                   width: pageSize.width,
-                  height: pageSize.height,
+              height: totalCanvasHeight,
                 }}
               >
                 {/* Background da Summary (se existir) - renderiza na página inteira */}
@@ -1394,7 +1484,22 @@ export default function Canvas() {
                     ))}
                 </div>
 
-                {/* Margin guides - Linhas mostrando as margens */}
+                
+          {/* Page Separators */}
+          {numberOfPages > 1 && Array.from({ length: numberOfPages - 1 }).map((_, i) => (
+            <div key={i} className="absolute w-full pointer-events-none" style={{
+              top: margins.top + headerHeight + ((i + 1) * bodyUsableHeight),
+              left: 0,
+              borderTop: '2px dashed #cbd5e1',
+              zIndex: 5
+            }}>
+              <span className="absolute right-2 -top-3 bg-slate-100 text-slate-400 text-[10px] px-2 rounded-full border border-slate-200">
+                Página {i + 2}
+              </span>
+            </div>
+          ))}
+
+          {/* Margin guides - Linhas mostrando as margens */}
                 <svg
                   className="absolute inset-0 pointer-events-none"
                   width="100%"
@@ -1416,9 +1521,9 @@ export default function Canvas() {
                   {/* Margem Inferior */}
                   <line
                     x1={0}
-                    y1={pageSize.height - margins.bottom}
+                    y1={totalCanvasHeight - margins.bottom}
                     x2={pageSize.width}
-                    y2={pageSize.height - margins.bottom}
+                    y2={totalCanvasHeight - margins.bottom}
                     stroke="#10b981"
                     strokeWidth="1"
                     strokeDasharray="5,5"
@@ -1430,7 +1535,7 @@ export default function Canvas() {
                     x1={margins.left}
                     y1={0}
                     x2={margins.left}
-                    y2={pageSize.height}
+                    y2={totalCanvasHeight}
                     stroke="#10b981"
                     strokeWidth="1"
                     strokeDasharray="5,5"
@@ -1442,7 +1547,7 @@ export default function Canvas() {
                     x1={pageSize.width - margins.right}
                     y1={0}
                     x2={pageSize.width - margins.right}
-                    y2={pageSize.height}
+                    y2={totalCanvasHeight}
                     stroke="#10b981"
                     strokeWidth="1"
                     strokeDasharray="5,5"
@@ -1479,7 +1584,7 @@ export default function Canvas() {
                   </text>
                   <text
                     x={margins.left + 5}
-                    y={pageSize.height - margins.bottom + 15}
+                    y={totalCanvasHeight - margins.bottom + 15}
                     fontSize="10"
                     fill="#10b981"
                     opacity="0.7"
@@ -1525,7 +1630,7 @@ export default function Canvas() {
                 const footerHeight = template.pageSettings.footer?.height || 0
                 const bodyTop = margins.top + headerHeight
                 const bodyBottom = pageSize.height - margins.bottom - footerHeight
-                const bodyCenter = bodyTop + (bodyBottom - bodyTop) / 2
+                const bodyCenter = bodyTop + bodyUsableHeight / 2
                 return bodyCenter
               })(),
               transform: 'translateY(-50%)',
@@ -1546,7 +1651,7 @@ export default function Canvas() {
                   : 'bg-gray-400 text-white'
               }`}
               style={{
-                top: pageSize.height - margins.bottom - template.pageSettings.footer.height + (template.pageSettings.footer.height / 2),
+                top: totalCanvasHeight - margins.bottom - template.pageSettings.footer.height + (template.pageSettings.footer.height / 2),
                 transform: 'translateY(-50%)',
               }}
               onClick={() => {
@@ -1563,7 +1668,7 @@ export default function Canvas() {
           className="bg-white shadow-lg relative"
           style={{
               width: pageSize.width,
-              height: pageSize.height,
+              height: totalCanvasHeight,
           }}
         >
 
@@ -1622,7 +1727,7 @@ export default function Canvas() {
                 currentSection === 'footer' ? 'border-green-400 bg-green-50/30' : 'border-gray-300 bg-gray-50/50'
               }`}
               style={{
-                top: pageSize.height - margins.bottom - template.pageSettings.footer.height,
+                top: totalCanvasHeight - margins.bottom - template.pageSettings.footer.height,
                 left: margins.left,
                 right: margins.right,
                 height: template.pageSettings.footer.height,
@@ -1672,7 +1777,7 @@ export default function Canvas() {
               top: margins.top + (template.pageSettings.header?.height || 0),
               left: margins.left,
               right: margins.right,
-              height: pageSize.height - margins.top - margins.bottom - (template.pageSettings.header?.height || 0) - (template.pageSettings.footer?.height || 0),
+              height: numberOfPages * bodyUsableHeight,
               zIndex: 10,
             }}
             onClick={(e) => {
@@ -1759,6 +1864,21 @@ export default function Canvas() {
             )}
           </div>
 
+          
+          {/* Page Separators */}
+          {numberOfPages > 1 && Array.from({ length: numberOfPages - 1 }).map((_, i) => (
+            <div key={i} className="absolute w-full pointer-events-none" style={{
+              top: margins.top + headerHeight + ((i + 1) * bodyUsableHeight),
+              left: 0,
+              borderTop: '2px dashed #cbd5e1',
+              zIndex: 5
+            }}>
+              <span className="absolute right-2 -top-3 bg-slate-100 text-slate-400 text-[10px] px-2 rounded-full border border-slate-200">
+                Página {i + 2}
+              </span>
+            </div>
+          ))}
+
           {/* Margin guides - Linhas mostrando as margens */}
           <svg
             className="absolute inset-0 pointer-events-none"
@@ -1796,9 +1916,9 @@ export default function Canvas() {
             {template.pageSettings.footer && (
               <line
                 x1={0}
-                y1={pageSize.height - margins.bottom - template.pageSettings.footer.height}
+                y1={totalCanvasHeight - margins.bottom - template.pageSettings.footer.height}
                 x2={pageSize.width}
-                y2={pageSize.height - margins.bottom - template.pageSettings.footer.height}
+                y2={totalCanvasHeight - margins.bottom - template.pageSettings.footer.height}
                 stroke="#9ca3af"
                 strokeWidth="1"
                 strokeDasharray="2,2"
@@ -1809,9 +1929,9 @@ export default function Canvas() {
             {/* Margem Inferior */}
               <line
                 x1={0}
-                y1={pageSize.height - margins.bottom}
-                x2={pageSize.width}
-                y2={pageSize.height - margins.bottom}
+                y1={totalCanvasHeight - margins.bottom}
+                    x2={pageSize.width}
+                    y2={totalCanvasHeight - margins.bottom}
                 stroke={marginSnap.bottom ? "#10b981" : "#3b82f6"}
                 strokeWidth={marginSnap.bottom ? "2" : "1"}
                 strokeDasharray="5,5"
@@ -1823,7 +1943,7 @@ export default function Canvas() {
               x1={margins.left}
               y1={0}
               x2={margins.left}
-              y2={pageSize.height}
+              y2={totalCanvasHeight}
               stroke={marginSnap.left ? "#10b981" : "#3b82f6"}
               strokeWidth={marginSnap.left ? "2" : "1"}
               strokeDasharray="5,5"
@@ -1835,7 +1955,7 @@ export default function Canvas() {
               x1={pageSize.width - margins.right}
               y1={0}
               x2={pageSize.width - margins.right}
-              y2={pageSize.height}
+              y2={totalCanvasHeight}
               stroke={marginSnap.right ? "#10b981" : "#3b82f6"}
               strokeWidth={marginSnap.right ? "2" : "1"}
               strokeDasharray="5,5"
@@ -1911,12 +2031,12 @@ export default function Canvas() {
                   className="absolute text-xs text-gray-500"
                   style={{
                     left: -200,
-                    top: pageSize.height - margins.bottom - template.pageSettings.footer.height,
+                    top: totalCanvasHeight - margins.bottom - template.pageSettings.footer.height,
                     transform: 'translateY(-50%)',
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  Footer start: {pageSize.height - margins.bottom - template.pageSettings.footer.height}pt
+                  Footer start: {totalCanvasHeight - margins.bottom - template.pageSettings.footer.height}pt
                 </div>
               )}
               
@@ -1925,7 +2045,7 @@ export default function Canvas() {
                 className="absolute text-xs text-gray-400"
                 style={{
                   left: -160,
-                  top: pageSize.height - margins.bottom,
+                  top: totalCanvasHeight - margins.bottom,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
                 }}
@@ -1982,7 +2102,7 @@ export default function Canvas() {
                 className="absolute text-xs text-green-500"
                 style={{
                   left: -150,
-                  top: pageSize.height - margins.bottom,
+                  top: totalCanvasHeight - margins.bottom,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
                 }}
@@ -2497,6 +2617,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
           height: element.height || 'auto',
           fontSize: element.style?.fontSize || 12,
           fontWeight: element.style?.fontWeight || 'normal',
+                textDecoration: element.type === 'link' ? 'underline' : 'none',
           fontStyle: element.style?.fontStyle || 'normal',
           fontFamily: getFontFamily(element.style?.fontFamily),
           textDecoration: element.style?.textDecoration || 'none',
@@ -2563,6 +2684,34 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         )
       }
 
+            case 'page_break': {
+        const pbWidth = element.width === '100%' ? (pageSize.width - margins.left - margins.right) : (element.width || (pageSize.width - margins.left - margins.right))
+        return (
+          <div
+            style={{
+              width: pbWidth,
+              height: 20,
+              borderBottom: '4px dashed #999',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative'
+            }}
+          >
+            <span style={{
+              background: 'white',
+              padding: '0 10px',
+              color: '#999',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              transform: 'translateY(10px)'
+            }}>
+              PAGE BREAK
+            </span>
+          </div>
+        )
+      }
+      case 'spacer':
       case 'rectangle': {
         const borderWidth = element.style?.borderWidth ?? 1
         const borderColor = element.style?.borderColor || '#000000'
