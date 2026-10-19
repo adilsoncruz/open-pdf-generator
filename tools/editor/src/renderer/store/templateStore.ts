@@ -82,6 +82,7 @@ export interface Template {
       groups?: ElementGroup[]
     }
   }
+  schema?: Record<string, any>
 }
 
 interface TemplateStore {
@@ -91,11 +92,10 @@ interface TemplateStore {
   selectedGroupId: string | null  // ID do grupo selecionado
   selectedLoopChildId: string | null  // ID do elemento filho do loop selecionado
   selectedLoopParentId: string | null
-  expandedLoopIds: string[]
+  expandedLoopIds: string[]  // IDs dos loops expandidos na sidebar
   selectedContainerChildId: string | null
   selectedContainerParentId: string | null
   expandedContainerIds: string[]
-  expandedLoopIds: string[]  // IDs dos loops expandidos na sidebar
   currentFilePath: string | null
   isDirty: boolean
   testData: Record<string, unknown>
@@ -123,6 +123,7 @@ interface TemplateStore {
   updateSelectedElements: (updates: Partial<Element>) => void
   setCurrentFilePath: (path: string | null) => void
   setTestData: (data: Record<string, unknown>) => void
+  setSchema: (schema: Record<string, any> | null) => void
   markClean: () => void
   setCurrentSection: (section: ElementLocation) => void
   addHeader: () => void
@@ -1086,6 +1087,21 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   setTestData: (data) =>
     set({
       testData: data,
+    }),
+
+  setSchema: (schema) =>
+    set((state) => {
+      const newTemplate = { ...state.template }
+      if (schema && Object.keys(schema).length > 0) {
+        newTemplate.schema = schema
+      } else {
+        delete newTemplate.schema
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
     }),
 
   markClean: () =>

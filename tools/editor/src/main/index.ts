@@ -1089,6 +1089,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
           console.error('❌ [Preview] CLI failed with code:', code)
           console.error('❌ [Preview] STDOUT:', stdout)
           console.error('❌ [Preview] STDERR:', stderr)
+          if (stderr) console.error('❌ [Preview] STDERR:', stderr)
 
           await fs.unlink(pdfFile).catch(() => {})
           await fs.rmdir(tmpDir).catch(() => {})
@@ -1098,6 +1099,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
             errorCode: ErrorCodes.ERROR_GENERATING_PDF,
             code,
             // Include CLI output for debugging
+            
             cliError: stderr.trim() || stdout.trim(),
           })
         }
@@ -1163,6 +1165,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
       ])
 
       let stdout = ''
+      let stderr = ''
 
       java.stdout.on('data', (data) => {
         const text = data.toString()
@@ -1171,7 +1174,9 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
       })
 
       java.stderr.on('data', (data) => {
-        console.error('[JAR STDERR]', data.toString())
+        const text = data.toString()
+        stderr += text
+        console.error('[JAR STDERR]', text)
       })
 
       java.on('close', async (code) => {
@@ -1191,6 +1196,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
             success: false,
             errorCode: ErrorCodes.ERROR_GENERATING_PDF,
             code,
+            cliError: stderr.trim() || stdout.trim(),
           })
         }
       })

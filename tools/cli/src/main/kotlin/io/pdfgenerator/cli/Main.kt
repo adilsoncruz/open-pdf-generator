@@ -205,6 +205,7 @@ class ValidateCommand : CliktCommand(
                 echo("  Page orientation: ${templateObj.pageSettings.orientation}")
                 echo("  Header: ${if (templateObj.pageSettings.header != null) "yes" else "no"}")
                 echo("  Footer: ${if (templateObj.pageSettings.footer != null) "yes" else "no"}")
+                echo("  Schema: ${if (templateObj.schema != null) "defined" else "none"}")
                 echo("  Elements: ${templateObj.bodyElements().size}")
             }
 

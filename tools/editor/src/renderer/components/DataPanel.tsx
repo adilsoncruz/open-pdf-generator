@@ -3,11 +3,11 @@ import { useTemplateStore } from '../store/templateStore'
 import { usePreviewStore } from '../store/previewStore'
 import { useTranslation } from '../i18n'
 import { Button, Icon } from './atoms'
+import { generateSampleFromSchema } from '../utils/schemaGenerator'
 
 interface DataPanelProps {
   onClose: () => void
 }
-
 
 function validateJson(value: string): { valid: boolean; error: string | null; errorLine: number | null } {
   if (!value.trim()) {
@@ -33,7 +33,7 @@ function validateJson(value: string): { valid: boolean; error: string | null; er
 
 export default function DataPanel({ onClose }: DataPanelProps) {
   const { t } = useTranslation()
-  const { testData, setTestData } = useTemplateStore()
+  const { testData, setTestData, template } = useTemplateStore()
   const { mode: previewMode, triggerRefresh } = usePreviewStore()
   const [jsonInput, setJsonInput] = useState(JSON.stringify(testData, null, 2))
   const [error, setError] = useState<string | null>(null)
@@ -368,6 +368,18 @@ export default function DataPanel({ onClose }: DataPanelProps) {
     }
   }
 
+  const handleGenerateFromSchema = () => {
+    if (!template.schema) return
+    if (jsonInput.trim() && jsonInput.trim() !== '{}') {
+      if (!confirm('Deseja substituir os dados de teste atuais pelos dados gerados a partir do Schema?')) {
+        return
+      }
+    }
+    const sample = generateSampleFromSchema(template.schema)
+    setJsonInput(JSON.stringify(sample, null, 2))
+    setError(null)
+  }
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div className="theme-surface border theme-border rounded-xl shadow-xl w-2/3 max-w-4xl max-h-[80vh] flex flex-col">
@@ -396,6 +408,17 @@ export default function DataPanel({ onClose }: DataPanelProps) {
               <Icon name="folder" size="sm" />
               {t.dataPanel.loadFile}
             </Button>
+            {template.schema && (
+              <Button
+                onClick={handleGenerateFromSchema}
+                variant="secondary"
+                size="sm"
+                title="Gera dados de teste compatíveis com o Schema do template"
+              >
+                <span className="font-mono text-xs">⚡</span>
+                Gerar do Schema
+              </Button>
+            )}
             <Button
               onClick={handleFormat}
               disabled={!isValid}
