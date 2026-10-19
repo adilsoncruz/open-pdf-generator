@@ -284,6 +284,13 @@ class PDFGenerator(
                 )
             }
 
+            if (template.schema != null) {
+                val schemaErrors = com.pdfgenerator.validator.SchemaValidator.validate(template.schema, data)
+                if (schemaErrors.isNotEmpty()) {
+                    throw PDFSchemaValidationException(schemaErrors)
+                }
+            }
+
             val headerCondition = template.pageSettings.header?.printCondition
             val footerCondition = template.pageSettings.footer?.printCondition
             val templateHeaderHeight = template.pageSettings.header?.height ?: 0f

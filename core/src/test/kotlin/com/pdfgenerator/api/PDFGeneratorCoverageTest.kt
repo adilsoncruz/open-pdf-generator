@@ -185,7 +185,7 @@ class PDFGeneratorCoverageTest {
         }
         assertTrue(ex1.message!!.contains("Error generating PDF"))
         
-        val ex2 = assertThrows(PDFGenerationException::class.java) {
+        assertThrows(PDFGenerationException::class.java) {
             generator.generateFromPath("test_dummy", "{}", invalidFile) // will fail in loadTemplate though
         }
     }

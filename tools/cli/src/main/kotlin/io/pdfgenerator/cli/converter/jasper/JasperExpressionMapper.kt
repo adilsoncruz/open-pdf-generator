@@ -4,9 +4,8 @@ import com.lowagie.text.pdf.PdfName.F
 import io.pdfgenerator.cli.converter.jasper.JasperExpressionMapper.parameterRegex
 
 object JasperExpressionMapper {
-    private val fieldRegex = Regex("""^${'$'}F\{([A-Za-z0-9_.]+)}$""")
-    private val parameterRegex = Regex("""${'$'}P\{([A-Za-z0-9_.]+)}""")
-    private val regex = "\\{(.*?)}".toRegex()
+    private val fieldRegex = Regex("^\\\$F\\{([A-Za-z0-9_.]+)}\$")
+    private val parameterRegex = Regex("^\\\$P\\{([A-Za-z0-9_.]+)}\$")
 
     /**
      * Converts the most common Jasper expressions into our dataBinding format.
@@ -21,7 +20,6 @@ object JasperExpressionMapper {
 
         fieldRegex.find(normalized)?.let { return it.groupValues[1] }
         parameterRegex.find(normalized)?.let { return it.groupValues[1] }
-        regex.find(normalized)?.let { return it.groupValues[1] }
 
         return null
     }

@@ -29,6 +29,7 @@
   "license": "MIT",
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "ajv": "^8.20.0",
     "clsx": "^2.1.0",
     "electron-log": "^5.2.4",
     "electron-updater": "^6.3.9",

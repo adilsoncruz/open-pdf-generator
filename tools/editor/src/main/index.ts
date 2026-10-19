@@ -1084,6 +1084,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
       ])
 
       let stdout = ''
+      let stderr = ''
 
       java.stdout.on('data', (data) => {
         const text = data.toString()
@@ -1092,7 +1093,9 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
       })
 
       java.stderr.on('data', (data) => {
-        console.error('[CLI STDERR]', data.toString().trim())
+        const text = data.toString()
+        stderr += text
+        console.error('[CLI STDERR]', text.trim())
       })
 
       java.on('close', async (code) => {
@@ -1125,6 +1128,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
         } else {
           console.error('❌ [Preview] CLI failed with code:', code)
           console.error('❌ [Preview] STDOUT:', stdout)
+          if (stderr) console.error('❌ [Preview] STDERR:', stderr)
 
           await fs.unlink(pdfFile).catch(() => {})
           await fs.rmdir(tmpDir).catch(() => {})
@@ -1133,8 +1137,8 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
             success: false,
             errorCode: ErrorCodes.ERROR_GENERATING_PDF,
             code,
-            // Include CLI output for debugging
-            cliError: stdout,
+            // Include CLI error output (stderr or stdout) for accurate reporting
+            cliError: stderr.trim() || stdout.trim(),
           })
         }
       })
@@ -1199,6 +1203,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
       ])
 
       let stdout = ''
+      let stderr = ''
 
       java.stdout.on('data', (data) => {
         const text = data.toString()
@@ -1207,7 +1212,9 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
       })
 
       java.stderr.on('data', (data) => {
-        console.error('[JAR STDERR]', data.toString())
+        const text = data.toString()
+        stderr += text
+        console.error('[JAR STDERR]', text)
       })
 
       java.on('close', async (code) => {
@@ -1227,6 +1234,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
             success: false,
             errorCode: ErrorCodes.ERROR_GENERATING_PDF,
             code,
+            cliError: stderr.trim() || stdout.trim(),
           })
         }
       })

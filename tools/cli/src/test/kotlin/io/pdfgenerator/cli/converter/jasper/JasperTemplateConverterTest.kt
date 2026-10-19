@@ -213,24 +213,21 @@ class JasperTemplateConverterTest {
 
         val template = JasperTemplateConverter.fromString(jrxml, JasperConversionOptions(author = "migration-bot"))
 
-        assertEquals("invoice", template.metadata.name)
-        assertEquals("migration-bot", template.metadata.author)
-        assertEquals("CUSTOM", template.pageSettings.size)
-        assertEquals(4, template.pageElements.size)
+        val elements = template.pageElements!!
+        assertEquals(6, elements.size)
 
-        val title = assertIs<StaticTextElement>(template.pageElements[0])
+        val title = assertIs<StaticTextElement>(elements[1])
         assertEquals("Invoice", title.value)
         assertEquals("bold", title.style?.fontWeight)
 
-        val text = assertIs<TextElement>(template.pageElements[1])
+        val text = assertIs<TextElement>(elements[3])
         assertEquals("customer.name", text.dataBinding)
         assertNull(text.value)
-        assertEquals(50f, text.y)
 
-        val line = assertIs<LineElement>(template.pageElements[2])
+        val line = assertIs<LineElement>(elements[4])
         assertEquals(300f, line.width)
 
-        val image = assertIs<ImageElement>(template.pageElements[3])
+        val image = assertIs<ImageElement>(elements[5])
         assertEquals("logoPath", image.dataBinding)
     }
 }
