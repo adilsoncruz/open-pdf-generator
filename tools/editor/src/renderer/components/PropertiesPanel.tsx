@@ -265,7 +265,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                       onUpdate({
                         positionMode: 'RELATIVE',
                         position: 'relative',
-                        relativeOffsetY: typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10,
+                        relativeOffsetY: element.height === '100%' ? 0 : (typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 0),
                       })
                     }}
                     className={`py-1 text-xs font-medium rounded transition text-center ${
@@ -279,14 +279,15 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                 </div>
 
                 {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' && (
-                  <div className="flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 mt-1.5">
+                  <div className={`flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 mt-1.5 ${element.height === '100%' ? 'opacity-50' : ''}`}>
                     <span className="text-slate-400 text-xs">Offset Y</span>
                     <div className="flex items-center gap-1">
                       <input
                         type="number"
-                        value={(element.relativeOffsetY as number) ?? 10}
+                        value={element.height === '100%' ? 0 : ((element.relativeOffsetY as number) ?? 0)}
+                        disabled={element.height === '100%'}
                         onChange={(e) => onUpdate('relativeOffsetY', parseFloat(e.target.value) || 0)}
-                        className="w-16 bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+                        className="w-16 bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1 disabled:cursor-not-allowed"
                       />
                       <span className="text-slate-500 text-[10px]">pt</span>
                     </div>
@@ -935,34 +936,36 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             {/* X */}
-            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+            <div className={`flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition ${element.width === '100%' ? 'opacity-50' : ''}`}>
               <span className="text-slate-500 font-mono text-xs w-4">X</span>
               <input
                 type="number"
                 value={element.x ?? 0}
+                disabled={element.width === '100%'}
                 onChange={(e) => onUpdate('x', parseFloat(e.target.value) || 0)}
-                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1 disabled:cursor-not-allowed"
               />
               <span className="text-slate-500 text-[10px]">pt</span>
             </div>
 
             {/* Y */}
-            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+            <div className={`flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition ${element.height === '100%' ? 'opacity-50' : ''}`}>
               <span className="text-slate-500 font-mono text-xs w-4">Y</span>
               <input
                 type="number"
                 value={element.y ?? 0}
+                disabled={element.height === '100%'}
                 onChange={(e) => onUpdate('y', parseFloat(e.target.value) || 0)}
-                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1 disabled:cursor-not-allowed"
               />
               <span className="text-slate-500 text-[10px]">pt</span>
             </div>
 
             {/* W */}
-            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+            <div className={`flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition ${element.width === '100%' ? 'border-indigo-500/40' : ''}`}>
               <span className="text-slate-500 font-mono text-xs w-4">W</span>
               {element.width === '100%' ? (
-                <span className="w-full text-slate-200 font-mono text-xs text-right pr-1">100%</span>
+                <span className="w-full text-indigo-400 font-mono text-xs text-right pr-1 font-semibold">100%</span>
               ) : (
                 <input
                   type="number"
@@ -975,17 +978,60 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
             </div>
 
             {/* H */}
-            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+            <div className={`flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition ${element.height === '100%' ? 'border-indigo-500/40' : ''}`}>
               <span className="text-slate-500 font-mono text-xs w-4">H</span>
-              <input
-                type="number"
-                value={typeof element.height === 'number' ? element.height : 30}
-                onChange={(e) => onUpdate('height', parseFloat(e.target.value) || 0)}
-                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
-              />
+              {element.height === '100%' ? (
+                <span className="w-full text-indigo-400 font-mono text-xs text-right pr-1 font-semibold">100%</span>
+              ) : (
+                <input
+                  type="number"
+                  value={typeof element.height === 'number' ? element.height : 30}
+                  onChange={(e) => onUpdate('height', parseFloat(e.target.value) || 0)}
+                  className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+                />
+              )}
               <span className="text-slate-500 text-[10px]">pt</span>
             </div>
           </div>
+
+          {/* Checkboxes de 100% Width e 100% Height */}
+          {['rectangle', 'container', 'loop', 'line', 'image', 'spacer'].includes(element.type) && (
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <label className="flex items-center justify-between bg-slate-950/50 border border-slate-800 rounded-lg px-2.5 py-1.5 cursor-pointer hover:border-slate-700 transition select-none">
+                <span className="text-[11px] text-slate-300 font-medium">Width 100%</span>
+                <input
+                  type="checkbox"
+                  checked={element.width === '100%'}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      onUpdate({ width: '100%', x: 0 })
+                    } else {
+                      onUpdate({ width: 100 })
+                    }
+                  }}
+                  className="rounded border-slate-700 text-indigo-600 focus:ring-0 bg-slate-900 cursor-pointer w-3.5 h-3.5"
+                />
+              </label>
+
+              {element.type !== 'line' && (
+                <label className="flex items-center justify-between bg-slate-950/50 border border-slate-800 rounded-lg px-2.5 py-1.5 cursor-pointer hover:border-slate-700 transition select-none">
+                  <span className="text-[11px] text-slate-300 font-medium">Height 100%</span>
+                  <input
+                    type="checkbox"
+                    checked={element.height === '100%'}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        onUpdate({ height: '100%', y: 0, relativeOffsetY: 0 })
+                      } else {
+                        onUpdate({ height: element.type === 'container' || element.type === 'loop' ? 100 : 60 })
+                      }
+                    }}
+                    className="rounded border-slate-700 text-indigo-600 focus:ring-0 bg-slate-900 cursor-pointer w-3.5 h-3.5"
+                  />
+                </label>
+              )}
+            </div>
+          )}
 
           {/* Position Mode (Absolute / Relative) - Oculto para Container porque container é sempre relativo */}
           {element.type !== 'container' && (
@@ -1019,7 +1065,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                     onUpdate({
                       positionMode: 'RELATIVE',
                       position: 'relative',
-                      relativeOffsetY: typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10,
+                      relativeOffsetY: element.height === '100%' ? 0 : (typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 0),
                     })
                   }}
                   className={`py-1 text-xs font-medium rounded transition text-center ${
@@ -1033,14 +1079,15 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
               </div>
 
               {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' && (
-                <div className="flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 mt-1.5">
+                <div className={`flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 mt-1.5 ${element.height === '100%' ? 'opacity-50' : ''}`}>
                   <span className="text-slate-400 text-xs">Offset Y</span>
                   <div className="flex items-center gap-1">
                     <input
                       type="number"
-                      value={(element.relativeOffsetY as number) ?? 10}
+                      value={element.height === '100%' ? 0 : ((element.relativeOffsetY as number) ?? 0)}
+                      disabled={element.height === '100%'}
                       onChange={(e) => onUpdate('relativeOffsetY', parseFloat(e.target.value) || 0)}
-                      className="w-16 bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1"
+                      className="w-16 bg-transparent text-slate-200 font-mono text-xs focus:outline-none text-right pr-1 disabled:cursor-not-allowed"
                     />
                     <span className="text-slate-500 text-[10px]">pt</span>
                   </div>
@@ -1375,27 +1422,53 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
 
         {element.type === 'barcode' && (
           <div>
-            <div className="text-xs font-semibold text-slate-200 mb-2">Barcode Settings</div>
-            <div className="space-y-2">
-              <div className="relative">
+            <div className="text-xs font-semibold text-slate-200 mb-2">Barcode / QR Settings</div>
+            <div className="space-y-2.5">
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Formato</label>
                 <select
-                  value={element.barcodeType || 'code128'}
+                  value={(element.barcodeType as string) || 'qrcode'}
                   onChange={(e) => onUpdate('barcodeType', e.target.value)}
-                  className="w-full appearance-none bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
                 >
-                  <option value="code128">Code 128 (1D)</option>
                   <option value="qrcode">QR Code (2D)</option>
-                  <option value="ean13">EAN-13</option>
-                  <option value="pdf417">PDF417</option>
+                  <option value="code128">Code 128 (1D)</option>
+                  <option value="code39">Code 39 (1D)</option>
+                  <option value="ean13">EAN-13 (13 dígitos)</option>
+                  <option value="ean8">EAN-8 (8 dígitos)</option>
+                  <option value="upc_a">UPC-A (12 dígitos)</option>
+                  <option value="upc_e">UPC-E (8 dígitos)</option>
+                  <option value="pdf417">PDF417 (2D)</option>
+                  <option value="datamatrix">Data Matrix (2D)</option>
                 </select>
               </div>
-              <input
-                type="text"
-                value={(element.value as string) || ''}
-                onChange={(e) => onUpdate('value', e.target.value)}
-                placeholder="Valor do código..."
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
-              />
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Conteúdo ou Campo (Data Binding)</label>
+                <input
+                  type="text"
+                  value={(element.value as string) ?? (element.dataBinding as string) ?? ''}
+                  onChange={(e) => {
+                    onUpdate({ value: e.target.value, dataBinding: e.target.value })
+                  }}
+                  placeholder={element.barcodeType === 'qrcode' ? 'https://... ou campo.json' : '123456789012 ou campo.json'}
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                />
+              </div>
+              {((element.barcodeType as string) || 'qrcode') === 'qrcode' && (
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Correção de Erro (QR)</label>
+                  <select
+                    value={(element.style?.errorCorrection as string) || 'M'}
+                    onChange={(e) => onStyleUpdate('errorCorrection', e.target.value)}
+                    className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="L">Baixa (L - 7%)</option>
+                    <option value="M">Média (M - 15%)</option>
+                    <option value="Q">Quartil (Q - 25%)</option>
+                    <option value="H">Alta (H - 30%)</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1417,7 +1490,20 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
           </div>
         )}
 
-        {/* 4. Appearance Section */}
+        {/* Page Break specific */}
+        {element.type === 'page_break' && (
+          <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 space-y-1.5">
+            <div className="text-xs font-semibold text-indigo-300 flex items-center gap-1.5">
+              <span>✂ Quebra de Página (Page Break)</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Força o início de uma nova página no PDF a partir desta posição vertical. Use <strong className="text-slate-300">Print Condition</strong> abaixo para quebras de página condicionais.
+            </p>
+          </div>
+        )}
+
+        {/* 4. Appearance Section (Não exibido para Page Break) */}
+        {element.type !== 'page_break' && (
         <div>
           <div className="text-xs font-semibold text-slate-200 mb-2">
             Appearance
@@ -1553,9 +1639,10 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
             )}
           </div>
         </div>
+        )}
 
-        {/* 5. Data Binding Section (Não exibido para Container) */}
-        {element.type !== 'container' && (
+        {/* 5. Data Binding Section (Não exibido para Container nem Page Break) */}
+        {element.type !== 'container' && element.type !== 'page_break' && element.type !== 'spacer' && (
           <div>
             <div className="text-xs font-semibold text-slate-200 mb-2">
               Data Binding
@@ -1564,7 +1651,13 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
               <input
                 type="text"
                 value={element.dataBinding || ''}
-                onChange={(e) => onUpdate('dataBinding', e.target.value)}
+                onChange={(e) => {
+                  if (element.type === 'barcode') {
+                    onUpdate({ dataBinding: e.target.value, value: e.target.value })
+                  } else {
+                    onUpdate('dataBinding', e.target.value)
+                  }
+                }}
                 placeholder="{{ invoice.items }}"
                 className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none pr-6"
               />
@@ -2048,7 +2141,7 @@ export default function PropertiesPanel() {
                 <div className="flex items-center gap-2">
                             <Input
                     type="number"
-                    value={selectedElement.relativeOffsetY ?? 10}
+                    value={selectedElement.relativeOffsetY ?? 0}
                     onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
                               className="w-20"
                               size="sm"
@@ -3160,7 +3253,7 @@ export default function PropertiesPanel() {
                         <div className="flex items-center gap-2">
                             <Input
                             type="number"
-                            value={selectedElement.relativeOffsetY ?? 10}
+                            value={selectedElement.relativeOffsetY ?? 0}
                             onChange={(e) => handleUpdate('relativeOffsetY', parseFloat(e.target.value))}
                               size="sm"
                               className="w-20"
@@ -4235,7 +4328,7 @@ function TableEditor({ element, onUpdate, onStyleUpdate, activeTab }: TableEdito
                   <div className="flex items-center gap-2">
                         <Input
                       type="number"
-                      value={element.relativeOffsetY ?? 10}
+                      value={element.relativeOffsetY ?? 0}
                       onChange={(e) => onUpdate('relativeOffsetY', parseFloat(e.target.value))}
                           size="sm"
                           className="w-20"

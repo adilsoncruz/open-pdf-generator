@@ -4,7 +4,6 @@ import { useUIStore } from '../store/uiStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
 import { Select, Button, Divider } from './atoms'
 import { IconButton } from './molecules'
-import { RulersAndGuides, type Guide } from './RulersAndGuides'
 // Component to render Loop child elements
 interface LoopChildElementProps {
   child: Element
@@ -164,7 +163,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       y: e.clientY,
       initialX: child.x || 0,
       initialY: child.y || 0,
-      initialOffsetY: typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 10
+      initialOffsetY: child.height === '100%' ? 0 : (typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 0)
     })
   }
 
@@ -194,7 +193,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       
       const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
       if (isChildRelative && effectiveY !== undefined) {
-        const newOffsetY = Math.max(0, dragStart.initialOffsetY + deltaY)
+        const newOffsetY = child.height === '100%' ? 0 : Math.max(0, dragStart.initialOffsetY + deltaY)
         updateContainerChildElement(containerId, child.id, { x: newX, y: newY, relativeOffsetY: newOffsetY }, location)
       } else {
         updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
@@ -328,6 +327,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
             style={{
               width: rectWidth,
               height: rectHeight,
+              boxSizing: 'border-box',
               backgroundColor: child.style?.fillColor || '#e0e0e0',
               borderRadius: child.style?.cornerRadius || 0,
               border: child.style?.borderColor ? `1px solid ${child.style.borderColor}` : 'none',
@@ -600,6 +600,44 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
           </div>
         )
       }
+      case 'barcode': {
+        const barcodeType = ((child.barcodeType as string) || 'qrcode').toLowerCase()
+        const is2D = barcodeType === 'qrcode' || barcodeType === 'qr_code' || barcodeType === 'datamatrix' || barcodeType === 'data_matrix'
+        const rawBinding = (child.value as string) || (child.dataBinding as string) || (is2D ? 'https://openpdf.dev' : '123456789012')
+        const bw = resolveWidth(child.width || (is2D ? 100 : 140))
+        const bh = resolveHeight(child.height || (is2D ? 100 : 50))
+
+        return (
+          <div
+            className="select-none border border-dashed border-slate-400 flex flex-col items-center justify-center bg-white p-1.5 overflow-hidden"
+            style={{ width: bw, height: bh }}
+          >
+            {is2D ? (
+              <svg className="w-3/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 3h7v7H3V3zm2 2v3h3V5H5zm9-2h7v7h-7V3zm2 2v3h3V5h-3zM3 14h7v7H3v-7zm2 2v3h3v-3H5zm9-2h3v3h-3v-3zm4 0h3v3h-3v-3zm-2 3h2v2h-2v-2zm-2 2h3v2h-3v-2zm4 0h3v2h-3v-2z" />
+              </svg>
+            ) : (
+              <svg className="w-4/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 48 20" fill="currentColor" preserveAspectRatio="none">
+                <rect x="2" y="1" width="2" height="18" />
+                <rect x="6" y="1" width="1" height="18" />
+                <rect x="9" y="1" width="3" height="18" />
+                <rect x="14" y="1" width="1" height="18" />
+                <rect x="17" y="1" width="2" height="18" />
+                <rect x="21" y="1" width="4" height="18" />
+                <rect x="27" y="1" width="1" height="18" />
+                <rect x="30" y="1" width="2" height="18" />
+                <rect x="34" y="1" width="3" height="18" />
+                <rect x="39" y="1" width="1" height="18" />
+                <rect x="42" y="1" width="2" height="18" />
+                <rect x="45" y="1" width="1" height="18" />
+              </svg>
+            )}
+            <span className="text-[9px] font-mono text-slate-600 text-center truncate w-full px-1 mt-0.5 leading-tight">
+              {rawBinding}
+            </span>
+          </div>
+        )
+      }
       default:
         return <div className="w-10 h-10 bg-gray-300" />
     }
@@ -607,11 +645,11 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
 
   return (
     <div
-      className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500 ring-offset-1' : ''}`}
+      className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500' : ''}`}
       style={{
-        left: effectiveX !== undefined ? effectiveX : (child.x || 0),
-        top: effectiveY !== undefined ? effectiveY : (child.y || 0),
-        ...(effectiveWidth !== undefined && !child.width ? { width: effectiveWidth } : {}),
+        left: child.width === '100%' ? 0 : (effectiveX !== undefined ? effectiveX : (child.x || 0)),
+        top: child.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : (child.y || 0)),
+        ...(child.width === '100%' ? { width: '100%' } : (effectiveWidth !== undefined && !child.width ? { width: effectiveWidth } : {})),
       }}
       onMouseDown={handleMouseDown}
     >
@@ -878,6 +916,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
             style={{
               width: rectWidth,
               height: rectHeight,
+              boxSizing: 'border-box',
               backgroundColor: child.style?.fillColor || '#e0e0e0',
               borderRadius: child.style?.cornerRadius || 0,
               border: child.style?.borderColor ? `1px solid ${child.style.borderColor}` : 'none',
@@ -921,6 +960,44 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
           </svg>
         )
       }
+      case 'barcode': {
+        const barcodeType = ((child.barcodeType as string) || 'qrcode').toLowerCase()
+        const is2D = barcodeType === 'qrcode' || barcodeType === 'qr_code' || barcodeType === 'datamatrix' || barcodeType === 'data_matrix'
+        const rawBinding = (child.value as string) || (child.dataBinding as string) || (is2D ? 'https://openpdf.dev' : '123456789012')
+        const bw = resolveWidth(child.width || (is2D ? 100 : 140))
+        const bh = resolveHeight(child.height || (is2D ? 100 : 50))
+
+        return (
+          <div
+            className="select-none border border-dashed border-slate-400 flex flex-col items-center justify-center bg-white p-1.5 overflow-hidden"
+            style={{ width: bw, height: bh }}
+          >
+            {is2D ? (
+              <svg className="w-3/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 3h7v7H3V3zm2 2v3h3V5H5zm9-2h7v7h-7V3zm2 2v3h3V5h-3zM3 14h7v7H3v-7zm2 2v3h3v-3H5zm9-2h3v3h-3v-3zm4 0h3v3h-3v-3zm-2 3h2v2h-2v-2zm-2 2h3v2h-3v-2zm4 0h3v2h-3v-2z" />
+              </svg>
+            ) : (
+              <svg className="w-4/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 48 20" fill="currentColor" preserveAspectRatio="none">
+                <rect x="2" y="1" width="2" height="18" />
+                <rect x="6" y="1" width="1" height="18" />
+                <rect x="9" y="1" width="3" height="18" />
+                <rect x="14" y="1" width="1" height="18" />
+                <rect x="17" y="1" width="2" height="18" />
+                <rect x="21" y="1" width="4" height="18" />
+                <rect x="27" y="1" width="1" height="18" />
+                <rect x="30" y="1" width="2" height="18" />
+                <rect x="34" y="1" width="3" height="18" />
+                <rect x="39" y="1" width="1" height="18" />
+                <rect x="42" y="1" width="2" height="18" />
+                <rect x="45" y="1" width="1" height="18" />
+              </svg>
+            )}
+            <span className="text-[9px] font-mono text-slate-600 text-center truncate w-full px-1 mt-0.5 leading-tight">
+              {rawBinding}
+            </span>
+          </div>
+        )
+      }
       default:
         return <div className="w-10 h-10 bg-gray-300" />
     }
@@ -928,10 +1005,11 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
   
   return (
     <div
-      className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500 ring-offset-1' : ''}`}
+      className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500' : ''}`}
       style={{
-        left: child.x || 0,
-        top: child.y || 0,
+        left: child.width === '100%' ? 0 : (child.x || 0),
+        top: child.height === '100%' ? 0 : (child.y || 0),
+        ...(child.width === '100%' ? { width: '100%' } : {}),
       }}
       onMouseDown={handleMouseDown}
     >
@@ -950,7 +1028,6 @@ export default function Canvas() {
   const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, currentSection, setCurrentSection, clearSelection } = useTemplateStore()
   const { zoom, setZoom } = useUIStore()
   const pageRef = useRef<HTMLDivElement>(null)
-  const [guides, setGuides] = useState<Guide[]>([])
 
   let pageSize;
   switch(template.pageSettings.size) {
@@ -1243,9 +1320,6 @@ export default function Canvas() {
         >
         
         <div ref={pageRef} className="relative" style={{ width: pageSize.width, height: pageSize.height, transform: `scale(${scale})`, transformOrigin: 'top center' }}>
-          
-          <RulersAndGuides width={pageSize.width} height={pageSize.height} scale={scale} guides={guides} setGuides={setGuides} />
-          
           {currentSection === 'bodyBackground' && template.pageSettings.bodyBackground ? (
             
             <>
@@ -1771,7 +1845,7 @@ export default function Canvas() {
           {/* Body Section - container com coordenadas relativas */}
           <div
             className={`absolute ${
-              currentSection === 'body' ? 'border-2 border-dashed border-gray-400' : ''
+              currentSection === 'body' ? 'outline outline-2 outline-dashed outline-gray-400 -outline-offset-2' : ''
             }`}
             style={{
               top: margins.top + (template.pageSettings.header?.height || 0),
@@ -1803,9 +1877,10 @@ export default function Canvas() {
                   let effectiveWidth: number | string | undefined = undefined
 
                   if (isRelativeFlow) {
-                    const offsetY = typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10
+                    const isHeightFull = element.height === '100%'
+                    const offsetY = isHeightFull ? 0 : (typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 0)
                     if (currentFlowY === 0) {
-                      effectiveY = typeof element.y === 'number' && element.y > 0 ? element.y : offsetY
+                      effectiveY = isHeightFull ? 0 : (typeof element.y === 'number' && element.y > 0 ? element.y : offsetY)
                     } else {
                       effectiveY = currentFlowY + offsetY
                       if (lastFlowX !== undefined) {
@@ -2402,7 +2477,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
       x: e.clientX,
       y: e.clientY,
       initialPositions,
-      initialOffsetY: typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 10
+      initialOffsetY: element.height === '100%' ? 0 : (typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 0)
     })
   }
 
@@ -2474,7 +2549,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         
         const isRelative = (element.positionMode || element.position || '').toUpperCase() === 'RELATIVE'
         if (isRelative && effectiveY !== undefined) {
-          const newOffset = Math.max(0, dragStart.initialOffsetY + deltaY)
+          const newOffset = element.height === '100%' ? 0 : Math.max(0, dragStart.initialOffsetY + deltaY)
           onUpdate({ x: newX, y: newY, relativeOffsetY: newOffset })
         } else {
           onUpdate({ x: newX, y: newY })
@@ -2684,29 +2759,36 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         )
       }
 
-            case 'page_break': {
+      case 'page_break': {
         const pbWidth = element.width === '100%' ? (pageSize.width - margins.left - margins.right) : (element.width || (pageSize.width - margins.left - margins.right))
         return (
           <div
+            className={`cursor-pointer select-none ${isSelected ? 'ring-2 ring-indigo-500 rounded' : ''}`}
             style={{
               width: pbWidth,
-              height: 20,
-              borderBottom: '4px dashed #999',
+              height: 24,
+              borderBottom: isSelected ? '3px dashed #6366f1' : '3px dashed #94a3b8',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              position: 'relative'
+              position: 'relative',
             }}
+            onMouseDown={handleMouseDown}
           >
-            <span style={{
-              background: 'white',
-              padding: '0 10px',
-              color: '#999',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              transform: 'translateY(10px)'
-            }}>
-              PAGE BREAK
+            <span
+              style={{
+                background: isSelected ? '#eef2ff' : 'white',
+                padding: '1px 10px',
+                color: isSelected ? '#4f46e5' : '#64748b',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                borderRadius: '4px',
+                border: isSelected ? '1px solid #818cf8' : '1px solid #cbd5e1',
+                transform: 'translateY(10px)',
+                pointerEvents: 'none',
+              }}
+            >
+              ✂ PAGE BREAK
             </span>
           </div>
         )
@@ -2781,6 +2863,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
             style={{
               width: resolvedWidth,
               height: resolvedHeight,
+              boxSizing: 'border-box',
               backgroundColor: element.style?.fillColor || 'transparent',
               borderTopWidth: `${element.style?.borderTopWidth ?? borderWidth}px`,
               borderTopStyle: borderStyle,
@@ -3128,30 +3211,43 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
       }
 
       case 'barcode': {
-        const barcodeType = element.barcodeType || 'qrcode'
-        
-        
-        const barcodeBinding = element.dataBinding || element.value || 'Sem dados'
-        
+        const barcodeType = ((element.barcodeType as string) || 'qrcode').toLowerCase()
+        const is2D = barcodeType === 'qrcode' || barcodeType === 'qr_code' || barcodeType === 'datamatrix' || barcodeType === 'data_matrix'
+        const barcodeBinding = (element.value as string) || (element.dataBinding as string) || (is2D ? 'https://openpdf.dev' : '123456789012')
+
         return (
           <div
-            className={`cursor-move select-none border-2 border-dashed border-gray-400 flex flex-col items-center justify-center bg-white ${
+            className={`cursor-move select-none border border-dashed border-slate-400 flex flex-col items-center justify-center bg-white p-1.5 overflow-hidden ${
               isSelected ? 'ring-2 ring-primary-500' : ''
             }`}
             style={{
-              width: element.width || 100,
-              height: element.height || 100,
+              width: element.width || (is2D ? 100 : 140),
+              height: element.height || (is2D ? 100 : 50),
             }}
             onMouseDown={handleMouseDown}
           >
-            <div className="text-3xl mb-1">
-              {barcodeType === 'qrcode' ? '⊞' : '|||'}
-            </div>
-            <span className="text-gray-500 text-xs text-center px-2 break-all">
-              {barcodeType === 'qrcode' ? 'QR Code' : 'Barcode'}
-            </span>
-            <span className="text-gray-400 text-xs text-center px-1 break-all mt-1 max-w-full overflow-hidden">
-              {element.dataBinding ? `{${element.dataBinding}}` : barcodeBinding}
+            {is2D ? (
+              <svg className="w-3/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 3h7v7H3V3zm2 2v3h3V5H5zm9-2h7v7h-7V3zm2 2v3h3V5h-3zM3 14h7v7H3v-7zm2 2v3h3v-3H5zm9-2h3v3h-3v-3zm4 0h3v3h-3v-3zm-2 3h2v2h-2v-2zm-2 2h3v2h-3v-2zm4 0h3v2h-3v-2z" />
+              </svg>
+            ) : (
+              <svg className="w-4/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 48 20" fill="currentColor" preserveAspectRatio="none">
+                <rect x="2" y="1" width="2" height="18" />
+                <rect x="6" y="1" width="1" height="18" />
+                <rect x="9" y="1" width="3" height="18" />
+                <rect x="14" y="1" width="1" height="18" />
+                <rect x="17" y="1" width="2" height="18" />
+                <rect x="21" y="1" width="4" height="18" />
+                <rect x="27" y="1" width="1" height="18" />
+                <rect x="30" y="1" width="2" height="18" />
+                <rect x="34" y="1" width="3" height="18" />
+                <rect x="39" y="1" width="1" height="18" />
+                <rect x="42" y="1" width="2" height="18" />
+                <rect x="45" y="1" width="1" height="18" />
+              </svg>
+            )}
+            <span className="text-[9px] font-mono text-slate-600 text-center truncate w-full px-1 mt-0.5 leading-tight">
+              {barcodeBinding}
             </span>
           </div>
         )
@@ -3169,6 +3265,9 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
               ? element.width
               : 400
         const loopHeight = typeof element.height === 'number' ? element.height : 150
+        const loopBorderWidth = element.style?.borderStyle === 'none' ? 0 : (element.style?.borderWidth ?? element.style?.strokeWidth ?? 2)
+        const innerLoopWidth = Math.max(0, loopWidth - (loopBorderWidth * 2))
+        const innerLoopHeight = Math.max(0, loopHeight - (loopBorderWidth * 2))
         
         return (
           <div
@@ -3178,11 +3277,12 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
             style={{
               width: loopWidth,
               height: loopHeight,
+              boxSizing: 'border-box',
               backgroundColor:
                 (element.style?.fillColor || element.style?.backgroundColor) === 'transparent'
                   ? 'transparent'
                   : (element.style?.fillColor || element.style?.backgroundColor || 'transparent'),
-              borderWidth: element.style?.borderStyle === 'none' ? 0 : (element.style?.borderWidth ?? element.style?.strokeWidth ?? 2),
+              borderWidth: loopBorderWidth,
               borderStyle: (element.style?.borderStyle as string) || 'dashed',
               borderColor: element.style?.borderColor || element.style?.strokeColor || '#8b5cf6',
               borderRadius: element.style?.cornerRadius ?? 4,
@@ -3226,8 +3326,8 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                       child={child} 
                       loopId={element.id}
                       location={location}
-                      loopWidth={loopWidth}
-                      loopHeight={loopHeight}
+                      loopWidth={innerLoopWidth}
+                      loopHeight={innerLoopHeight}
                     />
                   ))}
                 </>
@@ -3254,7 +3354,19 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                   : typeof element.width === 'number'
                     ? element.width
                     : 400
-              const containerHeight = typeof element.height === 'number' ? element.height : 150
+              const containerHeight =
+                element.height === '100%'
+                  ? (location === 'header'
+                    ? (template.pageSettings.header?.height || 100)
+                    : location === 'footer'
+                      ? (template.pageSettings.footer?.height || 100)
+                      : (pageSize.height - margins.top - margins.bottom - (location === 'body' ? ((template.pageSettings.header?.height || 0) + (template.pageSettings.footer?.height || 0)) : 0)))
+                  : typeof element.height === 'number'
+                    ? element.height
+                    : 150
+              const containerBorderWidth = element.style?.borderStyle === 'none' ? 0 : (element.style?.borderWidth ?? element.style?.strokeWidth ?? 2)
+              const innerContainerWidth = Math.max(0, containerWidth - (containerBorderWidth * 2))
+              const innerContainerHeight = Math.max(0, containerHeight - (containerBorderWidth * 2))
 
               return (
                 <div
@@ -3264,11 +3376,12 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                   style={{
                     width: containerWidth,
                     height: containerHeight,
+                    boxSizing: 'border-box',
                     backgroundColor:
                       (element.style?.fillColor || element.style?.backgroundColor) === 'transparent'
                         ? 'transparent'
                         : (element.style?.fillColor || element.style?.backgroundColor || 'transparent'),
-                    borderWidth: element.style?.borderStyle === 'none' ? 0 : (element.style?.borderWidth ?? element.style?.strokeWidth ?? 2),
+                    borderWidth: containerBorderWidth,
                     borderStyle: (element.style?.borderStyle as string) || 'dashed',
                     borderColor: element.style?.borderColor || element.style?.strokeColor || '#8b5cf6',
                     borderRadius: element.style?.cornerRadius ?? 4,
@@ -3316,9 +3429,10 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                             let effectiveChildWidth: number | string | undefined = undefined
 
                             if (isRelative) {
-                              const offset = typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 10
+                              const isChildHeightFull = child.height === '100%'
+                              const offset = isChildHeightFull ? 0 : (typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 0)
                               if (containerFlowY === 0) {
-                                effectiveChildY = typeof child.y === 'number' && child.y > 0 ? child.y : offset
+                                effectiveChildY = isChildHeightFull ? 0 : (typeof child.y === 'number' && child.y > 0 ? child.y : offset)
                               } else {
                                 effectiveChildY = containerFlowY + offset
                                 if (lastChildX !== undefined) {
@@ -3350,8 +3464,8 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                                 effectiveWidth={effectiveChildWidth}
                                 containerId={element.id}
                                 location={location}
-                                containerWidth={containerWidth}
-                                containerHeight={containerHeight}
+                                containerWidth={innerContainerWidth}
+                                containerHeight={innerContainerHeight}
                               />
                             )
                           })
@@ -3459,9 +3573,9 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
     <div
       className="absolute"
       style={{
-        left: effectiveX !== undefined ? effectiveX : element.x,
-        top: effectiveY !== undefined ? effectiveY : element.y,
-        ...(effectiveWidth !== undefined && element.width === undefined ? { width: effectiveWidth } : {}),
+        left: element.width === '100%' ? 0 : (effectiveX !== undefined ? effectiveX : element.x),
+        top: element.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : element.y),
+        ...(element.width === '100%' ? { width: '100%' } : (effectiveWidth !== undefined && element.width === undefined ? { width: effectiveWidth } : {})),
       }}
     >
       <div ref={elementWrapperRef} className="relative">

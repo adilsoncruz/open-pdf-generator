@@ -56,11 +56,52 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
         element: BarcodeElement,
         context: RenderContext,
     ): String? {
-        return DataBindingResolver.resolve(
-            element.dataBinding,
-            context.data,
-            context.loopContext,
-        )?.toString()
+        val rawBinding = element.dataBinding?.trim() ?: ""
+        val rawValue = element.value?.trim() ?: ""
+        val effectiveType = (element.barcodeType ?: "qrcode").lowercase()
+
+        // 1. Try resolving dataBinding from context data / loopContext
+        if (rawBinding.isNotEmpty()) {
+            val cleanKey = rawBinding.removePrefix("{{").removeSuffix("}}").removePrefix("\${").removeSuffix("}").trim()
+            val resolved =
+                DataBindingResolver.resolve(
+                    cleanKey,
+                    context.data,
+                    context.loopContext,
+                )?.toString()
+            if (!resolved.isNullOrBlank()) {
+                return resolved
+            }
+            if (context.data.containsKey(cleanKey)) {
+                return null
+            }
+        }
+
+        // 2. Try resolving value from context data if it looks like a binding
+        if (rawValue.isNotEmpty()) {
+            val cleanValKey = rawValue.removePrefix("{{").removeSuffix("}}").removePrefix("\${").removeSuffix("}").trim()
+            val resolvedVal =
+                DataBindingResolver.resolve(
+                    cleanValKey,
+                    context.data,
+                    context.loopContext,
+                )?.toString()
+            if (!resolvedVal.isNullOrBlank()) {
+                return resolvedVal
+            }
+            return rawValue
+        }
+
+        // 3. Fallback to literal dataBinding string or default sample
+        if (rawBinding.isNotEmpty()) {
+            return rawBinding
+        }
+
+        return if (effectiveType in listOf("qrcode", "qr_code")) {
+            "https://openpdf.dev"
+        } else {
+            "123456789012"
+        }
     }
 
     private fun generateBarcodeImage(
@@ -68,8 +109,9 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
         data: String,
         scaleFactor: Int = 1,
     ): Image {
+        val effectiveType = (element.barcodeType ?: "qrcode").lowercase()
         val format =
-            when (element.barcodeType.lowercase()) {
+            when (effectiveType) {
                 "qrcode", "qr_code" -> BarcodeFormat.QR_CODE
                 "barcode", "code128", "code_128" -> BarcodeFormat.CODE_128
                 "code39", "code_39" -> BarcodeFormat.CODE_39
@@ -96,18 +138,28 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
             hints[EncodeHintType.MARGIN] = 0
         }
 
-        val width = element.width.toInt() * scaleFactor
-        val height = element.height.toInt() * scaleFactor
+        val width = (if (element.width > 0f) element.width.toInt() else 100).coerceAtLeast(10) * scaleFactor
+        val height = (if (element.height > 0f) element.height.toInt() else 100).coerceAtLeast(10) * scaleFactor
 
         val writer = MultiFormatWriter()
         val bitMatrix: BitMatrix =
-            writer.encode(
-                data,
-                format,
-                width,
-                height,
-                hints,
-            )
+            try {
+                writer.encode(
+                    data,
+                    format,
+                    width,
+                    height,
+                    hints,
+                )
+            } catch (e: Exception) {
+                logger.warn("Fallback para CODE_128 no barcode ${element.id} ($effectiveType) devido a conteúdo incompatível '$data': ${e.message}")
+                writer.encode(
+                    data,
+                    BarcodeFormat.CODE_128,
+                    width,
+                    height,
+                )
+            }
 
         val bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix)
 

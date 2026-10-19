@@ -41,6 +41,7 @@ class GenerateCommand : CliktCommand(
     ).file(mustExist = true)
 
     private val output by option(
+        "-o",
         "--output",
         help = "Output PDF file path",
     ).default("output.pdf")

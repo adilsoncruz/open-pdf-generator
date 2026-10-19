@@ -29,7 +29,8 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         val containerX = 0f
         val containerY = element.y
         val containerWidth = context.containerWidth ?: element.resolveWidth(595.28f)
-        val containerHeight = if (element.height > 0f) element.height else (context.containerHeight ?: 0f)
+        val defaultHeight = context.containerHeight ?: (context.document.pageSize.height - context.template.pageSettings.margins.top - context.template.pageSettings.margins.bottom)
+        val containerHeight = element.resolveHeight(defaultHeight)
 
         element.style?.let { style ->
             val cb =

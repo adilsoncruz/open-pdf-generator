@@ -9,7 +9,6 @@ import * as http from 'http'
 import { initAutoUpdater, checkForUpdates } from './autoUpdater'
 
 let mainWindow: BrowserWindow | null = null
-let splashWindow: BrowserWindow | null = null
 
 // ============ CLI Management ============
 
@@ -463,37 +462,6 @@ async function readJarVersionFromBuildLibs(
   }
 }
 
-function createSplashWindow() {
-  const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
-  
-  splashWindow = new BrowserWindow({
-    width: 400,
-    height: 350,
-    frame: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    center: true,
-    show: false, // Show only when content loads
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
-  })
-
-  // Show splash as soon as content is ready
-  splashWindow.once('ready-to-show', () => {
-    splashWindow?.show()
-  })
-
-  // Carregar arquivo HTML da splash
-  const splashPath = isDev
-    ? path.join(__dirname, '..', '..', 'resources', 'splash.html')
-    : path.join(process.resourcesPath, 'splash.html')
-  
-  splashWindow.loadFile(splashPath)
-}
-
 function createMenu() {
   const isMac = process.platform === 'darwin'
   
@@ -702,11 +670,6 @@ function createWindow() {
 
   // Quando a janela estiver pronta para mostrar
   mainWindow.once('ready-to-show', () => {
-    // Fechar splash e mostrar janela principal
-    if (splashWindow) {
-      splashWindow.close()
-      splashWindow = null
-    }
     mainWindow?.show()
     mainWindow?.maximize()
     mainWindow?.focus()
@@ -1081,6 +1044,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
       ])
 
       let stdout = ''
+      let stderr = ''
 
       java.stdout.on('data', (data) => {
         const text = data.toString()
@@ -1089,7 +1053,9 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
       })
 
       java.stderr.on('data', (data) => {
-        console.error('[CLI STDERR]', data.toString().trim())
+        const text = data.toString()
+        stderr += text
+        console.error('[CLI STDERR]', text.trim())
       })
 
       java.on('close', async (code) => {
@@ -1122,6 +1088,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
         } else {
           console.error('❌ [Preview] CLI failed with code:', code)
           console.error('❌ [Preview] STDOUT:', stdout)
+          console.error('❌ [Preview] STDERR:', stderr)
 
           await fs.unlink(pdfFile).catch(() => {})
           await fs.rmdir(tmpDir).catch(() => {})
@@ -1131,7 +1098,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
             errorCode: ErrorCodes.ERROR_GENERATING_PDF,
             code,
             // Include CLI output for debugging
-            cliError: stdout,
+            cliError: stderr.trim() || stdout.trim(),
           })
         }
       })
@@ -1181,7 +1148,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
 
     const javaPath = cliStatus.javaPath || 'java'
     console.log('  Java Path:', javaPath)
-    console.log('  Command:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '-o', pdfFile)
+    console.log('  Command:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '--output', pdfFile)
 
     return new Promise((resolve) => {
       const java = spawn(javaPath, [
@@ -1191,7 +1158,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
         templateFile,
         '-d',
         dataFile,
-        '-o',
+        '--output',
         pdfFile,
       ])
 
