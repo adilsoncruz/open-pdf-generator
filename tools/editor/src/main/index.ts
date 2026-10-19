@@ -9,7 +9,6 @@ import * as http from 'http'
 import { initAutoUpdater, checkForUpdates } from './autoUpdater'
 
 let mainWindow: BrowserWindow | null = null
-let splashWindow: BrowserWindow | null = null
 
 // ============ CLI Management ============
 
@@ -463,37 +462,6 @@ async function readJarVersionFromBuildLibs(
   }
 }
 
-function createSplashWindow() {
-  const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
-  
-  splashWindow = new BrowserWindow({
-    width: 400,
-    height: 350,
-    frame: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    center: true,
-    show: false, // Show only when content loads
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
-  })
-
-  // Show splash as soon as content is ready
-  splashWindow.once('ready-to-show', () => {
-    splashWindow?.show()
-  })
-
-  // Carregar arquivo HTML da splash
-  const splashPath = isDev
-    ? path.join(__dirname, '..', '..', 'resources', 'splash.html')
-    : path.join(process.resourcesPath, 'splash.html')
-  
-  splashWindow.loadFile(splashPath)
-}
-
 function createMenu() {
   const isMac = process.platform === 'darwin'
   
@@ -694,19 +662,14 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
-    backgroundColor: '#f3f4f6',
-    title: 'PDF Template Editor',
+    backgroundColor: '#0b0f19',
+    title: 'Open PDF Template Studio',
   })
   
   createMenu()
 
   // Quando a janela estiver pronta para mostrar
   mainWindow.once('ready-to-show', () => {
-    // Fechar splash e mostrar janela principal
-    if (splashWindow) {
-      splashWindow.close()
-      splashWindow = null
-    }
     mainWindow?.show()
     mainWindow?.maximize()
     mainWindow?.focus()
@@ -733,9 +696,6 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // Mostrar splash screen imediatamente
-  createSplashWindow()
-  
   // Set dock icon on macOS
   if (process.platform === 'darwin') {
     const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
@@ -1128,6 +1088,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
         } else {
           console.error('❌ [Preview] CLI failed with code:', code)
           console.error('❌ [Preview] STDOUT:', stdout)
+          console.error('❌ [Preview] STDERR:', stderr)
           if (stderr) console.error('❌ [Preview] STDERR:', stderr)
 
           await fs.unlink(pdfFile).catch(() => {})
@@ -1137,7 +1098,8 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
             success: false,
             errorCode: ErrorCodes.ERROR_GENERATING_PDF,
             code,
-            // Include CLI error output (stderr or stdout) for accurate reporting
+            // Include CLI output for debugging
+            
             cliError: stderr.trim() || stdout.trim(),
           })
         }
@@ -1188,7 +1150,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
 
     const javaPath = cliStatus.javaPath || 'java'
     console.log('  Java Path:', javaPath)
-    console.log('  Command:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '-o', pdfFile)
+    console.log('  Command:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '--output', pdfFile)
 
     return new Promise((resolve) => {
       const java = spawn(javaPath, [
@@ -1198,7 +1160,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
         templateFile,
         '-d',
         dataFile,
-        '-o',
+        '--output',
         pdfFile,
       ])
 

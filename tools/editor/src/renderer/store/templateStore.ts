@@ -543,13 +543,13 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           const lastH = typeof lastChild.height === 'number' ? lastChild.height : 25
           childY = lastY + lastH + 10
           childX = lastChild.x ?? childX
-          if (typeof lastChild.width === 'number') {
+          if (childWidth === undefined && typeof lastChild.width === 'number') {
             childWidth = lastChild.width
           }
           if ((lastChild.positionMode || lastChild.position || '').toUpperCase() === 'RELATIVE') {
             normalizedElement.positionMode = 'RELATIVE'
             normalizedElement.position = 'relative'
-            normalizedElement.relativeOffsetY = 10
+            normalizedElement.relativeOffsetY = 0
           }
         }
         const adaptedChild = {
@@ -2461,6 +2461,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: addToLoop(state.template.pageSettings.bodyBackground.elements),
+            },
+          },
+        }
       } else if (loc === 'summary' && state.template.summaryPage) {
         newTemplate = {
           ...state.template,
@@ -2527,6 +2538,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: updateInLoop(state.template.pageSettings.bodyBackground.elements),
+            },
+          },
+        }
       } else if (loc === 'summary' && state.template.summaryPage) {
         newTemplate = {
           ...state.template,
@@ -2588,6 +2610,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             footer: {
               ...state.template.pageSettings.footer,
               elements: deleteFromLoop(state.template.pageSettings.footer.elements),
+            },
+          },
+        }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: deleteFromLoop(state.template.pageSettings.bodyBackground.elements),
             },
           },
         }
@@ -2704,6 +2737,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: reorderInLoop(state.template.pageSettings.bodyBackground.elements),
+            },
+          },
+        }
       } else if (loc === 'summary' && state.template.summaryPage) {
         newTemplate = {
           ...state.template,
@@ -2740,6 +2784,15 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
   setSidebarMinimized: (minimized: boolean) =>
     set({ isSidebarMinimized: minimized }),
+
+  addElementToContainer: (containerId, element, location) =>
+    get().addElementToLoop(containerId, element, location),
+
+  deleteContainerChildElement: (containerId, childId, location) =>
+    get().deleteLoopChildElement(containerId, childId, location),
+
+  reorderContainerChildren: (containerId, fromIndex, toIndex, location) =>
+    get().reorderLoopChildren(containerId, fromIndex, toIndex, location),
 
   updateContainerChildElement: (containerId, childId, updates, location) =>
       set((state) => {
@@ -2782,6 +2835,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               footer: {
                 ...state.template.pageSettings.footer,
                 elements: updateInContainer(state.template.pageSettings.footer.elements),
+              },
+            },
+          }
+        } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+          newTemplate = {
+            ...state.template,
+            pageSettings: {
+              ...state.template.pageSettings,
+              bodyBackground: {
+                ...state.template.pageSettings.bodyBackground,
+                elements: updateInContainer(state.template.pageSettings.bodyBackground.elements),
               },
             },
           }

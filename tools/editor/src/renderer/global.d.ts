@@ -1,5 +1,10 @@
 // Global type declarations for the renderer process
 
+declare module '*.png' {
+  const source: string
+  export default source
+}
+
 export interface CLIStatus {
   installed: boolean
   version: string | null

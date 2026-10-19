@@ -129,7 +129,6 @@ class HeaderFooterPageEvent(
             headerAdjustedElements =
                 header.elements
                     .filter { shouldRenderElement(it, header.groups) }
-                    .map { adjustElementForHeader(it, document) }
 
             headerContext =
                 RenderContext(
@@ -141,14 +140,18 @@ class HeaderFooterPageEvent(
                     useContentUnder = false,
                     containerWidth = containerWidth,
                     containerHeight = header.height,
+                    offsetX = margins.left,
+                    offsetY = margins.top,
                 )
         }
 
         template.pageSettings.footer?.let { footer ->
+            val pageHeight = document.pageSize.height
+            val footerTopY = pageHeight - margins.bottom - footer.height
+
             footerAdjustedElements =
                 footer.elements
                     .filter { shouldRenderElement(it, footer.groups) }
-                    .map { adjustElementForFooter(it, document, footer) }
 
             footerContext =
                 RenderContext(
@@ -160,6 +163,8 @@ class HeaderFooterPageEvent(
                     useContentUnder = false,
                     containerWidth = containerWidth,
                     containerHeight = footer.height,
+                    offsetX = margins.left,
+                    offsetY = footerTopY,
                 )
         }
 
@@ -169,7 +174,6 @@ class HeaderFooterPageEvent(
             bodyBackgroundAdjustedElements =
                 bodyBackground.elements
                     .filter { shouldRenderElement(it, bodyBackground.groups) }
-                    .map { adjustElementForBackground(it, document) }
 
             bodyBackgroundContext =
                 RenderContext(
@@ -181,6 +185,8 @@ class HeaderFooterPageEvent(
                     useContentUnder = true,
                     containerWidth = containerWidth,
                     containerHeight = containerHeight,
+                    offsetX = margins.left,
+                    offsetY = margins.top,
                 )
         }
     }
@@ -239,69 +245,6 @@ class HeaderFooterPageEvent(
 
         elements.forEach { element ->
             renderEngine.render(element, context)
-        }
-    }
-
-    private fun adjustElementForHeader(
-        element: Element,
-        document: Document,
-    ): Element {
-        val leftMargin = template.pageSettings.margins.left
-        val topMargin = template.pageSettings.margins.top
-        val adjustedX = leftMargin + element.x
-        val adjustedY = topMargin + element.y
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            else -> element
-        }
-    }
-
-    private fun adjustElementForFooter(
-        element: Element,
-        document: Document,
-        footer: HeaderFooter,
-    ): Element {
-        val pageHeight = document.pageSize.height
-        val leftMargin = template.pageSettings.margins.left
-        val bottomMargin = template.pageSettings.margins.bottom
-        val footerTopY = pageHeight - bottomMargin - footer.height
-        val adjustedX = leftMargin + element.x
-        val adjustedY = footerTopY + element.y
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            else -> element
-        }
-    }
-
-    private fun adjustElementForBackground(
-        element: Element,
-        document: Document,
-    ): Element {
-        val leftMargin = template.pageSettings.margins.left
-        val topMargin = template.pageSettings.margins.top
-        val adjustedX = leftMargin + element.x
-        val adjustedY = topMargin + element.y
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            else -> element
         }
     }
 }
