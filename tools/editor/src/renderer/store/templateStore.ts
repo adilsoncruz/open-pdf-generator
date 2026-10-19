@@ -34,6 +34,23 @@ export interface ElementGroup {
   collapsed?: boolean  
 }
 
+export interface WatermarkConfig {
+  type?: 'text' | 'image'
+  text?: string
+  dataBinding?: string
+  imageSource?: string
+  fontName?: string
+  fontSize?: number
+  fontStyle?: string
+  color?: string
+  opacity?: number
+  rotation?: number
+  width?: number
+  height?: number
+  onTop?: boolean
+  printCondition?: string
+}
+
 export interface Template {
   version: string
   metadata: {
@@ -70,6 +87,7 @@ export interface Template {
       groups?: ElementGroup[]
       printCondition?: string
     }
+    watermark?: WatermarkConfig
   }
   page: Element[]
   groups?: ElementGroup[]  // Grupos do body
@@ -287,6 +305,7 @@ const normalizeBodyContainers = (template: Template): Template => ({
           elements: ensureContainersInSection(template.pageSettings.bodyBackground.elements, 'Background', 200),
         }
       : undefined,
+    watermark: template.pageSettings.watermark,
   },
   summaryPage: template.summaryPage
     ? {

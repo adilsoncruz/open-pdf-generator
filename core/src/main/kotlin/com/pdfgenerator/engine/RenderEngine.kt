@@ -49,6 +49,8 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
     private val spacerRenderer = SpacerRenderer()
     private val linkRenderer = LinkRenderer()
 
+    internal fun loadImage(source: String): com.lowagie.text.Image = imageRenderer.loadImage(source)
+
     fun render(
         element: Element,
         context: RenderContext,

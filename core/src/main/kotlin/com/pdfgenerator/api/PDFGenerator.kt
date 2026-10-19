@@ -322,7 +322,8 @@ class PDFGenerator(
 
             if (template.pageSettings.header != null ||
                 template.pageSettings.footer != null ||
-                template.pageSettings.bodyBackground != null
+                template.pageSettings.bodyBackground != null ||
+                template.pageSettings.watermark != null
             ) {
                 writer.pageEvent = HeaderFooterPageEvent(template, data, config)
             }
