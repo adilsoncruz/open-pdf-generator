@@ -121,9 +121,10 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
         console.error('❌ [Preview] Failed to generate preview:', result.errorCode)
         if (result.cliError) {
           console.error('❌ [Preview] CLI Error:', result.cliError)
+          setError(result.cliError)
+        } else {
+          setError(getErrorMessage(result.errorCode))
         }
-        // Translate error code to localized message
-        setError(getErrorMessage(result.errorCode))
       }
     } catch (error) {
       console.error('❌ [Preview] Exception during preview generation:', error)

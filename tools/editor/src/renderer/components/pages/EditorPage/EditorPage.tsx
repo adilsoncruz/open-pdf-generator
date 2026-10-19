@@ -9,6 +9,7 @@ import {
   Canvas,
   PropertiesPanel,
   DataPanel,
+  SchemaPanel,
   PDFPreview,
   HelpModal,
   ElementsToolbar,
@@ -27,6 +28,7 @@ import type { ToolbarRef } from '../../organisms'
  */
 export function EditorPage() {
   const [showDataPanel, setShowDataPanel] = useState(false)
+  const [showSchemaPanel, setShowSchemaPanel] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
   const [helpModalInitialTab, setHelpModalInitialTab] = useState<'text' | 'conditions'>('text')
   
@@ -408,11 +410,29 @@ export function EditorPage() {
                 <Icon name="layers" size="sm" />
               </button>
               <button 
-                onClick={() => setShowDataPanel(true)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
-                title="Dados JSON de Teste"
+                onClick={() => setShowSchemaPanel(true)}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm relative ${
+                  showSchemaPanel
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+                title="Validação de Schema (JSON Schema)"
               >
                 <span className="font-mono text-xs font-semibold">{`{ }`}</span>
+                {template.schema && (
+                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                )}
+              </button>
+              <button 
+                onClick={() => setShowDataPanel(true)}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
+                  showDataPanel
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+                title="Dados JSON de Teste"
+              >
+                <Icon name="data" size="sm" />
               </button>
               <button 
                 onClick={() => {
@@ -497,6 +517,9 @@ export function EditorPage() {
 
         {/* Data Panel Modal */}
         {showDataPanel && <DataPanel onClose={() => setShowDataPanel(false)} />}
+
+        {/* Schema Validation Panel Modal */}
+        {showSchemaPanel && <SchemaPanel onClose={() => setShowSchemaPanel(false)} />}
 
         {/* Help Modal */}
         <HelpModal

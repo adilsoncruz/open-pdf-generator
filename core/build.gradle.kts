@@ -19,6 +19,7 @@ dependencies {
     implementation("com.github.librepdf:openpdf:2.0.3")
 
     implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.networknt:json-schema-validator:1.5.1")
 
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.google.zxing:javase:3.5.3") {

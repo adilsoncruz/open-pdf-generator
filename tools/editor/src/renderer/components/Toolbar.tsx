@@ -381,7 +381,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
             'https://adoptium.net/'
           )
         } else {
-          alert(`${t.pdf.error}: ${getErrorMessage(result.errorCode)}`)
+          alert(`${t.pdf.error}:\n\n${result.cliError || getErrorMessage(result.errorCode)}`)
         }
       }
     } catch (error) {
