@@ -144,7 +144,6 @@ class HeaderFooterPageEvent(
             headerAdjustedElements =
                 header.elements
                     .filter { shouldRenderElement(it, header.groups) }
-                    .map { adjustElementForHeader(it, document) }
 
             headerContext =
                 RenderContext(
@@ -156,14 +155,18 @@ class HeaderFooterPageEvent(
                     useContentUnder = false,
                     containerWidth = containerWidth,
                     containerHeight = header.height,
+                    offsetX = margins.left,
+                    offsetY = margins.top,
                 )
         }
 
         template.pageSettings.footer?.let { footer ->
+            val pageHeight = document.pageSize.height
+            val footerTopY = pageHeight - margins.bottom - footer.height
+
             footerAdjustedElements =
                 footer.elements
                     .filter { shouldRenderElement(it, footer.groups) }
-                    .map { adjustElementForFooter(it, document, footer) }
 
             footerContext =
                 RenderContext(
@@ -175,6 +178,8 @@ class HeaderFooterPageEvent(
                     useContentUnder = false,
                     containerWidth = containerWidth,
                     containerHeight = footer.height,
+                    offsetX = margins.left,
+                    offsetY = footerTopY,
                 )
         }
 
@@ -184,7 +189,6 @@ class HeaderFooterPageEvent(
             bodyBackgroundAdjustedElements =
                 bodyBackground.elements
                     .filter { shouldRenderElement(it, bodyBackground.groups) }
-                    .map { adjustElementForBackground(it, document) }
 
             bodyBackgroundContext =
                 RenderContext(
@@ -196,6 +200,8 @@ class HeaderFooterPageEvent(
                     useContentUnder = true,
                     containerWidth = containerWidth,
                     containerHeight = containerHeight,
+                    offsetX = margins.left,
+                    offsetY = margins.top,
                 )
         }
     }

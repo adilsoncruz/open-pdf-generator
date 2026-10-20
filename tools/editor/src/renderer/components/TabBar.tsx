@@ -2,21 +2,33 @@ import React, { useEffect } from 'react'
 import { useTabStore } from '../store/tabStore'
 import { useTemplateStore } from '../store/templateStore'
 
-
 export const TabBar: React.FC = () => {
-  const { tabs, activeTabId, switchTab, closeTab, addTab } = useTabStore()
-  const currentFilePath = useTemplateStore(state => state.currentFilePath)
-  const isDirty = useTemplateStore(state => state.isDirty)
-  const templateName = useTemplateStore(state => state.template.metadata.name)
+  const { tabs, activeTabId, switchTab, closeTab, addTab, createNewTemplateTab } = useTabStore()
+  const currentFilePath = useTemplateStore((state) => state.currentFilePath)
+  const isDirty = useTemplateStore((state) => state.isDirty)
+  const templateName = useTemplateStore((state) => state.template?.metadata?.name)
 
-  // Initialize first tab if empty
+  // Initialize first tab with current template store state if tabs array is empty
   useEffect(() => {
     if (tabs.length === 0) {
+      const currentState = useTemplateStore.getState()
       addTab({
-        name: 'New Template',
-        path: null,
-        isDirty: false,
-        stateSnapshot: useTemplateStore.getState()
+        name: currentState.currentFilePath
+          ? currentState.currentFilePath.split(/[/\\]/).pop() || 'template.json'
+          : currentState.template?.metadata?.name || 'New Template',
+        path: currentState.currentFilePath,
+        isDirty: currentState.isDirty,
+        stateSnapshot: {
+          template: currentState.template,
+          currentFilePath: currentState.currentFilePath,
+          isDirty: currentState.isDirty,
+          history: currentState.history,
+          historyIndex: currentState.historyIndex,
+          selectedElementIds: currentState.selectedElementIds,
+          selectedElementLocation: currentState.selectedElementLocation,
+          selectedGroupId: currentState.selectedGroupId,
+          currentSection: currentState.currentSection,
+        },
       })
     }
   }, [tabs.length, addTab])
@@ -24,41 +36,95 @@ export const TabBar: React.FC = () => {
   if (tabs.length === 0) return null
 
   return (
-    <div className="flex items-center space-x-1 overflow-x-auto h-full px-2 flex-1 scrollbar-hide">
-      {tabs.map(tab => {
+    <div className="flex items-center gap-1.5 overflow-x-auto h-full scrollbar-none py-0.5 max-w-full">
+      {tabs.map((tab) => {
         const isActive = tab.id === activeTabId
-        // Always read latest state for active tab
         const displayIsDirty = isActive ? isDirty : tab.isDirty
-        let displayName = isActive 
+        const displayName = isActive
           ? (currentFilePath ? currentFilePath.split(/[/\\]/).pop() : templateName || 'New Template')
-          : (tab.path ? tab.path.split(/[/\\]/).pop() : tab.stateSnapshot?.template?.metadata?.name || 'New Template')
+          : (tab.path ? tab.path.split(/[/\\]/).pop() : tab.name || 'New Template')
 
         return (
           <div
             key={tab.id}
             onClick={() => switchTab(tab.id)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                switchTab(tab.id)
+              }
+            }}
             className={`
-              group flex items-center h-8 px-3 text-xs font-medium rounded-md cursor-pointer max-w-[160px] min-w-[100px] select-none transition-colors border
-              ${isActive 
-                ? 'bg-primary-50 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 border-primary-200 dark:border-primary-500/30 shadow-sm' 
-                : 'bg-transparent text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent hover:border-gray-200 dark:hover:border-gray-700'
+              group flex items-center h-7 px-2.5 text-xs rounded-md cursor-pointer select-none transition-all border max-w-[190px] min-w-[110px]
+              ${
+                isActive
+                  ? 'bg-slate-800 text-slate-100 border-slate-700 shadow-sm font-medium ring-1 ring-cyan-500/20'
+                  : 'bg-slate-950/40 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-slate-800/80'
               }
             `}
+            title={tab.path || displayName}
           >
-            <span className="truncate flex-1 mr-2">{displayName}</span>
-            {displayIsDirty && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 flex-shrink-0"></span>}
+            {/* File Icon */}
+            <svg
+              className={`w-3.5 h-3.5 mr-1.5 flex-shrink-0 ${
+                isActive ? 'text-cyan-400' : 'text-slate-500 group-hover:text-slate-400'
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.75}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+
+            {/* Tab Label */}
+            <span className="truncate flex-1 font-mono text-[11px]">{displayName}</span>
+
+            {/* Unsaved indicator */}
+            {displayIsDirty && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-amber-400 ml-1.5 mr-1 flex-shrink-0 animate-pulse"
+                title="Alterações não salvas"
+              />
+            )}
+
+            {/* Close Tab Button */}
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation()
                 closeTab(tab.id)
               }}
-              className={`p-0.5 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 ${isActive ? 'opacity-100' : ''}`}
+              className={`p-0.5 rounded text-slate-400 hover:text-rose-300 hover:bg-rose-500/20 ml-1 transition-opacity ${
+                isActive ? 'opacity-80 hover:opacity-100' : 'opacity-0 group-hover:opacity-100'
+              }`}
+              title="Fechar aba"
             >
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         )
       })}
+
+      {/* New Tab Button */}
+      <button
+        type="button"
+        onClick={createNewTemplateTab}
+        className="flex items-center justify-center w-6 h-6 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-800/80 transition cursor-pointer flex-shrink-0"
+        title="Novo template (Ctrl+N)"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
     </div>
   )
 }
+export default TabBar

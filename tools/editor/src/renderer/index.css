@@ -296,7 +296,8 @@ code {
  * StatusBar, Canvas Rulers/Workspace, and PDFPreview) to a clean Light Slate
  * palette while preserving Indigo/Emerald/Amber accents and PDF page contrast.
  * ============================================================================ */
-html:not(.dark) .bg-slate-950 {
+html:not(.dark) .bg-slate-950,
+html:not(.dark) .bg-\[\#0b0f19\] {
   background-color: #f8fafc !important;
 }
 
@@ -328,6 +329,7 @@ html:not(.dark) .bg-slate-900\/40 {
 }
 
 html:not(.dark) .bg-slate-800,
+html:not(.dark) .bg-slate-800\/90,
 html:not(.dark) .bg-slate-800\/80,
 html:not(.dark) .bg-slate-800\/70,
 html:not(.dark) .bg-slate-800\/60,
@@ -350,6 +352,7 @@ html:not(.dark) .border-slate-700\/50 {
   border-color: #cbd5e1 !important;
 }
 
+html:not(.dark) .text-slate-50,
 html:not(.dark) .text-slate-100,
 html:not(.dark) .text-slate-200 {
   color: #0f172a !important;

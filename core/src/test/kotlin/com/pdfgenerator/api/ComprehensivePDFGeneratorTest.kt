@@ -1,10 +1,7 @@
 package com.pdfgenerator.api
 
-import com.pdfgenerator.model.Template
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import java.io.File
-import java.nio.file.Files
 
 class ComprehensivePDFGeneratorTest {
 

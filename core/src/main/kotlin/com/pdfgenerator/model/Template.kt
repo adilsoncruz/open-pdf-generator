@@ -16,6 +16,7 @@ data class Template(
     val pageElements: List<Element>? = null,
     val groups: List<ElementGroup>? = null,
     val summaryPage: SummaryPage? = null,
+    val schema: Map<String, Any?>? = null,
 ) {
     fun bodyElements(): List<Element> = page ?: pageElements ?: emptyList()
 
@@ -60,6 +61,14 @@ data class Template(
             val elementErrors = element.validate(pageSettings)
             elementErrors.forEach { error ->
                 errors.add(ValidationError("page[$index].${error.path}", error.message))
+            }
+        }
+
+        schema?.let {
+            try {
+                com.pdfgenerator.validator.SchemaValidator.validateSchema(it)
+            } catch (e: Exception) {
+                errors.add(ValidationError("schema", "Invalid schema definition: ${e.message}"))
             }
         }
 

@@ -52,8 +52,8 @@ export const useUIStore = create<UIStore>()(
     {
       name: 'pdf-editor-ui-settings',
       onRehydrateStorage: () => (state) => {
-        // Apply theme on rehydration
-        if (state?.theme === 'dark') {
+        const activeTheme = state?.theme ?? 'dark'
+        if (activeTheme === 'dark') {
           document.documentElement.classList.add('dark')
         } else {
           document.documentElement.classList.remove('dark')
@@ -62,6 +62,11 @@ export const useUIStore = create<UIStore>()(
     }
   )
 )
+
+if (typeof document !== 'undefined') {
+  const initialTheme = useUIStore.getState().theme
+  document.documentElement.classList.toggle('dark', initialTheme === 'dark')
+}
 
 
 
