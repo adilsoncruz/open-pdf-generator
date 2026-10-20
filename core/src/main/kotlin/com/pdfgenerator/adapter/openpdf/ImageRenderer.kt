@@ -118,7 +118,7 @@ class ImageRenderer(private val config: PDFGeneratorConfig) : Renderer<ImageElem
         }
     }
 
-    private fun loadImage(source: String): Image {
+    internal fun loadImage(source: String): Image {
         if (source.startsWith("data:image")) {
             val base64Data = source.substringAfter("base64,")
             val imageBytes = Base64.getDecoder().decode(base64Data)

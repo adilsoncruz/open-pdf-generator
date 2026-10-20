@@ -1,6 +1,8 @@
 package com.pdfgenerator.adapter.openpdf
 
 import com.lowagie.text.Document
+import com.lowagie.text.pdf.BaseFont
+import com.lowagie.text.pdf.PdfGState
 import com.lowagie.text.pdf.PdfPageEventHelper
 import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
@@ -17,7 +19,13 @@ import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TextElement
+import com.pdfgenerator.model.WatermarkConfig
+import com.pdfgenerator.model.WatermarkType
+import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.ConditionEvaluator
+import com.pdfgenerator.util.DataBindingResolver
+import com.pdfgenerator.util.ExpressionProcessor
+import com.pdfgenerator.util.FontCache
 import com.pdfgenerator.util.withSyntheticBindings
 import org.slf4j.LoggerFactory
 
@@ -74,8 +82,15 @@ class HeaderFooterPageEvent(
                     renderBodyBackgroundOptimized(writer, document, bodyBackground)
                 }
             }
+
+            template.pageSettings.watermark?.let { watermark ->
+                val watermarkCondition = watermark.printCondition
+                if (watermarkCondition == null || ConditionEvaluator.evaluate(watermarkCondition, pageData, null)) {
+                    renderWatermark(writer, document, watermark, pageData)
+                }
+            }
         } catch (e: Exception) {
-            logger.error("Error rendering body background: ${e.message}", e)
+            logger.error("Error rendering body background or watermark: ${e.message}", e)
             if (config.strictMode) {
                 throw e
             }
@@ -245,6 +260,170 @@ class HeaderFooterPageEvent(
 
         elements.forEach { element ->
             renderEngine.render(element, context)
+        }
+    }
+
+    private fun adjustElementForHeader(
+        element: Element,
+        document: Document,
+    ): Element {
+        val leftMargin = template.pageSettings.margins.left
+        val topMargin = template.pageSettings.margins.top
+        val adjustedX = leftMargin + element.x
+        val adjustedY = topMargin + element.y
+
+        return when (element) {
+            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
+            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
+            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
+            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
+            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
+            else -> element
+        }
+    }
+
+    private fun adjustElementForFooter(
+        element: Element,
+        document: Document,
+        footer: HeaderFooter,
+    ): Element {
+        val pageHeight = document.pageSize.height
+        val leftMargin = template.pageSettings.margins.left
+        val bottomMargin = template.pageSettings.margins.bottom
+        val footerTopY = pageHeight - bottomMargin - footer.height
+        val adjustedX = leftMargin + element.x
+        val adjustedY = footerTopY + element.y
+
+        return when (element) {
+            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
+            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
+            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
+            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
+            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
+            else -> element
+        }
+    }
+
+    private fun adjustElementForBackground(
+        element: Element,
+        document: Document,
+    ): Element {
+        val leftMargin = template.pageSettings.margins.left
+        val topMargin = template.pageSettings.margins.top
+        val adjustedX = leftMargin + element.x
+        val adjustedY = topMargin + element.y
+
+        return when (element) {
+            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
+            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
+            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
+            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
+            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
+            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
+            else -> element
+        }
+    }
+
+    private fun renderWatermark(
+        writer: PdfWriter,
+        document: Document,
+        watermark: WatermarkConfig,
+        pageData: Map<String, Any?>,
+    ) {
+        val cb = if (watermark.onTop) writer.directContent else writer.directContentUnder
+        cb.saveState()
+
+        try {
+            val gState = PdfGState()
+            val opacity = watermark.opacity.coerceIn(0f, 1f)
+            gState.setFillOpacity(opacity)
+            gState.setStrokeOpacity(opacity)
+            cb.setGState(gState)
+
+            val pageWidth = document.pageSize.width
+            val pageHeight = document.pageSize.height
+            val centerX = pageWidth / 2f
+            val centerY = pageHeight / 2f
+
+            when (watermark.type) {
+                WatermarkType.TEXT -> {
+                    val rawText =
+                        watermark.dataBinding?.let { binding ->
+                            if (ExpressionProcessor.hasTransformations(binding)) {
+                                ExpressionProcessor.process(binding, pageData)
+                            } else {
+                                DataBindingResolver.resolve(binding, pageData)?.toString()
+                            }
+                        } ?: watermark.text
+
+                    if (!rawText.isNullOrBlank()) {
+                        val isBold = watermark.fontStyle.contains("bold", ignoreCase = true)
+                        val isItalic = watermark.fontStyle.contains("italic", ignoreCase = true)
+                        val familyLower = watermark.fontName.lowercase()
+                        val baseFontName =
+                            when {
+                                familyLower.contains("times") ->
+                                    when {
+                                        isBold && isItalic -> BaseFont.TIMES_BOLDITALIC
+                                        isBold -> BaseFont.TIMES_BOLD
+                                        isItalic -> BaseFont.TIMES_ITALIC
+                                        else -> BaseFont.TIMES_ROMAN
+                                    }
+                                familyLower.contains("courier") ->
+                                    when {
+                                        isBold && isItalic -> BaseFont.COURIER_BOLDOBLIQUE
+                                        isBold -> BaseFont.COURIER_BOLD
+                                        isItalic -> BaseFont.COURIER_OBLIQUE
+                                        else -> BaseFont.COURIER
+                                    }
+                                else ->
+                                    when {
+                                        isBold && isItalic -> BaseFont.HELVETICA_BOLDOBLIQUE
+                                        isBold -> BaseFont.HELVETICA_BOLD
+                                        isItalic -> BaseFont.HELVETICA_OBLIQUE
+                                        else -> BaseFont.HELVETICA
+                                    }
+                            }
+                        val baseFont = FontCache.getFont(baseFontName)
+                        val color = ColorUtil.hexToColor(watermark.color)
+
+                        cb.beginText()
+                        cb.setFontAndSize(baseFont, watermark.fontSize)
+                        cb.setColorFill(color)
+                        cb.showTextAligned(
+                            com.lowagie.text.Element.ALIGN_CENTER,
+                            rawText,
+                            centerX,
+                            centerY,
+                            watermark.rotation,
+                        )
+                        cb.endText()
+                    }
+                }
+                WatermarkType.IMAGE -> {
+                    val source = watermark.imageSource
+                    if (!source.isNullOrBlank()) {
+                        val image = renderEngine.loadImage(source)
+                        val w = watermark.width ?: image.width
+                        val h = watermark.height ?: image.height
+                        image.scaleToFit(w, h)
+                        image.setRotationDegrees(watermark.rotation)
+                        val scaledW = image.scaledWidth
+                        val scaledH = image.scaledHeight
+                        image.setAbsolutePosition(centerX - (scaledW / 2f), centerY - (scaledH / 2f))
+                        cb.addImage(image)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("Error rendering watermark: ${e.message}", e)
+            if (config.strictMode) {
+                throw e
+            }
+        } finally {
+            cb.restoreState()
         }
     }
 }
