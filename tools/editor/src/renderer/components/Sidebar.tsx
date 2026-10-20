@@ -424,7 +424,7 @@ export default function Sidebar() {
     return template.page || []
   }
 
-  const selectedContainerId = ['body', 'header', 'footer', 'summary'].includes(currentSection)
+  const selectedContainerId = ['body', 'header', 'footer', 'summary', 'bodyBackground'].includes(currentSection)
     ? selectedContainerParentId || (getSectionElements().find(el => el.id === selectedElementIds[0] && el.type === 'container')?.id || null)
     : null
 
@@ -1115,7 +1115,23 @@ function HistoryContent() {
 
               {/* Barcodes / QR */}
               <button
-                onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 100, height: 100, barcodeType: 'qrcode', dataBinding: '' }, currentSection)}
+                onClick={() =>
+                  addElement(
+                    {
+                      type: 'barcode',
+                      id: `barcode-${Date.now()}`,
+                      x: 40,
+                      y: 40,
+                      width: 100,
+                      height: 100,
+                      barcodeType: 'qrcode',
+                      value: 'https://openpdf.dev',
+                      dataBinding: 'https://openpdf.dev',
+                      style: { errorCorrection: 'M' },
+                    },
+                    currentSection
+                  )
+                }
                 className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Barcodes / QR"
               >
@@ -1131,7 +1147,23 @@ function HistoryContent() {
 
               {/* Barcode 1D */}
               <button
-                onClick={() => addElement({ type: 'barcode', id: `barcode-${Date.now()}`, width: 140, height: 50, barcodeType: 'code128', dataBinding: '' }, currentSection)}
+                onClick={() =>
+                  addElement(
+                    {
+                      type: 'barcode',
+                      id: `barcode-${Date.now()}`,
+                      x: 40,
+                      y: 40,
+                      width: 140,
+                      height: 50,
+                      barcodeType: 'code128',
+                      value: '123456789012',
+                      dataBinding: '123456789012',
+                      style: { errorCorrection: 'M' },
+                    },
+                    currentSection
+                  )
+                }
                 className="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group"
                 title="Código de Barras 1D"
               >
@@ -1513,11 +1545,12 @@ function ContainersPanel({
 
   const { template, addElement, currentSection, selectElement, moveElementUp, moveElementDown, deleteElement, updateElement } = useTemplateStore()
 
-  if (!['body', 'header', 'footer', 'summary'].includes(currentSection)) return null
+  if (!['body', 'header', 'footer', 'summary', 'bodyBackground'].includes(currentSection)) return null
 
   const getSectionElements = () => {
     if (currentSection === 'header') return template.pageSettings.header?.elements || []
     if (currentSection === 'footer') return template.pageSettings.footer?.elements || []
+    if (currentSection === 'bodyBackground') return template.pageSettings.bodyBackground?.elements || []
     if (currentSection === 'summary') return template.summaryPage?.elements || []
     return template.page || []
   }

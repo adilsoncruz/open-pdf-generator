@@ -239,7 +239,8 @@ A PDF template is defined as a JSON file with the following structure:
     },
     "header": { ... },
     "footer": { ... },
-    "bodyBackground": { ... }
+    "bodyBackground": { ... },
+    "watermark": { ... }
   },
   "elements": [ ... ]
 }
@@ -1094,6 +1095,80 @@ Elements that appear behind the main content on all pages.
   }
 }
 ```
+
+---
+
+## Watermark
+
+Page-level watermark automatically centered on all pages with transparency and rotation support.
+
+### Text Watermark
+
+```json
+{
+  "pageSettings": {
+    "watermark": {
+      "type": "text",
+      "text": "CONFIDENTIAL",
+      "fontName": "Helvetica",
+      "fontSize": 60,
+      "fontStyle": "bold",
+      "color": "#CCCCCC",
+      "opacity": 0.2,
+      "rotation": 45,
+      "printCondition": "isDraft == true"
+    }
+  }
+}
+```
+
+Dynamic text is also supported via `dataBinding`:
+
+```json
+{
+  "watermark": {
+    "type": "text",
+    "dataBinding": "documentStatus | uppercase",
+    "opacity": 0.25,
+    "rotation": 45
+  }
+}
+```
+
+### Image Watermark
+
+```json
+{
+  "pageSettings": {
+    "watermark": {
+      "type": "image",
+      "imageSource": "assets/watermark-logo.png",
+      "width": 300,
+      "height": 200,
+      "opacity": 0.15,
+      "rotation": 0,
+      "onTop": false
+    }
+  }
+}
+```
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `type` | string | `"text"` | `"text"` or `"image"` |
+| `text` | string | `null` | Static watermark text |
+| `dataBinding` | string | `null` | Variable or expression for watermark text |
+| `imageSource` | string | `null` | File path, classpath, URL, or data:image base64 |
+| `fontName` | string | `"Helvetica"` | Font family (`"Helvetica"`, `"Times"`, `"Courier"`) |
+| `fontSize` | number | `60` | Font size in points |
+| `fontStyle` | string | `"bold"` | `"normal"`, `"bold"`, `"italic"`, `"bolditalic"` |
+| `color` | string | `"#CCCCCC"` | Hex color code |
+| `opacity` | number | `0.2` | Alpha opacity from `0.0` to `1.0` |
+| `rotation` | number | `45` | Rotation angle in degrees |
+| `width` | number | intrinsic | Target width for image |
+| `height` | number | intrinsic | Target height for image |
+| `onTop` | boolean | `false` | When true, renders over content; otherwise under |
+| `printCondition` | string | `null` | Boolean condition expression |
 
 ---
 

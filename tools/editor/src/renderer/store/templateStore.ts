@@ -36,6 +36,23 @@ export interface ElementGroup {
   collapsed?: boolean  
 }
 
+export interface WatermarkConfig {
+  type?: 'text' | 'image'
+  text?: string
+  dataBinding?: string
+  imageSource?: string
+  fontName?: string
+  fontSize?: number
+  fontStyle?: string
+  color?: string
+  opacity?: number
+  rotation?: number
+  width?: number
+  height?: number
+  onTop?: boolean
+  printCondition?: string
+}
+
 export interface Template {
   version: string
   metadata: {
@@ -72,6 +89,7 @@ export interface Template {
       groups?: ElementGroup[]
       printCondition?: string
     }
+    watermark?: WatermarkConfig
   }
   page: Element[]
   groups?: ElementGroup[]  // Grupos do body
@@ -84,6 +102,7 @@ export interface Template {
       groups?: ElementGroup[]
     }
   }
+  schema?: Record<string, any>
 }
 
 interface TemplateStore {
@@ -93,11 +112,10 @@ interface TemplateStore {
   selectedGroupId: string | null  // ID do grupo selecionado
   selectedLoopChildId: string | null  // ID do elemento filho do loop selecionado
   selectedLoopParentId: string | null
-  expandedLoopIds: string[]
+  expandedLoopIds: string[]  // IDs dos loops expandidos na sidebar
   selectedContainerChildId: string | null
   selectedContainerParentId: string | null
   expandedContainerIds: string[]
-  expandedLoopIds: string[]  // IDs dos loops expandidos na sidebar
   currentFilePath: string | null
   isDirty: boolean
   testData: Record<string, unknown>
@@ -125,6 +143,7 @@ interface TemplateStore {
   updateSelectedElements: (updates: Partial<Element>) => void
   setCurrentFilePath: (path: string | null) => void
   setTestData: (data: Record<string, unknown>) => void
+  setSchema: (schema: Record<string, any> | null) => void
   markClean: () => void
   setCurrentSection: (section: ElementLocation) => void
   addHeader: () => void
@@ -295,6 +314,7 @@ const normalizeBodyContainers = (template: Template): Template => ({
           elements: ensureContainersInSection(template.pageSettings.bodyBackground.elements, 'Background', 200),
         }
       : undefined,
+    watermark: template.pageSettings.watermark,
   },
   summaryPage: template.summaryPage
     ? {
@@ -602,13 +622,13 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           const lastH = typeof lastChild.height === 'number' ? lastChild.height : 25
           childY = lastY + lastH + 10
           childX = lastChild.x ?? childX
-          if (typeof lastChild.width === 'number') {
+          if (childWidth === undefined && typeof lastChild.width === 'number') {
             childWidth = lastChild.width
           }
           if ((lastChild.positionMode || lastChild.position || '').toUpperCase() === 'RELATIVE') {
             normalizedElement.positionMode = 'RELATIVE'
             normalizedElement.position = 'relative'
-            normalizedElement.relativeOffsetY = 10
+            normalizedElement.relativeOffsetY = 0
           }
         }
         const adaptedChild = {
@@ -1317,6 +1337,21 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   setTestData: (data) =>
     set({
       testData: data,
+    }),
+
+  setSchema: (schema) =>
+    set((state) => {
+      const newTemplate = { ...state.template }
+      if (schema && Object.keys(schema).length > 0) {
+        newTemplate.schema = schema
+      } else {
+        delete newTemplate.schema
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
     }),
 
   markClean: () =>
@@ -2713,6 +2748,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: addToLoop(state.template.pageSettings.bodyBackground.elements),
+            },
+          },
+        }
       } else if (loc === 'summary' && state.template.summaryPage) {
         newTemplate = {
           ...state.template,
@@ -2779,6 +2825,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: updateInLoop(state.template.pageSettings.bodyBackground.elements),
+            },
+          },
+        }
       } else if (loc === 'summary' && state.template.summaryPage) {
         newTemplate = {
           ...state.template,
@@ -2840,6 +2897,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             footer: {
               ...state.template.pageSettings.footer,
               elements: deleteFromLoop(state.template.pageSettings.footer.elements),
+            },
+          },
+        }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: deleteFromLoop(state.template.pageSettings.bodyBackground.elements),
             },
           },
         }
@@ -2959,6 +3027,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: reorderInLoop(state.template.pageSettings.bodyBackground.elements),
+            },
+          },
+        }
       } else if (loc === 'summary' && state.template.summaryPage) {
         newTemplate = {
           ...state.template,
@@ -2995,6 +3074,15 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
   setSidebarMinimized: (minimized: boolean) =>
     set({ isSidebarMinimized: minimized }),
+
+  addElementToContainer: (containerId, element, location) =>
+    get().addElementToLoop(containerId, element, location),
+
+  deleteContainerChildElement: (containerId, childId, location) =>
+    get().deleteLoopChildElement(containerId, childId, location),
+
+  reorderContainerChildren: (containerId, fromIndex, toIndex, location) =>
+    get().reorderLoopChildren(containerId, fromIndex, toIndex, location),
 
   updateContainerChildElement: (containerId, childId, updates, location) =>
       set((state) => {
@@ -3079,6 +3167,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               footer: {
                 ...state.template.pageSettings.footer,
                 elements: updateInContainer(state.template.pageSettings.footer.elements),
+              },
+            },
+          }
+        } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+          newTemplate = {
+            ...state.template,
+            pageSettings: {
+              ...state.template.pageSettings,
+              bodyBackground: {
+                ...state.template.pageSettings.bodyBackground,
+                elements: updateInContainer(state.template.pageSettings.bodyBackground.elements),
               },
             },
           }

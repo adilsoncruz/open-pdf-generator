@@ -8,6 +8,7 @@ import { useTranslation } from '../i18n'
 import { Icon, Badge, Button } from './atoms'
 import { MenuItem, DropdownMenu, IconButton } from './molecules'
 import { TabBar } from './TabBar'
+import { StudioLogo } from './pages/LoadingPage'
 
 // CLI status interface
 interface CLIStatus {
@@ -164,60 +165,21 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   }
 
   const handleNew = () => {
-
-    useTabStore.getState().addTab({
-      name: 'New Template',
-      path: null,
-      isDirty: false,
-      stateSnapshot: {
-        ...useTemplateStore.getState(),
-        template: {
-          version: '1.0',
-          metadata: {
-            name: 'New Template',
-        description: '',
-        author: '',
-        created: new Date().toISOString(),
-        modified: new Date().toISOString(),
-        tags: [],
-      },
-      pageSettings: {
-        size: 'A4',
-        orientation: 'portrait',
-        margins: { top: 30, right: 30, bottom: 30, left: 30 },
-      },
-      page: [],
-        },
-        currentFilePath: null,
-        isDirty: false,
-        history: [],
-        historyIndex: 0,
-        selectedElementIds: [],
-      }
-    })
-    setCurrentFilePath(null)
+    useTabStore.getState().createNewTemplateTab()
   }
 
   const handleOpen = async () => {
-      console.log("handleOpen 0")
-    console.log("handleOpen 0.1")
     // Loop to keep file dialog open until valid template or user cancels
     let keepTrying = true
     while (keepTrying) {
-        console.log("handleOpen 0.1.1")
-
       const result = await window.electronAPI.openFile()
-       console.log("handleOpen 0.2")
       if (!result) {
         // User cancelled the file dialog
         break
       }
-      console.log("handleOpen 1.0")
       try {
         // First, try to parse JSON to catch syntax errors
-        console.log("handleOpen 1")
         const loadedTemplate = JSON.parse(result.content)
-        console.log("handleOpen 2")
         // Always do basic structural validation first (CLI may not validate structure properly)
         let structuralError = ''
         if (!loadedTemplate.version) {
@@ -227,15 +189,12 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         } else if (!loadedTemplate.elements && !loadedTemplate.page) {
           structuralError = t.validation.missingElements
         }
-        console.log("handleOpen 3")
         if (structuralError) {
           keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${structuralError}\n\n${t.validation.selectAnotherFile}`)
           continue
         }
-        console.log("handleOpen 4")
         // Validate template using CLI (if available) for deeper validation
         const validation = await window.electronAPI.validateTemplate(result.path)
-        console.log("handleOpen 5")
         if (!validation.valid) {
           // CLI validation failed - show friendly error message
           if (validation.errorCode !== 'CLI_NOT_INSTALLED' && validation.errorCode !== 'JAVA_NOT_INSTALLED') {
@@ -245,20 +204,26 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
           // If CLI not installed, we already did structural validation above, so proceed
         }
         
-        // Valid template - load it and exit loop
+        // Valid template - open as new tab
+        const tabTitle = result.convertedFromJasper
+          ? 'Converted Template'
+          : result.path.split(/[/\\]/).pop() || loadedTemplate.metadata?.name || 'Opened Template'
+
         useTabStore.getState().addTab({
-          name: loadedTemplate.metadata?.name || 'Opened Template',
+          name: tabTitle,
           path: result.convertedFromJasper ? null : result.path,
           isDirty: false,
           stateSnapshot: {
-            ...useTemplateStore.getState(),
             template: loadedTemplate,
             currentFilePath: result.convertedFromJasper ? null : result.path,
             isDirty: false,
             history: [loadedTemplate],
             historyIndex: 0,
             selectedElementIds: [],
-          }
+            selectedElementLocation: 'body',
+            selectedGroupId: null,
+            currentSection: 'body',
+          },
         })
         if (result.convertedFromJasper) {
           alert('Template JASPER (.jrxml) convertido para JSON. Use "Save As" para salvar o template convertido.')
@@ -278,6 +243,11 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
       const result = await window.electronAPI.writeFile(currentFilePath, content)
       if (result.success) {
         markClean()
+        useTabStore.getState().updateActiveTab({
+          path: currentFilePath,
+          name: currentFilePath.split(/[/\\]/).pop() || 'template.json',
+          isDirty: false,
+        })
         // Update preview if open
         if (effectivePreviewMode !== 'hidden') {
           triggerRefresh()
@@ -299,6 +269,11 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     if (result) {
       setCurrentFilePath(result)
       markClean()
+      useTabStore.getState().updateActiveTab({
+        path: result,
+        name: result.split(/[/\\]/).pop() || fileName,
+        isDirty: false,
+      })
       // Update preview if open
       if (effectivePreviewMode !== 'hidden') {
         triggerRefresh()
@@ -381,7 +356,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
             'https://adoptium.net/'
           )
         } else {
-          alert(`${t.pdf.error}: ${getErrorMessage(result.errorCode)}`)
+          alert(`${t.pdf.error}:\n\n${result.cliError || getErrorMessage(result.errorCode)}`)
         }
       }
     } catch (error) {
@@ -405,9 +380,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
       {/* 1. SEÇÃO ESQUERDA: Logo + Menu Arquivo + Nome do Template + Status Salvo */}
       <div className="flex items-center space-x-3">
         <div className="flex items-center gap-2 pr-2 border-r border-slate-800">
-          <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm shadow-indigo-500/30">
-            <Icon name="file-text" size="sm" className="text-white" />
-          </div>
+          <StudioLogo className="w-7 h-7 rounded-lg shadow-sm shadow-indigo-500/30" />
           <span className="text-xs font-semibold tracking-wider uppercase text-slate-300">
             Open PDF
           </span>
@@ -473,8 +446,8 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         <UpdateNotification />
       </div>
 
-      {/* 2. SEÇÃO CENTRAL: Espaço reservado para Abas (Multi-tabs) */}
-      <div className="flex-1 flex items-center justify-start px-4 min-w-0">
+      {/* 2. SEÇÃO CENTRAL: Abas de Templates (Multi-tabs) */}
+      <div className="flex-1 flex items-center justify-start px-3 min-w-0 overflow-hidden">
         <TabBar />
       </div>
 

@@ -16,6 +16,7 @@ data class Template(
     val pageElements: List<Element>? = null,
     val groups: List<ElementGroup>? = null,
     val summaryPage: SummaryPage? = null,
+    val schema: Map<String, Any?>? = null,
 ) {
     fun bodyElements(): List<Element> = page ?: pageElements ?: emptyList()
 
@@ -63,6 +64,14 @@ data class Template(
             }
         }
 
+        schema?.let {
+            try {
+                com.pdfgenerator.validator.SchemaValidator.validateSchema(it)
+            } catch (e: Exception) {
+                errors.add(ValidationError("schema", "Invalid schema definition: ${e.message}"))
+            }
+        }
+
         return ValidationResult(errors.isEmpty(), errors)
     }
 
@@ -93,6 +102,7 @@ data class PageSettings(
     val header: HeaderFooter? = null,
     val footer: HeaderFooter? = null,
     val bodyBackground: BodyBackground? = null,
+    val watermark: WatermarkConfig? = null,
 ) {
     fun getPageSize(): Rectangle {
         val baseSize =
