@@ -529,7 +529,11 @@ data class ContainerElement(
     val elements: List<Element>,
     val style: RectangleStyle? = null,
     val printCondition: String? = null,
+    val heightMode: String? = "auto",
+    val autoHeight: Boolean? = true,
 ) : Element {
+    fun isAutoHeight(): Boolean = (heightMode ?: "auto").equals("auto", ignoreCase = true) && (autoHeight != false)
+
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {
             is Number -> width.toFloat()

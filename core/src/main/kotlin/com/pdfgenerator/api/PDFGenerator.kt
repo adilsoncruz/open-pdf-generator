@@ -663,7 +663,11 @@ class PDFGenerator(
                     element.elements.maxOfOrNull { child ->
                         child.y + getElementHeight(child, data, context)
                     } ?: 0f
-                kotlin.math.max(element.height, contentHeight)
+                if (element.isAutoHeight()) {
+                    kotlin.math.max(element.height, contentHeight)
+                } else {
+                    element.height
+                }
             }
             is PageBreakElement -> 0f
             is SpacerElement -> element.height

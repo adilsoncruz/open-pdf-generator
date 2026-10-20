@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useTemplateStore, type Element, type ElementGroup, type ElementLocation } from '../store/templateStore'
+import { useState, useEffect, useRef } from 'react'
+import { useTemplateStore, type Element, type ElementGroup, type ElementLocation, flattenElements } from '../store/templateStore'
 import { Icon, Input, Select, Checkbox, Divider, ColorInput, Button, TextArea } from './atoms'
 import type { IconName } from './atoms/Icon/Icon.types'
 import { NumberField, ColorField, PropertyGroup, PropertyRow, TabBar, IconButton } from './molecules'
@@ -25,10 +25,26 @@ interface ElementInspectorProps {
   onUpdate: (field: string | Record<string, any>, value?: any) => void
   onStyleUpdate: (field: string | Record<string, any>, value?: any) => void
   parentName?: string
+  isMultiSelection?: boolean
+  selectedCount?: number
 }
 
 function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentName }: ElementInspectorProps) {
   const [tableTab, setTableTab] = useState<'general' | 'columns' | 'styles'>('general')
+  const [localId, setLocalId] = useState(element.id || '')
+
+  useEffect(() => {
+    setLocalId(element.id || '')
+  }, [element.id])
+
+  const handleIdCommit = () => {
+    const trimmed = localId.trim()
+    if (trimmed && trimmed !== element.id) {
+      onUpdate('id', trimmed)
+    } else {
+      setLocalId(element.id || '')
+    }
+  }
 
   const columns = Array.isArray(element.columns) ? element.columns : []
 
@@ -104,14 +120,17 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
     <div className="w-[300px] bg-slate-900 border-l border-slate-800 flex flex-col h-full shrink-0 select-none text-slate-200">
       {/* Header */}
       <div className="border-b border-slate-800 bg-slate-950/40 shrink-0 px-3.5 pt-2.5 pb-2">
-        <div className="flex items-center justify-between">
-          <div className="relative">
-            <span className="text-xs font-semibold text-slate-200 tracking-wide">
+        <div className="flex items-center justify-between gap-2">
+          <div className="relative min-w-0 flex-1">
+            <span className="text-xs font-semibold text-slate-200 tracking-wide block">
               Properties Panel
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono truncate block" title={element.id}>
+              #{element.id}
             </span>
             <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
           </div>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50 uppercase">
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50 uppercase shrink-0">
             {parentName ? `${parentName} / table` : 'table'}
           </span>
         </div>
@@ -162,6 +181,31 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
         {/* TAB 1: GERAL */}
         {tableTab === 'general' && (
           <>
+            {/* Identification / ID */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] font-semibold text-slate-300">ID da Tabela</span>
+                <span className="text-[10px] text-slate-500 font-mono">identificador</span>
+              </div>
+              <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+                <span className="text-slate-500 font-mono text-xs mr-2 select-none">#</span>
+                <input
+                  type="text"
+                  value={localId}
+                  onChange={(e) => setLocalId(e.target.value)}
+                  onBlur={handleIdCommit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleIdCommit()
+                      ;(e.target as HTMLInputElement).blur()
+                    }
+                  }}
+                  className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+                  placeholder="id_da_tabela"
+                />
+              </div>
+            </div>
+
             {/* Transform */}
             <div>
               <div className="text-xs font-semibold text-slate-200 mb-2">Transform</div>
@@ -896,7 +940,74 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
     return <StudioSlateTableInspector {...props} />
   }
 
-  const { element, onUpdate, onStyleUpdate, parentName } = props
+  const { element, onUpdate, onStyleUpdate, parentName, isMultiSelection, selectedCount } = props
+  const [localId, setLocalId] = useState(element.id || '')
+
+  useEffect(() => {
+    setLocalId(element.id || '')
+  }, [element.id])
+
+  const handleIdCommit = () => {
+    const trimmed = localId.trim()
+    if (trimmed && trimmed !== element.id) {
+      onUpdate('id', trimmed)
+    } else {
+      setLocalId(element.id || '')
+    }
+  }
+
+  useEffect(() => {
+    if (element.type === 'static_text' && element.dataBinding) {
+      onUpdate('dataBinding', undefined)
+    }
+  }, [element.type, element.dataBinding])
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      if (result) {
+        onUpdate({
+          url: result,
+          value: result,
+          source: result,
+        })
+      }
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  const handleRemoveImage = () => {
+    onUpdate({
+      url: '',
+      value: '',
+      source: '',
+    })
+  }
+
+  const store = useTemplateStore()
+  const { selectedElementIds, selectedElementLocation, currentSection, template, createGroup, ungroupElements, deleteSelectedElements } = store
+
+  const currentGroups = (() => {
+    if (selectedElementLocation === 'header') return template.pageSettings.header?.groups || []
+    if (selectedElementLocation === 'footer') return template.pageSettings.footer?.groups || []
+    if (selectedElementLocation === 'bodyBackground') return template.pageSettings.bodyBackground?.groups || []
+    if (selectedElementLocation === 'summary') return template.summaryPage?.groups || []
+    return template.groups || []
+  })()
+
+  const activeGroup = currentGroups.find(g => 
+    selectedElementIds.some(id => g.elementIds.includes(id))
+  )
+  const canGroup = isMultiSelection && !activeGroup
+  const canUngroup = !!activeGroup
+
   const isTextElement = ['text', 'rich_text', 'link', 'static_text'].includes(element.type)
   const isMediaElement = ['image', 'barcode'].includes(element.type)
   const isShapeOrContainer = ['rectangle', 'container', 'line', 'spacer'].includes(element.type)
@@ -913,21 +1024,116 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
   return (
     <div className="w-[300px] bg-slate-900 border-l border-slate-800 flex flex-col h-full shrink-0 select-none text-slate-200">
       {/* 1. Header */}
-      <div className="border-b border-slate-800 bg-slate-950/40 shrink-0 px-3.5 pt-2.5 pb-0">
-        <div className="flex items-center justify-between">
-          <div className="relative pb-2">
-            <span className="text-xs font-semibold text-slate-200 tracking-wide">
-              Properties Panel
-            </span>
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
-          </div>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50 uppercase">
-            {parentName ? `${parentName} / ${element.type}` : element.type}
+      <div className="border-b border-slate-800 bg-slate-950/40 shrink-0 px-3.5 pt-2.5 pb-2">
+        <div className="flex items-center justify-between gap-2">
+          {isMultiSelection ? (
+            <div className="relative min-w-0 flex-1">
+              <span className="text-xs font-semibold text-indigo-400 tracking-wide block">
+                Multi-seleção
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium truncate block">
+                {selectedCount} elementos selecionados
+              </span>
+              <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
+            </div>
+          ) : (
+            <div className="relative min-w-0 flex-1">
+              <span className="text-xs font-semibold text-slate-200 tracking-wide block">
+                Properties Panel
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono truncate block" title={element.id}>
+                #{element.id}
+              </span>
+              <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
+            </div>
+          )}
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50 uppercase shrink-0">
+            {isMultiSelection ? `${selectedCount} selecionados` : (parentName ? `${parentName} / ${element.type}` : element.type)}
           </span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
+        {/* Identificação / ID */}
+        {!isMultiSelection ? (
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-semibold text-slate-300">ID do Elemento</span>
+              <span className="text-[10px] text-slate-500 font-mono">identificador</span>
+            </div>
+            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+              <span className="text-slate-500 font-mono text-xs mr-2 select-none">#</span>
+              <input
+                type="text"
+                value={localId}
+                onChange={(e) => setLocalId(e.target.value)}
+                onBlur={handleIdCommit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleIdCommit()
+                    ;(e.target as HTMLInputElement).blur()
+                  }
+                }}
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+                placeholder="id_do_elemento"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="p-2.5 rounded-lg bg-indigo-950/40 border border-indigo-800/40 text-[11px] text-indigo-300">
+              <span className="font-semibold block mb-0.5">Propriedades em lote</span>
+              Alterações nos campos abaixo serão aplicadas a todos os {selectedCount} elementos selecionados.
+            </div>
+
+            {/* Quick Actions Bar */}
+            <div className="flex items-center gap-1.5 pt-0.5">
+              {canGroup && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const name = prompt('Nome do Grupo:', `Grupo ${currentGroups.length + 1}`)
+                    if (name && name.trim()) {
+                      createGroup(name.trim(), selectedElementIds, selectedElementLocation || currentSection)
+                    }
+                  }}
+                  className="flex-1 py-1.5 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center justify-center gap-1 transition cursor-pointer shadow-sm"
+                  title="Agrupar elementos selecionados"
+                >
+                  <Icon name="group" size="xs" />
+                  <span>Agrupar</span>
+                </button>
+              )}
+
+              {canUngroup && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (activeGroup) {
+                      ungroupElements(activeGroup.id, selectedElementLocation || currentSection)
+                    }
+                  }}
+                  className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 text-xs font-medium flex items-center justify-center gap-1 transition cursor-pointer"
+                  title="Desagrupar elementos"
+                >
+                  <Icon name="ungroup" size="xs" />
+                  <span>Desagrupar</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => deleteSelectedElements()}
+                className="py-1.5 px-2.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 text-red-300 text-xs font-medium flex items-center justify-center gap-1 transition cursor-pointer"
+                title="Excluir elementos selecionados"
+              >
+                <Icon name="trash" size="xs" />
+                <span>Excluir</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 2. Transform Section */}
         <div>
           <div className="text-xs font-semibold text-slate-200 mb-2">
@@ -1357,21 +1563,142 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         )}
 
         {/* Media Properties (Image / Barcode) */}
-        {element.type === 'image' && (
-          <div>
-            <div className="text-xs font-semibold text-slate-200 mb-2">Image Source</div>
-            <input
-              type="text"
-              value={(element.url as string) || (element.value as string) || ''}
-              onChange={(e) => {
-                onUpdate('url', e.target.value)
-                onUpdate('value', e.target.value)
-              }}
-              placeholder="https://exemplo.com/imagem.png"
-              className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
-            />
-          </div>
-        )}
+        {element.type === 'image' && (() => {
+          const imageSrc = (element.url as string) || (element.source as string) || (element.value as string) || ''
+          const isBase64 = imageSrc.startsWith('data:image')
+          const base64SizeKB = isBase64 ? Math.round((imageSrc.length * 0.75) / 1024) : 0
+
+          return (
+            <div>
+              <div className="text-xs font-semibold text-slate-200 mb-2">Imagem</div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/gif"
+                className="hidden"
+                onChange={handleImageFileSelect}
+              />
+
+              {imageSrc ? (
+                <div className="space-y-2 mb-3">
+                  <div className="relative group bg-slate-950/80 border border-slate-800 rounded-lg p-2 flex flex-col items-center justify-center">
+                    <img
+                      src={imageSrc}
+                      alt="Preview"
+                      className="max-h-24 max-w-full rounded object-contain border border-slate-800/60 bg-slate-900/60"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none'
+                      }}
+                    />
+                    <div className="mt-2 flex items-center justify-between w-full px-1">
+                      {isBase64 ? (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          Base64 (~{base64SizeKB} KB)
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                          Remoto / URL
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 transition cursor-pointer"
+                      >
+                        <Icon name="trash" size="xs" />
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition cursor-pointer"
+                  >
+                    <Icon name="upload" size="xs" />
+                    Substituir por Imagem Local
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition cursor-pointer shadow-sm"
+                  >
+                    <Icon name="upload" size="xs" />
+                    Procurar Imagem Local
+                  </button>
+                  <p className="text-[10px] text-slate-500 text-center">
+                    PNG, JPG, SVG, WebP ou GIF (converte em Base64)
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-400 block">
+                  {isBase64 ? 'Origem dos Dados' : 'URL ou Caminho da Imagem'}
+                </label>
+                {isBase64 ? (
+                  <div className="flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-400 font-mono">
+                    <span className="truncate pr-2">data:image/...;base64 (~{base64SizeKB} KB)</span>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard?.writeText(imageSrc)}
+                      title="Copiar Base64"
+                      className="text-slate-400 hover:text-indigo-400 shrink-0 cursor-pointer"
+                    >
+                      <Icon name="copy" size="xs" />
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={imageSrc}
+                    onChange={(e) => {
+                      onUpdate({
+                        url: e.target.value,
+                        value: e.target.value,
+                        source: e.target.value,
+                      })
+                    }}
+                    placeholder="https://exemplo.com/imagem.png"
+                    className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Ajuste (Fit)</label>
+                  <select
+                    value={element.fit || 'contain'}
+                    onChange={(e) => onUpdate('fit', e.target.value)}
+                    className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="contain">Contain</option>
+                    <option value="cover">Cover</option>
+                    <option value="fill">Fill</option>
+                    <option value="scale-down">Scale Down</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Alinhamento</label>
+                  <select
+                    value={element.alignment || 'center'}
+                    onChange={(e) => onUpdate('alignment', e.target.value)}
+                    className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="left">Esquerda</option>
+                    <option value="center">Centro</option>
+                    <option value="right">Direita</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         {element.type === 'barcode' && (
           <div>
@@ -1401,21 +1728,68 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         )}
 
         {/* Container specific */}
-        {element.type === 'container' && (
-          <div>
-            <div className="text-xs font-semibold text-slate-200 mb-2">Container Settings</div>
-            <div>
-              <label className="text-[10px] text-slate-400 block mb-1">Nome do Container</label>
-              <input
-                type="text"
-                value={(element.name as string) || ''}
-                onChange={(e) => onUpdate('name', e.target.value)}
-                placeholder="Container 1"
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans"
-              />
+        {element.type === 'container' && (() => {
+          const isFixed = element.heightMode === 'fixed' || element.autoHeight === false
+
+          return (
+            <div className="space-y-3">
+              <div className="text-xs font-semibold text-slate-200">Container Settings</div>
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Nome do Container</label>
+                <input
+                  type="text"
+                  value={(element.name as string) || ''}
+                  onChange={(e) => onUpdate('name', e.target.value)}
+                  placeholder="Container 1"
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Comportamento de Altura</label>
+                <div className="grid grid-cols-2 gap-1.5 bg-slate-950/70 p-1 rounded-lg border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUpdate({
+                        heightMode: 'auto',
+                        autoHeight: true,
+                      })
+                    }}
+                    className={`py-1.5 text-xs font-medium rounded-md transition cursor-pointer ${
+                      !isFixed
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Auto-Height
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUpdate({
+                        heightMode: 'fixed',
+                        autoHeight: false,
+                      })
+                    }}
+                    className={`py-1.5 text-xs font-medium rounded-md transition cursor-pointer ${
+                      isFixed
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Fixed-Height
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
+                  {!isFixed
+                    ? 'O container se expande automaticamente conforme novos elementos são adicionados.'
+                    : 'Tamanho fixo. Impede a inserção de elementos que ultrapassem a altura do container.'}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* 4. Appearance Section */}
         <div>
@@ -1554,8 +1928,8 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
           </div>
         </div>
 
-        {/* 5. Data Binding Section (Não exibido para Container) */}
-        {element.type !== 'container' && (
+        {/* 5. Data Binding Section (Não exibido para static_text, container, line, spacer, page_break) */}
+        {element.type !== 'container' && element.type !== 'static_text' && element.type !== 'line' && element.type !== 'spacer' && element.type !== 'page_break' && (
           <div>
             <div className="text-xs font-semibold text-slate-200 mb-2">
               Data Binding
@@ -1602,6 +1976,55 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
             Deixe vazio para imprimir sempre
           </span>
         </div>
+
+        {/* 7. Delete / Group Action Buttons */}
+        <div className="pt-2 border-t border-slate-800 space-y-1.5">
+          {isMultiSelection && canGroup && (
+            <button
+              type="button"
+              onClick={() => {
+                const name = prompt('Nome do Grupo:', `Grupo ${currentGroups.length + 1}`)
+                if (name && name.trim()) {
+                  createGroup(name.trim(), selectedElementIds, selectedElementLocation || currentSection)
+                }
+              }}
+              className="w-full py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm"
+            >
+              <Icon name="group" size="xs" />
+              <span>Agrupar {selectedCount} elementos</span>
+            </button>
+          )}
+
+          {isMultiSelection && canUngroup && (
+            <button
+              type="button"
+              onClick={() => {
+                if (activeGroup) {
+                  ungroupElements(activeGroup.id, selectedElementLocation || currentSection)
+                }
+              }}
+              className="w-full py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              <Icon name="ungroup" size="xs" />
+              <span>Desagrupar elementos</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              if (isMultiSelection) {
+                deleteSelectedElements()
+              } else {
+                useTemplateStore.getState().deleteElement(element.id, useTemplateStore.getState().selectedElementLocation)
+              }
+            }}
+            className="w-full py-1.5 px-3 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 text-red-300 text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer"
+          >
+            <Icon name="trash" size="xs" />
+            <span>{isMultiSelection ? `Excluir ${selectedCount} elementos` : 'Excluir elemento'}</span>
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -1640,22 +2063,22 @@ export default function PropertiesPanel() {
     let elements: Element[] = []
     
     if (selectedElementLocation === 'header' && template.pageSettings.header) {
-      elements = template.pageSettings.header.elements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.pageSettings.header.elements
     } else if (selectedElementLocation === 'footer' && template.pageSettings.footer) {
-      elements = template.pageSettings.footer.elements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.pageSettings.footer.elements
     } else if (selectedElementLocation === 'bodyBackground' && template.pageSettings.bodyBackground) {
-      elements = template.pageSettings.bodyBackground.elements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.pageSettings.bodyBackground.elements
     } else if (selectedElementLocation === 'summary' && template.summaryPage) {
-      elements = template.summaryPage.elements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.summaryPage.elements
     } else {
-      elements = template.page.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.page || []
     }
     
-    return elements
+    const flat = flattenElements(elements)
+    return flat.filter((el) => selectedElementIds.includes(el.id))
   })()
 
-  
-  if (selectedLoopChildId && selectedLoopParentId) {
+  if (selectedElements.length <= 1 && selectedLoopChildId && selectedLoopParentId) {
     // Encontrar o loop pai e o elemento filho
     let loopElement: Element | null = null
     
@@ -1692,7 +2115,7 @@ export default function PropertiesPanel() {
     }
   }
 
-  if (selectedContainerChildId && selectedContainerParentId) {
+  if (selectedElements.length <= 1 && selectedContainerChildId && selectedContainerParentId) {
       // Encontrar o loop pai e o elemento filho
       let containerElement: Element | null = null
 
@@ -1934,6 +2357,9 @@ export default function PropertiesPanel() {
     return (
       <StudioSlateElementInspector
         element={selectedElement}
+        isMultiSelection={isMultiSelection}
+        selectedCount={selectedElements.length}
+        parentName={selectedElementLocation}
         onUpdate={(field, value) => {
           const updates = typeof field === 'string' ? { [field]: value } : field
           if (isMultiSelection) {

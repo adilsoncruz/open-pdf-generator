@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useTemplateStore, type Element } from '../../../store/templateStore'
+import { useTemplateStore, type Element, flattenElements } from '../../../store/templateStore'
 import { useUIStore } from '../../../store/uiStore'
 import { usePreviewStore } from '../../../store/previewStore'
 import { Icon } from '../../atoms'
@@ -139,12 +139,16 @@ export function EditorPage() {
             template.pageSettings.bodyBackground
           ) {
             allElements = template.pageSettings.bodyBackground.elements
+          } else if (selectedElementLocation === 'summary' && template.summaryPage) {
+            allElements = template.summaryPage.elements
           } else {
             allElements = template.page
           }
 
+          const flatElements = flattenElements(allElements)
+
           selectedElementIds.forEach((id) => {
-            const currentElement = allElements.find((el) => el.id === id)
+            const currentElement = flatElements.find((el) => el.id === id)
             if (currentElement) {
               const updates: Partial<Element> = {}
               switch (e.key) {
@@ -170,7 +174,10 @@ export function EditorPage() {
 
       // Delete/Backspace: delete selected elements
       if ((e.key === 'Delete' || e.key === 'Backspace') && !isInputField) {
-        if (selectedContainerChildId && selectedContainerParentId) {
+        if (selectedElementIds.length > 1) {
+          e.preventDefault()
+          deleteSelectedElements()
+        } else if (selectedContainerChildId && selectedContainerParentId) {
           e.preventDefault()
           deleteLoopChildElement(selectedContainerParentId, selectedContainerChildId, selectedElementLocation)
         } else if (selectedLoopChildId && selectedLoopParentId) {
@@ -187,6 +194,42 @@ export function EditorPage() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && !isInputField) {
         e.preventDefault()
         selectAllElements()
+        return
+      }
+
+      // Ctrl+G / Cmd+G: Group / Ungroup
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g' && !isInputField) {
+        e.preventDefault()
+        const store = useTemplateStore.getState()
+        const currentLoc = store.selectedElementLocation || store.currentSection
+        const groups = (() => {
+          if (currentLoc === 'header') return store.template.pageSettings.header?.groups || []
+          if (currentLoc === 'footer') return store.template.pageSettings.footer?.groups || []
+          if (currentLoc === 'bodyBackground') return store.template.pageSettings.bodyBackground?.groups || []
+          if (currentLoc === 'summary') return store.template.summaryPage?.groups || []
+          return store.template.groups || []
+        })()
+
+        if (e.shiftKey) {
+          // Ungroup
+          const activeGrp = groups.find(
+            (g) => g.id === store.selectedGroupId || store.selectedElementIds.some((id) => g.elementIds.includes(id))
+          )
+          if (activeGrp) {
+            store.ungroupElements(activeGrp.id, currentLoc)
+          }
+        } else {
+          // Group
+          const activeGrp = groups.find(
+            (g) => g.id === store.selectedGroupId || store.selectedElementIds.some((id) => g.elementIds.includes(id))
+          )
+          if (!activeGrp && store.selectedElementIds.length >= 2) {
+            const name = prompt('Nome do Grupo:', `Grupo ${groups.length + 1}`)
+            if (name && name.trim()) {
+              store.createGroup(name.trim(), store.selectedElementIds, currentLoc)
+            }
+          }
+        }
         return
       }
 
