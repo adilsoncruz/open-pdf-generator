@@ -44,18 +44,18 @@ You define document structure, geometry, and styling in a clean JSON format and 
 
 ---
 
-## Executive Comparison
+## Head-to-Head Comparison: Open PDF Generator vs JasperReports
 
-| Metric / Feature | Open PDF Generator | JasperReports 6.21.4 | iText 8 / OpenPDF raw |
+| Metric / Feature | Open PDF Generator | JasperReports 6.21.4 | Advantage |
 |:---|:---:|:---:|:---:|
-| **Throughput (2 vCPU container)** | **8,310 docs/sec** | 3,338 docs/sec *(2.5x slower)* | ~7,000 docs/sec *(imperative)* |
-| **Cold Start (1st doc latency)** | **273 ms** | 1,166 ms *(4.3x slower)* | ~450 ms |
-| **Container RSS Memory (100k docs)** | **128 MB** *(Zero GC stalls)* | 165 MB *(Heavy GC pauses)* | Varies |
-| **Runtime Dependency Footprint** | **4.0 MB** | 13.6 MB+ (up to 50MB with tools) | ~10 MB+ |
-| **Template Format** | Declarative **JSON** | Complex **JRXML / XML** | Hardcoded Java/Kotlin code |
-| **Visual Designer** | ✅ Open PDF Studio | ✅ Jaspersoft Studio (Eclipse) | ❌ None |
-| **License** | **LGPL-3.0** *(Free, Commercial OK)* | LGPL-3.0 / Commercial | AGPLv3 / Commercial |
-| **Streaming API** | ✅ Direct `OutputStream` | ⚠️ In-memory buffer required | ✅ Direct stream |
+| **Throughput (2 vCPU container)** | **8,310 docs/sec** | 3,338 docs/sec | **2.5x faster** |
+| **Cold Start (1st doc latency)** | **273 ms** | 1,166 ms | **4.3x faster** |
+| **Container RSS Memory (100k docs)** | **128 MB** *(Zero GC stalls)* | 165 MB *(Heavy GC pauses)* | **22% lower memory** |
+| **Runtime Dependency Footprint** | **4.0 MB** | 13.6 MB+ (up to 50MB with tools) | **3.4x lighter** |
+| **Template Format** | Declarative **JSON** | Complex **JRXML / XML** | Git-friendly, no compilation |
+| **Visual Designer** | ✅ Open PDF Studio | ✅ Jaspersoft Studio (Eclipse) | Modern Electron/React UI |
+| **Streaming API** | ✅ Direct `OutputStream` | ⚠️ In-memory buffer required | Zero-copy byte stream |
+| **License** | **LGPL-3.0** *(Free, Commercial OK)* | LGPL-3.0 / Commercial | Identical freedom |
 
 > 📊 **Explore Full Evidence:** See JMH benchmarks, cgroup container stress results, and FinOps cloud cost analysis in our [Benchmark Report](/lib/benchmark).
 
