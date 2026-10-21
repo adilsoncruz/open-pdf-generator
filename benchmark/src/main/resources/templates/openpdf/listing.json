@@ -1,0 +1,102 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "Benchmark Inventory Listing",
+    "description": "Multi-page tabular catalog benchmark template"
+  },
+  "pageSettings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 40,
+      "right": 30,
+      "bottom": 40,
+      "left": 30
+    },
+    "header": {
+      "height": 40,
+      "elements": [
+        {
+          "type": "text",
+          "id": "hdr-title",
+          "x": 0,
+          "y": 5,
+          "dataBinding": "reportTitle",
+          "style": { "fontSize": 12, "bold": true, "color": "#1e293b" }
+        },
+        {
+          "type": "text",
+          "id": "hdr-date",
+          "x": 350,
+          "y": 5,
+          "dataBinding": "generatedAt",
+          "style": { "fontSize": 9, "color": "#64748b", "alignment": "right" }
+        },
+        {
+          "type": "line",
+          "id": "hdr-line",
+          "x": 0,
+          "y": 25,
+          "width": "100%",
+          "height": 0,
+          "style": { "color": "#cbd5e1", "width": 1 }
+        }
+      ]
+    },
+    "footer": {
+      "height": 30,
+      "elements": [
+        {
+          "type": "line",
+          "id": "ftr-line",
+          "x": 0,
+          "y": 5,
+          "width": "100%",
+          "height": 0,
+          "style": { "color": "#e2e8f0", "width": 1 }
+        },
+        {
+          "type": "text",
+          "id": "ftr-confidential",
+          "x": 0,
+          "y": 12,
+          "value": "CONFIDENTIAL - INTERNAL USE ONLY",
+          "style": { "fontSize": 8, "color": "#94a3b8" }
+        },
+        {
+          "type": "text",
+          "id": "ftr-page",
+          "x": 350,
+          "y": 12,
+          "dataBinding": "pageNumber | prefix:'Page '",
+          "style": { "fontSize": 8, "color": "#64748b", "alignment": "right" }
+        }
+      ]
+    }
+  },
+  "page": [
+    {
+      "type": "table",
+      "id": "inventory-table",
+      "x": 0,
+      "y": 10,
+      "width": "100%",
+      "dataBinding": "items",
+      "columns": [
+        { "header": "#", "field": "id", "width": 35, "alignment": "center" },
+        { "header": "SKU Code", "field": "code", "width": 80 },
+        { "header": "Product Name", "field": "name", "width": 200 },
+        { "header": "Category", "field": "category", "width": 85 },
+        { "header": "Stock", "field": "stock", "width": 55, "alignment": "right" },
+        { "header": "Unit Price", "field": "price", "width": 75, "alignment": "right" }
+      ],
+      "style": {
+        "headerBackground": "#0f172a",
+        "headerTextColor": "#ffffff",
+        "alternateRowBackground": "#f8fafc",
+        "borderColor": "#e2e8f0",
+        "fontSize": 9
+      }
+    }
+  ]
+}

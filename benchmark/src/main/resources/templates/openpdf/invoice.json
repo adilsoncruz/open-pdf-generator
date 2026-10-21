@@ -1,0 +1,159 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "Benchmark Invoice",
+    "description": "Standard 1-page commercial invoice template for benchmarking"
+  },
+  "pageSettings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 36,
+      "right": 36,
+      "bottom": 36,
+      "left": 36
+    }
+  },
+  "page": [
+    {
+      "type": "text",
+      "id": "company-title",
+      "x": 0,
+      "y": 0,
+      "value": "ACME ENTERPRISE SOLUTIONS",
+      "style": { "fontSize": 18, "bold": true, "color": "#1e293b" }
+    },
+    {
+      "type": "text",
+      "id": "invoice-title",
+      "x": 350,
+      "y": 0,
+      "value": "INVOICE",
+      "style": { "fontSize": 20, "bold": true, "color": "#4f46e5", "alignment": "right" }
+    },
+    {
+      "type": "text",
+      "id": "invoice-number",
+      "x": 350,
+      "y": 28,
+      "dataBinding": "invoiceNumber | prefix:'Number: '",
+      "style": { "fontSize": 10, "color": "#64748b", "alignment": "right" }
+    },
+    {
+      "type": "text",
+      "id": "invoice-date",
+      "x": 350,
+      "y": 42,
+      "dataBinding": "date | prefix:'Date: '",
+      "style": { "fontSize": 10, "color": "#64748b", "alignment": "right" }
+    },
+    {
+      "type": "rectangle",
+      "id": "divider",
+      "x": 0,
+      "y": 65,
+      "width": "100%",
+      "height": 1,
+      "style": { "fillColor": "#e2e8f0" }
+    },
+    {
+      "type": "text",
+      "id": "customer-label",
+      "x": 0,
+      "y": 80,
+      "value": "Billed To:",
+      "style": { "fontSize": 9, "bold": true, "color": "#94a3b8" }
+    },
+    {
+      "type": "text",
+      "id": "customer-name",
+      "x": 0,
+      "y": 95,
+      "dataBinding": "customer.name",
+      "style": { "fontSize": 12, "bold": true, "color": "#0f172a" }
+    },
+    {
+      "type": "text",
+      "id": "customer-email",
+      "x": 0,
+      "y": 112,
+      "dataBinding": "customer.email",
+      "style": { "fontSize": 10, "color": "#475569" }
+    },
+    {
+      "type": "text",
+      "id": "customer-address",
+      "x": 0,
+      "y": 126,
+      "dataBinding": "customer.address",
+      "style": { "fontSize": 10, "color": "#475569" }
+    },
+    {
+      "type": "table",
+      "id": "items-table",
+      "x": 0,
+      "y": 160,
+      "width": "100%",
+      "dataBinding": "items",
+      "columns": [
+        { "header": "Description", "field": "description", "width": 260 },
+        { "header": "Qty", "field": "quantity", "width": 60, "alignment": "center" },
+        { "header": "Unit Price ($)", "field": "unitPrice", "width": 90, "alignment": "right" },
+        { "header": "Total ($)", "field": "total", "width": 100, "alignment": "right" }
+      ],
+      "style": {
+        "headerBackground": "#f1f5f9",
+        "headerTextColor": "#1e293b",
+        "borderColor": "#cbd5e1"
+      }
+    },
+    {
+      "type": "text",
+      "id": "subtotal-label",
+      "x": 340,
+      "y": 480,
+      "value": "Subtotal:",
+      "style": { "fontSize": 10, "color": "#64748b", "alignment": "right" }
+    },
+    {
+      "type": "text",
+      "id": "subtotal-value",
+      "x": 420,
+      "y": 480,
+      "dataBinding": "subtotal | prefix:'$'",
+      "style": { "fontSize": 10, "bold": true, "color": "#1e293b", "alignment": "right" }
+    },
+    {
+      "type": "text",
+      "id": "tax-label",
+      "x": 340,
+      "y": 498,
+      "value": "Tax (10%):",
+      "style": { "fontSize": 10, "color": "#64748b", "alignment": "right" }
+    },
+    {
+      "type": "text",
+      "id": "tax-value",
+      "x": 420,
+      "y": 498,
+      "dataBinding": "tax | prefix:'$'",
+      "style": { "fontSize": 10, "bold": true, "color": "#1e293b", "alignment": "right" }
+    },
+    {
+      "type": "text",
+      "id": "total-label",
+      "x": 340,
+      "y": 520,
+      "value": "Grand Total:",
+      "style": { "fontSize": 12, "bold": true, "color": "#4f46e5", "alignment": "right" }
+    },
+    {
+      "type": "text",
+      "id": "total-value",
+      "x": 420,
+      "y": 520,
+      "dataBinding": "total | prefix:'$'",
+      "style": { "fontSize": 12, "bold": true, "color": "#4f46e5", "alignment": "right" }
+    }
+  ]
+}

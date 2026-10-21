@@ -169,6 +169,20 @@ Templates are JSON files with page settings, header/footer, and body elements:
 - ✅ Template validation
 - 📦 CI/CD integration ready
 
+## ⚡ Performance Benchmark (vs JasperReports)
+
+Under identical JVM environments, **Open PDF Generator** substantially outperforms **JasperReports 6.21.4** across speed, memory allocation, and cold start:
+
+| Metric / Scenario | Open PDF Generator | JasperReports 6.21.4 | Advantage |
+|---|---|---|---|
+| **Cold Start (1st Doc Render)** | **379.9 ms** | 2053.4 ms | **5.4x faster** (Ideal for Serverless & Lambda) |
+| **Invoice (1 page, 10 items)** | **0.62 ms** (1,581 docs/s) | 2.92 ms (346 docs/s) | **4.7x faster** latency |
+| **Catalog Listing (100 items)** | **4.44 ms** (207 docs/s) | 7.49 ms (125 docs/s) | **1.7x faster** throughput |
+| **Distribution Size (JARs)** | **4.0 MB** | 13.6 MB | **3.4x smaller** dependencies |
+| **Template Compilation** | Instant (Native JSON) | Required (JRXML -> .jasper) | Zero build-time compilation |
+
+👉 Full details in the [Benchmark Documentation](https://adilsoncruz.github.io/open-pdf-generator/lib/benchmark).
+
 ## 📦 Development
 
 ### Prerequisites

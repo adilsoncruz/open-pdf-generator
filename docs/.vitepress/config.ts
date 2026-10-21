@@ -77,7 +77,8 @@ export default defineConfig({
             { text: 'Groups', link: '/lib/guide/advanced/groups' },
             { text: 'Pagination', link: '/lib/guide/advanced/pagination' },
             { text: 'Positioning', link: '/lib/guide/advanced/positioning' },
-            { text: 'Performance', link: '/lib/guide/advanced/performance' }
+            { text: 'Performance', link: '/lib/guide/advanced/performance' },
+            { text: 'Benchmark (vs Jasper)', link: '/lib/benchmark' }
           ]
         },
         {
