@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "2.0.21"
     kotlin("kapt") version "2.0.21"
     id("me.champeau.jmh") version "0.7.2"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
     application
 }
 
@@ -51,6 +52,15 @@ dependencies {
 
 application {
     mainClass.set("com.pdfgenerator.benchmark.BenchmarkStandaloneRunnerKt")
+}
+
+tasks.shadowJar {
+    archiveBaseName.set("open-pdf-benchmark")
+    archiveClassifier.set("")
+    archiveVersion.set("")
+    manifest {
+        attributes["Main-Class"] = "com.pdfgenerator.benchmark.BenchmarkStandaloneRunnerKt"
+    }
 }
 
 jmh {

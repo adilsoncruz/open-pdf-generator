@@ -7,6 +7,7 @@ Comprehensive, reproducible benchmark comparing **Open PDF Generator** against *
 - **Cold Start:** Open PDF Generator starts **4.3x faster** (273.62 ms vs 1166.03 ms), ideal for Serverless, AWS Lambda, and rapid container scale-out.
 - **Single-Page Invoices:** **4.4x lower latency** and generates **1874 docs/sec** (compared to 424 docs/sec in Jasper).
 - **Dependency Footprint:** Open PDF Generator is **3.4x lighter** (4.0 MB vs 13.6 MB), completely eliminating legacy Apache Commons Digester/Collections and Eclipse ECJ compiler dependencies.
+- **Container RSS Memory:** In isolated Docker containers with cgroup quotas, Open PDF uses **41.6% less physical RAM (RSS)** (75.2 MB vs 128.8 MB).
 - **JSON Schema Safety:** Validating payloads upfront with full JSON Schema compliance adds just **0.35 ms** overhead.
 
 ## Benchmark Environment
@@ -18,6 +19,19 @@ Comprehensive, reproducible benchmark comparing **Open PDF Generator** against *
 | **Processors** | 15 Cores |
 | **Max Heap** | 6144 MB |
 | **JasperReports Version** | 6.21.4 |
+
+## Docker Container Benchmark (cgroups: CPU & RSS Memory Limits)
+
+Workload executed inside an isolated Docker container (`eclipse-temurin:21-jre-alpine`) under strict cgroup v2 quotas (**2 CPUs**, **1 GB RAM**):
+
+| Metric | Open PDF Generator | JasperReports 6.21.4 | Advantage |
+|---|---|---|---|
+| **Workload** | 500 invoices (4 threads) | 500 invoices (4 threads) | Identical workload |
+| **Total Duration** | **0.37 s** | 1.05 s | **2.81x faster** |
+| **Throughput** | **1337.3 docs/s** | 476.6 docs/s | **+181% more throughput** |
+| **Peak Process RSS Memory** | **75.2 MB** | 128.8 MB | **41.6% less RAM** |
+| **Cgroup Peak Memory** | **77.9 MB** | 129.3 MB | Safer from OOMKilled |
+| **Average CPU Usage** | 11.2% | 8.4% | Higher CPU saturation efficiency |
 
 ## Throughput & Latency (Single-thread)
 
@@ -101,6 +115,16 @@ xychart-beta
     bar [273, 1166]
 ```
 
+### Container Peak RSS Memory (MB) (Lower is better)
+
+```mermaid
+xychart-beta
+    title "Peak Container RSS Memory (MB)"
+    x-axis ["Open PDF Generator", "JasperReports"]
+    y-axis "Memory (MB)" 0 --> 160
+    bar [75, 128]
+```
+
 ### Concurrency Throughput (Higher is better)
 
 ```mermaid
@@ -113,8 +137,14 @@ xychart-beta
 
 ## Reproducing Locally
 
-You can run this exact benchmark suite locally:
+### Run Native JVM Benchmark:
 
 ```bash
 ./benchmark/scripts/run-benchmark.sh
+```
+
+### Run in Docker Container (with cgroups limits):
+
+```bash
+./benchmark/scripts/run-container-benchmark.sh 2 1g 500 4
 ```
