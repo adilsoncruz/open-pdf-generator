@@ -485,6 +485,8 @@ export interface Translations {
     browseFile: string
     openFromComputer: string
     recentFiles: string
+    noRecentFiles: string
+    removeRecent: string
     switchThemeLight: string
     switchThemeDark: string
     selectLanguage: string

@@ -570,6 +570,8 @@ const en: Translations = {
     browseFile: 'Browse file',
     openFromComputer: 'Open a file from your computer',
     recentFiles: 'Recent files',
+    noRecentFiles: 'No recent files yet',
+    removeRecent: 'Remove from list',
     switchThemeLight: 'Switch to light theme',
     switchThemeDark: 'Switch to dark theme',
     selectLanguage: 'Select language',

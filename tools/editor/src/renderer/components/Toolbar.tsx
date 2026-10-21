@@ -3,6 +3,7 @@ import { useTemplateStore } from '../store/templateStore'
 import { useTabStore } from '../store/tabStore'
 import { useUIStore } from '../store/uiStore'
 import { usePreviewStore } from '../store/previewStore'
+import { useRecentFilesStore } from '../store/recentFilesStore'
 import { UpdateNotification } from './UpdateNotification'
 import { useTranslation, type LanguageCode } from '../i18n'
 import { Icon, Button } from './atoms'
@@ -209,6 +210,10 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
           ? 'Converted Template'
           : result.path.split(/[/\\]/).pop() || loadedTemplate.metadata?.name || 'Opened Template'
 
+        if (!result.convertedFromJasper && result.path) {
+          useRecentFilesStore.getState().addRecentFile(result.path, tabTitle)
+        }
+
         useTabStore.getState().addTab({
           name: tabTitle,
           path: result.convertedFromJasper ? null : result.path,
@@ -243,9 +248,11 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
       const result = await window.electronAPI.writeFile(currentFilePath, content)
       if (result.success) {
         markClean()
+        const resolvedName = currentFilePath.split(/[/\\]/).pop() || 'template.json'
+        useRecentFilesStore.getState().addRecentFile(currentFilePath, resolvedName)
         useTabStore.getState().updateActiveTab({
           path: currentFilePath,
-          name: currentFilePath.split(/[/\\]/).pop() || 'template.json',
+          name: resolvedName,
           isDirty: false,
         })
         // Update preview if open
@@ -269,9 +276,11 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     if (result) {
       setCurrentFilePath(result)
       markClean()
+      const resolvedName = result.split(/[/\\]/).pop() || fileName
+      useRecentFilesStore.getState().addRecentFile(result, resolvedName)
       useTabStore.getState().updateActiveTab({
         path: result,
-        name: result.split(/[/\\]/).pop() || fileName,
+        name: resolvedName,
         isDirty: false,
       })
       // Update preview if open
