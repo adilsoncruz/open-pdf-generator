@@ -59,65 +59,7 @@ features:
     details: Containers, tables, text, loops, page breaks, shapes, barcodes, watermarks, and summary pages with full styling.
 ---
 
-<div class="benchmark-card">
-  <div class="benchmark-header">
-    <div class="benchmark-badge-row">
-      <span class="benchmark-pill">⚡ Benchmark Case Study</span>
-      <span style="font-size: 12px; color: var(--vp-c-text-3);">Tested on Linux Container Cgroups (2 vCPU, 1 GB RAM)</span>
-    </div>
-    <h3>Engineered for High-Density Microservices & Cloud Run</h3>
-    <p class="benchmark-subtitle">
-      Stress test generating <strong>100,000 unique dynamic invoices</strong> against JasperReports 6.21.4 with zero template caching.
-    </p>
-  </div>
-
-  <div class="benchmark-grid">
-    <div class="benchmark-stat-item">
-      <span class="benchmark-stat-label">Throughput</span>
-      <div class="benchmark-stat-val">
-        8,310 <span class="unit">docs/s</span>
-      </div>
-      <span class="benchmark-stat-delta">▲ 2.5x faster</span>
-      <span class="benchmark-stat-desc">Jasper achieved 3,338 docs/s under identical quotas</span>
-    </div>
-
-    <div class="benchmark-stat-item">
-      <span class="benchmark-stat-label">Cold Start</span>
-      <div class="benchmark-stat-val">
-        273 <span class="unit">ms</span>
-      </div>
-      <span class="benchmark-stat-delta">▲ 4.3x faster</span>
-      <span class="benchmark-stat-desc">Jasper takes 1,166 ms to compile and render doc #1</span>
-    </div>
-
-    <div class="benchmark-stat-item">
-      <span class="benchmark-stat-label">Peak RSS RAM</span>
-      <div class="benchmark-stat-val">
-        128 <span class="unit">MB</span>
-      </div>
-      <span class="benchmark-stat-delta">▲ 22% lower</span>
-      <span class="benchmark-stat-desc">Zero GC stalls; Jasper required 165 MB with pauses</span>
-    </div>
-
-    <div class="benchmark-stat-item">
-      <span class="benchmark-stat-label">Footprint</span>
-      <div class="benchmark-stat-val">
-        4.0 <span class="unit">MB</span>
-      </div>
-      <span class="benchmark-stat-delta">▲ 3.4x smaller</span>
-      <span class="benchmark-stat-desc">No heavy compilation deps (Jasper: 13.6 MB JAR tree)</span>
-    </div>
-  </div>
-
-  <div class="benchmark-footer">
-    <span style="font-size: 13px; color: var(--vp-c-text-2);">
-      Looking to cut cloud infrastructure costs or replace legacy Jasper?
-    </span>
-    <a href="./lib/benchmark">
-      <span>Read Full Technical Benchmark & FinOps Analysis →</span>
-    </a>
-  </div>
-</div>
+<BenchmarkHero />
 
 ## Quick Example
 
