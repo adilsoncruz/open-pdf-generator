@@ -1,13 +1,15 @@
 <script setup lang="ts">
+import { withBase } from 'vitepress'
 import { currentSlide, heroSlideTexts, setSlide, prevSlide, nextSlide, isPaused } from '../composables/useHeroSlider'
 </script>
 
 <template>
   <div 
-    class="hero-dots-container"
+    class="hero-bottom-container"
     @mouseenter="isPaused = true"
     @mouseleave="isPaused = false"
   >
+    <!-- Slide Navigation Dots (Centered) -->
     <div class="hero-dots-bar">
       <!-- Previous Slide Button -->
       <button 
@@ -48,21 +50,42 @@ import { currentSlide, heroSlideTexts, setSlide, prevSlide, nextSlide, isPaused 
         </svg>
       </button>
     </div>
+
+    <!-- Action CTA Buttons (Centered Below Slides) -->
+    <div class="hero-actions-row">
+      <a :href="withBase('/lib/guide/getting-started')" class="hero-btn btn-brand">
+        Get Started
+      </a>
+      <a :href="withBase('/lib/benchmark')" class="hero-btn btn-alt">
+        <span class="bolt-icon">⚡</span> 2.5x vs Jasper Benchmark
+      </a>
+      <a 
+        href="https://github.com/adilsoncruz/open-pdf-generator" 
+        target="_blank" 
+        rel="noopener" 
+        class="hero-btn btn-alt"
+      >
+        GitHub
+      </a>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.hero-dots-container {
+.hero-bottom-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 20px;
   width: 100%;
-  margin: 10px auto 30px auto;
+  margin: 12px auto 36px auto;
   padding: 0 16px;
   position: relative;
   z-index: 20;
 }
 
+/* Dots Bar */
 .hero-dots-bar {
   display: inline-flex;
   align-items: center;
@@ -161,6 +184,79 @@ import { currentSlide, heroSlideTexts, setSlide, prevSlide, nextSlide, isPaused 
   animation: fadeIn 0.2s ease;
 }
 
+/* Hero Action Buttons Row */
+.hero-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 9999px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  line-height: 1;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+/* Brand Button (Get Started) */
+.hero-btn.btn-brand {
+  background: #5b55f0;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 18px rgba(79, 70, 229, 0.38);
+}
+
+.hero-btn.btn-brand:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  box-shadow: 0 6px 24px rgba(79, 70, 229, 0.52);
+  transform: translateY(-1.5px);
+}
+
+/* Alt Buttons (Benchmark & GitHub) */
+.hero-btn.btn-alt {
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.dark .hero-btn.btn-alt {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.hero-btn.btn-alt:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+  transform: translateY(-1.5px);
+  background: #e2e8f0;
+}
+
+.dark .hero-btn.btn-alt:hover {
+  background: #334155;
+  color: #818cf8;
+  border-color: #818cf8;
+}
+
+.bolt-icon {
+  color: #f59e0b;
+  font-size: 15px;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -169,6 +265,18 @@ import { currentSlide, heroSlideTexts, setSlide, prevSlide, nextSlide, isPaused 
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-actions-row {
+    flex-direction: column;
+    width: 100%;
+    max-width: 280px;
+    gap: 10px;
+  }
+  .hero-btn {
+    width: 100%;
   }
 }
 </style>
