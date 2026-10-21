@@ -559,6 +559,21 @@ const pt: Translations = {
     headerEnd: 'Fim do cabeçalho',
     footerStart: 'Início do rodapé',
   },
+  home: {
+    tagline: 'Editor de Modelos Studio Slate',
+    whatDoYouWantToDo: 'O que você deseja fazer?',
+    chooseOption: 'Escolha uma opção para continuar.',
+    openRecent: 'Abrir recente',
+    continueWhereLeftOff: 'Continue de onde parou',
+    newTemplate: 'Novo template',
+    startFromScratch: 'Comece do zero',
+    browseFile: 'Buscar arquivo',
+    openFromComputer: 'Abra um arquivo do computador',
+    recentFiles: 'Arquivos recentes',
+    switchThemeLight: 'Mudar para tema claro',
+    switchThemeDark: 'Mudar para tema escuro',
+    selectLanguage: 'Selecionar idioma',
+  },
 }
 
 export default pt

@@ -559,6 +559,21 @@ const es: Translations = {
     headerEnd: 'Fin del encabezado',
     footerStart: 'Inicio del pie de página',
   },
+  home: {
+    tagline: 'Editor de Plantillas Studio Slate',
+    whatDoYouWantToDo: '¿Qué deseas hacer?',
+    chooseOption: 'Elige una opción para continuar.',
+    openRecent: 'Abrir reciente',
+    continueWhereLeftOff: 'Continúa donde lo dejaste',
+    newTemplate: 'Nueva plantilla',
+    startFromScratch: 'Empieza desde cero',
+    browseFile: 'Buscar archivo',
+    openFromComputer: 'Abre un archivo de tu ordenador',
+    recentFiles: 'Archivos recientes',
+    switchThemeLight: 'Cambiar a tema claro',
+    switchThemeDark: 'Cambiar a tema oscuro',
+    selectLanguage: 'Seleccionar idioma',
+  },
 }
 
 export default es

@@ -559,6 +559,21 @@ const en: Translations = {
     headerEnd: 'Header end',
     footerStart: 'Footer start',
   },
+  home: {
+    tagline: 'Studio Slate Template Editor',
+    whatDoYouWantToDo: 'What do you want to do?',
+    chooseOption: 'Choose an option to continue.',
+    openRecent: 'Open recent',
+    continueWhereLeftOff: 'Continue where you left off',
+    newTemplate: 'New template',
+    startFromScratch: 'Start from scratch',
+    browseFile: 'Browse file',
+    openFromComputer: 'Open a file from your computer',
+    recentFiles: 'Recent files',
+    switchThemeLight: 'Switch to light theme',
+    switchThemeDark: 'Switch to dark theme',
+    selectLanguage: 'Select language',
+  },
 }
 
 export default en

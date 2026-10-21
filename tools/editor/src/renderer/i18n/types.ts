@@ -472,6 +472,23 @@ export interface Translations {
     headerEnd: string
     footerStart: string
   }
+
+  // Home Page
+  home: {
+    tagline: string
+    whatDoYouWantToDo: string
+    chooseOption: string
+    openRecent: string
+    continueWhereLeftOff: string
+    newTemplate: string
+    startFromScratch: string
+    browseFile: string
+    openFromComputer: string
+    recentFiles: string
+    switchThemeLight: string
+    switchThemeDark: string
+    selectLanguage: string
+  }
 }
 
 export type TranslationKey = keyof Translations
