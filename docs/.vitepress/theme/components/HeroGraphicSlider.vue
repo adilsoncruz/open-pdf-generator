@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
 import { withBase } from 'vitepress'
-import { currentSlide, isPaused, totalSlides, nextSlide, prevSlide, setSlide } from '../composables/useHeroSlider'
+import { currentSlide, isPaused, nextSlide } from '../composables/useHeroSlider'
 
 let timer = null
 
@@ -20,565 +20,519 @@ onUnmounted(() => {
 
 <template>
   <div 
-    class="hero-slider-frame"
+    class="hero-graphic-viewport"
     @mouseenter="isPaused = true"
     @mouseleave="isPaused = false"
   >
-    <!-- Background Ambient Glow -->
+    <!-- Background Ambient Glow (Free-floating) -->
     <div class="ambient-glow" :class="'glow-slide-' + currentSlide"></div>
 
-    <!-- Slides Container -->
-    <div class="slides-viewport">
+    <!-- Slides Viewport (No bounding square box) -->
+    <div class="slides-content">
 
-      <!-- 1. Container Concurrency & Throughput -->
-      <div v-show="currentSlide === 0" class="slide-pane">
-        <div class="slide-badge">⚡ Throughput & Concurrency</div>
-
-        <div class="stat-center-block">
-          <div class="gauge-arc-wrap">
-            <svg viewBox="0 0 160 85" class="gauge-svg">
-              <defs>
-                <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#6366f1" />
-                  <stop offset="60%" stop-color="#8b5cf6" />
-                  <stop offset="100%" stop-color="#10b981" />
-                </linearGradient>
-              </defs>
-              <!-- Background Arc -->
-              <path
-                d="M 15 75 A 65 65 0 0 1 145 75"
-                fill="none"
-                class="track-arc"
-                stroke-width="12"
-                stroke-linecap="round"
-              />
-              <!-- Active Fill Arc -->
-              <path
-                d="M 15 75 A 65 65 0 0 1 145 75"
-                fill="none"
-                stroke="url(#gaugeGradient)"
-                stroke-width="12"
-                stroke-dasharray="204.2"
-                stroke-dashoffset="20"
-                stroke-linecap="round"
-                class="active-arc"
-              />
-              <!-- Jasper marker (38% capacity) -->
-              <circle cx="50" cy="27" r="4" fill="#f59e0b" />
-            </svg>
-          </div>
-
-          <!-- Giant Number -->
-          <div class="giant-stat text-brand">
-            8,650
-            <span class="giant-unit">docs/s</span>
-          </div>
-
-          <div class="speed-delta-badge">
-            <span class="delta-arrow">▲</span>
-            <span>+144% vs JasperReports 7</span>
+      <!-- 0. Main Logo (Original Hero Experience) -->
+      <transition name="fade-scale" mode="out-in">
+        <div v-if="currentSlide === 0" key="slide-0" class="graphic-pane logo-pane">
+          <div class="hero-logo-wrapper">
+            <img 
+              :src="withBase('/icon.png')" 
+              alt="Open PDF Generator"
+              class="hero-main-logo"
+            />
           </div>
         </div>
 
-        <div class="metrics-pill-row">
-          <div class="mini-chip highlight-chip">
-            <span class="chip-dot"></span>
-            <span>Open PDF: <strong>8,650/s</strong></span>
-          </div>
-          <div class="mini-chip muted-chip">
-            <span>Jasper 7: 3,539/s</span>
-          </div>
-        </div>
+        <!-- 1. Container Concurrency & Throughput -->
+        <div v-else-if="currentSlide === 1" key="slide-1" class="graphic-pane metric-pane">
+          <div class="slide-badge">⚡ Throughput & Concurrency</div>
 
-        <p class="slide-caption">
-          <strong>100% lock-free parallel execution</strong> in 2-core container stress tests.
-        </p>
-      </div>
-
-      <!-- 2. Complex Documents with Native Barcodes -->
-      <div v-show="currentSlide === 1" class="slide-pane">
-        <div class="slide-badge">🏷️ Native Barcodes & QR</div>
-
-        <div class="stat-center-block">
-          <!-- Mini Code Visual -->
-          <div class="code-visual-header">
-            <div class="code-bars-icon">
-              <span></span><span></span><span></span><span></span><span></span><span></span>
+          <div class="stat-center-block">
+            <div class="gauge-arc-wrap">
+              <svg viewBox="0 0 160 85" class="gauge-svg">
+                <defs>
+                  <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#6366f1" />
+                    <stop offset="60%" stop-color="#8b5cf6" />
+                    <stop offset="100%" stop-color="#10b981" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 15 75 A 65 65 0 0 1 145 75"
+                  fill="none"
+                  class="track-arc"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M 15 75 A 65 65 0 0 1 145 75"
+                  fill="none"
+                  stroke="url(#gaugeGradient)"
+                  stroke-width="12"
+                  stroke-dasharray="204.2"
+                  stroke-dashoffset="20"
+                  stroke-linecap="round"
+                  class="active-arc"
+                />
+                <circle cx="50" cy="27" r="4.5" fill="#f59e0b" />
+              </svg>
             </div>
-            <div class="qr-cube-icon">
-              <div class="qr-cube-dot active"></div><div class="qr-cube-dot"></div>
-              <div class="qr-cube-dot"></div><div class="qr-cube-dot active"></div>
+
+            <!-- Giant Stat -->
+            <div class="giant-stat text-brand">
+              8,650
+              <span class="giant-unit">docs/s</span>
+            </div>
+
+            <div class="speed-delta-badge">
+              <span class="delta-arrow">▲</span>
+              <span>+144% vs JasperReports 7</span>
             </div>
           </div>
 
-          <!-- Giant Number -->
-          <div class="giant-stat text-emerald">
-            9.8x
-            <span class="giant-unit">FASTER</span>
-          </div>
-
-          <div class="compare-row-pill">
-            <span class="pill-openpdf">Open PDF: <strong>1.22 ms</strong></span>
-            <span class="pill-divider">vs</span>
-            <span class="pill-jasper">Jasper: 11.88 ms</span>
-          </div>
-        </div>
-
-        <div class="metrics-pill-row">
-          <div class="mini-chip highlight-chip">
-            <span><strong>9.9x less RAM</strong> (928 KB vs 9.1 MB)</span>
-          </div>
-          <div class="mini-chip muted-chip">
-            <span>3.8 KB PDF size</span>
-          </div>
-        </div>
-
-        <p class="slide-caption">
-          <strong>Direct PDF vector operators</strong> eliminate heavy AWT BufferedImage rasters.
-        </p>
-      </div>
-
-      <!-- 3. Cold Start & Serverless Readiness -->
-      <div v-show="currentSlide === 2" class="slide-pane">
-        <div class="slide-badge">⏱️ Cold Start & Serverless</div>
-
-        <div class="stat-center-block">
-          <div class="timer-dial-wrap">
-            <svg viewBox="0 0 160 85" class="gauge-svg">
-              <defs>
-                <linearGradient id="coldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#10b981" />
-                  <stop offset="100%" stop-color="#6366f1" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 15 75 A 65 65 0 0 1 145 75"
-                fill="none"
-                class="track-arc"
-                stroke-width="12"
-                stroke-linecap="round"
-              />
-              <path
-                d="M 15 75 A 65 65 0 0 1 145 75"
-                fill="none"
-                stroke="url(#coldGradient)"
-                stroke-width="12"
-                stroke-dasharray="204.2"
-                stroke-dashoffset="170"
-                stroke-linecap="round"
-                class="active-arc"
-              />
-            </svg>
-          </div>
-
-          <!-- Giant Number -->
-          <div class="giant-stat text-indigo">
-            195
-            <span class="giant-unit">ms</span>
-          </div>
-
-          <div class="speed-delta-badge delta-indigo">
-            <span class="delta-arrow">▲</span>
-            <span>4.3x Faster First Document</span>
-          </div>
-        </div>
-
-        <div class="metrics-pill-row">
-          <div class="mini-chip highlight-chip">
-            <span>Open PDF: <strong>195 ms</strong></span>
-          </div>
-          <div class="mini-chip muted-chip">
-            <span>Jasper 7: 742 ms</span>
-          </div>
-          <div class="mini-chip alert-chip">
-            <span>Jasper 6: 1,166 ms</span>
-          </div>
-        </div>
-
-        <p class="slide-caption">
-          <strong>Instant JSON parsing</strong> without XML compilation for AWS Lambda & Cloud Run.
-        </p>
-      </div>
-
-      <!-- 4. Memory Allocation & Dependency Footprint -->
-      <div v-show="currentSlide === 3" class="slide-pane">
-        <div class="slide-badge">💾 Cloud FinOps & Footprint</div>
-
-        <div class="stat-center-block">
-          <!-- Giant Number -->
-          <div class="giant-stat text-emerald">
-            -60%
-            <span class="giant-unit">CLOUD BILL</span>
-          </div>
-
-          <div class="finops-duo-row">
-            <div class="duo-item">
-              <span class="duo-val">4.0 MB</span>
-              <span class="duo-lbl">6.3x lighter JAR</span>
+          <div class="metrics-pill-row">
+            <div class="mini-chip highlight-chip">
+              <span class="chip-dot"></span>
+              <span>Open PDF: <strong>8,650/s</strong></span>
             </div>
-            <div class="duo-sep"></div>
-            <div class="duo-item">
-              <span class="duo-val">128 MB</span>
-              <span class="duo-lbl">25% lower RAM</span>
+            <div class="mini-chip muted-chip">
+              <span>Jasper 7: 3,539/s</span>
             </div>
           </div>
+
+          <p class="slide-caption">
+            <strong>100% lock-free parallel execution</strong> in container stress tests.
+          </p>
         </div>
 
-        <div class="metrics-pill-row">
-          <div class="mini-chip highlight-chip">
-            <span>Zero Apache Commons</span>
+        <!-- 2. Complex Documents with Native Barcodes -->
+        <div v-else-if="currentSlide === 2" key="slide-2" class="graphic-pane metric-pane">
+          <div class="slide-badge">🏷️ Native Barcodes & QR</div>
+
+          <div class="stat-center-block">
+            <!-- Mini Code Visual -->
+            <div class="code-visual-header">
+              <div class="code-bars-icon">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <div class="qr-cube-icon">
+                <div class="qr-cube-dot active"></div><div class="qr-cube-dot"></div>
+                <div class="qr-cube-dot"></div><div class="qr-cube-dot active"></div>
+              </div>
+            </div>
+
+            <!-- Giant Stat -->
+            <div class="giant-stat text-emerald">
+              1.22
+              <span class="giant-unit">ms</span>
+            </div>
+
+            <div class="speed-delta-badge delta-emerald">
+              <span class="delta-arrow">⚡</span>
+              <span>9.8x Faster Document Generation</span>
+            </div>
           </div>
-          <div class="mini-chip highlight-chip">
-            <span>Zero ECJ Compiler</span>
+
+          <div class="metrics-pill-row">
+            <div class="mini-chip highlight-chip">
+              <span><strong>9.9x less RAM</strong> (928 KB vs 9.1 MB)</span>
+            </div>
+            <div class="mini-chip muted-chip">
+              <span>Jasper 7: 11.88 ms</span>
+            </div>
           </div>
+
+          <p class="slide-caption">
+            <strong>Direct PDF vector operators</strong> eliminate heavy AWT BufferedImage rasters.
+          </p>
         </div>
 
-        <p class="slide-caption">
-          Runs comfortably in <strong>512MB / 1GB containers</strong> without OOM GC thrashing.
-        </p>
-      </div>
+        <!-- 3. Cold Start & Serverless Readiness -->
+        <div v-else-if="currentSlide === 3" key="slide-3" class="graphic-pane metric-pane">
+          <div class="slide-badge">⏱️ Cold Start & Serverless</div>
 
-      <!-- 5. Studio & Ecosystem (Logo with Badges) -->
-      <div v-show="currentSlide === 4" class="slide-pane logo-pane">
-        <div class="logo-center-wrap">
-          <img 
-            :src="withBase('/icon.png')" 
-            alt="Open PDF Generator"
-            class="hero-logo-img"
-          />
+          <div class="stat-center-block">
+            <div class="timer-dial-wrap">
+              <svg viewBox="0 0 160 85" class="gauge-svg">
+                <defs>
+                  <linearGradient id="coldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#10b981" />
+                    <stop offset="100%" stop-color="#6366f1" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 15 75 A 65 65 0 0 1 145 75"
+                  fill="none"
+                  class="track-arc"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M 15 75 A 65 65 0 0 1 145 75"
+                  fill="none"
+                  stroke="url(#coldGradient)"
+                  stroke-width="12"
+                  stroke-dasharray="204.2"
+                  stroke-dashoffset="170"
+                  stroke-linecap="round"
+                  class="active-arc"
+                />
+              </svg>
+            </div>
 
-          <!-- Floating Badges -->
-          <div class="floating-badge badge-tr">
-            <span>⚡ 9.8x Barcodes</span>
+            <!-- Giant Stat -->
+            <div class="giant-stat text-indigo">
+              195
+              <span class="giant-unit">ms</span>
+            </div>
+
+            <div class="speed-delta-badge delta-indigo">
+              <span class="delta-arrow">▲</span>
+              <span>4.3x Faster First Document</span>
+            </div>
           </div>
-          <div class="floating-badge badge-bl">
-            <span>🚀 195ms Boot</span>
+
+          <div class="metrics-pill-row">
+            <div class="mini-chip highlight-chip">
+              <span>Open PDF: <strong>195 ms</strong></span>
+            </div>
+            <div class="mini-chip muted-chip">
+              <span>Jasper 7: 742 ms</span>
+            </div>
+            <div class="mini-chip alert-chip">
+              <span>Jasper 6: 1,166 ms</span>
+            </div>
           </div>
-          <div class="floating-badge badge-br">
-            <span>⭐ LGPL-3.0 Free</span>
-          </div>
+
+          <p class="slide-caption">
+            <strong>Instant JSON parsing</strong> without XML compilation for AWS Lambda & Cloud Run.
+          </p>
         </div>
 
-        <p class="slide-caption logo-caption">
-          <strong>Open PDF Studio</strong> & Engine: Modern JSON-first PDF ecosystem.
-        </p>
-      </div>
+        <!-- 4. Memory Allocation & Dependency Footprint -->
+        <div v-else-if="currentSlide === 4" key="slide-4" class="graphic-pane metric-pane">
+          <div class="slide-badge">💾 Cloud FinOps & Footprint</div>
 
-    </div>
+          <div class="stat-center-block">
+            <!-- Giant Stat -->
+            <div class="giant-stat text-emerald">
+              -60%
+              <span class="giant-unit">CLOUD BILL</span>
+            </div>
 
-    <!-- Navigation Dots and Arrow Bar -->
-    <div class="slider-controls-bar">
-      <button class="arrow-btn" @click.stop="prevSlide" title="Previous Slide">‹</button>
-      
-      <div class="dots-track">
-        <button 
-          v-for="i in totalSlides"
-          :key="i"
-          class="dot-pill"
-          :class="{ active: currentSlide === (i - 1) }"
-          @click.stop="setSlide(i - 1)"
-          :title="'Slide ' + i"
-        ></button>
-      </div>
+            <div class="finops-duo-row">
+              <div class="duo-item">
+                <span class="duo-val">4.0 MB</span>
+                <span class="duo-lbl">6.3x lighter JAR</span>
+              </div>
+              <div class="duo-sep"></div>
+              <div class="duo-item">
+                <span class="duo-val">128 MB</span>
+                <span class="duo-lbl">25% lower RAM</span>
+              </div>
+            </div>
+          </div>
 
-      <button class="arrow-btn" @click.stop="nextSlide" title="Next Slide">›</button>
+          <div class="metrics-pill-row">
+            <div class="mini-chip highlight-chip">
+              <span>Zero Apache Commons</span>
+            </div>
+            <div class="mini-chip highlight-chip">
+              <span>Zero ECJ Compiler</span>
+            </div>
+          </div>
+
+          <p class="slide-caption">
+            Runs comfortably in <strong>512MB / 1GB containers</strong> without OOM GC thrashing.
+          </p>
+        </div>
+      </transition>
+
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Main Card Frame (Theme-Adaptive) */
-.hero-slider-frame {
+/* Main Viewport: Clean, spacious, NO square box */
+.hero-graphic-viewport {
   position: relative;
   width: 100%;
-  max-width: 360px;
-  aspect-ratio: 1 / 1;
-  border-radius: 28px;
-  background: var(--vp-c-bg-alt);
-  border: 1px solid var(--vp-c-border);
-  box-shadow: 0 16px 40px -10px rgba(99, 102, 241, 0.12),
-              0 4px 16px rgba(0, 0, 0, 0.04);
+  max-width: 440px;
+  min-height: 340px;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
+  align-items: center;
+  justify-content: center;
   user-select: none;
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   margin: 0 auto;
-}
-
-:deep(.dark) .hero-slider-frame,
-.dark .hero-slider-frame {
-  background: #0f172a;
-  border-color: #1e293b;
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.hero-slider-frame:hover {
-  border-color: var(--vp-c-brand-1);
-  transform: translateY(-2px);
 }
 
 /* Ambient Radial Glow */
 .ambient-glow {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
   border-radius: 50%;
+  transform: translate(-50%, -50%);
   pointer-events: none;
-  transition: all 0.8s ease;
+  filter: blur(65px);
   z-index: 0;
-  opacity: 0.6;
+  opacity: 0.4;
+  transition: all 0.8s ease;
 }
 
 .dark .ambient-glow {
-  opacity: 1;
+  opacity: 0.6;
 }
 
 .glow-slide-0 {
-  background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.18) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.45) 0%, rgba(168, 85, 247, 0.25) 60%, transparent 80%);
 }
 
 .glow-slide-1 {
-  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.18) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(16, 185, 129, 0.25) 60%, transparent 80%);
 }
 
 .glow-slide-2 {
-  background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.18) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.45) 0%, rgba(99, 102, 241, 0.25) 60%, transparent 80%);
 }
 
 .glow-slide-3 {
-  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.18) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(59, 130, 246, 0.25) 60%, transparent 80%);
 }
 
 .glow-slide-4 {
-  background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.22) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.5) 0%, rgba(139, 92, 246, 0.25) 60%, transparent 80%);
 }
 
-/* Slide Viewport */
-.slides-viewport {
+/* Slides Content Container */
+.slides-content {
   position: relative;
   z-index: 1;
-  flex: 1;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px 20px 10px 20px;
 }
 
-.slide-pane {
+/* Graphic Pane */
+.graphic-pane {
   width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   text-align: center;
-  animation: fadeIn 0.35s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+/* Slide 0: Logo Pane (Original Hero Experience) */
+.logo-pane {
+  padding: 10px;
 }
 
-/* Top Pill Badge */
+.hero-logo-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-main-logo {
+  width: 270px;
+  height: 270px;
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 35px rgba(99, 102, 241, 0.28));
+  animation: floatLogo 5s ease-in-out infinite;
+}
+
+@keyframes floatLogo {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.02);
+  }
+}
+
+/* Slide Badge */
 .slide-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--vp-c-brand-1);
   background: var(--vp-c-brand-soft);
   border: 1px solid rgba(99, 102, 241, 0.25);
-  padding: 3px 10px;
   border-radius: 9999px;
-  font-family: var(--vp-font-family-mono);
+  margin-bottom: 14px;
 }
 
-/* Center Block with Giant Number */
+/* Center Stat Block */
 .stat-center-block {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  margin: auto 0;
+  margin-bottom: 16px;
 }
 
-/* SVG Gauge */
-.gauge-arc-wrap, .timer-dial-wrap {
-  width: 100%;
-  max-width: 180px;
-  margin-bottom: -18px;
+/* SVG Gauges */
+.gauge-arc-wrap,
+.timer-dial-wrap {
+  width: 140px;
+  height: 72px;
+  margin-bottom: -10px;
 }
 
 .gauge-svg {
   width: 100%;
-  height: auto;
+  height: 100%;
   overflow: visible;
 }
 
 .track-arc {
-  stroke: var(--vp-c-divider);
+  stroke: var(--vp-c-border);
+  opacity: 0.5;
 }
 
-:deep(.dark) .track-arc,
 .dark .track-arc {
-  stroke: rgba(255, 255, 255, 0.08);
+  stroke: #334155;
+  opacity: 0.8;
 }
 
 .active-arc {
-  animation: arcDash 1s ease-out;
+  filter: drop-shadow(0 2px 6px rgba(99, 102, 241, 0.4));
 }
 
-@keyframes arcDash {
-  from { stroke-dashoffset: 204.2; }
-  to { stroke-dashoffset: 20; }
-}
-
-/* Giant Number Styling */
+/* High-Impact Giant Number */
 .giant-stat {
-  font-size: 46px;
+  font-size: 54px;
   font-weight: 900;
-  font-family: var(--vp-font-family-mono);
-  line-height: 1;
-  letter-spacing: -0.03em;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-family: var(--vp-font-family-base);
   display: flex;
   align-items: baseline;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .giant-unit {
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--vp-c-text-2);
+  letter-spacing: 0.02em;
+  opacity: 0.85;
 }
 
 .text-brand {
-  color: var(--vp-c-brand-1);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #10b981 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .text-emerald {
-  color: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #34d399 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .text-indigo {
-  color: #6366f1;
-}
-
-:deep(.dark) .text-indigo,
-.dark .text-indigo {
-  color: #818cf8;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Delta Badge */
 .speed-delta-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #059669;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 2px 8px;
-  border-radius: 9999px;
+  gap: 5px;
   margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #047857;
+  background: #d1fae5;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-:deep(.dark) .speed-delta-badge,
 .dark .speed-delta-badge {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.speed-delta-badge.delta-emerald {
+  color: #047857;
+  background: #d1fae5;
+}
+.dark .speed-delta-badge.delta-emerald {
   color: #34d399;
   background: rgba(16, 185, 129, 0.15);
 }
 
-.delta-indigo {
-  color: var(--vp-c-brand-1) !important;
-  background: var(--vp-c-brand-soft) !important;
+.speed-delta-badge.delta-indigo {
+  color: #4338ca;
+  background: #e0e7ff;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+.dark .speed-delta-badge.delta-indigo {
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.15);
 }
 
-.delta-arrow {
-  font-size: 10px;
-}
-
-/* Code Visual Header */
+/* Barcode visual header */
 .code-visual-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 16px;
   margin-bottom: 6px;
 }
 
 .code-bars-icon {
-  display: flex;
-  align-items: center;
+  display: inline-flex;
   gap: 2.5px;
-  height: 20px;
+  align-items: flex-end;
+  height: 24px;
 }
 
 .code-bars-icon span {
   width: 2.5px;
-  height: 100%;
   background: var(--vp-c-brand-1);
   border-radius: 1px;
 }
 
-.code-bars-icon span:nth-child(2),
-.code-bars-icon span:nth-child(4) {
-  width: 4px;
-}
+.code-bars-icon span:nth-child(1) { height: 22px; width: 3.5px; }
+.code-bars-icon span:nth-child(2) { height: 16px; }
+.code-bars-icon span:nth-child(3) { height: 24px; width: 4.5px; }
+.code-bars-icon span:nth-child(4) { height: 18px; }
+.code-bars-icon span:nth-child(5) { height: 24px; width: 3px; }
+.code-bars-icon span:nth-child(6) { height: 20px; width: 4px; }
 
 .qr-cube-icon {
   display: grid;
-  grid-template-columns: repeat(2, 7px);
-  gap: 2px;
+  grid-template-columns: repeat(2, 8px);
+  gap: 3px;
 }
 
 .qr-cube-dot {
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--vp-c-brand-1);
-  border-radius: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--vp-c-border);
 }
 
 .qr-cube-dot.active {
   background: #10b981;
-  border-color: #10b981;
-}
-
-/* Compare Row Pill */
-.compare-row-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-family: var(--vp-font-family-mono);
-  background: var(--vp-c-bg-soft);
-  padding: 3px 10px;
-  border-radius: 9999px;
-  border: 1px solid var(--vp-c-border);
-  margin-top: 6px;
-}
-
-.pill-openpdf strong {
-  color: #10b981;
-}
-
-.pill-divider {
-  color: var(--vp-c-text-3);
-  font-size: 9px;
-}
-
-.pill-jasper {
-  color: var(--vp-c-text-3);
-  text-decoration: line-through;
 }
 
 /* FinOps Duo Row */
@@ -587,7 +541,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .duo-item {
@@ -597,205 +551,94 @@ onUnmounted(() => {
 }
 
 .duo-val {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
-  font-family: var(--vp-font-family-mono);
   color: var(--vp-c-text-1);
 }
 
 .duo-lbl {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 11px;
   color: var(--vp-c-text-2);
 }
 
 .duo-sep {
   width: 1px;
-  height: 22px;
+  height: 24px;
   background: var(--vp-c-border);
 }
 
-/* Chips Row */
+/* Comparison Pills Row */
 .metrics-pill-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 6px;
+  margin-bottom: 12px;
 }
 
 .mini-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-family: var(--vp-font-family-mono);
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-border);
-  color: var(--vp-c-text-2);
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.3;
 }
 
 .highlight-chip {
   background: var(--vp-c-brand-soft);
-  border-color: rgba(99, 102, 241, 0.25);
-  color: var(--vp-c-text-1);
+  color: var(--vp-c-brand-1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  font-weight: 600;
 }
 
-.highlight-chip strong {
-  color: var(--vp-c-brand-1);
+.muted-chip {
+  background: var(--vp-c-bg-elv);
+  color: var(--vp-c-text-2);
+  border: 1px solid var(--vp-c-border);
+}
+
+.alert-chip {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .chip-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #10b981;
 }
 
-.muted-chip {
-  color: var(--vp-c-text-3);
-}
-
-.alert-chip {
-  background: rgba(244, 63, 94, 0.08);
-  border-color: rgba(244, 63, 94, 0.2);
-  color: #e11d48;
-}
-
-:deep(.dark) .alert-chip,
-.dark .alert-chip {
-  color: #fca5a5;
-  background: rgba(244, 63, 94, 0.15);
-}
-
-/* Caption */
+/* Slide Caption */
 .slide-caption {
-  margin: 6px 0 0 0 !important;
-  font-size: 11.5px !important;
-  color: var(--vp-c-text-2) !important;
-  line-height: 1.4 !important;
+  font-size: 12.5px;
+  color: var(--vp-c-text-2);
+  line-height: 1.4;
+  max-width: 340px;
+  margin: 0 auto;
 }
 
 .slide-caption strong {
   color: var(--vp-c-text-1);
 }
 
-/* Logo Pane */
-.logo-pane {
-  justify-content: center;
-  position: relative;
+/* Transitions */
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.logo-center-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 190px;
-  height: 190px;
+.fade-scale-enter-from {
+  opacity: 0;
+  transform: scale(0.96);
 }
 
-.hero-logo-img {
-  width: 140px;
-  height: 140px;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 25px rgba(99, 102, 241, 0.35));
-}
-
-.floating-badge {
-  position: absolute;
-  padding: 4px 9px;
-  border-radius: 9999px;
-  font-size: 10px;
-  font-weight: 700;
-  backdrop-filter: blur(10px);
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-  border: 1px solid var(--vp-c-border);
-}
-
-.badge-tr {
-  top: 10px;
-  right: -15px;
-  background: var(--vp-c-bg-soft);
-  color: var(--vp-c-brand-1);
-}
-
-.badge-bl {
-  bottom: 12px;
-  left: -20px;
-  background: var(--vp-c-bg-soft);
-  color: #10b981;
-}
-
-.badge-br {
-  bottom: -4px;
-  right: -5px;
-  background: var(--vp-c-bg-soft);
-  color: #f59e0b;
-}
-
-.logo-caption {
-  margin-top: 10px !important;
-}
-
-/* Controls Bar */
-.slider-controls-bar {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
-  background: var(--vp-c-bg-soft);
-  border-top: 1px solid var(--vp-c-border);
-}
-
-.arrow-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
-  background: var(--vp-c-bg);
-  border: 1px solid var(--vp-c-border);
-  color: var(--vp-c-text-2);
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  line-height: 1;
-  transition: all 0.2s ease;
-}
-
-.arrow-btn:hover {
-  background: var(--vp-c-brand-1);
-  color: #ffffff;
-  border-color: var(--vp-c-brand-1);
-}
-
-.dots-track {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.dot-pill {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: var(--vp-c-divider);
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.25s ease;
-}
-
-.dot-pill.active {
-  width: 18px;
-  background: var(--vp-c-brand-1);
-  box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(1.04);
 }
 </style>
