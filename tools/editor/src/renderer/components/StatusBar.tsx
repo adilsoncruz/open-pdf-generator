@@ -1,8 +1,9 @@
-import React from 'react'
 import { useTemplateStore } from '../store/templateStore'
 import { useUIStore } from '../store/uiStore'
+import { useTranslation } from '../i18n'
 
 export function StatusBar() {
+  const { t } = useTranslation()
   const { 
     template,
     undo,
@@ -47,13 +48,13 @@ export function StatusBar() {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 font-medium text-slate-300">
           <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>
-          <span>Página 1 de 1</span>
+          <span>{t.preview.page} 1 {t.preview.of} 1</span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400 font-normal">{pageSize}</span>
         </div>
 
         <div className="text-slate-500 text-[11px]">
-          {elementsCount} {elementsCount === 1 ? 'elemento' : 'elementos'}
+          {elementsCount} {t.sidebar.elementsTitle.toLowerCase()}
         </div>
       </div>
 
@@ -64,7 +65,7 @@ export function StatusBar() {
           onClick={undo}
           disabled={!canUndoActive}
           className="p-1 rounded hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer disabled:cursor-not-allowed"
-          title="Desfazer (Ctrl+Z / Cmd+Z)"
+          title={`${t.menu.undo} (Ctrl+Z / Cmd+Z)`}
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a5 5 0 015 5v2M3 10l6 6m-6-6l6-6" />
@@ -76,7 +77,7 @@ export function StatusBar() {
           onClick={redo}
           disabled={!canRedoActive}
           className="p-1 rounded hover:bg-slate-800 text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer disabled:cursor-not-allowed"
-          title="Refazer (Ctrl+Y / Cmd+Shift+Z)"
+          title={`${t.menu.redo} (Ctrl+Y / Cmd+Shift+Z)`}
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a5 5 0 00-5 5v2m15-7l-6-6m6 6l-6 6" />
@@ -89,7 +90,7 @@ export function StatusBar() {
         <button
           onClick={() => setZoom(Math.max(25, zoom - 10))}
           className="px-1.5 py-0.5 text-xs text-slate-400 hover:text-white hover:bg-slate-800 rounded transition font-medium"
-          title="Diminuir Zoom"
+          title={t.preview.zoomOut}
         >
           -
         </button>
@@ -103,7 +104,7 @@ export function StatusBar() {
         <button
           onClick={() => setZoom(Math.min(300, zoom + 10))}
           className="px-1.5 py-0.5 text-xs text-slate-400 hover:text-white hover:bg-slate-800 rounded transition font-medium"
-          title="Aumentar Zoom"
+          title={t.preview.zoomIn}
         >
           +
         </button>

@@ -3,6 +3,7 @@ import { useTemplateStore, type Element, type ElementGroup, type ElementLocation
 import { Icon, Input, Select, Checkbox, Divider, ColorInput, Button, TextArea } from './atoms'
 import type { IconName } from './atoms/Icon/Icon.types'
 import { NumberField, ColorField, PropertyGroup, PropertyRow, TabBar, IconButton } from './molecules'
+import { useTranslation } from '../i18n'
 
 /**
  * Reusable panel header component with pin button
@@ -30,6 +31,7 @@ interface ElementInspectorProps {
 }
 
 function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentName }: ElementInspectorProps) {
+  const { t } = useTranslation()
   const [tableTab, setTableTab] = useState<'general' | 'columns' | 'styles'>('general')
   const [localId, setLocalId] = useState(element.id || '')
 
@@ -123,7 +125,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
         <div className="flex items-center justify-between gap-2">
           <div className="relative min-w-0 flex-1">
             <span className="text-xs font-semibold text-slate-200 tracking-wide block">
-              Properties Panel
+              {t.properties.title}
             </span>
             <span className="text-[10px] text-slate-400 font-mono truncate block" title={element.id}>
               #{element.id}
@@ -147,7 +149,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
           }`}
         >
-          Geral
+          {t.properties.generalTab}
         </button>
         <button
           type="button"
@@ -158,7 +160,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
           }`}
         >
-          <span>Colunas</span>
+          <span>{t.properties.columnsTab}</span>
           <span className="text-[10px] px-1 py-0.5 rounded bg-slate-800 font-mono text-slate-300">
             {columns.length}
           </span>
@@ -172,7 +174,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
           }`}
         >
-          Estilos
+          {t.properties.stylesTab}
         </button>
       </div>
 
@@ -208,7 +210,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
             {/* Transform */}
             <div>
-              <div className="text-xs font-semibold text-slate-200 mb-2">Transform</div>
+              <div className="text-xs font-semibold text-slate-200 mb-2">{t.properties.transform}</div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {/* X */}
                 <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
@@ -266,7 +268,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
               {/* Botão Largura 100% */}
               <div className="mt-2 flex items-center justify-between bg-slate-950/50 border border-slate-800 rounded-lg px-2.5 py-1.5">
-                <span className="text-xs text-slate-300">Largura 100% (ajustar ao container)</span>
+                <span className="text-xs text-slate-300">{t.properties.width100}</span>
                 <input
                   type="checkbox"
                   checked={element.width === '100%'}
@@ -284,9 +286,9 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
               {/* Position Mode (Absolute / Relative) */}
               <div className="mt-2.5 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-slate-400 font-medium">Position Mode</span>
+                  <span className="text-[10px] text-slate-400 font-medium">{t.properties.position}</span>
                   <span className="text-[10px] font-mono text-slate-500">
-                    {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' ? 'Relativo (fluxo)' : 'Absoluto (fixo)'}
+                    {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' ? t.properties.relativeFlow : t.properties.absoluteFixed}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 bg-slate-950 border border-slate-800 rounded-lg p-0.5 gap-1">
@@ -301,7 +303,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                     }`}
                   >
-                    Absolute
+                    {t.properties.absolute}
                   </button>
                   <button
                     type="button"
@@ -318,13 +320,13 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                     }`}
                   >
-                    Relative
+                    {t.properties.relative}
                   </button>
                 </div>
 
                 {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' && (
                   <div className={`flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 mt-1.5 ${element.height === '100%' ? 'opacity-50' : ''}`}>
-                    <span className="text-slate-400 text-xs">Offset Y</span>
+                    <span className="text-slate-400 text-xs">{t.properties.offsetY}</span>
                     <div className="flex items-center gap-1">
                       <input
                         type="number"
@@ -342,7 +344,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
             {/* Data Binding */}
             <div>
-              <div className="text-xs font-semibold text-slate-200 mb-2">Data Binding (Lista)</div>
+              <div className="text-xs font-semibold text-slate-200 mb-2">{t.properties.dataBindingList}</div>
               <div className="space-y-2">
                 <div>
                   <div className="relative flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
@@ -360,17 +362,17 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                     </div>
                   </div>
                   <span className="text-[10px] text-slate-500 mt-1 block">
-                    Caminho para o array de dados no JSON
+                    {t.properties.dataBindingListHelp}
                   </span>
                 </div>
 
                 <div>
-                  <label className="text-[11px] text-slate-400 block mb-1">Mensagem Lista Vazia</label>
+                  <label className="text-[11px] text-slate-400 block mb-1">{t.properties.emptyMessage}</label>
                   <input
                     type="text"
                     value={(element.emptyMessage as string) || ''}
                     onChange={(e) => onUpdate('emptyMessage', e.target.value)}
-                    placeholder="Ex: Nenhum registro encontrado"
+                    placeholder={t.properties.emptyMessagePlaceholder}
                     className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -379,10 +381,10 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
             {/* Comportamento de Cabeçalho */}
             <div>
-              <div className="text-xs font-semibold text-slate-200 mb-2">Comportamento do Cabeçalho</div>
+              <div className="text-xs font-semibold text-slate-200 mb-2">{t.properties.headerBehavior}</div>
               <div className="space-y-2">
                 <label className="flex items-center justify-between bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2 cursor-pointer hover:border-slate-700">
-                  <span className="text-xs text-slate-300">Exibir cabeçalho</span>
+                  <span className="text-xs text-slate-300">{t.properties.showHeader}</span>
                   <input
                     type="checkbox"
                     checked={element.showHeader !== false}
@@ -392,7 +394,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                 </label>
 
                 <label className="flex items-center justify-between bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2 cursor-pointer hover:border-slate-700">
-                  <span className="text-xs text-slate-300">Repetir cabeçalho nas páginas</span>
+                  <span className="text-xs text-slate-300">{t.properties.repeatHeader}</span>
                   <input
                     type="checkbox"
                     checked={element.headerRepeat !== false}
@@ -405,7 +407,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
             {/* Print Condition */}
             <div>
-              <div className="text-xs font-semibold text-slate-200 mb-2">Condição de Impressão</div>
+              <div className="text-xs font-semibold text-slate-200 mb-2">{t.properties.printCondition}</div>
               <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
                 <input
                   type="text"
@@ -416,7 +418,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                 />
               </div>
               <span className="text-[10px] text-slate-500 mt-1 block">
-                Deixe vazio para imprimir sempre
+                {t.properties.printConditionHelp}
               </span>
             </div>
           </>
@@ -427,7 +429,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
           <div className="space-y-3">
             <div className="flex items-center justify-between pb-1 border-b border-slate-800">
               <span className="text-xs font-semibold text-slate-200">
-                Colunas ({columns.length})
+                {t.properties.columnsTab} ({columns.length})
               </span>
               <button
                 type="button"
@@ -437,13 +439,13 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
-                <span>Nova Coluna</span>
+                <span>{t.properties.newColumn}</span>
               </button>
             </div>
 
             {columns.length === 0 ? (
               <div className="text-center py-6 px-4 bg-slate-950/50 border border-slate-800/80 rounded-xl space-y-2">
-                <p className="text-xs text-slate-400">Nenhuma coluna configurada nesta tabela.</p>
+                <p className="text-xs text-slate-400">{t.properties.noColumns}</p>
                 <button
                   type="button"
                   onClick={addColumn}
@@ -452,7 +454,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
-                  Adicionar Primeira Coluna
+                  {t.properties.addFirstColumn}
                 </button>
               </div>
             ) : (
@@ -482,7 +484,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                         <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
-                            title="Mover para cima"
+                            title={t.properties.moveUp}
                             disabled={index === 0}
                             onClick={() => moveColumn(index, index - 1)}
                             className="p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
@@ -493,7 +495,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                           </button>
                           <button
                             type="button"
-                            title="Mover para baixo"
+                            title={t.properties.moveDown}
                             disabled={index === columns.length - 1}
                             onClick={() => moveColumn(index, index + 1)}
                             className="p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
@@ -504,7 +506,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                           </button>
                           <button
                             type="button"
-                            title="Excluir coluna"
+                            title={t.properties.deleteColumn}
                             onClick={() => removeColumn(index)}
                             className="p-1 rounded text-red-400 hover:text-red-300 hover:bg-red-950/50 ml-0.5"
                           >
@@ -518,7 +520,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                       {/* Header e Field */}
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
-                          <label className="text-[10px] text-slate-400 block mb-1">Título (Header)</label>
+                          <label className="text-[10px] text-slate-400 block mb-1">{t.properties.columnTitle}</label>
                           <input
                             type="text"
                             value={headerTitle}
@@ -528,7 +530,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] text-slate-400 block mb-1">Campo (Field JSON)</label>
+                          <label className="text-[10px] text-slate-400 block mb-1">{t.properties.columnFieldJson}</label>
                           <input
                             type="text"
                             value={fieldName}
@@ -541,7 +543,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
                       {/* Largura */}
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400 text-[11px]">Largura</span>
+                        <span className="text-slate-400 text-[11px]">{t.properties.width}</span>
                         <div className="flex items-center bg-slate-900 border border-slate-800 rounded px-2 py-1 w-28 focus-within:border-indigo-500">
                           <input
                             type="number"
@@ -556,7 +558,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
                       {/* Alinhamento Header */}
                       <div className="space-y-1">
-                        <span className="text-[10px] text-slate-400 block">Alinhamento Cabeçalho</span>
+                        <span className="text-[10px] text-slate-400 block">{t.properties.headerAlignment}</span>
                         <div className="grid grid-cols-3 gap-1 bg-slate-900 p-0.5 rounded border border-slate-800 text-[11px]">
                           {(['left', 'center', 'right'] as const).map((align) => (
                             <button
@@ -569,7 +571,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                                   : 'text-slate-400 hover:text-slate-200'
                               }`}
                             >
-                              {align === 'left' ? 'Esq' : align === 'center' ? 'Centro' : 'Dir'}
+                              {align === 'left' ? t.properties.alignLeftShort : align === 'center' ? t.properties.alignCenterShort : t.properties.alignRightShort}
                             </button>
                           ))}
                         </div>
@@ -577,7 +579,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
                       {/* Alinhamento Conteúdo */}
                       <div className="space-y-1">
-                        <span className="text-[10px] text-slate-400 block">Alinhamento Dados</span>
+                        <span className="text-[10px] text-slate-400 block">{t.properties.cellAlignment}</span>
                         <div className="grid grid-cols-3 gap-1 bg-slate-900 p-0.5 rounded border border-slate-800 text-[11px]">
                           {(['left', 'center', 'right'] as const).map((align) => (
                             <button
@@ -590,7 +592,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                                   : 'text-slate-400 hover:text-slate-200'
                               }`}
                             >
-                              {align === 'left' ? 'Esq' : align === 'center' ? 'Centro' : 'Dir'}
+                              {align === 'left' ? t.properties.alignLeftShort : align === 'center' ? t.properties.alignCenterShort : t.properties.alignRightShort}
                             </button>
                           ))}
                         </div>
@@ -608,11 +610,11 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
           <div className="space-y-4">
             {/* 1. Header Styling */}
             <div>
-              <div className="text-xs font-semibold text-slate-200 mb-2">Cabeçalho (Header)</div>
+              <div className="text-xs font-semibold text-slate-200 mb-2">{t.properties.tableHeader}</div>
               <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-3 space-y-2.5 text-xs">
                 {/* Background */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Cor de Fundo</span>
+                  <span className="text-slate-400">{t.properties.backgroundColor}</span>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -628,14 +630,14 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                         onChange={(e) => onStyleUpdate('headerBackground', e.target.checked ? 'transparent' : '#f0f0f0')}
                         className="rounded border-slate-700 text-indigo-600 bg-slate-900"
                       />
-                      <span>Transp.</span>
+                      <span>{t.properties.transparent}</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Text Color */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Cor do Texto</span>
+                  <span className="text-slate-400">{t.properties.textColor}</span>
                   <input
                     type="color"
                     value={headerColor.startsWith('#') && headerColor.length === 7 ? headerColor : '#000000'}
@@ -646,7 +648,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
                 {/* Font & Size */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-400">Fonte / Tam</span>
+                  <span className="text-slate-400">{t.properties.fontAndSize}</span>
                   <div className="flex items-center gap-1.5">
                     <select
                       value={headerFontFamily}
@@ -672,7 +674,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
                 {/* Padding */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Padding</span>
+                  <span className="text-slate-400">{t.properties.padding}</span>
                   <div className="flex items-center gap-1">
                     <input
                       type="number"
@@ -690,11 +692,11 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
             {/* 2. Células e Linhas (Rows & Cells) */}
             <div>
-              <div className="text-xs font-semibold text-slate-200 mb-2">Células e Linhas</div>
+              <div className="text-xs font-semibold text-slate-200 mb-2">{t.properties.cellsAndRows}</div>
               <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-3 space-y-2.5 text-xs">
                 {/* Background */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Cor de Fundo</span>
+                  <span className="text-slate-400">{t.properties.backgroundColor}</span>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -710,14 +712,14 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                         onChange={(e) => onStyleUpdate('cellBackground', e.target.checked ? 'transparent' : '#ffffff')}
                         className="rounded border-slate-700 text-indigo-600 bg-slate-900"
                       />
-                      <span>Transp.</span>
+                      <span>{t.properties.transparent}</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Text Color */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Cor do Texto</span>
+                  <span className="text-slate-400">{t.properties.textColor}</span>
                   <input
                     type="color"
                     value={cellColor.startsWith('#') && cellColor.length === 7 ? cellColor : '#000000'}
@@ -729,7 +731,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                 {/* Zebra Striping (Linhas Alternadas) */}
                 <div className="pt-1 border-t border-slate-800/80 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Zebra (Linhas Alternadas)</span>
+                    <span className="text-slate-300">{t.properties.zebraStriping}</span>
                     <input
                       type="checkbox"
                       checked={hasAlternateRowBg}
@@ -739,7 +741,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                   </div>
                   {hasAlternateRowBg && (
                     <div className="flex items-center justify-between pl-2">
-                      <span className="text-[11px] text-slate-400">Cor Alternada</span>
+                      <span className="text-[11px] text-slate-400">{t.properties.alternateColor}</span>
                       <input
                         type="color"
                         value={alternateRowBg.startsWith('#') && alternateRowBg.length === 7 ? alternateRowBg : '#f8fafc'}
@@ -752,7 +754,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
                 {/* Font & Size */}
                 <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
-                  <span className="text-slate-400">Fonte / Tam</span>
+                  <span className="text-slate-400">{t.properties.fontAndSize}</span>
                   <div className="flex items-center gap-1.5">
                     <select
                       value={cellFontFamily}
@@ -778,7 +780,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
                 {/* Padding */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Padding</span>
+                  <span className="text-slate-400">{t.properties.padding}</span>
                   <div className="flex items-center gap-1">
                     <input
                       type="number"
@@ -796,17 +798,17 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
             {/* 3. Bordas da Tabela */}
             <div>
-              <div className="text-xs font-semibold text-slate-200 mb-2">Bordas da Tabela</div>
+              <div className="text-xs font-semibold text-slate-200 mb-2">{t.properties.tableBorders}</div>
               <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-3 space-y-2.5 text-xs">
                 {/* Presets de Borda */}
                 <div className="space-y-1">
-                  <span className="text-[10px] text-slate-400 block">Preset de Bordas</span>
+                  <span className="text-[10px] text-slate-400 block">{t.properties.borderPreset}</span>
                   <div className="grid grid-cols-4 gap-1 bg-slate-900 p-0.5 rounded border border-slate-800 text-[11px]">
                     {[
-                      { id: 'all', label: 'Grade' },
-                      { id: 'row', label: 'Linhas' },
-                      { id: 'columns', label: 'Colunas' },
-                      { id: 'none', label: 'Sem' },
+                      { id: 'all', label: t.properties.grid },
+                      { id: 'row', label: t.properties.rows },
+                      { id: 'columns', label: t.properties.columnsPreset },
+                      { id: 'none', label: t.properties.noBorders },
                     ].map((preset) => (
                       <button
                         key={preset.id}
@@ -854,13 +856,13 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
                       borderStyle: borderStyle as any,
                     }}
                   >
-                    {borderType === 'none' ? 'Sem bordas' : `${borderWidth}pt • ${borderStyle}`}
+                    {borderType === 'none' ? t.properties.noBorders : `${borderWidth}pt • ${borderStyle}`}
                   </div>
                 </div>
 
                 {/* Largura da Borda */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Espessura</span>
+                  <span className="text-slate-400">{t.properties.borderThickness}</span>
                   <div className="flex items-center gap-1">
                     <input
                       type="number"
@@ -886,7 +888,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
                 {/* Cor da Borda */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Cor da Borda</span>
+                  <span className="text-slate-400">{t.properties.borderColor}</span>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -916,15 +918,15 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 
                 {/* Estilo da Borda */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Estilo</span>
+                  <span className="text-slate-400">{t.properties.borderStyleLabel}</span>
                   <select
                     value={borderStyle}
                     onChange={(e) => onStyleUpdate('borderStyle', e.target.value)}
                     className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer w-28"
                   >
-                    <option value="solid">━━ Sólido</option>
-                    <option value="dashed">╍╍ Tracejado</option>
-                    <option value="dotted">┈┈ Pontilhado</option>
+                    <option value="solid">{t.properties.solid}</option>
+                    <option value="dashed">{t.properties.dashed}</option>
+                    <option value="dotted">{t.properties.dotted}</option>
                   </select>
                 </div>
               </div>
@@ -937,6 +939,7 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
 }
 
 function StudioSlateElementInspector(props: ElementInspectorProps) {
+  const { t } = useTranslation()
   if (props.element.type === 'table') {
     return <StudioSlateTableInspector {...props} />
   }
@@ -1052,7 +1055,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
           ) : (
             <div className="relative min-w-0 flex-1">
               <span className="text-xs font-semibold text-slate-200 tracking-wide block">
-                Properties Panel
+                {t.properties.title}
               </span>
               <span className="text-[10px] text-slate-400 font-mono truncate block" title={element.id}>
                 #{element.id}
@@ -1114,7 +1117,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         {/* 2. Transform Section */}
         <div>
           <div className="text-xs font-semibold text-slate-200 mb-2">
-            Transform
+            {t.properties.transform}
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             {/* X */}
@@ -1219,9 +1222,9 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
           {element.type !== 'container' && (
             <div className="mt-2.5 space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400 font-medium">Position</span>
+                <span className="text-[10px] text-slate-400 font-medium">{t.properties.position}</span>
                 <span className="text-[10px] font-mono text-slate-500">
-                  {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' ? 'Relativo (fluxo)' : 'Absoluto (fixo)'}
+                  {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' ? t.properties.relativeFlow : t.properties.absoluteFixed}
                 </span>
               </div>
               <div className="grid grid-cols-2 bg-slate-950 border border-slate-800 rounded-lg p-0.5 gap-1">
@@ -1239,7 +1242,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                   }`}
                 >
-                  Absolute
+                  {t.properties.absolute}
                 </button>
                 <button
                   type="button"
@@ -1256,13 +1259,13 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                   }`}
                 >
-                  Relative
+                  {t.properties.relative}
                 </button>
               </div>
 
               {(((element.positionMode || element.position || 'ABSOLUTE') as string).toUpperCase()) === 'RELATIVE' && (
                 <div className={`flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 mt-1.5 ${element.height === '100%' ? 'opacity-50' : ''}`}>
-                  <span className="text-slate-400 text-xs">Offset Y</span>
+                  <span className="text-slate-400 text-xs">{t.properties.offsetY}</span>
                   <div className="flex items-center gap-1">
                     <input
                       type="number"
@@ -1283,7 +1286,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         {isTextElement && (
           <div>
             <div className="text-xs font-semibold text-slate-200 mb-2">
-              Typography
+              {t.properties.typography}
             </div>
             <div className="space-y-2">
               {/* Font Family */}
@@ -1342,9 +1345,9 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                     }}
                     className="w-full appearance-none bg-slate-950/70 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none pr-8 cursor-pointer"
                   >
-                    <option value="Regular">Regular</option>
-                    <option value="Bold">Bold</option>
-                    <option value="Italic">Italic</option>
+                    <option value="Regular">{t.properties.regular}</option>
+                    <option value="Bold">{t.properties.bold}</option>
+                    <option value="Italic">{t.properties.italic}</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
                     <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -1357,10 +1360,10 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
               {/* Segmented Control Alignment */}
               <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-1 gap-1">
                 {[
-                  { align: 'left', title: 'Alinhar à Esquerda', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h10M4 18h14" /> },
-                  { align: 'center', title: 'Centralizar', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M7 12h10M5 18h14" /> },
-                  { align: 'right', title: 'Alinhar à Direita', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M10 12h10M6 18h14" /> },
-                  { align: 'justify', title: 'Justificar', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /> },
+                  { align: 'left', title: t.properties.alignLeft, icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h10M4 18h14" /> },
+                  { align: 'center', title: t.properties.alignCenter, icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M7 12h10M5 18h14" /> },
+                  { align: 'right', title: t.properties.alignRight, icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M10 12h10M6 18h14" /> },
+                  { align: 'justify', title: t.properties.alignJustify, icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /> },
                 ].map(({ align, title, icon }) => (
                   <button
                     key={align}
@@ -1384,9 +1387,9 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                 {/* Vertical Align */}
                 <div className="flex flex-1 bg-slate-950 border border-slate-800 rounded-lg p-0.5 gap-0.5">
                   {[
-                    { val: 'top', title: 'Topo', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4h16M7 8h10M9 12h6" /> },
-                    { val: 'center', title: 'Meio', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 12h16M7 7h10M7 17h10" /> },
-                    { val: 'bottom', title: 'Base', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 20h16M7 16h10M9 12h6" /> },
+                    { val: 'top', title: t.properties.alignTop, icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4h16M7 8h10M9 12h6" /> },
+                    { val: 'center', title: t.properties.alignMiddle, icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 12h16M7 7h10M7 17h10" /> },
+                    { val: 'bottom', title: t.properties.alignBottom, icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 20h16M7 16h10M9 12h6" /> },
                   ].map(({ val, title, icon }) => (
                     <button
                       key={val}
@@ -1417,7 +1420,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                         ? 'bg-slate-800 text-indigo-400 border border-slate-700'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                     }`}
-                    title="Sublinhado"
+                    title={t.properties.underline}
                   >
                     U
                   </button>
@@ -1431,7 +1434,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                         ? 'bg-slate-800 text-indigo-400 border border-slate-700'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                     }`}
-                    title="Tachado"
+                    title={t.properties.strikethrough}
                   >
                     S
                   </button>
@@ -1441,7 +1444,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
               {/* Line Wrap (Multiline) & Flow Settings */}
               <div className="bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-300 font-medium">Quebra de Linha (Wrap)</span>
+                  <span className="text-[11px] text-slate-300 font-medium">{t.properties.lineWrap}</span>
                   <input
                     type="checkbox"
                     checked={element.style?.multiline === true}
@@ -1454,7 +1457,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                   <div className="pt-2 border-t border-slate-800/60 space-y-2">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col bg-slate-950/80 border border-slate-800 rounded px-2 py-1 focus-within:border-indigo-500">
-                        <span className="text-[9px] text-slate-500 font-mono">ALTURA LINHA</span>
+                        <span className="text-[9px] text-slate-500 font-mono">{t.properties.lineHeight}</span>
                         <input
                           type="number"
                           step="0.1"
@@ -1466,7 +1469,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                         />
                       </div>
                       <div className="flex flex-col bg-slate-950/80 border border-slate-800 rounded px-2 py-1 focus-within:border-indigo-500">
-                        <span className="text-[9px] text-slate-500 font-mono">RECUO 1ª LINHA</span>
+                        <span className="text-[9px] text-slate-500 font-mono">{t.properties.firstLineIndent}</span>
                         <input
                           type="number"
                           min="0"
@@ -1478,15 +1481,15 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                     </div>
 
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400 text-[10px]">Overflow</span>
+                      <span className="text-slate-400 text-[10px]">{t.properties.overflow}</span>
                       <select
                         value={(element.style?.overflow as string) || 'visible'}
                         onChange={(e) => onStyleUpdate('overflow', e.target.value)}
                         className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
                       >
-                        <option value="visible">Visible</option>
-                        <option value="hidden">Hidden (clip)</option>
-                        <option value="auto">Auto (ajusta altura)</option>
+                        <option value="visible">{t.properties.overflowVisible}</option>
+                        <option value="hidden">{t.properties.overflowHidden}</option>
+                        <option value="auto">{t.properties.overflowAuto}</option>
                       </select>
                     </div>
                   </div>
@@ -1495,10 +1498,10 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
 
               {/* Text Margins / Paddings (Top, Right, Bottom, Left) */}
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1">Margens Internas (pt)</label>
+                <label className="text-[10px] text-slate-400 block mb-1">{t.properties.internalMargins}</label>
                 <div className="grid grid-cols-4 gap-1.5">
                   <div className="flex flex-col bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 focus-within:border-indigo-500">
-                    <span className="text-[9px] text-slate-500 font-mono">TOP</span>
+                    <span className="text-[9px] text-slate-500 font-mono">{t.properties.top}</span>
                     <input
                       type="number"
                       min={0}
@@ -1512,7 +1515,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                     />
                   </div>
                   <div className="flex flex-col bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 focus-within:border-indigo-500">
-                    <span className="text-[9px] text-slate-500 font-mono">RIGHT</span>
+                    <span className="text-[9px] text-slate-500 font-mono">{t.properties.right}</span>
                     <input
                       type="number"
                       min={0}
@@ -1526,7 +1529,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                     />
                   </div>
                   <div className="flex flex-col bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 focus-within:border-indigo-500">
-                    <span className="text-[9px] text-slate-500 font-mono">BOTTOM</span>
+                    <span className="text-[9px] text-slate-500 font-mono">{t.properties.bottom}</span>
                     <input
                       type="number"
                       min={0}
@@ -1540,7 +1543,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                     />
                   </div>
                   <div className="flex flex-col bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 focus-within:border-indigo-500">
-                    <span className="text-[9px] text-slate-500 font-mono">LEFT</span>
+                    <span className="text-[9px] text-slate-500 font-mono">{t.properties.left}</span>
                     <input
                       type="number"
                       min={0}
@@ -1558,20 +1561,20 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
 
               {/* Text Value */}
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1">Conteúdo do Texto</label>
+                <label className="text-[10px] text-slate-400 block mb-1">{t.properties.textContent}</label>
                 <textarea
                   value={(element.value as string) || ''}
                   onChange={(e) => onUpdate('value', e.target.value)}
                   rows={2}
                   className="w-full bg-slate-950/70 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans resize-none"
-                  placeholder="Texto..."
+                  placeholder={t.properties.textPlaceholder}
                 />
               </div>
 
               {/* URL for Link */}
               {element.type === 'link' && (
                 <div>
-                  <label className="text-[10px] text-slate-400 block mb-1">URL de Destino</label>
+                  <label className="text-[10px] text-slate-400 block mb-1">{t.properties.targetUrl}</label>
                   <input
                     type="text"
                     value={(element.url as string) || ''}
@@ -1725,7 +1728,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
 
         {element.type === 'barcode' && (
           <div>
-            <div className="text-xs font-semibold text-slate-200 mb-2">Barcode / QR Settings</div>
+            <div className="text-xs font-semibold text-slate-200 mb-2">{t.properties.barcodeSettings}</div>
             <div className="space-y-2.5">
               <div>
                 <label className="text-[10px] text-slate-400 block mb-1">Formato</label>
@@ -1782,9 +1785,9 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
 
           return (
             <div className="space-y-3">
-              <div className="text-xs font-semibold text-slate-200">Container Settings</div>
+              <div className="text-xs font-semibold text-slate-200">{t.properties.containerSettings}</div>
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1">Nome do Container</label>
+                <label className="text-[10px] text-slate-400 block mb-1">{t.properties.containerName}</label>
                 <input
                   type="text"
                   value={(element.name as string) || ''}
@@ -1856,7 +1859,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         {element.type !== 'page_break' && (
         <div>
           <div className="text-xs font-semibold text-slate-200 mb-2">
-            Appearance
+            {t.properties.appearance}
           </div>
           <div className="space-y-2.5">
             {/* Fill Color Swatch + Hex Input + Transparent toggle */}
@@ -1885,7 +1888,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
               <div className="flex-1 flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 min-w-0">
                 {isFillTransparent ? (
                   <span className="text-slate-500 font-mono text-xs uppercase select-none truncate">
-                    Transparente
+                    {t.properties.transparent}
                   </span>
                 ) : (
                   <>
@@ -1917,14 +1920,14 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                     }}
                     className="rounded border-slate-700 text-indigo-600 bg-slate-900 cursor-pointer"
                   />
-                  <span>Transp.</span>
+                  <span>{t.properties.transparent}</span>
                 </label>
               )}
             </div>
 
             {/* Stroke row */}
             <div className="flex items-center justify-between text-xs gap-2">
-              <span className="text-slate-400 w-14 shrink-0">Stroke</span>
+              <span className="text-slate-400 w-14 shrink-0">{t.properties.stroke}</span>
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
                 <input
                   type="color"
@@ -1949,7 +1952,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
 
             {/* Border row */}
             <div className="flex items-center justify-between text-xs gap-2">
-              <span className="text-slate-400 w-14 shrink-0">Border</span>
+              <span className="text-slate-400 w-14 shrink-0">{t.properties.border}</span>
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
                 <input
                   type="color"
@@ -1962,10 +1965,10 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
                   onChange={(e) => onStyleUpdate('borderStyle', e.target.value)}
                   className="flex-1 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
                 >
-                  <option value="solid">━━ Solido</option>
-                  <option value="dashed">╍╍ Tracejado</option>
-                  <option value="dotted">┈┈ Pontilhado</option>
-                  <option value="none">Nenhum</option>
+                  <option value="solid">{t.properties.solid}</option>
+                  <option value="dashed">{t.properties.dashed}</option>
+                  <option value="dotted">{t.properties.dotted}</option>
+                  <option value="none">{t.properties.none}</option>
                 </select>
               </div>
             </div>
@@ -1973,7 +1976,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
             {/* Corner Radius for Containers / Shapes */}
             {isShapeOrContainer && (
               <div className="flex items-center justify-between text-xs gap-2">
-                <span className="text-slate-400 w-14 shrink-0">Radius</span>
+                <span className="text-slate-400 w-14 shrink-0">{t.properties.radius}</span>
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
                   <input
                     type="number"
@@ -1995,7 +1998,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         {element.type !== 'container' && element.type !== 'static_text' && element.type !== 'line' && element.type !== 'spacer' && element.type !== 'page_break' && (
           <div>
             <div className="text-xs font-semibold text-slate-200 mb-2">
-              Data Binding
+              {t.properties.dataBinding}
             </div>
             <div className="relative flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
               <input
@@ -2021,7 +2024,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
             {element.dataBinding && (
               <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-emerald-400/90 font-mono">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span>Vinculado a dados dinâmicos</span>
+                <span>{t.properties.boundDynamicData}</span>
               </div>
             )}
           </div>
@@ -2030,7 +2033,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         {/* 6. Print Condition Section (Todos os elementos) */}
         <div>
           <div className="text-xs font-semibold text-slate-200 mb-2">
-            Print Condition
+            {t.properties.printCondition}
           </div>
           <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
             <input
@@ -2042,7 +2045,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
             />
           </div>
           <span className="text-[10px] text-slate-500 mt-1 block">
-            Deixe vazio para imprimir sempre
+            {t.properties.printConditionHelp}
           </span>
         </div>
 
@@ -2070,6 +2073,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
 
 export default function PropertiesPanel() {
   // HOOKS DEVEM VIR PRIMEIRO (antes de qualquer return)
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<string>('appearance')
   const watermarkFileInputRef = useRef<HTMLInputElement>(null)
   
@@ -2249,7 +2253,7 @@ export default function PropertiesPanel() {
         <div className="p-3.5 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-            <h2 className="text-sm font-semibold text-slate-200">Propriedades da Página</h2>
+            <h2 className="text-sm font-semibold text-slate-200">{t.sidebar.pageSettings}</h2>
           </div>
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
             {template.pageSettings.size || 'A4'}
@@ -2257,53 +2261,53 @@ export default function PropertiesPanel() {
         </div>
         <div className="p-4 flex-1 overflow-y-auto space-y-4 text-xs text-slate-400">
           <div>
-            <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">Tamanho do Papel</label>
+            <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">{t.sidebar.paperSize}</label>
             <div className="px-3 py-2 bg-slate-950 border border-slate-800 rounded text-slate-200 font-medium">
               {template.pageSettings.size} ({template.pageSettings.orientation || 'portrait'})
             </div>
           </div>
 
           <div>
-            <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">Margens do Documento (pt)</label>
+            <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">{t.sidebar.margins}</label>
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-slate-950 border border-slate-800 p-2 rounded">
-                <span className="text-slate-500 block text-[10px]">Superior:</span>
+                <span className="text-slate-500 block text-[10px]">{t.sidebar.top}:</span>
                 <span className="font-mono text-slate-200">{template.pageSettings.margins.top} pt</span>
               </div>
               <div className="bg-slate-950 border border-slate-800 p-2 rounded">
-                <span className="text-slate-500 block text-[10px]">Inferior:</span>
+                <span className="text-slate-500 block text-[10px]">{t.sidebar.bottom}:</span>
                 <span className="font-mono text-slate-200">{template.pageSettings.margins.bottom} pt</span>
               </div>
               <div className="bg-slate-950 border border-slate-800 p-2 rounded">
-                <span className="text-slate-500 block text-[10px]">Esquerda:</span>
+                <span className="text-slate-500 block text-[10px]">{t.sidebar.left}:</span>
                 <span className="font-mono text-slate-200">{template.pageSettings.margins.left} pt</span>
               </div>
               <div className="bg-slate-950 border border-slate-800 p-2 rounded">
-                <span className="text-slate-500 block text-[10px]">Direita:</span>
+                <span className="text-slate-500 block text-[10px]">{t.sidebar.right}:</span>
                 <span className="font-mono text-slate-200">{template.pageSettings.margins.right} pt</span>
               </div>
             </div>
           </div>
 
           <div className="pt-2 border-t border-slate-800/80">
-            <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">Seções Ativas</label>
+            <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">{t.sidebar.activeSections}</label>
             <div className="space-y-1.5 text-[11px]">
               <div className="flex justify-between items-center px-2 py-1.5 rounded bg-slate-950/60 border border-slate-800/60">
-                <span className="text-slate-300">Cabeçalho (Header)</span>
+                <span className="text-slate-300">{t.sidebar.header}</span>
                 <span className={template.pageSettings.header ? "text-indigo-400 font-medium" : "text-slate-600"}>
-                  {template.pageSettings.header ? `${template.pageSettings.header.height} pt` : 'Inativo'}
+                  {template.pageSettings.header ? `${template.pageSettings.header.height} pt` : t.sidebar.inactive}
                 </span>
               </div>
               <div className="flex justify-between items-center px-2 py-1.5 rounded bg-slate-950/60 border border-slate-800/60">
-                <span className="text-slate-300">Rodapé (Footer)</span>
+                <span className="text-slate-300">{t.sidebar.footer}</span>
                 <span className={template.pageSettings.footer ? "text-indigo-400 font-medium" : "text-slate-600"}>
-                  {template.pageSettings.footer ? `${template.pageSettings.footer.height} pt` : 'Inativo'}
+                  {template.pageSettings.footer ? `${template.pageSettings.footer.height} pt` : t.sidebar.inactive}
                 </span>
               </div>
               <div className="flex justify-between items-center px-2 py-1.5 rounded bg-slate-950/60 border border-slate-800/60">
-                <span className="text-slate-300">Sumário (Summary)</span>
+                <span className="text-slate-300">{t.sidebar.summary}</span>
                 <span className={template.summaryPage ? "text-emerald-400 font-medium" : "text-slate-600"}>
-                  {template.summaryPage ? 'Ativo' : 'Inativo'}
+                  {template.summaryPage ? t.sidebar.active : t.sidebar.inactive}
                 </span>
               </div>
             </div>
@@ -2674,7 +2678,7 @@ export default function PropertiesPanel() {
           </div>
 
           <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[11px] leading-relaxed">
-            Selecione qualquer elemento no canvas ou na árvore para editar dimensões, tipografia, preenchimento e dados dinâmicos.
+            {t.sidebar.useSidebar}
           </div>
         </div>
       </div>
@@ -6003,6 +6007,7 @@ function GroupPropertiesPanel({
   group: ElementGroup; 
   location: 'body' | 'header' | 'footer' | 'bodyBackground' | 'summary' 
 }): JSX.Element {
+  const { t } = useTranslation()
   const { updateGroup, deleteGroup, selectGroup, template } = useTemplateStore()
   
   // Buscar elementos do grupo (incluindo filhos de container)
@@ -6119,10 +6124,10 @@ function GroupPropertiesPanel({
             className="w-full py-1.5 px-3 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer"
           >
             <Icon name="ungroup" size="xs" />
-            <span>Desagrupar Elementos</span>
+            <span>{t.properties.ungroupElements}</span>
           </button>
           <p className="text-[10px] text-slate-500 mt-1.5 text-center">
-            Os elementos permanecerão no documento.
+            {t.properties.ungroupNotice}
           </p>
         </div>
       </div>
@@ -6134,12 +6139,13 @@ function GroupPropertiesPanel({
  * Component to display and edit summary page properties
  */
 function SummaryPropertiesPanel(): JSX.Element {
+  const { t } = useTranslation()
   const { template, updateSummaryPage } = useTemplateStore()
   
   if (!template.summaryPage) {
     return (
       <div className="w-[360px] theme-bg-secondary border-l theme-border p-4">
-        <p className="text-sm theme-text-muted">Summary page does not exist</p>
+        <p className="text-sm theme-text-muted">{t.properties.summaryNotExist}</p>
       </div>
     )
   }
@@ -6147,7 +6153,7 @@ function SummaryPropertiesPanel(): JSX.Element {
   return (
     <div className="w-[360px] theme-bg-secondary border-l theme-border p-4 overflow-y-auto">
       <h2 className="text-sm font-semibold theme-text border-b pb-3 mb-3">
-        Summary Properties
+        {t.properties.summaryProperties}
       </h2>
       
       {/* Info */}
@@ -6163,18 +6169,18 @@ function SummaryPropertiesPanel(): JSX.Element {
             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <span className="text-xs font-semibold text-green-800">
-            Summary Page
+            {t.properties.summaryProperties}
           </span>
         </div>
         <p className="text-xs text-green-700 mt-1">
-          Additional page rendered after the main content
+          {t.properties.summaryDescription}
         </p>
       </div>
       
       {/* Print Condition */}
       <div className="mb-4">
         <label className="block text-xs font-semibold theme-text mb-2">
-          Print Condition
+          {t.properties.printCondition}
         </label>
         <textarea
           value={template.summaryPage.printCondition || ''}
@@ -6184,7 +6190,7 @@ function SummaryPropertiesPanel(): JSX.Element {
           rows={3}
         />
         <p className="text-xs theme-text-muted mt-1">
-          If empty, the summary will always print. Use JavaScript expressions like:
+          {t.properties.printConditionHelp}
         </p>
         <ul className="text-xs theme-text-muted mt-1 ml-4 list-disc">
           <li><code>invoice.showSummary === true</code></li>
@@ -6200,14 +6206,15 @@ function SummaryPropertiesPanel(): JSX.Element {
  * Component to display and edit header properties
  */
 function HeaderPropertiesPanel(): JSX.Element {
+  const { t } = useTranslation()
   const { template, updateHeader } = useTemplateStore()
   
   if (!template.pageSettings.header) {
     return (
       <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
-        <PanelHeader title="Header Properties" />
+        <PanelHeader title={t.properties.headerProperties} />
         <div className="p-4">
-        <p className="text-sm theme-text-muted">Header does not exist</p>
+        <p className="text-sm theme-text-muted">{t.properties.headerNotExist}</p>
         </div>
       </div>
     )
@@ -6215,7 +6222,7 @@ function HeaderPropertiesPanel(): JSX.Element {
   
   return (
     <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
-      <PanelHeader title="Header Properties" subtitle="Top of each page" />
+      <PanelHeader title={t.properties.headerProperties} subtitle={t.properties.headerTopPage} />
       
       <div className="flex-1 overflow-y-auto p-4">
       {/* Info */}
@@ -6236,14 +6243,14 @@ function HeaderPropertiesPanel(): JSX.Element {
           </span>
         </div>
         <p className="text-xs text-blue-700 mt-1">
-          Header rendered at the top of each page
+          {t.properties.headerTopPage}
         </p>
       </div>
       
       {/* Altura */}
       <div className="mb-4">
         <NumberField
-          label="Height (pt)"
+          label={t.properties.heightPt}
           value={template.pageSettings.header.height}
           onValueChange={(value) => updateHeader({ height: value || 0 })}
           min={0}
@@ -6254,7 +6261,7 @@ function HeaderPropertiesPanel(): JSX.Element {
       {/* Print Condition */}
       <div className="mb-4">
         <label className="block text-xs font-semibold theme-text mb-2">
-          Print Condition
+          {t.properties.printCondition}
         </label>
         <TextArea
           value={template.pageSettings.header.printCondition || ''}
@@ -6264,7 +6271,7 @@ function HeaderPropertiesPanel(): JSX.Element {
           className="font-mono"
         />
         <p className="text-xs theme-text-muted mt-1">
-          If empty, the header will always print. Use expressions like:
+          {t.properties.printConditionHelp}
         </p>
         <ul className="text-xs theme-text-muted mt-1 ml-4 list-disc">
           <li><code>pageNumber &gt; 1</code></li>
@@ -6280,14 +6287,15 @@ function HeaderPropertiesPanel(): JSX.Element {
  * Component to display and edit footer properties
  */
 function FooterPropertiesPanel(): JSX.Element {
+  const { t } = useTranslation()
   const { template, updateFooter } = useTemplateStore()
   
   if (!template.pageSettings.footer) {
     return (
       <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
-        <PanelHeader title="Footer Properties" />
+        <PanelHeader title={t.properties.footerProperties} />
         <div className="p-4">
-        <p className="text-sm theme-text-muted">Footer does not exist</p>
+        <p className="text-sm theme-text-muted">{t.properties.footerNotExist}</p>
         </div>
       </div>
     )
@@ -6295,7 +6303,7 @@ function FooterPropertiesPanel(): JSX.Element {
   
   return (
     <div className="w-[360px] theme-bg-secondary border-l theme-border flex flex-col h-full">
-      <PanelHeader title="Footer Properties" subtitle="Bottom of each page" />
+      <PanelHeader title={t.properties.footerProperties} subtitle={t.properties.footerBottomPage} />
       
       <div className="flex-1 overflow-y-auto p-4">
       {/* Info */}
@@ -6307,14 +6315,14 @@ function FooterPropertiesPanel(): JSX.Element {
           </span>
         </div>
         <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">
-          Footer rendered at the bottom of each page
+          {t.properties.footerBottomPage}
         </p>
       </div>
       
       {/* Altura */}
       <div className="mb-4">
         <NumberField
-          label="Height (pt)"
+          label={t.properties.heightPt}
           value={template.pageSettings.footer.height}
           onValueChange={(value) => updateFooter({ height: value || 0 })}
           min={0}
@@ -6325,7 +6333,7 @@ function FooterPropertiesPanel(): JSX.Element {
       {/* Print Condition */}
       <div className="mb-4">
         <label className="block text-xs font-semibold theme-text mb-2">
-          Print Condition
+          {t.properties.printCondition}
         </label>
         <TextArea
           value={template.pageSettings.footer.printCondition || ''}
@@ -6335,7 +6343,7 @@ function FooterPropertiesPanel(): JSX.Element {
           className="font-mono"
         />
         <p className="text-xs theme-text-muted mt-1">
-          If empty, the footer will always print. Use expressions like:
+          {t.properties.printConditionHelp}
         </p>
         <ul className="text-xs theme-text-muted mt-1 ml-4 list-disc">
           <li><code>pageNumber &gt; 1</code></li>
@@ -6351,12 +6359,13 @@ function FooterPropertiesPanel(): JSX.Element {
  * Component to display and edit body background properties
  */
 function BackgroundPropertiesPanel(): JSX.Element {
+  const { t } = useTranslation()
   const { template, updateBodyBackground } = useTemplateStore()
   
   if (!template.pageSettings.bodyBackground) {
     return (
       <div className="w-[360px] theme-bg-secondary border-l theme-border p-4">
-        <p className="text-sm theme-text-muted">Background does not exist</p>
+        <p className="text-sm theme-text-muted">{t.properties.backgroundNotExist}</p>
       </div>
     )
   }
@@ -6364,7 +6373,7 @@ function BackgroundPropertiesPanel(): JSX.Element {
   return (
     <div className="w-[360px] theme-bg-secondary border-l theme-border p-4 overflow-y-auto">
       <h2 className="text-sm font-semibold theme-text border-b pb-3 mb-3">
-        Background Properties
+        {t.properties.backgroundProperties}
       </h2>
       
       {/* Info */}
@@ -6381,18 +6390,18 @@ function BackgroundPropertiesPanel(): JSX.Element {
             <path d="M3 3l18 18" />
           </svg>
           <span className="text-xs font-semibold text-purple-800">
-            Background
+            {t.properties.backgroundProperties}
           </span>
         </div>
         <p className="text-xs text-purple-700 mt-1">
-          Elements rendered behind the main content
+          {t.properties.backgroundDescription}
         </p>
       </div>
       
       {/* Print Condition */}
       <div className="mb-4">
         <label className="block text-xs font-semibold theme-text mb-2">
-          Print Condition
+          {t.properties.printCondition}
         </label>
         <textarea
           value={template.pageSettings.bodyBackground.printCondition || ''}
@@ -6402,7 +6411,7 @@ function BackgroundPropertiesPanel(): JSX.Element {
           rows={3}
         />
         <p className="text-xs theme-text-muted mt-1">
-          If empty, the background will always print. Use expressions like:
+          {t.properties.printConditionHelp}
         </p>
         <ul className="text-xs theme-text-muted mt-1 ml-4 list-disc">
           <li><code>invoice.showBackground === true</code></li>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { EditorPage, HomePage, LoadingPage } from './components/pages'
 import { useTabStore } from './store/tabStore'
 import { useUIStore } from './store/uiStore'
+import { useRecentFilesStore } from './store/recentFilesStore'
 import './index.css'
 
 // Fallback para desenvolvimento no browser sem Electron
@@ -170,6 +171,9 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
     onMenuCopy: () => {},
     onMenuPaste: () => {},
     onMenuDelete: () => {},
+    onMenuSetLanguage: () => {},
+    setLanguage: async () => ({ success: true }),
+    getSystemLocale: async () => 'en',
     checkForUpdates: async () => ({ success: false }),
     downloadUpdate: async () => ({ success: false }),
     installUpdate: () => {},
@@ -189,6 +193,17 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
   }
 }
 
+// Escuta eventos de troca de idioma disparados pelo menu nativo do Electron
+if (typeof window !== 'undefined' && window.electronAPI?.onMenuSetLanguage) {
+  import('./i18n').then(({ useI18nStore, AVAILABLE_LANGUAGES }) => {
+    window.electronAPI.onMenuSetLanguage((lang) => {
+      if (lang in AVAILABLE_LANGUAGES) {
+        useI18nStore.getState().setLanguage(lang as any)
+      }
+    })
+  })
+}
+
 function App() {
   const [screen, setScreen] = useState<'loading' | 'home' | 'editor'>('loading')
   const theme = useUIStore((state) => state.theme)
@@ -202,6 +217,33 @@ function App() {
     return () => window.clearTimeout(timer)
   }, [])
 
+  const openTemplateFromContent = (filePath: string, content: string) => {
+    try {
+      const loadedTemplate = JSON.parse(content)
+      const fileName = filePath.split(/[/\\]/).pop() || 'Opened Template'
+      useRecentFilesStore.getState().addRecentFile(filePath, fileName)
+      useTabStore.getState().addTab({
+        name: fileName,
+        path: filePath,
+        isDirty: false,
+        stateSnapshot: {
+          template: loadedTemplate,
+          currentFilePath: filePath,
+          isDirty: false,
+          history: [loadedTemplate],
+          historyIndex: 0,
+          selectedElementIds: [],
+          selectedElementLocation: 'body',
+          selectedGroupId: null,
+          currentSection: 'body',
+        },
+      })
+      setScreen('editor')
+    } catch {
+      window.alert('Não foi possível abrir este template. Verifique se o arquivo é um JSON válido.')
+    }
+  }
+
   if (screen === 'loading') return <LoadingPage />
   if (screen === 'home') {
     return (
@@ -213,27 +255,15 @@ function App() {
         onOpenFile={async () => {
           const result = await window.electronAPI.openFile()
           if (!result) return
-          try {
-            const loadedTemplate = JSON.parse(result.content)
-            useTabStore.getState().addTab({
-              name: result.path.split(/[/\\]/).pop() || 'Opened Template',
-              path: result.path,
-              isDirty: false,
-              stateSnapshot: {
-                template: loadedTemplate,
-                currentFilePath: result.path,
-                isDirty: false,
-                history: [loadedTemplate],
-                historyIndex: 0,
-                selectedElementIds: [],
-                selectedElementLocation: 'body',
-                selectedGroupId: null,
-                currentSection: 'body',
-              },
-            })
-            setScreen('editor')
-          } catch {
-            window.alert('Não foi possível abrir este template. Verifique se o arquivo é um JSON válido.')
+          openTemplateFromContent(result.path, result.content)
+        }}
+        onOpenRecentFile={async (filePath: string) => {
+          const result = await window.electronAPI.readFile(filePath)
+          if (result.success && result.content) {
+            openTemplateFromContent(filePath, result.content)
+          } else {
+            window.alert('Não foi possível abrir o arquivo recente. Ele pode ter sido movido ou excluído.')
+            useRecentFilesStore.getState().removeRecentFile(filePath)
           }
         }}
       />

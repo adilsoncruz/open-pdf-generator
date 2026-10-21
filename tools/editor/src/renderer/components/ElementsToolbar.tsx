@@ -1,5 +1,6 @@
 import { useTemplateStore } from '../store/templateStore'
 import { Icon, type IconName } from './atoms'
+import { useTranslation } from '../i18n'
 
 const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
   { type: 'text', label: 'Text', icon: 'text' },
@@ -17,7 +18,24 @@ const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
 ]
 
 export default function ElementsToolbar() {
+  const { t } = useTranslation()
   const { currentSection, addElement, template } = useTemplateStore()
+
+  const elementLabels: Record<string, string> = {
+    text: t.elements.text,
+    static_text: t.elements.staticText,
+    image: t.elements.image,
+    table: t.elements.table,
+    rectangle: t.elements.rectangle,
+    line: t.elements.line,
+    barcode: t.elements.barcode,
+    loop: t.elements.loop,
+    page_break: t.elements.pageBreak,
+    spacer: t.elements.spacer,
+    rich_text: t.elements.richText,
+    link: t.elements.link,
+    container: t.elements.container,
+  }
 
   const handleAddElement = (type: string) => {
     const id = `${type}-${Date.now()}`
@@ -230,7 +248,7 @@ export default function ElementsToolbar() {
               ? 'theme-surface opacity-40 cursor-not-allowed'
               : 'theme-surface border theme-border hover:border-primary-500 hover:shadow-glow-sm'
           }`}
-          title={elem.label}
+          title={elementLabels[elem.type] || elem.label}
         >
           <Icon 
             name={elem.icon} 
@@ -240,7 +258,7 @@ export default function ElementsToolbar() {
           
           {/* Tooltip */}
           <div className="absolute right-full mr-2 px-2 py-1 theme-surface border theme-border theme-text text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
-            {elem.label}
+            {elementLabels[elem.type] || elem.label}
           </div>
         </button>
       ))}

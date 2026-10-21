@@ -46,6 +46,7 @@ export interface Translations {
     cliNotInstalled: string
     unsavedChanges: string
     continueAnyway: string
+    language: string
   }
 
   // Sidebar
@@ -91,6 +92,23 @@ export interface Translations {
     addFooter: string
     addSummary: string
     addBackground: string
+    elementsLibrary: string
+    layers: string
+    layer: string
+    templateInfo: string
+    documentProperties: string
+    documentName: string
+    description: string
+    author: string
+    version: string
+    paperSize: string
+    orientation: string
+    portrait: string
+    landscape: string
+    activeSections: string
+    historyVersions: string
+    active: string
+    inactive: string
   }
 
   // Elements Toolbar
@@ -103,6 +121,11 @@ export interface Translations {
     line: string
     barcode: string
     loop: string
+    pageBreak: string
+    spacer: string
+    richText: string
+    link: string
+    container: string
   }
 
   // Data Panel
@@ -197,11 +220,120 @@ export interface Translations {
     fill: string
     scale: string
     none: string
+    title: string
+    headerProperties: string
+    footerProperties: string
+    summaryProperties: string
+    backgroundProperties: string
+    headerTopPage: string
+    footerBottomPage: string
+    summaryDescription: string
+    backgroundDescription: string
+    groupName: string
+    elementsCount: string
+    ungroupElements: string
+    ungroupNotice: string
+    heightPt: string
+    headerNotExist: string
+    footerNotExist: string
+    summaryNotExist: string
+    backgroundNotExist: string
+    transform: string
+    relativeFlow: string
+    absoluteFixed: string
+    absolute: string
+    relative: string
+    offsetY: string
+    typography: string
+    regular: string
+    bold: string
+    italic: string
+    alignLeft: string
+    alignCenter: string
+    alignRight: string
+    alignJustify: string
+    alignTop: string
+    alignMiddle: string
+    alignBottom: string
+    underline: string
+    strikethrough: string
+    lineWrap: string
+    lineHeight: string
+    firstLineIndent: string
+    overflow: string
+    overflowVisible: string
+    overflowHidden: string
+    overflowAuto: string
+    internalMargins: string
+    top: string
+    right: string
+    bottom: string
+    left: string
+    textContent: string
+    textPlaceholder: string
+    targetUrl: string
+    imageSource: string
+    imagePlaceholder: string
+    barcodeSettings: string
+    barcodePlaceholder: string
+    containerSettings: string
+    containerName: string
+    appearance: string
+    transparent: string
+    stroke: string
+    border: string
+    solid: string
+    dashed: string
+    dotted: string
+    radius: string
+    boundDynamicData: string
+    printConditionHelp: string
+    generalTab: string
+    columnsTab: string
+    stylesTab: string
+    width100: string
+    dataBindingList: string
+    dataBindingListHelp: string
+    emptyMessage: string
+    emptyMessagePlaceholder: string
+    headerBehavior: string
+    showHeader: string
+    repeatHeader: string
+    newColumn: string
+    noColumns: string
+    addFirstColumn: string
+    moveUp: string
+    moveDown: string
+    deleteColumn: string
+    columnTitle: string
+    columnFieldJson: string
+    headerAlignment: string
+    cellAlignment: string
+    alignLeftShort: string
+    alignCenterShort: string
+    alignRightShort: string
+    tableHeader: string
+    textColor: string
+    fontAndSize: string
+    padding: string
+    cellsAndRows: string
+    zebraStriping: string
+    alternateColor: string
+    tableBorders: string
+    borderPreset: string
+    grid: string
+    rows: string
+    columnsPreset: string
+    noBorders: string
+    borderThickness: string
+    borderStyleLabel: string
   }
 
   // Settings Modal
   settings: {
     title: string
+    language: string
+    selectLanguage: string
     java: string
     cli: string
     installed: string
@@ -289,6 +421,75 @@ export interface Translations {
     deleteElement: string
     deleteGroup: string
     removeSection: string
+  }
+
+  // Application Menu (Native)
+  menu: {
+    file: string
+    new: string
+    open: string
+    save: string
+    saveAs: string
+    exportPdf: string
+    exit: string
+    edit: string
+    undo: string
+    redo: string
+    cut: string
+    copy: string
+    paste: string
+    selectAll: string
+    copyElement: string
+    pasteElement: string
+    deleteElement: string
+    view: string
+    reload: string
+    forceReload: string
+    toggleDevTools: string
+    resetZoom: string
+    zoomIn: string
+    zoomOut: string
+    toggleFullScreen: string
+    window: string
+    minimize: string
+    zoom: string
+    close: string
+    help: string
+    documentation: string
+    reportIssue: string
+    about: string
+    language: string
+  }
+
+  // Canvas
+  canvas: {
+    addElements: string
+    viaSidebar: string
+    page: string
+    dragHorizontalGuide: string
+    dragVerticalGuide: string
+    guideTooltip: string
+    headerEnd: string
+    footerStart: string
+  }
+
+  // Home Page
+  home: {
+    tagline: string
+    whatDoYouWantToDo: string
+    chooseOption: string
+    openRecent: string
+    continueWhereLeftOff: string
+    newTemplate: string
+    startFromScratch: string
+    browseFile: string
+    openFromComputer: string
+    recentFiles: string
+    noRecentFiles: string
+    removeRecent: string
+    switchThemeLight: string
+    switchThemeDark: string
+    selectLanguage: string
   }
 }
 
