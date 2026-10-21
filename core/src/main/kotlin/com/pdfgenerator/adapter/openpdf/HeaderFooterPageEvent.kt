@@ -84,9 +84,11 @@ class HeaderFooterPageEvent(
             }
 
             template.pageSettings.watermark?.let { watermark ->
-                val watermarkCondition = watermark.printCondition
-                if (watermarkCondition == null || ConditionEvaluator.evaluate(watermarkCondition, pageData, null)) {
-                    renderWatermark(writer, document, watermark, pageData)
+                if (!watermark.onTop) {
+                    val watermarkCondition = watermark.printCondition
+                    if (watermarkCondition == null || ConditionEvaluator.evaluate(watermarkCondition, pageData, null)) {
+                        renderWatermark(writer, document, watermark, pageData)
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -123,6 +125,15 @@ class HeaderFooterPageEvent(
                 val footerCondition = footer.printCondition
                 if (footerCondition == null || ConditionEvaluator.evaluate(footerCondition, pageData, null)) {
                     renderFooterOptimized(writer, document, footer, pageData)
+                }
+            }
+
+            template.pageSettings.watermark?.let { watermark ->
+                if (watermark.onTop) {
+                    val watermarkCondition = watermark.printCondition
+                    if (watermarkCondition == null || ConditionEvaluator.evaluate(watermarkCondition, pageData, null)) {
+                        renderWatermark(writer, document, watermark, pageData)
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -392,13 +403,41 @@ class HeaderFooterPageEvent(
                         cb.beginText()
                         cb.setFontAndSize(baseFont, watermark.fontSize)
                         cb.setColorFill(color)
-                        cb.showTextAligned(
-                            com.lowagie.text.Element.ALIGN_CENTER,
-                            rawText,
-                            centerX,
-                            centerY,
-                            watermark.rotation,
-                        )
+
+                        if (watermark.repeat) {
+                            val estimatedTextWidth = watermark.fontSize * (rawText.length * 0.6f)
+                            val defaultStepX = (estimatedTextWidth * 1.5f).coerceIn(160f, 320f)
+                            val defaultStepY = (watermark.fontSize * 3.5f).coerceIn(120f, 260f)
+                            val stepX = watermark.spacingX ?: defaultStepX
+                            val stepY = watermark.spacingY ?: defaultStepY
+
+                            var rowIndex = 0
+                            var y = -stepY / 2f
+                            while (y <= pageHeight + stepY) {
+                                val offsetX = if (rowIndex % 2 != 0) stepX / 2f else 0f
+                                var x = -stepX / 2f + offsetX
+                                while (x <= pageWidth + stepX) {
+                                    cb.showTextAligned(
+                                        com.lowagie.text.Element.ALIGN_CENTER,
+                                        rawText,
+                                        x,
+                                        y,
+                                        watermark.rotation,
+                                    )
+                                    x += stepX
+                                }
+                                y += stepY
+                                rowIndex++
+                            }
+                        } else {
+                            cb.showTextAligned(
+                                com.lowagie.text.Element.ALIGN_CENTER,
+                                rawText,
+                                centerX,
+                                centerY,
+                                watermark.rotation,
+                            )
+                        }
                         cb.endText()
                     }
                 }
@@ -406,14 +445,55 @@ class HeaderFooterPageEvent(
                     val source = watermark.imageSource
                     if (!source.isNullOrBlank()) {
                         val image = renderEngine.loadImage(source)
-                        val w = watermark.width ?: image.width
-                        val h = watermark.height ?: image.height
-                        image.scaleToFit(w, h)
+                        val imgW = image.width.coerceAtLeast(1f)
+                        val imgH = image.height.coerceAtLeast(1f)
+                        val rawW = watermark.width?.takeIf { it > 0f }
+                        val rawH = watermark.height?.takeIf { it > 0f }
+
+                        val (targetW, targetH) = when {
+                            rawW != null && rawH != null -> rawW to rawH
+                            rawW != null -> rawW to (imgH * (rawW / imgW))
+                            rawH != null -> (imgW * (rawH / imgH)) to rawH
+                            watermark.repeat -> {
+                                val defaultSize = (pageWidth * 0.25f).coerceIn(80f, 180f)
+                                defaultSize to (imgH * (defaultSize / imgW))
+                            }
+                            else -> {
+                                val maxW = pageWidth * 0.7f
+                                val maxH = pageHeight * 0.7f
+                                val scale = minOf(maxW / imgW, maxH / imgH, 1f)
+                                (imgW * scale) to (imgH * scale)
+                            }
+                        }
+                        image.scaleToFit(targetW.coerceAtLeast(1f), targetH.coerceAtLeast(1f))
                         image.setRotationDegrees(watermark.rotation)
                         val scaledW = image.scaledWidth
                         val scaledH = image.scaledHeight
-                        image.setAbsolutePosition(centerX - (scaledW / 2f), centerY - (scaledH / 2f))
-                        cb.addImage(image)
+
+                        if (watermark.repeat) {
+                            val defaultStepX = (scaledW * 1.8f).coerceAtLeast(40f)
+                            val defaultStepY = (scaledH * 1.8f).coerceAtLeast(40f)
+                            val stepX = watermark.spacingX ?: defaultStepX
+                            val stepY = watermark.spacingY ?: defaultStepY
+
+                            var rowIndex = 0
+                            var y = -stepY / 2f
+                            while (y <= pageHeight + stepY) {
+                                val offsetX = if (rowIndex % 2 != 0) stepX / 2f else 0f
+                                var x = -stepX / 2f + offsetX
+                                while (x <= pageWidth + stepX) {
+                                    val imgCopy = com.lowagie.text.Image.getInstance(image)
+                                    imgCopy.setAbsolutePosition(x - (scaledW / 2f), y - (scaledH / 2f))
+                                    cb.addImage(imgCopy)
+                                    x += stepX
+                                }
+                                y += stepY
+                                rowIndex++
+                            }
+                        } else {
+                            image.setAbsolutePosition(centerX - (scaledW / 2f), centerY - (scaledH / 2f))
+                            cb.addImage(image)
+                        }
                     }
                 }
             }

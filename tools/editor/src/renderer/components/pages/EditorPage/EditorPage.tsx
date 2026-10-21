@@ -15,6 +15,7 @@ import {
   ElementsToolbar,
   StatusBar,
 } from '../../organisms'
+import ContextMenu from '../../ContextMenu'
 import type { ToolbarRef } from '../../organisms'
 
 /**
@@ -570,6 +571,9 @@ export function EditorPage() {
           onClose={() => setShowHelpModal(false)}
           initialTab={helpModalInitialTab}
         />
+
+        {/* Global Context Menu */}
+        <ContextMenu />
       </div>
     </>
   )

@@ -204,6 +204,23 @@ async function checkCLIStatus(): Promise<CLIStatus> {
   
   try {
     await fs.access(CLI_JAR_PATH)
+
+    const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
+    if (isDev) {
+      const latestJar = await findLatestLocalCliJar()
+      if (latestJar) {
+        try {
+          const installedStat = await fs.stat(CLI_JAR_PATH)
+          const latestStat = await fs.stat(latestJar)
+          if (latestStat.mtimeMs > installedStat.mtimeMs) {
+            console.log(`🔄 Novo JAR local detectado (${latestJar}), atualizando ${CLI_JAR_PATH}...`)
+            await fs.copyFile(latestJar, CLI_JAR_PATH)
+          }
+        } catch {
+          // ignore stat/copy error in dev check
+        }
+      }
+    }
     
     let installedVersion: string | null = null
     try {

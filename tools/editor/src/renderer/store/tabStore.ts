@@ -21,10 +21,22 @@ interface TabStore {
   createNewTemplateTab: () => void
 }
 
-export const createDefaultTemplate = (): Template => ({
+export const getNextNewTemplateName = (tabs: Tab[]): string => {
+  const existingNames = new Set(tabs.map((t) => t.name.toLowerCase().trim()))
+  if (!existingNames.has('new template')) {
+    return 'New Template'
+  }
+  let index = 2
+  while (existingNames.has(`new template ${index}`)) {
+    index++
+  }
+  return `New Template ${index}`
+}
+
+export const createDefaultTemplate = (name: string = 'New Template'): Template => ({
   version: '1.0',
   metadata: {
-    name: 'New Template',
+    name,
     description: '',
     author: '',
     created: new Date().toISOString(),
@@ -107,9 +119,10 @@ export const useTabStore = create<TabStore>((set, get) => ({
   },
 
   createNewTemplateTab: () => {
-    const defaultTemplate = createDefaultTemplate()
+    const nextName = getNextNewTemplateName(get().tabs)
+    const defaultTemplate = createDefaultTemplate(nextName)
     get().addTab({
-      name: 'New Template',
+      name: nextName,
       path: null,
       isDirty: false,
       stateSnapshot: {

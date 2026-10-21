@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
+import React, { useState, useEffect, useRef, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
 import { useTemplateStore, type Element, type ElementLocation, flattenElements } from '../store/templateStore'
 import { useUIStore } from '../store/uiStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
@@ -708,6 +708,21 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
         ...(child.width === '100%' ? { width: '100%' } : (effectiveWidth !== undefined && !child.width ? { width: effectiveWidth } : {})),
       }}
       onMouseDown={handleMouseDown}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!selectedElementIds.includes(child.id)) {
+          selectContainerChild(containerId, child.id, location)
+        }
+        useUIStore.getState().openContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          targetType: 'element',
+          elementId: child.id,
+          containerId,
+          location,
+        })
+      }}
     >
       {renderContent()}
       {/* Label do elemento e handles de redimensionamento */}
@@ -1077,6 +1092,18 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
         ...(child.width === '100%' ? { width: '100%' } : {}),
       }}
       onMouseDown={handleMouseDown}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        selectLoopChild(loopId, child.id, location)
+        useUIStore.getState().openContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          targetType: 'element',
+          elementId: child.id,
+          location,
+        })
+      }}
     >
       {renderContent()}
       {/* Label do elemento */}
@@ -1100,52 +1127,9 @@ export default function Canvas() {
     currentSection, 
     setCurrentSection, 
     clearSelection,
-    selectedGroupId,
-    createGroup,
-    ungroupElements,
-    deleteSelectedElements,
   } = useTemplateStore()
   const { zoom, setZoom } = useUIStore()
   const pageRef = useRef<HTMLDivElement>(null)
-
-  const [showGroupModal, setShowGroupModal] = useState(false)
-  const [groupNameInput, setGroupNameInput] = useState('')
-
-  const getGroups = () => {
-    if (currentSection === 'header') return template.pageSettings.header?.groups || []
-    if (currentSection === 'footer') return template.pageSettings.footer?.groups || []
-    if (currentSection === 'bodyBackground') return template.pageSettings.bodyBackground?.groups || []
-    if (currentSection === 'summary') return template.summaryPage?.groups || []
-    return template.groups || []
-  }
-
-  const currentGroups = getGroups()
-  const activeGroup = currentGroups.find(
-    g => g.id === selectedGroupId || selectedElementIds.some(id => g.elementIds.includes(id))
-  )
-  const canGroup = selectedElementIds.length >= 2 && !activeGroup
-  const canUngroup = !!activeGroup
-
-  const handleOpenGroupModal = () => {
-    setGroupNameInput(`Grupo ${currentGroups.length + 1}`)
-    setShowGroupModal(true)
-  }
-
-  const handleConfirmGroup = () => {
-    const finalName = groupNameInput.trim() || `Grupo ${currentGroups.length + 1}`
-    createGroup(finalName, selectedElementIds, selectedElementLocation || currentSection)
-    setShowGroupModal(false)
-  }
-
-  const handleUngroup = () => {
-    if (activeGroup) {
-      ungroupElements(activeGroup.id, selectedElementLocation || currentSection)
-    }
-  }
-
-  const handleDeleteSelected = () => {
-    deleteSelectedElements()
-  }
 
   let pageSize;
   switch(template.pageSettings.size) {
@@ -1425,116 +1409,26 @@ export default function Canvas() {
           </div>
         </div>
 
-        {/* FLOATING ACTION MENU PARA MULTI-SELEÇÃO / GRUPO */}
-        {(selectedElementIds.length > 1 || selectedGroupId || activeGroup) && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-150">
-            <div className="flex items-center gap-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl rounded-xl px-3 py-1.5 text-xs text-slate-200">
-              <div className="flex items-center gap-1.5 pr-2 border-r border-slate-700/80 text-[11px] font-medium text-slate-300 select-none">
-                <Icon name={activeGroup ? "group" : "layers"} size="xs" className="text-indigo-400" />
-                <span>
-                  {activeGroup ? activeGroup.name : `${selectedElementIds.length} selecionados`}
-                </span>
-              </div>
-
-              {canGroup && (
-                <button
-                  type="button"
-                  onClick={handleOpenGroupModal}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition cursor-pointer shadow-sm text-xs"
-                  title="Agrupar elementos selecionados (Ctrl+G)"
-                >
-                  <Icon name="group" size="xs" />
-                  <span>Agrupar</span>
-                </button>
-              )}
-
-              {canUngroup && (
-                <button
-                  type="button"
-                  onClick={handleUngroup}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-medium transition cursor-pointer text-xs"
-                  title="Desagrupar elementos (Ctrl+Shift+G)"
-                >
-                  <Icon name="ungroup" size="xs" />
-                  <span>Desagrupar</span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={handleDeleteSelected}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 border border-red-500/20 font-medium transition cursor-pointer text-xs"
-                title="Deletar elementos selecionados (Delete)"
-              >
-                <Icon name="trash" size="xs" />
-                <span>Deletar</span>
-              </button>
-
-              <div className="h-4 w-px bg-slate-700/80" />
-
-              <button
-                type="button"
-                onClick={clearSelection}
-                className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
-                title="Limpar seleção (Esc)"
-              >
-                <Icon name="close" size="xs" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Modal de confirmação para Criar Grupo */}
-        {showGroupModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 max-w-sm w-full mx-4 shadow-2xl">
-              <h3 className="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-2">
-                <Icon name="group" size="sm" className="text-indigo-400" />
-                Agrupar Elementos
-              </h3>
-              <p className="text-xs text-slate-400 mb-3">
-                Defina um nome para o grupo de {selectedElementIds.length} elementos:
-              </p>
-              <input
-                type="text"
-                value={groupNameInput}
-                onChange={(e) => setGroupNameInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleConfirmGroup()
-                  if (e.key === 'Escape') setShowGroupModal(false)
-                }}
-                placeholder="Nome do grupo..."
-                className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none mb-4"
-                autoFocus
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowGroupModal(false)}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmGroup}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition cursor-pointer shadow-sm"
-                >
-                  Criar Grupo
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Scrollable content area */}
-        <div id="canvas-scroll-container" className="flex-1 overflow-auto p-8 bg-slate-950/80">
+        <div
+          id="canvas-scroll-container"
+          className="flex-1 overflow-auto p-8 bg-slate-950/80"
+          onContextMenu={(e) => {
+            e.preventDefault()
+            useUIStore.getState().openContextMenu({
+              x: e.clientX,
+              y: e.clientY,
+              targetType: 'canvas',
+              location: currentSection,
+            })
+          }}
+        >
           <div className="inline-block min-w-full min-h-full">
         {/* Wrapper que define o tamanho real para scroll funcionar com zoom */}
         <div 
           className="flex justify-center items-start min-w-max"
           style={{ 
-            minWidth: pageSize.width * scale + 100, // +100 para labels laterais
+            minWidth: pageSize.width * scale + 240, // +240 para labels laterais à direita
             minHeight: pageSize.height * scale + 50, // +50 para margem inferior
           }}
         >
@@ -2177,6 +2071,113 @@ export default function Canvas() {
             )}
           </div>
 
+          {/* Camada de Marca d'Água (Watermark) */}
+          {template.pageSettings.watermark && (() => {
+            const wm = template.pageSettings.watermark
+            const rotation = wm.rotation ?? 45
+            const opacity = wm.opacity ?? 0.2
+
+            const imageTileWidth = wm.width || (wm.repeat ? Math.round(pageSize.width * 0.25) : Math.round(pageSize.width * 0.6))
+
+            const renderWatermarkContent = () => (
+              wm.type === 'image' && wm.imageSource ? (
+                <img
+                  src={wm.imageSource}
+                  alt="Watermark"
+                  style={{
+                    width: `${imageTileWidth}px`,
+                    height: wm.height ? `${wm.height}px` : 'auto',
+                    maxWidth: pageSize.width * 0.8,
+                    objectFit: 'contain',
+                  }}
+                />
+              ) : (
+                <span
+                  style={{
+                    fontSize: `${wm.fontSize || 60}px`,
+                    fontWeight: wm.fontStyle?.includes('bold') ? 'bold' : 'normal',
+                    fontStyle: wm.fontStyle?.includes('italic') ? 'italic' : 'normal',
+                    fontFamily: wm.fontName || 'Outfit, sans-serif',
+                    color: wm.color || '#94a3b8',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  {wm.text || (wm.dataBinding ? `{{${wm.dataBinding}}}` : 'WATERMARK')}
+                </span>
+              )
+            )
+
+            if (wm.repeat) {
+              const rawText = wm.text || (wm.dataBinding ? `{{${wm.dataBinding}}}` : 'WATERMARK')
+              const estimatedTextWidth = (wm.fontSize || 60) * (rawText.length * 0.6)
+              const defaultStepX = wm.type === 'image'
+                ? Math.round(imageTileWidth * 1.8)
+                : Math.min(320, Math.max(160, estimatedTextWidth * 1.5))
+              const defaultStepY = wm.type === 'image'
+                ? Math.round((wm.height || imageTileWidth) * 1.8)
+                : Math.min(260, Math.max(120, (wm.fontSize || 60) * 3.5))
+
+              const stepX = wm.spacingX || defaultStepX
+              const stepY = wm.spacingY || defaultStepY
+
+              const gridItems: { x: number; y: number }[] = []
+              let rowIndex = 0
+              for (let y = -stepY / 2; y <= totalCanvasHeight + stepY; y += stepY) {
+                const offsetX = (rowIndex % 2 !== 0) ? stepX / 2 : 0
+                for (let x = -stepX / 2 + offsetX; x <= pageSize.width + stepX; x += stepX) {
+                  gridItems.push({ x, y })
+                }
+                rowIndex++
+              }
+
+              return (
+                <div
+                  className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+                  style={{ zIndex: wm.onTop ? 45 : 3 }}
+                >
+                  {gridItems.map((pt, idx) => (
+                    <div
+                      key={`wm-grid-${idx}`}
+                      className="absolute flex items-center justify-center pointer-events-none select-none"
+                      style={{
+                        left: pt.x,
+                        top: pt.y,
+                        transform: `translate(-50%, -50%) rotate(-${rotation}deg)`,
+                        opacity,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {renderWatermarkContent()}
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+
+            return (
+              <div
+                className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+                style={{ zIndex: wm.onTop ? 45 : 3 }}
+              >
+                {Array.from({ length: numberOfPages }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute flex items-center justify-center pointer-events-none select-none"
+                    style={{
+                      left: '50%',
+                      top: (pageSize.height / 2) + (i * bodyUsableHeight),
+                      transform: `translate(-50%, -50%) rotate(-${rotation}deg)`,
+                      opacity,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {renderWatermarkContent()}
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
+
           
           {/* Page Separators */}
           {numberOfPages > 1 && Array.from({ length: numberOfPages - 1 }).map((_, i) => (
@@ -2312,9 +2313,9 @@ export default function Canvas() {
             <>
               {/* Label Margin Top */}
               <div
-                className="absolute text-xs text-gray-400"
+                className="absolute text-xs text-gray-400 select-none pointer-events-none"
                 style={{
-                  left: -160,
+                  left: pageSize.width + 10,
                   top: margins.top,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -2326,9 +2327,9 @@ export default function Canvas() {
               {/* Label Header End */}
               {template.pageSettings.header && (
                 <div
-                  className="absolute text-xs text-gray-500"
+                  className="absolute text-xs text-gray-500 select-none pointer-events-none"
                   style={{
-                    left: -200,
+                    left: pageSize.width + 10,
                     top: margins.top + template.pageSettings.header.height,
                     transform: 'translateY(-50%)',
                     whiteSpace: 'nowrap',
@@ -2341,9 +2342,9 @@ export default function Canvas() {
               {/* Label Footer Start */}
               {template.pageSettings.footer && (
                 <div
-                  className="absolute text-xs text-gray-500"
+                  className="absolute text-xs text-gray-500 select-none pointer-events-none"
                   style={{
-                    left: -200,
+                    left: pageSize.width + 10,
                     top: totalCanvasHeight - margins.bottom - template.pageSettings.footer.height,
                     transform: 'translateY(-50%)',
                     whiteSpace: 'nowrap',
@@ -2355,9 +2356,9 @@ export default function Canvas() {
               
               {/* Label Margin Bottom */}
               <div
-                className="absolute text-xs text-gray-400"
+                className="absolute text-xs text-gray-400 select-none pointer-events-none"
                 style={{
-                  left: -160,
+                  left: pageSize.width + 10,
                   top: totalCanvasHeight - margins.bottom,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -2368,7 +2369,7 @@ export default function Canvas() {
               
               {/* Label Margin Left */}
               <div
-                className="absolute text-xs text-blue-600"
+                className="absolute text-xs text-blue-600 select-none pointer-events-none"
                 style={{
                   left: margins.left,
                   top: -25,
@@ -2381,7 +2382,7 @@ export default function Canvas() {
               
               {/* Label Margin Right */}
               <div
-                className="absolute text-xs text-blue-600"
+                className="absolute text-xs text-blue-600 select-none pointer-events-none"
                 style={{
                   left: pageSize.width - margins.right,
                   top: -25,
@@ -2399,9 +2400,9 @@ export default function Canvas() {
             <>
               {/* Label Margin Top */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
-                  left: -150,
+                  left: pageSize.width + 10,
                   top: margins.top,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -2412,9 +2413,9 @@ export default function Canvas() {
               
               {/* Label Margin Bottom */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
-                  left: -150,
+                  left: pageSize.width + 10,
                   top: totalCanvasHeight - margins.bottom,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -2425,7 +2426,7 @@ export default function Canvas() {
               
               {/* Label Margin Left */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
                   left: margins.left,
                   top: -25,
@@ -2438,7 +2439,7 @@ export default function Canvas() {
               
               {/* Label Margin Right */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
                   left: pageSize.width - margins.right,
                   top: -25,
@@ -3853,6 +3854,20 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         top: element.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : element.y),
         ...(element.width === '100%' ? { width: '100%' } : (effectiveWidth !== undefined && element.width === undefined ? { width: effectiveWidth } : {})),
       }}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!selectedElementIds.includes(element.id)) {
+          onSelect(false)
+        }
+        useUIStore.getState().openContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          targetType: element.type === 'container' ? 'container' : 'element',
+          elementId: element.id,
+          location,
+        })
+      }}
     >
       <div ref={elementWrapperRef} className="relative">
         {renderElement()}
@@ -3861,10 +3876,14 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         
         {elementGroup && (
           <div
-            className="absolute -top-1 -right-1 z-20 pointer-events-none"
-            title={`Group: ${elementGroup.name}${elementGroup.printCondition ? `\nCondition: ${elementGroup.printCondition}` : ''}`}
+            className="absolute -top-1 -right-1 z-20 pointer-events-auto cursor-pointer group/badge"
+            title={`Grupo: ${elementGroup.name}${elementGroup.printCondition ? `\nCondição: ${elementGroup.printCondition}` : ''}\nClique para editar grupo`}
+            onClick={(e) => {
+              e.stopPropagation()
+              useTemplateStore.getState().selectGroup(elementGroup.id, location)
+            }}
           >
-            <div className="bg-purple-500 text-white p-1 rounded-full shadow-lg">
+            <div className="bg-purple-500 hover:bg-purple-600 text-white p-1 rounded-full shadow-lg transition transform hover:scale-110">
               <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="3" y="3" width="7" height="7" rx="1" />
                 <rect x="14" y="3" width="7" height="7" rx="1" />

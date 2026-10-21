@@ -50,6 +50,9 @@ export interface WatermarkConfig {
   width?: number
   height?: number
   onTop?: boolean
+  repeat?: boolean
+  spacingX?: number
+  spacingY?: number
   printCondition?: string
 }
 
@@ -130,6 +133,8 @@ interface TemplateStore {
   setTemplate: (template: Template) => void
   updateTemplate: (updates: Partial<Template>) => void
   updatePageSettings: (updates: Partial<Template['pageSettings']>) => void
+  updateWatermark: (updates: Partial<WatermarkConfig>) => void
+  removeWatermark: () => void
   updateMetadata: (updates: Partial<Template['metadata']>) => void
   addElement: (element: Element, location?: ElementLocation) => void
   updateElement: (id: string, updates: Partial<Element>, location?: ElementLocation) => void
@@ -480,6 +485,50 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           ...state.template.pageSettings,
           ...updates,
         },
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
+    }),
+
+  updateWatermark: (updates) =>
+    set((state) => {
+      const currentWatermark = state.template.pageSettings.watermark || {
+        type: 'text',
+        text: 'CONFIDENTIAL',
+        fontSize: 60,
+        fontStyle: 'bold',
+        color: '#94a3b8',
+        opacity: 0.2,
+        rotation: 45,
+        onTop: false,
+      }
+      const newTemplate = {
+        ...state.template,
+        pageSettings: {
+          ...state.template.pageSettings,
+          watermark: {
+            ...currentWatermark,
+            ...updates,
+          },
+        },
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
+    }),
+
+  removeWatermark: () =>
+    set((state) => {
+      const newPageSettings = { ...state.template.pageSettings }
+      delete newPageSettings.watermark
+      const newTemplate = {
+        ...state.template,
+        pageSettings: newPageSettings,
       }
       return {
         template: newTemplate,
@@ -2314,6 +2363,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       return {
         ...historyState,
         template: newTemplate,
+        selectedGroupId: groupId,
         isDirty: true,
       }
     }),

@@ -57,3 +57,6 @@ tools/editor/release/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 
+# Codebase memory / MCP
+.codebase-memory/
+

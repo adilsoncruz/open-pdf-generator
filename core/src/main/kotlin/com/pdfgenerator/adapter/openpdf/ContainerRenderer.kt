@@ -29,7 +29,8 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         val containerX = 0f
         val containerY = element.y
         val containerWidth = context.containerWidth ?: element.resolveWidth(595.28f)
-        val baseHeight = if (element.height > 0f) element.height else (context.containerHeight ?: 0f)
+        val resolvedHeight = element.resolveHeight(context.containerHeight ?: 0f)
+        val baseHeight = if (resolvedHeight > 0f) resolvedHeight else (context.containerHeight ?: 0f)
         val maxAvailableHeight =
             (context.document.pageSize.height - context.resolveY(containerY) - context.document.bottomMargin()).coerceAtLeast(10f)
         val containerHeight = if (element.isAutoHeight()) {

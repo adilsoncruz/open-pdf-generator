@@ -41,7 +41,7 @@ export const TabBar: React.FC = () => {
         const isActive = tab.id === activeTabId
         const displayIsDirty = isActive ? isDirty : tab.isDirty
         const displayName = isActive
-          ? (currentFilePath ? currentFilePath.split(/[/\\]/).pop() : templateName || 'New Template')
+          ? (currentFilePath ? currentFilePath.split(/[/\\]/).pop() : templateName || tab.name || 'New Template')
           : (tab.path ? tab.path.split(/[/\\]/).pop() : tab.name || 'New Template')
 
         return (

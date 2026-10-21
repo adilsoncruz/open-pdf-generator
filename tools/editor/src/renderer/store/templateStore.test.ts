@@ -145,4 +145,30 @@ describe('templateStore multi-selection', () => {
     expect(updatedContainer?.elements?.find((el) => el.id === 't1')?.groupId).toBeUndefined()
     expect(updatedContainer?.elements?.find((el) => el.id === 't2')?.groupId).toBeUndefined()
   })
+
+  it('updates and removes watermark configuration in pageSettings', () => {
+    const { updateWatermark, removeWatermark } = useTemplateStore.getState()
+
+    expect(useTemplateStore.getState().template.pageSettings.watermark).toBeUndefined()
+
+    // Update watermark
+    updateWatermark({ text: 'DRAFT', color: '#ff0000', rotation: 30, opacity: 0.15, repeat: true, spacingX: 180, spacingY: 140 })
+
+    let watermark = useTemplateStore.getState().template.pageSettings.watermark
+    expect(watermark).toBeDefined()
+    expect(watermark?.type).toBe('text')
+    expect(watermark?.text).toBe('DRAFT')
+    expect(watermark?.color).toBe('#ff0000')
+    expect(watermark?.rotation).toBe(30)
+    expect(watermark?.opacity).toBe(0.15)
+    expect(watermark?.repeat).toBe(true)
+    expect(watermark?.spacingX).toBe(180)
+    expect(watermark?.spacingY).toBe(140)
+
+    // Remove watermark
+    removeWatermark()
+
+    watermark = useTemplateStore.getState().template.pageSettings.watermark
+    expect(watermark).toBeUndefined()
+  })
 })

@@ -35,6 +35,7 @@ export default function Sidebar() {
     selectedElementIds, 
     selectedElementLocation,
     selectedGroupId,
+    selectGroup,
     createGroup,
     ungroupElements,
     deleteSelectedElements,
@@ -93,6 +94,7 @@ export default function Sidebar() {
     const isSelected = selectedElementIds.includes(el.id) || (parentContainerId && selectedContainerChildId === el.id)
     const isDraggingThis = draggedElementId === el.id
     const isDragOverThis = dragOverElementId === el.id
+    const elGroup = currentGroups.find(g => g.elementIds.includes(el.id) || g.id === el.groupId)
 
     const handleMoveUp = (e: React.MouseEvent) => {
       e.stopPropagation()
@@ -183,6 +185,26 @@ export default function Sidebar() {
           setDraggedElementId(null)
           setDragOverElementId(null)
         }}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setCurrentSection(sectionKey)
+          if (!selectedElementIds.includes(el.id)) {
+            if (parentContainerId) {
+              selectContainerChild(parentContainerId, el.id, sectionKey)
+            } else {
+              selectElement(el.id, sectionKey)
+            }
+          }
+          useUIStore.getState().openContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+            targetType: el.type === 'container' ? 'container' : 'element',
+            elementId: el.id,
+            containerId: parentContainerId,
+            location: sectionKey,
+          })
+        }}
         onClick={(e) => {
           e.stopPropagation()
           setCurrentSection(sectionKey)
@@ -208,6 +230,18 @@ export default function Sidebar() {
           <span className="text-[10px] text-slate-500 hover:text-slate-300 cursor-grab select-none">⠿</span>
           <span className="text-[10px] font-mono text-slate-400 w-3.5 h-3.5 flex items-center justify-center shrink-0">{getIcon()}</span>
           <span className="truncate">{getLabel()}</span>
+          {elGroup && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation()
+                selectGroup(elGroup.id, sectionKey)
+              }}
+              className="text-[9px] px-1 py-0.2 rounded bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 hover:text-white font-mono shrink-0 select-none cursor-pointer transition"
+              title={`Grupo: ${elGroup.name}\nClique para editar grupo`}
+            >
+              {elGroup.name}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           <button
@@ -317,6 +351,21 @@ export default function Sidebar() {
                 }}
               >
                 <div
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setCurrentSection(sectionKey)
+                    if (!selectedElementIds.includes(el.id)) {
+                      selectElement(el.id, sectionKey)
+                    }
+                    useUIStore.getState().openContextMenu({
+                      x: e.clientX,
+                      y: e.clientY,
+                      targetType: 'container',
+                      elementId: el.id,
+                      location: sectionKey,
+                    })
+                  }}
                   onClick={(e) => {
                     e.stopPropagation()
                     setCurrentSection(sectionKey)
@@ -1329,54 +1378,6 @@ function HistoryContent() {
                 )}
               </div>
             </div>
-
-            {/* Selection Actions Toolbar in Layers */}
-            {(selectedElementIds.length >= 2 || selectedGroupId || activeGroup) && (
-              <div className="mb-2 p-2 rounded-lg bg-slate-950/80 border border-indigo-500/30 flex items-center justify-between gap-1.5 shrink-0">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Icon name={activeGroup ? "group" : "layers"} size="xs" className="text-indigo-400" />
-                  <span className="text-[11px] font-medium text-slate-300 truncate">
-                    {activeGroup ? activeGroup.name : `${selectedElementIds.length} selecionados`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  {canGroup && (
-                    <button
-                      onClick={() => {
-                        const name = prompt('Nome do Grupo:', `Grupo ${currentGroups.length + 1}`)
-                        if (name && name.trim()) {
-                          createGroup(name.trim(), selectedElementIds, selectedElementLocation || currentSection)
-                        }
-                      }}
-                      className="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-medium transition cursor-pointer shadow-sm"
-                      title="Agrupar elementos selecionados"
-                    >
-                      Agrupar
-                    </button>
-                  )}
-                  {canUngroup && (
-                    <button
-                      onClick={() => {
-                        if (activeGroup) {
-                          ungroupElements(activeGroup.id, selectedElementLocation || currentSection)
-                        }
-                      }}
-                      className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 text-[10px] font-medium transition cursor-pointer"
-                      title="Desagrupar elementos"
-                    >
-                      Desagrupar
-                    </button>
-                  )}
-                  <button
-                    onClick={() => deleteSelectedElements()}
-                    className="p-1 rounded hover:bg-red-500/20 text-red-400 hover:text-red-300 transition cursor-pointer"
-                    title="Excluir selecionados"
-                  >
-                    <Icon name="trash" size="xs" />
-                  </button>
-                </div>
-              </div>
-            )}
 
             <div className="flex-1 overflow-y-auto space-y-1 text-xs pr-0.5">
               {/* Background Layer (se adicionado) */}
