@@ -59,37 +59,64 @@ features:
     details: Containers, tables, text, loops, page breaks, shapes, barcodes, watermarks, and summary pages with full styling.
 ---
 
-## ⚡ Enterprise Performance at Scale
+<div class="benchmark-card">
+  <div class="benchmark-header">
+    <div class="benchmark-badge-row">
+      <span class="benchmark-pill">⚡ Benchmark Case Study</span>
+      <span style="font-size: 12px; color: var(--vp-c-text-3);">Tested on Linux Container Cgroups (2 vCPU, 1 GB RAM)</span>
+    </div>
+    <h3>Engineered for High-Density Microservices & Cloud Run</h3>
+    <p class="benchmark-subtitle">
+      Stress test generating <strong>100,000 unique dynamic invoices</strong> against JasperReports 6.21.4 with zero template caching.
+    </p>
+  </div>
 
-Tested in Linux container cgroups (2 vCPU, 1 GB RAM) generating **100,000 unique invoices** with dynamic data against JasperReports 6.21.4:
+  <div class="benchmark-grid">
+    <div class="benchmark-stat-item">
+      <span class="benchmark-stat-label">Throughput</span>
+      <div class="benchmark-stat-val">
+        8,310 <span class="unit">docs/s</span>
+      </div>
+      <span class="benchmark-stat-delta">▲ 2.5x faster</span>
+      <span class="benchmark-stat-desc">Jasper achieved 3,338 docs/s under identical quotas</span>
+    </div>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin: 24px 0 24px 0;">
-  <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.28); border-radius: 12px; padding: 18px; text-align: center;">
-    <div style="font-size: 2.3rem; font-weight: 800; color: #818cf8; line-height: 1.1;">8,310</div>
-    <div style="font-size: 0.95rem; font-weight: 600; margin-top: 6px; color: var(--vp-c-text-1);">Docs / Second</div>
-    <div style="font-size: 0.8rem; color: var(--vp-c-text-2); margin-top: 4px;">2.5x higher throughput vs Jasper (3,338 docs/s)</div>
-  </div>
-  <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.28); border-radius: 12px; padding: 18px; text-align: center;">
-    <div style="font-size: 2.3rem; font-weight: 800; color: #34d399; line-height: 1.1;">273 ms</div>
-    <div style="font-size: 0.95rem; font-weight: 600; margin-top: 6px; color: var(--vp-c-text-1);">Cold Start</div>
-    <div style="font-size: 0.8rem; color: var(--vp-c-text-2); margin-top: 4px;">4.3x faster first doc (Jasper: 1,166 ms)</div>
-  </div>
-  <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.28); border-radius: 12px; padding: 18px; text-align: center;">
-    <div style="font-size: 2.3rem; font-weight: 800; color: #fbbf24; line-height: 1.1;">128 MB</div>
-    <div style="font-size: 0.95rem; font-weight: 600; margin-top: 6px; color: var(--vp-c-text-1);">Peak Container RSS</div>
-    <div style="font-size: 0.8rem; color: var(--vp-c-text-2); margin-top: 4px;">Stable memory, zero GC stalls</div>
-  </div>
-  <div style="background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); border-radius: 12px; padding: 18px; text-align: center;">
-    <div style="font-size: 2.3rem; font-weight: 800; color: #c084fc; line-height: 1.1;">4.0 MB</div>
-    <div style="font-size: 0.95rem; font-weight: 600; margin-top: 6px; color: var(--vp-c-text-1);">Library Footprint</div>
-    <div style="font-size: 0.8rem; color: var(--vp-c-text-2); margin-top: 4px;">3.4x lighter than Jasper (13.6 MB)</div>
-  </div>
-</div>
+    <div class="benchmark-stat-item">
+      <span class="benchmark-stat-label">Cold Start</span>
+      <div class="benchmark-stat-val">
+        273 <span class="unit">ms</span>
+      </div>
+      <span class="benchmark-stat-delta">▲ 4.3x faster</span>
+      <span class="benchmark-stat-desc">Jasper takes 1,166 ms to compile and render doc #1</span>
+    </div>
 
-<div style="text-align: center; margin-bottom: 36px;">
-  <a href="./lib/benchmark" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: rgba(99, 102, 241, 0.14); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 8px; color: #818cf8; font-weight: 600; text-decoration: none;">
-    <span>📊 Explore Full 100,000 Documents Benchmark Case Study & FinOps Analysis →</span>
-  </a>
+    <div class="benchmark-stat-item">
+      <span class="benchmark-stat-label">Peak RSS RAM</span>
+      <div class="benchmark-stat-val">
+        128 <span class="unit">MB</span>
+      </div>
+      <span class="benchmark-stat-delta">▲ 22% lower</span>
+      <span class="benchmark-stat-desc">Zero GC stalls; Jasper required 165 MB with pauses</span>
+    </div>
+
+    <div class="benchmark-stat-item">
+      <span class="benchmark-stat-label">Footprint</span>
+      <div class="benchmark-stat-val">
+        4.0 <span class="unit">MB</span>
+      </div>
+      <span class="benchmark-stat-delta">▲ 3.4x smaller</span>
+      <span class="benchmark-stat-desc">No heavy compilation deps (Jasper: 13.6 MB JAR tree)</span>
+    </div>
+  </div>
+
+  <div class="benchmark-footer">
+    <span style="font-size: 13px; color: var(--vp-c-text-2);">
+      Looking to cut cloud infrastructure costs or replace legacy Jasper?
+    </span>
+    <a href="./lib/benchmark">
+      <span>Read Full Technical Benchmark & FinOps Analysis →</span>
+    </a>
+  </div>
 </div>
 
 ## Quick Example
