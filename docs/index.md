@@ -13,8 +13,8 @@ hero:
       text: Get Started
       link: /lib/guide/getting-started
     - theme: alt
-      text: 💖 Sponsor
-      link: https://github.com/sponsors/adilsoncruz
+      text: ⚡ 2.5x vs Jasper Benchmark
+      link: /lib/benchmark
     - theme: alt
       text: GitHub
       link: https://github.com/adilsoncruz/open-pdf-generator
@@ -42,6 +42,13 @@ features:
     linkText: Learn CLI
 
   - icon:
+      src: /icons/speed.svg
+    title: 2.5x Faster vs JasperReports
+    details: 8,650 docs/sec in containers, 195ms cold-start (4.3x faster), and 4.0MB footprint. Zero GC lockups under 100k document stress.
+    link: /lib/benchmark
+    linkText: View Benchmark Report
+
+  - icon:
       src: /icons/code.svg
     title: Data Binding & Conditions
     details: Use mustache syntax and pipes to format data, plus boolean conditions to dynamically show or hide elements and groups.
@@ -50,11 +57,6 @@ features:
       src: /icons/grid.svg
     title: Rich Elements & Layouts
     details: Containers, tables, text, loops, page breaks, shapes, barcodes, watermarks, and summary pages with full styling.
-
-  - icon:
-      src: /icons/plug.svg
-    title: Easy Integration
-    details: Simple API for Java, Kotlin, Spring Boot, and any JVM application. Available on JitPack.
 ---
 
 ## Quick Example
@@ -158,6 +160,7 @@ dependencies {
 
 | Path | Description |
 |------|-------------|
+| [⚡ Benchmark (vs JasperReports)](/lib/benchmark) | 100k invoices stress test, latency, throughput, memory & FinOps savings |
 | [Engine Documentation](/lib/) | Learn how to use the PDF Generator library |
 | [Editor Documentation](/editor/index.html) | Create templates visually with the desktop app |
 | [Examples](/lib/examples/) | Real-world template examples |

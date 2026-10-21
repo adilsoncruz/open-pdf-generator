@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="listing" pageWidth="595" pageHeight="842" columnWidth="535"
+              leftMargin="30" rightMargin="30" topMargin="40" bottomMargin="40" uuid="7cf61937-db56-42f3-a170-c0be1600ca41">
+    <parameter name="reportTitle" class="java.lang.String"/>
+    <parameter name="generatedAt" class="java.lang.String"/>
+
+    <field name="id" class="java.lang.Integer"/>
+    <field name="code" class="java.lang.String"/>
+    <field name="name" class="java.lang.String"/>
+    <field name="category" class="java.lang.String"/>
+    <field name="stock" class="java.lang.Integer"/>
+    <field name="price" class="java.lang.Double"/>
+
+    <pageHeader>
+        <band height="35">
+            <textField>
+                <reportElement x="0" y="5" width="350" height="18" forecolor="#1E293B" uuid="69a5e17f-d5e8-46eb-819d-7db135aa3263"/>
+                <textElement>
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{reportTitle}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="355" y="5" width="180" height="18" forecolor="#64748B" uuid="8d6db31e-4505-4f40-84cf-d64e0a7df8cb"/>
+                <textElement textAlignment="Right">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{generatedAt}]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="0" y="28" width="535" height="1" forecolor="#CBD5E1" uuid="1cbbcf5a-e7be-47bb-997e-13c54e3d30b6"/>
+            </line>
+        </band>
+    </pageHeader>
+
+    <columnHeader>
+        <band height="22">
+            <rectangle>
+                <reportElement x="0" y="0" width="535" height="22" backcolor="#0F172A" forecolor="#0F172A" uuid="1c3f59e7-8b5e-49b8-b80c-a633c7e7b5cb"/>
+            </rectangle>
+            <staticText>
+                <reportElement x="5" y="3" width="35" height="16" forecolor="#FFFFFF" uuid="fa3f80c6-302c-49a0-97fb-c55ecbe40b2a"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[#]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="45" y="3" width="80" height="16" forecolor="#FFFFFF" uuid="bf3c76d0-4bf6-4b68-b3f7-b088b2eb595e"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[SKU Code]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="130" y="3" width="200" height="16" forecolor="#FFFFFF" uuid="a6589570-349c-4614-b81d-b873d6bb682b"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Product Name]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="335" y="3" width="75" height="16" forecolor="#FFFFFF" uuid="bcce8fb1-7299-4d37-88ce-bf853c65c69b"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Category]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="415" y="3" width="45" height="16" forecolor="#FFFFFF" uuid="f9984920-5c6f-4d92-bce4-6ae3d622fa3a"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Stock]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="465" y="3" width="65" height="16" forecolor="#FFFFFF" uuid="e0a4f5f1-3269-4e78-beee-ff790dcfc309"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Unit Price]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="18">
+            <textField>
+                <reportElement x="5" y="1" width="35" height="16" uuid="88e0cf5b-e99d-488f-a9b0-a619dd40e2b9"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{id}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="45" y="1" width="80" height="16" uuid="876f2b1d-c20e-49b8-b7eb-d193d56f189c"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{code}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="130" y="1" width="200" height="16" uuid="f270a4ef-efb9-4a92-be20-f4b67dbdfd1e"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="335" y="1" width="75" height="16" uuid="559ea979-bfbf-450f-a1c6-2be5b6e22f87"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{category}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="415" y="1" width="45" height="16" uuid="a65f9024-db09-4a8b-967f-9f79b4eb5bb0"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{stock}]]></textFieldExpression>
+            </textField>
+            <textField pattern="$#,##0.00">
+                <reportElement x="465" y="1" width="65" height="16" uuid="16e1e69b-8919-481d-88b1-12c8a2b53492"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{price}]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="0" y="17" width="535" height="1" forecolor="#E2E8F0" uuid="7d6e6a17-38f3-4e89-8dcf-c878e1b64ff3"/>
+            </line>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="25">
+            <line>
+                <reportElement x="0" y="4" width="535" height="1" forecolor="#E2E8F0" uuid="88593f6c-fbe3-487e-97f2-fc75d5e54dcb"/>
+            </line>
+            <staticText>
+                <reportElement x="0" y="8" width="250" height="14" forecolor="#94A3B8" uuid="2a59a93d-d1ef-4573-afeb-fb12c1b182cb"/>
+                <textElement>
+                    <font size="8"/>
+                </textElement>
+                <text><![CDATA[CONFIDENTIAL - INTERNAL USE ONLY]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="355" y="8" width="180" height="14" forecolor="#64748B" uuid="21980838-6b19-4a9f-a2e6-7df089bcf279"/>
+                <textElement textAlignment="Right">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+
+        </band>
+    </pageFooter>
+</jasperReport>

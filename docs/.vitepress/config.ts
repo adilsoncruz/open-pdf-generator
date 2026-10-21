@@ -20,6 +20,7 @@ export default defineConfig({
       { text: 'Library', link: '/lib/' },
       { text: 'CLI', link: '/cli/' },
       { text: 'Editor', link: '/editor/' },
+      { text: '⚡ Benchmark', link: '/lib/benchmark' },
       {
         text: '💖 Donate',
         items: [
@@ -77,7 +78,8 @@ export default defineConfig({
             { text: 'Groups', link: '/lib/guide/advanced/groups' },
             { text: 'Pagination', link: '/lib/guide/advanced/pagination' },
             { text: 'Positioning', link: '/lib/guide/advanced/positioning' },
-            { text: 'Performance', link: '/lib/guide/advanced/performance' }
+            { text: 'Performance', link: '/lib/guide/advanced/performance' },
+            { text: 'Benchmark (vs Jasper)', link: '/lib/benchmark' }
           ]
         },
         {
