@@ -479,37 +479,6 @@ async function readJarVersionFromBuildLibs(
   }
 }
 
-function createSplashWindow() {
-  const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
-
-  splashWindow = new BrowserWindow({
-    width: 400,
-    height: 350,
-    frame: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    center: true,
-    show: false, // Show only when content loads
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
-  })
-
-  // Show splash as soon as content is ready
-  splashWindow.once('ready-to-show', () => {
-    splashWindow?.show()
-  })
-
-  // Carregar arquivo HTML da splash
-  const splashPath = isDev
-    ? path.join(__dirname, '..', '..', 'resources', 'splash.html')
-    : path.join(process.resourcesPath, 'splash.html')
-
-  splashWindow.loadFile(splashPath)
-}
-
 let currentAppLanguage = 'en'
 
 const MENU_TRANSLATIONS: Record<string, Record<string, string>> = {
