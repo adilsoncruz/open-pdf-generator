@@ -170,6 +170,9 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
     onMenuCopy: () => {},
     onMenuPaste: () => {},
     onMenuDelete: () => {},
+    onMenuSetLanguage: () => {},
+    setLanguage: async () => ({ success: true }),
+    getSystemLocale: async () => 'en',
     checkForUpdates: async () => ({ success: false }),
     downloadUpdate: async () => ({ success: false }),
     installUpdate: () => {},
@@ -187,6 +190,17 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
     getCurrentVersion: async () => '1.0.0',
     onUpdateStatus: () => {},
   }
+}
+
+// Escuta eventos de troca de idioma disparados pelo menu nativo do Electron
+if (typeof window !== 'undefined' && window.electronAPI?.onMenuSetLanguage) {
+  import('./i18n').then(({ useI18nStore, AVAILABLE_LANGUAGES }) => {
+    window.electronAPI.onMenuSetLanguage((lang) => {
+      if (lang in AVAILABLE_LANGUAGES) {
+        useI18nStore.getState().setLanguage(lang as any)
+      }
+    })
+  })
 }
 
 function App() {

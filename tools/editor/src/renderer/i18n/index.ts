@@ -24,32 +24,39 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Translations } from './types'
 import en from './locales/en'
+import pt from './locales/pt'
+import es from './locales/es'
 
 // Available languages
 export const AVAILABLE_LANGUAGES = {
   en: 'English',
-  // Add more languages here as they are created:
-  // pt: 'Portuguese',
-  // es: 'Español',
-  // fr: 'French',
-  // de: 'Deutsch',
-  // ja: '日本語',
-  // zh: '中文',
+  pt: 'Português',
+  es: 'Español',
 } as const
 
 export type LanguageCode = keyof typeof AVAILABLE_LANGUAGES
 
 // All available locales
-const LOCALES: Record<LanguageCode, Translations> = {
+export const LOCALES: Record<LanguageCode, Translations> = {
   en,
-  // Add more locales here:
-  // pt,
-  // es,
-  // fr,
+  pt,
+  es,
+}
+
+// Detect language from system / navigator
+export function detectSystemLanguage(): LanguageCode {
+  try {
+    const rawLang = (typeof navigator !== 'undefined' ? (navigator.languages?.[0] || navigator.language) : '').toLowerCase()
+    if (rawLang.startsWith('pt')) return 'pt'
+    if (rawLang.startsWith('es')) return 'es'
+  } catch {
+    // ignore
+  }
+  return 'en'
 }
 
 // Default language
-const DEFAULT_LANGUAGE: LanguageCode = 'en'
+const DEFAULT_LANGUAGE: LanguageCode = detectSystemLanguage()
 
 // i18n store interface
 interface I18nState {
@@ -62,7 +69,12 @@ export const useI18nStore = create<I18nState>()(
   persist(
     (set) => ({
       language: DEFAULT_LANGUAGE,
-      setLanguage: (lang: LanguageCode) => set({ language: lang }),
+      setLanguage: (lang: LanguageCode) => {
+        set({ language: lang })
+        if (window.electronAPI?.setLanguage) {
+          window.electronAPI.setLanguage(lang)
+        }
+      },
     }),
     {
       name: 'pdf-editor-language',

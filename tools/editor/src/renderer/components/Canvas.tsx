@@ -4,6 +4,7 @@ import { useUIStore } from '../store/uiStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
 import { Select, Button, Divider, Icon } from './atoms'
 import { IconButton } from './molecules'
+import { useTranslation } from '../i18n'
 // Component to render Loop child elements
 interface LoopChildElementProps {
   child: Element
@@ -71,6 +72,7 @@ function getCellBorderValues(style: Record<string, unknown> | undefined) {
 }
 
 function ContainerChildElement({ child, containerId, location, containerWidth, containerHeight, effectiveY, effectiveX, effectiveWidth }: ContainerChildElementProps) {
+  const { t } = useTranslation()
   const {
     selectedContainerChildId,
     selectedContainerParentId,
@@ -474,8 +476,8 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
                        {loopElements.length === 0 ? (
                          <div className="absolute inset-0 flex items-center justify-center">
                            <div className="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50">
-                             <div className="text-primary-400 text-[10px] font-medium">Adicione elementos</div>
-                             <div className="text-primary-300 text-[9px]">via sidebar</div>
+                             <div className="text-primary-400 text-[10px] font-medium">{t.canvas.addElements}</div>
+                             <div className="text-primary-300 text-[9px]">{t.canvas.viaSidebar}</div>
                            </div>
                          </div>
                        ) : (
@@ -1117,6 +1119,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
 }
 
 export default function Canvas() {
+  const { t } = useTranslation()
   const { 
     template, 
     selectedElementIds, 
@@ -1372,7 +1375,7 @@ export default function Canvas() {
       <div 
         className="h-6 bg-slate-950 border-b border-slate-800 flex items-center relative overflow-hidden select-none cursor-row-resize text-slate-400 pl-6 z-20 shrink-0 hover:bg-slate-900 transition-colors"
         onMouseDown={handleRulerMouseDownH}
-        title="Arraste para baixo para criar uma nova linha guia horizontal"
+        title={t.canvas.dragHorizontalGuide}
       >
         <div className="absolute left-1 text-[9px] font-mono text-slate-400 pointer-events-none">pt</div>
         <div className="flex-1 flex items-end h-full pointer-events-none">
@@ -1394,7 +1397,7 @@ export default function Canvas() {
         <div 
           className="w-6 bg-slate-950 border-r border-slate-800 flex flex-col relative select-none cursor-col-resize text-slate-400 z-20 shrink-0 overflow-hidden hover:bg-slate-900 transition-colors"
           onMouseDown={handleRulerMouseDownV}
-          title="Arraste para a direita para criar uma nova linha guia vertical"
+          title={t.canvas.dragVerticalGuide}
         >
           <div className="flex-1 flex flex-col pointer-events-none">
             {Array.from({ length: 40 }).map((_, i) => (
@@ -1497,7 +1500,7 @@ export default function Canvas() {
               zIndex: 5
             }}>
               <span className="absolute right-2 -top-3 bg-slate-100 text-slate-400 text-[10px] px-2 rounded-full border border-slate-200">
-                Página {i + 2}
+                {t.canvas.page} {i + 2}
               </span>
             </div>
           ))}
@@ -1682,7 +1685,7 @@ export default function Canvas() {
               zIndex: 5
             }}>
               <span className="absolute right-2 -top-3 bg-slate-100 text-slate-400 text-[10px] px-2 rounded-full border border-slate-200">
-                Página {i + 2}
+                {t.canvas.page} {i + 2}
               </span>
             </div>
           ))}
@@ -2188,7 +2191,7 @@ export default function Canvas() {
               zIndex: 5
             }}>
               <span className="absolute right-2 -top-3 bg-slate-100 text-slate-400 text-[10px] px-2 rounded-full border border-slate-200">
-                Página {i + 2}
+                {t.canvas.page} {i + 2}
               </span>
             </div>
           ))}
@@ -2335,7 +2338,7 @@ export default function Canvas() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  Header end: {margins.top + template.pageSettings.header.height}pt
+                  {t.canvas.headerEnd}: {margins.top + template.pageSettings.header.height}pt
                 </div>
               )}
               
@@ -2350,7 +2353,7 @@ export default function Canvas() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  Footer start: {totalCanvasHeight - margins.bottom - template.pageSettings.footer.height}pt
+                  {t.canvas.footerStart}: {totalCanvasHeight - margins.bottom - template.pageSettings.footer.height}pt
                 </div>
               )}
               
@@ -2468,7 +2471,7 @@ export default function Canvas() {
                   e.stopPropagation()
                   removeGuide('h', idx)
                 }}
-                title="Arraste para mover ou clique duplo para remover"
+                title={t.canvas.guideTooltip}
               >
                 <div className="h-0.5 bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
                   <div className={`absolute left-2 -top-5 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 transition-opacity ${draggingGuide?.type === 'h' && draggingGuide?.index === idx ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
@@ -2492,7 +2495,7 @@ export default function Canvas() {
                   e.stopPropagation()
                   removeGuide('v', idx)
                 }}
-                title="Arraste para mover ou clique duplo para remover"
+                title={t.canvas.guideTooltip}
               >
                 <div className="w-0.5 h-full bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
                   <div className={`absolute -left-6 top-2 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 transition-opacity whitespace-nowrap ${draggingGuide?.type === 'v' && draggingGuide?.index === idx ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
@@ -2549,6 +2552,7 @@ function getFontFamily(pdfFont?: string): string {
 }
 
 function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale = 1, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
+  const { t } = useTranslation()
   const template = useTemplateStore(state => state.template)
   const testData = useTemplateStore(state => state.testData)
   const saveSnapshot = useTemplateStore(state => state.saveSnapshot)
@@ -3561,8 +3565,8 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
               {loopElements.length === 0 ? (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50">
-                    <div className="text-primary-400 text-[10px] font-medium">Adicione elementos</div>
-                    <div className="text-primary-300 text-[9px]">via sidebar</div>
+                    <div className="text-primary-400 text-[10px] font-medium">{t.canvas.addElements}</div>
+                    <div className="text-primary-300 text-[9px]">{t.canvas.viaSidebar}</div>
                   </div>
                 </div>
               ) : (
@@ -3689,7 +3693,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                     {containerElements.length === 0 ? (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50">
-                          <div className="text-primary-400 text-[10px] font-medium">Adicione elementos <span className="text-primary-300 text-[9px]">via sidebar</span></div>
+                          <div className="text-primary-400 text-[10px] font-medium">{t.canvas.addElements} <span className="text-primary-300 text-[9px]">{t.canvas.viaSidebar}</span></div>
                         </div>
                       </div>
                     ) : (

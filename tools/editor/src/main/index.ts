@@ -122,7 +122,7 @@ let cachedJavaPath: string | null = null
 
 async function findJavaPath(): Promise<string | null> {
   if (cachedJavaPath) return cachedJavaPath
-  
+
   const javaHome = process.env.JAVA_HOME
   if (javaHome) {
     const javaPath = path.join(javaHome, 'bin', 'java')
@@ -134,7 +134,7 @@ async function findJavaPath(): Promise<string | null> {
       // JAVA_HOME is not valid, continue searching
     }
   }
-  
+
   for (const javaPath of JAVA_PATHS) {
     try {
       await fs.access(javaPath)
@@ -144,7 +144,7 @@ async function findJavaPath(): Promise<string | null> {
       // Continua procurando
     }
   }
-  
+
   try {
     const javaHomePath = execSync('/usr/libexec/java_home 2>/dev/null', { encoding: 'utf-8' }).trim()
     if (javaHomePath) {
@@ -160,7 +160,7 @@ async function findJavaPath(): Promise<string | null> {
   } catch {
     // java_home not available
   }
-  
+
   // Last attempt: use 'java' directly (works in dev)
   try {
     execSync('java -version 2>&1', { encoding: 'utf-8' })
@@ -169,7 +169,7 @@ async function findJavaPath(): Promise<string | null> {
   } catch {
     // Java not found
   }
-  
+
   return null
 }
 
@@ -178,11 +178,11 @@ async function findJavaPath(): Promise<string | null> {
  */
 async function checkJavaInstalled(): Promise<{ installed: boolean; version: string | null; javaPath: string | null }> {
   const javaPath = await findJavaPath()
-  
+
   if (!javaPath) {
     return { installed: false, version: null, javaPath: null }
   }
-  
+
   try {
     const output = execSync(`"${javaPath}" -version 2>&1`, { encoding: 'utf-8' })
     const match = output.match(/version "([^"]+)"/) || output.match(/version (\S+)/)
@@ -201,7 +201,7 @@ async function checkJavaInstalled(): Promise<{ installed: boolean; version: stri
  */
 async function checkCLIStatus(): Promise<CLIStatus> {
   const javaCheck = await checkJavaInstalled()
-  
+
   try {
     await fs.access(CLI_JAR_PATH)
 
@@ -221,14 +221,14 @@ async function checkCLIStatus(): Promise<CLIStatus> {
         }
       }
     }
-    
+
     let installedVersion: string | null = null
     try {
       installedVersion = (await fs.readFile(CLI_VERSION_FILE, 'utf-8')).trim()
     } catch {
       installedVersion = 'unknown'
     }
-    
+
     return {
       installed: true,
       version: installedVersion,
@@ -267,7 +267,7 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
       // Try to find the JAR in the app resources directory (fallback for dev)
       const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
       let fallbackJar: string | null = null
-      
+
       if (isDev) {
         const resourcesJar = path.join(__dirname, '..', '..', 'resources', 'pdf-generator.jar')
         fallbackJar = await findLatestLocalCliJar()
@@ -281,7 +281,7 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
           }
         }
       }
-      
+
       if (fallbackJar) {
         console.log(`📦 Instalando CLI de: ${fallbackJar}`)
         await fs.copyFile(fallbackJar, CLI_JAR_PATH)
@@ -291,11 +291,11 @@ async function installCLI(source?: string): Promise<{ success: boolean; error?: 
         return await downloadCLI(CLI_DOWNLOAD_URL)
       }
     }
-    
+
     // Save version
     const installedVersionFromJarPath = selectedJarPath?.match(/(?:pdf-generator-cli|open-pdf-generator)-(.+)\.jar$/)?.[1]
     await fs.writeFile(CLI_VERSION_FILE, installedVersionFromJarPath || CLI_VERSION)
-    
+
     console.log(`✅ CLI instalado com sucesso em: ${CLI_JAR_PATH}`)
     return { success: true }
   } catch (error) {
@@ -361,9 +361,9 @@ async function ensureCLIReady(): Promise<{ ok: true; status: CLIStatus } | { ok:
 async function downloadCLI(url: string): Promise<{ success: boolean; error?: string }> {
   return new Promise((resolve) => {
     console.log(`📥 Baixando CLI de: ${url}`)
-    
+
     const protocol = url.startsWith('https') ? https : http
-    
+
     const request = protocol.get(url, (response) => {
       // Seguir redirects
       if (response.statusCode === 301 || response.statusCode === 302) {
@@ -373,15 +373,15 @@ async function downloadCLI(url: string): Promise<{ success: boolean; error?: str
           return
         }
       }
-      
+
       if (response.statusCode !== 200) {
-        resolve({ 
-          success: false, 
-          error: `Erro ao baixar CLI: HTTP ${response.statusCode}` 
+        resolve({
+          success: false,
+          error: `Erro ao baixar CLI: HTTP ${response.statusCode}`
         })
         return
       }
-      
+
       const chunks: Buffer[] = []
       response.on('data', (chunk) => chunks.push(chunk))
       response.on('end', async () => {
@@ -392,21 +392,21 @@ async function downloadCLI(url: string): Promise<{ success: boolean; error?: str
           console.log(`✅ CLI baixado com sucesso: ${CLI_JAR_PATH}`)
           resolve({ success: true })
         } catch (error) {
-          resolve({ 
-            success: false, 
-            error: error instanceof Error ? error.message : 'Erro ao salvar arquivo' 
+          resolve({
+            success: false,
+            error: error instanceof Error ? error.message : 'Erro ao salvar arquivo'
           })
         }
       })
     })
-    
+
     request.on('error', (error) => {
-      resolve({ 
-        success: false, 
-        error: `Erro de rede: ${error.message}` 
+      resolve({
+        success: false,
+        error: `Erro de rede: ${error.message}`
       })
     })
-    
+
     request.setTimeout(30000, () => {
       request.destroy()
       resolve({ success: false, error: 'Timeout ao baixar CLI' })
@@ -421,7 +421,7 @@ async function installCLIFromFile(): Promise<{ success: boolean; error?: string;
   if (!mainWindow) {
     return { success: false, errorCode: ErrorCodes.MAIN_WINDOW_NOT_FOUND }
   }
-  
+
   const result = await dialog.showOpenDialog(mainWindow, {
     title: 'Select PDF Generator CLI JAR',
     properties: ['openFile'],
@@ -429,11 +429,11 @@ async function installCLIFromFile(): Promise<{ success: boolean; error?: string;
       { name: 'JAR Files', extensions: ['jar'] }
     ]
   })
-  
+
   if (result.canceled || result.filePaths.length === 0) {
     return { success: false, errorCode: ErrorCodes.OPERATION_CANCELLED }
   }
-  
+
   return await installCLI(result.filePaths[0])
 }
 
@@ -479,9 +479,157 @@ async function readJarVersionFromBuildLibs(
   }
 }
 
-function createMenu() {
+function createSplashWindow() {
+  const isDev = !app.isPackaged || process.env.NODE_ENV === 'development'
+
+  splashWindow = new BrowserWindow({
+    width: 400,
+    height: 350,
+    frame: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable: false,
+    center: true,
+    show: false, // Show only when content loads
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  })
+
+  // Show splash as soon as content is ready
+  splashWindow.once('ready-to-show', () => {
+    splashWindow?.show()
+  })
+
+  // Carregar arquivo HTML da splash
+  const splashPath = isDev
+    ? path.join(__dirname, '..', '..', 'resources', 'splash.html')
+    : path.join(process.resourcesPath, 'splash.html')
+
+  splashWindow.loadFile(splashPath)
+}
+
+let currentAppLanguage = 'en'
+
+const MENU_TRANSLATIONS: Record<string, Record<string, string>> = {
+  en: {
+    file: 'File',
+    new: 'New',
+    open: 'Open...',
+    save: 'Save',
+    saveAs: 'Save As...',
+    export: 'Export PDF...',
+    exit: 'Exit',
+    edit: 'Edit',
+    undo: 'Undo',
+    redo: 'Redo',
+    cut: 'Cut',
+    copy: 'Copy',
+    paste: 'Paste',
+    selectAll: 'Select All',
+    copyElement: 'Copy Element',
+    pasteElement: 'Paste Element',
+    deleteElement: 'Delete Element',
+    view: 'View',
+    reload: 'Reload',
+    forceReload: 'Force Reload',
+    toggleDevTools: 'Toggle Developer Tools',
+    resetZoom: 'Reset Zoom',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+    togglefullscreen: 'Toggle Full Screen',
+    window: 'Window',
+    minimize: 'Minimize',
+    zoom: 'Zoom',
+    close: 'Close',
+    help: 'Help',
+    documentation: 'Documentation',
+    reportIssue: 'Report Issue',
+    about: 'About',
+    language: 'Language',
+    aboutDetail: 'Visual editor for PDF template generation.',
+  },
+  pt: {
+    file: 'Arquivo',
+    new: 'Novo',
+    open: 'Abrir...',
+    save: 'Salvar',
+    saveAs: 'Salvar Como...',
+    export: 'Exportar PDF...',
+    exit: 'Sair',
+    edit: 'Editar',
+    undo: 'Desfazer',
+    redo: 'Refazer',
+    cut: 'Recortar',
+    copy: 'Copiar',
+    paste: 'Colar',
+    selectAll: 'Selecionar Tudo',
+    copyElement: 'Copiar Elemento',
+    pasteElement: 'Colar Elemento',
+    deleteElement: 'Excluir Elemento',
+    view: 'Exibir',
+    reload: 'Recarregar',
+    forceReload: 'Forçar Recarregamento',
+    toggleDevTools: 'Alternar Ferramentas do Desenvolvedor',
+    resetZoom: 'Redefinir Zoom',
+    zoomIn: 'Aumentar Zoom',
+    zoomOut: 'Diminuir Zoom',
+    togglefullscreen: 'Alternar Tela Cheia',
+    window: 'Janela',
+    minimize: 'Minimizar',
+    zoom: 'Zoom',
+    close: 'Fechar',
+    help: 'Ajuda',
+    documentation: 'Documentação',
+    reportIssue: 'Relatar Problema',
+    about: 'Sobre',
+    language: 'Idioma',
+    aboutDetail: 'Editor visual para geração de modelos PDF.',
+  },
+  es: {
+    file: 'Archivo',
+    new: 'Nuevo',
+    open: 'Abrir...',
+    save: 'Guardar',
+    saveAs: 'Guardar como...',
+    export: 'Exportar PDF...',
+    exit: 'Salir',
+    edit: 'Editar',
+    undo: 'Deshacer',
+    redo: 'Rehacer',
+    cut: 'Cortar',
+    copy: 'Copiar',
+    paste: 'Pegar',
+    selectAll: 'Seleccionar todo',
+    copyElement: 'Copiar elemento',
+    pasteElement: 'Pegar elemento',
+    deleteElement: 'Eliminar elemento',
+    view: 'Ver',
+    reload: 'Recargar',
+    forceReload: 'Forzar recarga',
+    toggleDevTools: 'Alternar herramientas de desarrollo',
+    resetZoom: 'Restablecer zoom',
+    zoomIn: 'Acercar zoom',
+    zoomOut: 'Alejar zoom',
+    togglefullscreen: 'Alternar pantalla completa',
+    window: 'Ventana',
+    minimize: 'Minimizar',
+    zoom: 'Zoom',
+    close: 'Cerrar',
+    help: 'Ayuda',
+    documentation: 'Documentación',
+    reportIssue: 'Informar de un problema',
+    about: 'Acerca de',
+    language: 'Idioma',
+    aboutDetail: 'Editor visual para la generación de plantillas PDF.',
+  },
+}
+
+function createMenu(lang: string = currentAppLanguage) {
   const isMac = process.platform === 'darwin'
-  
+  const strings = MENU_TRANSLATIONS[lang] || MENU_TRANSLATIONS.en
+
   const template: Electron.MenuItemConstructorOptions[] = [
     // App menu (macOS only)
     ...(isMac ? [{
@@ -499,17 +647,17 @@ function createMenu() {
       ]
     }] : []),
     {
-      label: 'File',
+      label: strings.file,
       submenu: [
         {
-          label: 'New',
+          label: strings.new,
           accelerator: 'CmdOrCtrl+N',
           click: () => {
             mainWindow?.webContents.send('menu:new')
           }
         },
         {
-          label: 'Open...',
+          label: strings.open,
           accelerator: 'CmdOrCtrl+O',
           click: () => {
             mainWindow?.webContents.send('menu:open')
@@ -517,14 +665,14 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'Save',
+          label: strings.save,
           accelerator: 'CmdOrCtrl+S',
           click: () => {
             mainWindow?.webContents.send('menu:save')
           }
         },
         {
-          label: 'Save As...',
+          label: strings.saveAs,
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => {
             mainWindow?.webContents.send('menu:save-as')
@@ -532,31 +680,31 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'Export PDF...',
+          label: strings.export,
           click: () => {
             mainWindow?.webContents.send('menu:export')
           }
         },
         { type: 'separator' },
         ...(isMac ? [] : [{
-          label: 'Exit',
+          label: strings.exit,
           accelerator: 'CmdOrCtrl+Q',
           role: 'quit' as const
         }])
       ]
     },
     {
-      label: 'Edit',
+      label: strings.edit,
       submenu: [
         {
-          label: 'Undo',
+          label: strings.undo,
           accelerator: 'CmdOrCtrl+Z',
           click: () => {
             mainWindow?.webContents.send('menu:undo')
           }
         },
         {
-          label: 'Redo',
+          label: strings.redo,
           accelerator: 'CmdOrCtrl+Y',
           click: () => {
             mainWindow?.webContents.send('menu:redo')
@@ -569,20 +717,20 @@ function createMenu() {
         { role: 'selectAll' },
         { type: 'separator' },
         {
-          label: 'Copy Element',
+          label: strings.copyElement,
           click: () => {
             mainWindow?.webContents.send('menu:copy')
           }
         },
         {
-          label: 'Paste Element',
+          label: strings.pasteElement,
           click: () => {
             mainWindow?.webContents.send('menu:paste')
           }
         },
         { type: 'separator' },
         {
-          label: 'Delete Element',
+          label: strings.deleteElement,
           accelerator: 'Delete',
           click: () => {
             mainWindow?.webContents.send('menu:delete')
@@ -591,7 +739,7 @@ function createMenu() {
       ]
     },
     {
-      label: 'View',
+      label: strings.view,
       submenu: [
         // Dev tools only in development
         ...((!app.isPackaged || process.env.NODE_ENV === 'development') ? [
@@ -608,7 +756,42 @@ function createMenu() {
       ]
     },
     {
-      label: 'Window',
+      label: strings.language,
+      submenu: [
+        {
+          label: 'English',
+          type: 'radio',
+          checked: lang === 'en',
+          click: () => {
+            currentAppLanguage = 'en'
+            createMenu('en')
+            mainWindow?.webContents.send('menu:set-language', 'en')
+          }
+        },
+        {
+          label: 'Português',
+          type: 'radio',
+          checked: lang === 'pt',
+          click: () => {
+            currentAppLanguage = 'pt'
+            createMenu('pt')
+            mainWindow?.webContents.send('menu:set-language', 'pt')
+          }
+        },
+        {
+          label: 'Español',
+          type: 'radio',
+          checked: lang === 'es',
+          click: () => {
+            currentAppLanguage = 'es'
+            createMenu('es')
+            mainWindow?.webContents.send('menu:set-language', 'es')
+          }
+        }
+      ]
+    },
+    {
+      label: strings.window,
       submenu: [
         { role: 'minimize' },
         { role: 'zoom' },
@@ -617,31 +800,31 @@ function createMenu() {
       ]
     },
     {
-      label: 'Help',
+      label: strings.help,
       submenu: [
         {
-          label: 'Documentation',
+          label: strings.documentation,
           click: () => {
             shell.openExternal('https://adilsoncruz.github.io/open-pdf-generator/')
           }
         },
         { type: 'separator' },
         {
-          label: 'Report Issue',
+          label: strings.reportIssue,
           click: () => {
             shell.openExternal('https://github.com/adilsoncruz/open-pdf-generator/issues')
           }
         },
         { type: 'separator' },
         {
-          label: 'About',
+          label: strings.about,
           click: () => {
             if (mainWindow) {
               dialog.showMessageBox(mainWindow, {
                 type: 'info',
-                title: 'About PDF Template Editor',
+                title: `${strings.about} PDF Template Editor`,
                 message: 'PDF Template Editor',
-                detail: `Version ${app.getVersion()}\n\nVisual editor for PDF template generation.\n\n© 2024`
+                detail: `Version ${app.getVersion()}\n\n${strings.aboutDetail}\n\n© 2024`
               })
             }
           }
@@ -660,7 +843,7 @@ function createWindow() {
   const resourcesPath = isDev
     ? path.join(__dirname, '..', '..', 'resources') // Em dev: dist/main -> desktop-app/resources
     : process.resourcesPath // Em prod: app.asar/resources
-  
+
   const iconPath = process.platform === 'darwin'
     ? path.join(resourcesPath, 'icon.icns')
     : process.platform === 'win32'
@@ -682,15 +865,23 @@ function createWindow() {
     backgroundColor: '#0b0f19',
     title: 'Open PDF Template Studio',
   })
-  
-  createMenu()
+
+  const systemLocale = (app.getLocale() || '').toLowerCase()
+  if (systemLocale.startsWith('pt')) {
+    currentAppLanguage = 'pt'
+  } else if (systemLocale.startsWith('es')) {
+    currentAppLanguage = 'es'
+  } else {
+    currentAppLanguage = 'en'
+  }
+  createMenu(currentAppLanguage)
 
   // Quando a janela estiver pronta para mostrar
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show()
     mainWindow?.maximize()
     mainWindow?.focus()
-    
+
     // Inicializar auto-updater
     if (mainWindow) {
       initAutoUpdater(mainWindow)
@@ -700,7 +891,8 @@ function createWindow() {
 
   // Em desenvolvimento, carrega do Vite dev server
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173')
+    const devPort = process.env.VITE_PORT || '5175'
+    mainWindow.loadURL(`http://localhost:${devPort}`)
     // DevTools starts closed in dev, can be opened via View menu (Cmd+Option+I)
   } else {
     // In production, load from build
@@ -719,14 +911,14 @@ app.whenReady().then(() => {
     const dockIcon = isDev
       ? path.join(__dirname, '..', '..', 'resources', 'icon.png') // Em dev: dist/main -> desktop-app/resources
       : path.join(process.resourcesPath, 'icon.png') // Em prod: app.asar/resources
-    
+
     try {
       app.dock?.setIcon(dockIcon)
     } catch (error) {
       console.warn('Could not load dock icon:', error)
     }
   }
-  
+
   // Criar janela principal (em background)
   createWindow()
 
@@ -905,6 +1097,17 @@ ipcMain.handle('app:getVersions', async (): Promise<VersionInfo> => {
   }
 })
 
+// Language management
+ipcMain.handle('app:getSystemLocale', () => {
+  return app.getLocale() || 'en'
+})
+
+ipcMain.handle('app:setLanguage', (_, lang: string) => {
+  currentAppLanguage = lang
+  createMenu(lang)
+  return { success: true }
+})
+
 // Gerar PDF e retornar como base64 (para preview)
 // Error codes for i18n translation in renderer
 const ErrorCodes = {
@@ -1009,7 +1212,7 @@ async function convertJrxmlToJson(filePath: string): Promise<{ success: boolean;
 
 ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: string) => {
   console.log('📄 [Preview] Starting PDF preview generation...')
-  
+
   try {
     const cliReady = await ensureCLIReady()
     if (!cliReady.ok) return cliReady.error
@@ -1030,7 +1233,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
 
     await fs.writeFile(templateFile, templateJson)
     await fs.writeFile(dataFile, dataJson)
-    
+
     // Log template summary
     try {
       const template = JSON.parse(templateJson)
@@ -1047,7 +1250,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
 
     const javaPath = cliStatus.javaPath || 'java'
     console.log('📄 [Preview] Executing:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '--output', pdfFile)
-    
+
     return new Promise((resolve) => {
       const java = spawn(javaPath, [
         '-jar',
@@ -1077,7 +1280,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
 
       java.on('close', async (code) => {
         console.log('📄 [Preview] CLI exited with code:', code)
-        
+
         await fs.unlink(templateFile).catch(() => {})
         await fs.unlink(dataFile).catch(() => {})
 
@@ -1085,12 +1288,12 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
           try {
             const pdfBuffer = await fs.readFile(pdfFile)
             const base64 = pdfBuffer.toString('base64')
-            
+
             console.log('✅ [Preview] PDF generated successfully, size:', pdfBuffer.length, 'bytes')
-            
+
             await fs.unlink(pdfFile).catch(() => {})
             await fs.rmdir(tmpDir).catch(() => {})
-            
+
             resolve({
               success: true,
               pdfBase64: base64,
@@ -1116,7 +1319,7 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
             errorCode: ErrorCodes.ERROR_GENERATING_PDF,
             code,
             // Include CLI output for debugging
-            
+
             cliError: stderr.trim() || stdout.trim(),
           })
         }
@@ -1124,12 +1327,12 @@ ipcMain.handle('pdf:generatePreview', async (_, templateJson: string, dataJson: 
 
       java.on('error', async (error) => {
         console.error('❌ [Preview] Java spawn error:', error)
-        
+
         await fs.unlink(templateFile).catch(() => {})
         await fs.unlink(dataFile).catch(() => {})
         await fs.unlink(pdfFile).catch(() => {})
         await fs.rmdir(tmpDir).catch(() => {})
-        
+
         resolve({
           success: false,
           errorCode: ErrorCodes.ERROR_EXECUTING_JAVA,
@@ -1208,7 +1411,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
           })
         } else {
           await fs.unlink(pdfFile).catch(() => {})
-          
+
           resolve({
             success: false,
             errorCode: ErrorCodes.ERROR_GENERATING_PDF,
@@ -1222,7 +1425,7 @@ ipcMain.handle('pdf:generate', async (_, templateJson: string, dataJson: string,
         await fs.unlink(templateFile).catch(() => {})
         await fs.unlink(dataFile).catch(() => {})
         await fs.unlink(pdfFile).catch(() => {})
-        
+
         resolve({
           success: false,
           errorCode: ErrorCodes.ERROR_EXECUTING_JAVA,
@@ -1271,17 +1474,17 @@ ipcMain.handle('pdf:openBase64', async (_, base64: string, openInViewer?: boolea
 // Validate template using CLI
 ipcMain.handle('template:validate', async (_, templatePath: string) => {
   console.log('🔍 [Validate] Validating template:', templatePath)
-  
+
   try {
     let cliStatus = await checkCLIStatus()
-    
+
     if (!cliStatus.javaInstalled) {
       return {
         valid: false,
         errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
       }
     }
-    
+
     if (!cliStatus.installed || cliStatus.needsUpdate) {
       const installResult = await installCLI()
       if (!installResult.success) {
@@ -1294,7 +1497,7 @@ ipcMain.handle('template:validate', async (_, templatePath: string) => {
     }
 
     const javaPath = cliStatus.javaPath || 'java'
-    
+
     return new Promise((resolve) => {
       const java = spawn(javaPath, [
         '-jar',
@@ -1316,7 +1519,7 @@ ipcMain.handle('template:validate', async (_, templatePath: string) => {
 
       java.on('close', (code) => {
         console.log('🔍 [Validate] CLI exited with code:', code)
-        
+
         if (code === 0) {
           resolve({
             valid: true,

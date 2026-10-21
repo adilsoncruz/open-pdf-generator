@@ -73,6 +73,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('menu:delete')
     ipcRenderer.on('menu:delete', callback)
   },
+  onMenuSetLanguage: (callback: (lang: string) => void) => {
+    ipcRenderer.removeAllListeners('menu:set-language')
+    ipcRenderer.on('menu:set-language', (_, lang) => callback(lang))
+  },
+
+  // Language APIs
+  setLanguage: (lang: string) => ipcRenderer.invoke('app:setLanguage', lang),
+  getSystemLocale: () => ipcRenderer.invoke('app:getSystemLocale'),
   
   // Auto-Update APIs
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
@@ -174,6 +182,11 @@ export interface ElectronAPI {
   onMenuCopy: (callback: () => void) => void
   onMenuPaste: (callback: () => void) => void
   onMenuDelete: (callback: () => void) => void
+  onMenuSetLanguage: (callback: (lang: string) => void) => void
+
+  // Language APIs
+  setLanguage: (lang: string) => Promise<{ success: boolean }>
+  getSystemLocale: () => Promise<string>
   
   // Auto-Update
   checkForUpdates: () => Promise<{ success: boolean; updateAvailable?: boolean; version?: string; error?: string }>

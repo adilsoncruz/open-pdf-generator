@@ -482,6 +482,7 @@ export default function Sidebar() {
   }
 
 function DocumentPropertiesContent() {
+  const { t } = useTranslation()
   const { template, updatePageSettings, updateMetadata } = useTemplateStore()
   const { margins, size, orientation } = template.pageSettings
   const { name, description, author } = template.metadata || { name: '', description: '', author: '' }
@@ -509,42 +510,42 @@ function DocumentPropertiesContent() {
       <div>
         <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Icon name="file-text" size="xs" className="text-indigo-400" />
-          <span>Informações do Template</span>
+          <span>{t.sidebar.templateInfo}</span>
         </div>
         <div className="space-y-2">
           <div>
-            <label className="text-[10px] text-slate-400 block mb-1">Nome do Documento</label>
+            <label className="text-[10px] text-slate-400 block mb-1">{t.sidebar.documentName}</label>
             <input
               type="text"
               value={name || ''}
               onChange={(e) => updateMetadata({ name: e.target.value })}
               className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none transition"
-              placeholder="Ex: Fatura Comercial"
+              placeholder={t.sidebar.documentName}
             />
           </div>
           <div>
-            <label className="text-[10px] text-slate-400 block mb-1">Descrição</label>
+            <label className="text-[10px] text-slate-400 block mb-1">{t.sidebar.description}</label>
             <textarea
               value={description || ''}
               onChange={(e) => updateMetadata({ description: e.target.value })}
               rows={2}
               className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none transition resize-none"
-              placeholder="Descrição do template..."
+              placeholder={t.sidebar.description}
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-[10px] text-slate-400 block mb-1">Autor</label>
+              <label className="text-[10px] text-slate-400 block mb-1">{t.sidebar.author}</label>
               <input
                 type="text"
                 value={author || ''}
                 onChange={(e) => updateMetadata({ author: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none transition"
-                placeholder="Autor"
+                placeholder={t.sidebar.author}
               />
             </div>
             <div>
-              <label className="text-[10px] text-slate-400 block mb-1">Versão</label>
+              <label className="text-[10px] text-slate-400 block mb-1">{t.sidebar.version}</label>
               <input
                 type="text"
                 value={template.version || '1.0'}
@@ -562,12 +563,12 @@ function DocumentPropertiesContent() {
       <div>
         <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Icon name="settings" size="xs" className="text-indigo-400" />
-          <span>Configuração da Página</span>
+          <span>{t.sidebar.pageSettings}</span>
         </div>
         
         <div className="space-y-2">
           <div>
-            <label className="text-[10px] text-slate-400 block mb-1">Tamanho do Papel</label>
+            <label className="text-[10px] text-slate-400 block mb-1">{t.sidebar.paperSize}</label>
             <select
               value={size || 'A4'}
               onChange={(e) => handleSizeChange(e.target.value)}
@@ -575,12 +576,12 @@ function DocumentPropertiesContent() {
             >
               <option value="A4">A4 (595 × 842 pt)</option>
               <option value="PORTRAIT">Letter (612 × 792 pt)</option>
-              <option value="CUSTOM">Personalizado (Custom)</option>
+              <option value="CUSTOM">Custom</option>
             </select>
           </div>
 
           <div>
-            <label className="text-[10px] text-slate-400 block mb-1">Orientação</label>
+            <label className="text-[10px] text-slate-400 block mb-1">{t.sidebar.orientation}</label>
             <div className="grid grid-cols-2 gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800">
               <button
                 type="button"
@@ -591,7 +592,7 @@ function DocumentPropertiesContent() {
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <span>Retrato</span>
+                <span>{t.sidebar.portrait}</span>
               </button>
               <button
                 type="button"
@@ -602,7 +603,7 @@ function DocumentPropertiesContent() {
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <span>Paisagem</span>
+                <span>{t.sidebar.landscape}</span>
               </button>
             </div>
           </div>
@@ -615,13 +616,13 @@ function DocumentPropertiesContent() {
       <div>
         <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Icon name="layers" size="xs" className="text-indigo-400" />
-          <span>Margens do Documento (pt)</span>
+          <span>{t.sidebar.margins}</span>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           {/* Top */}
           <div className="bg-slate-950 border border-slate-800 rounded-lg p-2 focus-within:border-indigo-500 transition">
-            <span className="text-[10px] text-slate-500 block mb-0.5">Superior (Top)</span>
+            <span className="text-[10px] text-slate-500 block mb-0.5">{t.sidebar.top}</span>
             <div className="flex items-center">
               <input
                 type="number"
@@ -635,7 +636,7 @@ function DocumentPropertiesContent() {
 
           {/* Bottom */}
           <div className="bg-slate-950 border border-slate-800 rounded-lg p-2 focus-within:border-indigo-500 transition">
-            <span className="text-[10px] text-slate-500 block mb-0.5">Inferior (Bottom)</span>
+            <span className="text-[10px] text-slate-500 block mb-0.5">{t.sidebar.bottom}</span>
             <div className="flex items-center">
               <input
                 type="number"
@@ -649,7 +650,7 @@ function DocumentPropertiesContent() {
 
           {/* Left */}
           <div className="bg-slate-950 border border-slate-800 rounded-lg p-2 focus-within:border-indigo-500 transition">
-            <span className="text-[10px] text-slate-500 block mb-0.5">Esquerda (Left)</span>
+            <span className="text-[10px] text-slate-500 block mb-0.5">{t.sidebar.left}</span>
             <div className="flex items-center">
               <input
                 type="number"
@@ -663,7 +664,7 @@ function DocumentPropertiesContent() {
 
           {/* Right */}
           <div className="bg-slate-950 border border-slate-800 rounded-lg p-2 focus-within:border-indigo-500 transition">
-            <span className="text-[10px] text-slate-500 block mb-0.5">Direita (Right)</span>
+            <span className="text-[10px] text-slate-500 block mb-0.5">{t.sidebar.right}</span>
             <div className="flex items-center">
               <input
                 type="number"
@@ -682,41 +683,41 @@ function DocumentPropertiesContent() {
       {/* 4. Resumo das Seções */}
       <div>
         <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2">
-          Seções do Documento
+          {t.sidebar.activeSections}
         </div>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
-            <span className="text-slate-300 text-xs">Header (Cabeçalho)</span>
+            <span className="text-slate-300 text-xs">{t.sidebar.header}</span>
             <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${template.pageSettings.header ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-500'}`}>
-              {template.pageSettings.header ? `${template.pageSettings.header.height}pt` : 'Desativado'}
+              {template.pageSettings.header ? `${template.pageSettings.header.height}pt` : t.sidebar.inactive}
             </span>
           </div>
 
           <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
-            <span className="text-slate-300 text-xs">Body Flow (Corpo)</span>
+            <span className="text-slate-300 text-xs">{t.sidebar.page}</span>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              {template.page?.length || 0} elemento(s)
+              {template.page?.length || 0} {t.sidebar.elementsTitle.toLowerCase()}
             </span>
           </div>
 
           <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
-            <span className="text-slate-300 text-xs">Footer (Rodapé)</span>
+            <span className="text-slate-300 text-xs">{t.sidebar.footer}</span>
             <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${template.pageSettings.footer ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-500'}`}>
-              {template.pageSettings.footer ? `${template.pageSettings.footer.height}pt` : 'Desativado'}
+              {template.pageSettings.footer ? `${template.pageSettings.footer.height}pt` : t.sidebar.inactive}
             </span>
           </div>
 
           <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
-            <span className="text-slate-300 text-xs">Background Layer</span>
+            <span className="text-slate-300 text-xs">{t.sidebar.background}</span>
             <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${template.pageSettings.bodyBackground ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-slate-800 text-slate-500'}`}>
-              {template.pageSettings.bodyBackground ? 'Ativo' : 'Desativado'}
+              {template.pageSettings.bodyBackground ? t.sidebar.active : t.sidebar.inactive}
             </span>
           </div>
 
           <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg">
-            <span className="text-slate-300 text-xs">Summary Page</span>
+            <span className="text-slate-300 text-xs">{t.sidebar.summary}</span>
             <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${template.summaryPage ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-500'}`}>
-              {template.summaryPage ? 'Ativo' : 'Desativado'}
+              {template.summaryPage ? t.sidebar.active : t.sidebar.inactive}
             </span>
           </div>
         </div>
@@ -952,10 +953,10 @@ function HistoryContent() {
           />
           <h2 className="text-xs font-semibold text-slate-200">
             {sidebarTab === 'document' 
-              ? 'Propriedades do Documento' 
+              ? t.sidebar.documentProperties 
               : sidebarTab === 'history' 
-              ? 'Histórico & Versões' 
-              : isElementsCollapsed ? 'Camadas (Layers)' : 'Elements Library'}
+              ? t.sidebar.historyVersions 
+              : isElementsCollapsed ? t.sidebar.layers : t.sidebar.elementsLibrary}
           </h2>
         </div>
 
@@ -1230,7 +1231,7 @@ function HistoryContent() {
           {/* Seção Inferior: Layer Tree (ocupa todo o espaço quando elementos recolhidos) */}
           <div className="flex-1 flex flex-col min-h-0 p-3 overflow-hidden">
             <div className="flex items-center justify-between mb-2 px-0.5 relative shrink-0 z-30">
-              <span className="text-[11px] font-medium text-slate-300">Layer</span>
+              <span className="text-[11px] font-medium text-slate-300">{t.sidebar.layers}</span>
               
               {/* Botão '+' com Dropdown Popover anexo a ele */}
               <div className="relative">
@@ -1241,7 +1242,7 @@ function HistoryContent() {
                     setShowAddBandDropdown(!showAddBandDropdown)
                   }}
                   className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 hover:text-white transition"
-                  title="Adicionar Seção ou Container"
+                  title={t.common.add}
                 >
                   <Icon name="plus" size="xs" />
                 </button>

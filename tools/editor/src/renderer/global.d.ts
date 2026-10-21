@@ -92,6 +92,11 @@ export interface ElectronAPI {
   onMenuCopy: (callback: () => void) => void
   onMenuPaste: (callback: () => void) => void
   onMenuDelete: (callback: () => void) => void
+  onMenuSetLanguage: (callback: (lang: string) => void) => void
+
+  // Language APIs
+  setLanguage: (lang: string) => Promise<{ success: boolean }>
+  getSystemLocale: () => Promise<string>
   
   // Auto-Update
   checkForUpdates: () => Promise<{ success: boolean; updateAvailable?: boolean; version?: string; error?: string }>
