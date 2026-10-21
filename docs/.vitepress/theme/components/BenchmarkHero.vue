@@ -11,7 +11,7 @@ import { withBase } from 'vitepress'
       </div>
       <h3>Engineered for High-Density Microservices & Cloud Run</h3>
       <p class="benchmark-subtitle">
-        Stress test generating <strong>100,000 unique dynamic invoices</strong> against JasperReports 6.21.4 with zero template caching.
+        Stress test generating <strong>100,000 unique dynamic invoices</strong> against JasperReports 6.21.4 and JasperReports 7.0.3 with zero template caching.
       </p>
     </div>
 
@@ -19,19 +19,19 @@ import { withBase } from 'vitepress'
       <div class="benchmark-stat-item">
         <span class="benchmark-stat-label">Throughput</span>
         <div class="benchmark-stat-val">
-          8,310 <span class="unit">docs/s</span>
+          8,650 <span class="unit">docs/s</span>
         </div>
         <span class="benchmark-stat-delta">▲ 2.5x faster</span>
-        <span class="benchmark-stat-desc">Jasper achieved 3,338 docs/s under identical quotas</span>
+        <span class="benchmark-stat-desc">Jasper 6: 3,338 docs/s | Jasper 7: 3,539 docs/s</span>
       </div>
 
       <div class="benchmark-stat-item">
         <span class="benchmark-stat-label">Cold Start</span>
         <div class="benchmark-stat-val">
-          273 <span class="unit">ms</span>
+          195 <span class="unit">ms</span>
         </div>
-        <span class="benchmark-stat-delta">▲ 4.3x faster</span>
-        <span class="benchmark-stat-desc">Jasper takes 1,166 ms to compile and render doc #1</span>
+        <span class="benchmark-stat-delta">▲ 3.8x - 4.3x faster</span>
+        <span class="benchmark-stat-desc">Jasper 7: 742 ms | Jasper 6: 1,166 ms (1st doc)</span>
       </div>
 
       <div class="benchmark-stat-item">
@@ -39,8 +39,8 @@ import { withBase } from 'vitepress'
         <div class="benchmark-stat-val">
           128 <span class="unit">MB</span>
         </div>
-        <span class="benchmark-stat-delta">▲ 22% lower</span>
-        <span class="benchmark-stat-desc">Zero GC stalls; Jasper required 165 MB with pauses</span>
+        <span class="benchmark-stat-delta">▲ 25% lower</span>
+        <span class="benchmark-stat-desc">Jasper 6: 164 MB | Jasper 7: 171 MB with GC stalls</span>
       </div>
 
       <div class="benchmark-stat-item">
@@ -48,8 +48,8 @@ import { withBase } from 'vitepress'
         <div class="benchmark-stat-val">
           4.0 <span class="unit">MB</span>
         </div>
-        <span class="benchmark-stat-delta">▲ 3.4x smaller</span>
-        <span class="benchmark-stat-desc">No heavy compilation deps (Jasper: 13.6 MB JAR tree)</span>
+        <span class="benchmark-stat-delta">▲ 6.3x smaller</span>
+        <span class="benchmark-stat-desc">Jasper 6: 13.6 MB | Jasper 7 + JDT: 25.2 MB</span>
       </div>
     </div>
 

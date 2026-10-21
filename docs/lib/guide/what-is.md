@@ -46,16 +46,16 @@ You define document structure, geometry, and styling in a clean JSON format and 
 
 ## Head-to-Head Comparison: Open PDF Generator vs JasperReports
 
-| Metric / Feature | Open PDF Generator | JasperReports 6.21.4 | Advantage |
-|:---|:---:|:---:|:---:|
-| **Throughput (2 vCPU container)** | **8,310 docs/sec** | 3,338 docs/sec | **2.5x faster** |
-| **Cold Start (1st doc latency)** | **273 ms** | 1,166 ms | **4.3x faster** |
-| **Container RSS Memory (100k docs)** | **128 MB** *(Zero GC stalls)* | 165 MB *(Heavy GC pauses)* | **22% lower memory** |
-| **Runtime Dependency Footprint** | **4.0 MB** | 13.6 MB+ (up to 50MB with tools) | **3.4x lighter** |
-| **Template Format** | Declarative **JSON** | Complex **JRXML / XML** | Git-friendly, no compilation |
-| **Visual Designer** | ✅ Open PDF Studio | ✅ Jaspersoft Studio (Eclipse) | Modern Electron/React UI |
-| **Streaming API** | ✅ Direct `OutputStream` | ⚠️ In-memory buffer required | Zero-copy byte stream |
-| **License** | **LGPL-3.0** *(Free, Commercial OK)* | LGPL-3.0 / Commercial | Identical freedom |
+| Metric / Feature | Open PDF Generator | JasperReports 6.21.4 | JasperReports 7.0.3 | Open PDF Advantage |
+|:---|:---:|:---:|:---:|:---:|
+| **Throughput (2 vCPU container)** | **8,650 docs/sec** | 3,338 docs/sec | 3,539 docs/sec | **2.4x - 2.6x faster** |
+| **Cold Start (1st doc latency)** | **195 ms** | 1,166 ms | 742 ms | **3.8x - 4.3x faster** |
+| **Container RSS Memory (100k docs)** | **128 MB** *(Zero GC stalls)* | 164 MB *(Heavy GC pauses)* | 171 MB *(High baseline)* | **25% lower memory** |
+| **Runtime Dependency Footprint** | **4.0 MB** | 13.6 MB+ (up to 50MB) | 25.2 MB (modular + JDT) | **6.3x lighter** |
+| **Template Format** | Declarative **JSON** | Complex **JRXML / XML** | Stricter **Jackson XML** | Git-friendly, no compilation |
+| **Visual Designer** | ✅ Open PDF Studio | ✅ Jaspersoft Studio | ✅ Jaspersoft Studio | Modern Electron/React UI |
+| **Streaming API** | ✅ Direct `OutputStream` | ⚠️ In-memory buffer required | ⚠️ In-memory buffer required | Zero-copy byte stream |
+| **License** | **LGPL-3.0** *(Free, Commercial OK)* | LGPL-3.0 / Commercial | LGPL-3.0 / Commercial | Identical freedom |
 
 > 📊 **Explore Full Evidence:** See JMH benchmarks, cgroup container stress results, and FinOps cloud cost analysis in our [Benchmark Report](/lib/benchmark).
 

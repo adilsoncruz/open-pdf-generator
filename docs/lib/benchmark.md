@@ -39,27 +39,29 @@ Open PDF Generator was built from the ground up for modern microservices and web
 
 To evaluate real-world resilience without caching, we ran **100,000 unique commercial invoices** (`INV-000001` through `INV-100000` with unique customer names, items, prices, and taxes) inside an isolated Linux container (`eclipse-temurin:21-jre-alpine`) enforced by strict cgroup v2 quotas (**2 vCPUs**, **1 GB RAM**):
 
-| Metric | Open PDF Generator | JasperReports 6.21.4 | Competitive Advantage |
-|---|---|---|---|
-| **Workload** | **100,000 unique invoices** (4 threads) | **100,000 unique invoices** (4 threads) | 100% dynamic data, zero caching |
-| **Total Duration** | **12.03 seconds** | 29.96 seconds | **2.5x faster turnaround** |
-| **Throughput** | **8,309.7 docs/sec** | 3,338.1 docs/sec | **+149% higher capacity** |
-| **Process RSS Memory (SO)** | **127.7 MB** | 164.0 MB | **22.1% lower physical memory** |
-| **Cgroup Peak Memory** | **128.6 MB** | 164.5 MB | **36 MB buffer against OOM** |
-| **CPU Utilization Peak** | **100.0%** (2 cores saturated) | 35.0% (blocked on internal locks) | Maximum hardware efficiency |
+| Metric | Open PDF Generator | JasperReports 6.21.4 | JasperReports 7.0.3 | Open PDF Advantage |
+|:---|:---:|:---:|:---:|:---:|
+| **Workload** | **100,000 unique invoices** | 100,000 unique invoices | 100,000 unique invoices | 100% dynamic, zero caching |
+| **Total Duration** | **11.56 seconds** | 29.96 seconds | 28.26 seconds | **2.44x - 2.59x faster** |
+| **Throughput** | **8,649.9 docs/sec** | 3,338.1 docs/sec | 3,538.9 docs/sec | **+144% to +159% capacity** |
+| **Process RSS Memory (SO)** | **128.1 MB** | 164.0 MB | 171.2 MB | **25% lower physical memory** |
+| **Cgroup Peak Memory** | **130.3 MB** | 164.5 MB | 171.5 MB | **41 MB safety buffer vs OOM** |
+| **CPU Utilization Peak** | **100.0%** (2 cores saturated) | 35.0% (internal locks) | 35.0% (internal locks) | True multi-core scalability |
+| **Cold Start (1st Doc)** | **195.2 ms** | 1,166.0 ms | 742.5 ms | **3.8x - 4.3x faster** |
+| **Runtime Dependency Footprint** | **4.0 MB** | 13.6 MB (up to 50MB) | 25.2 MB (modular + JDT) | **6.3x lighter JAR size** |
 
 ```mermaid
 xychart-beta
-    title "Total Time to Generate 100,000 Unique Invoices (Lower is better)"
-    x-axis ["Open PDF Generator", "JasperReports 6.21.4"]
+    title "Total Time to Generate 100,000 Unique Invoices (Seconds - Lower is better)"
+    x-axis ["Open PDF Generator", "JasperReports 7.0.3", "JasperReports 6.21.4"]
     y-axis "Seconds" 0 --> 35
-    bar [12, 30]
+    bar [11.56, 28.26, 29.96]
 ```
 
 ::: tip Why Open PDF's 100% CPU Peak is an Architectural Advantage
-Notice that JasperReports peaked at only 35% CPU, while Open PDF reached 100%. This is **not** a sign that Open PDF is heavier—in fact, Open PDF consumed **fewer total CPU cycles**.
+Notice that both JasperReports 6 and 7 peaked at only 35% CPU, while Open PDF reached 100%. This is **not** a sign that Open PDF is heavier—in fact, Open PDF consumed **fewer total CPU cycles**.
 
-Jasper's threads were throttled by **internal lock contention** (synchronized classloader lookups, reflection caches, and font metric synchronization), keeping threads idle and holding HTTP sockets open for **30 seconds**. Open PDF is **100% lock-free**, executing in parallel at full hardware capability, finishing the entire 100,000 job in **12 seconds**, and releasing the CPU immediately back to 0%.
+Jasper's threads are throttled by **internal lock contention** (synchronized classloader lookups, reflection caches, and font metric synchronization), keeping threads idle and holding HTTP sockets open for **~30 seconds**. Open PDF is **100% lock-free**, executing in parallel at full hardware capability, finishing the entire 100,000 job in **11.5 seconds**, and releasing the CPU immediately back to 0%.
 :::
 
 ---
