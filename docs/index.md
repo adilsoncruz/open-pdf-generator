@@ -59,8 +59,6 @@ features:
     details: Containers, tables, text, loops, page breaks, shapes, barcodes, watermarks, and summary pages with full styling.
 ---
 
-<BenchmarkHero />
-
 ## Quick Example
 
 Create a simple invoice PDF with just a few lines of code:
