@@ -6,7 +6,7 @@ const currentSlide = ref(0)
 const isHovered = ref(false)
 let timer = null
 
-const totalSlides = 4
+const totalSlides = 5
 
 function nextSlide() {
   currentSlide.value = (currentSlide.value + 1) % totalSlides
@@ -45,9 +45,9 @@ onUnmounted(() => {
     <!-- Slides Container -->
     <div class="slides-viewport">
 
-      <!-- SLIDE 0: Radial Tachometer / Speedometer (Throughput) -->
+      <!-- 1. Container Concurrency & Throughput -->
       <div v-show="currentSlide === 0" class="slide-pane">
-        <div class="slide-badge">⚡ Throughput Speedometer</div>
+        <div class="slide-badge">⚡ Concurrency & Throughput</div>
 
         <div class="gauge-wrapper">
           <svg viewBox="0 0 200 130" class="gauge-svg">
@@ -56,10 +56,6 @@ onUnmounted(() => {
                 <stop offset="0%" stop-color="#6366f1" />
                 <stop offset="50%" stop-color="#a855f7" />
                 <stop offset="100%" stop-color="#10b981" />
-              </linearGradient>
-              <linearGradient id="needleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="100%" stop-color="#6366f1" />
               </linearGradient>
             </defs>
 
@@ -85,7 +81,6 @@ onUnmounted(() => {
             />
 
             <!-- Jasper Comparison Marker (at 38% capacity) -->
-            <!-- x=64, y=56 approx for 38% angle -->
             <circle cx="64" cy="56" r="4.5" fill="#f59e0b" />
             <text x="32" y="44" fill="#94a3b8" font-size="8.5" font-family="monospace">Jasper: 3.5k</text>
 
@@ -110,76 +105,109 @@ onUnmounted(() => {
         </p>
       </div>
 
-      <!-- SLIDE 1: Latency Sparkline Curve (P99 Stability & Zero Locks) -->
+      <!-- 2. Complex Documents with Native Barcodes -->
       <div v-show="currentSlide === 1" class="slide-pane">
-        <div class="slide-badge">⚡ Latency Timeline (p50 / p99)</div>
+        <div class="slide-badge">🏷️ Native Barcodes & QR</div>
 
-        <div class="sparkline-wrapper">
-          <svg viewBox="0 0 240 120" class="sparkline-svg">
+        <div class="barcode-graphic-wrapper">
+          <div class="barcode-visual-card">
+            <!-- Mini Barcode + QR Illustration -->
+            <div class="code-icons-row">
+              <div class="mini-barcode-lines">
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <div class="mini-qrcode-grid">
+                <div class="qr-cell"></div><div class="qr-cell"></div><div class="qr-cell"></div>
+                <div class="qr-cell"></div><div class="qr-cell fill"></div><div class="qr-cell"></div>
+                <div class="qr-cell"></div><div class="qr-cell"></div><div class="qr-cell"></div>
+              </div>
+            </div>
+
+            <!-- Big Stat -->
+            <div class="speedup-hero">
+              <span class="hero-factor">9.8x</span>
+              <span class="hero-label">FASTER</span>
+            </div>
+
+            <div class="latency-compare">
+              <span class="best-time">Open PDF: <strong>1.22 ms</strong></span>
+              <span class="slow-time">Jasper: 11.88 ms</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics-pill-row">
+          <div class="mini-chip highlight-chip">
+            <span class="chip-label"><strong>9.9x less RAM</strong> (928 KB vs 9.1 MB)</span>
+          </div>
+          <div class="mini-chip highlight-chip">
+            <span class="chip-label">3.8 KB PDF size</span>
+          </div>
+        </div>
+
+        <p class="slide-caption">
+          <strong>Direct PDF vector operators</strong> eliminate heavy AWT BufferedImage rasterization.
+        </p>
+      </div>
+
+      <!-- 3. Cold Start & Serverless Readiness -->
+      <div v-show="currentSlide === 2" class="slide-pane">
+        <div class="slide-badge">⏱️ Cold Start & Serverless</div>
+
+        <div class="stopwatch-wrapper">
+          <svg viewBox="0 0 200 130" class="gauge-svg">
             <defs>
-              <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#6366f1" stop-opacity="0.45" />
-                <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0" />
+              <linearGradient id="stopwatchGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#10b981" />
+                <stop offset="100%" stop-color="#6366f1" />
               </linearGradient>
             </defs>
 
-            <!-- Grid Lines -->
-            <line x1="20" y1="20" x2="230" y2="20" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
-            <line x1="20" y1="60" x2="230" y2="60" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
-            <line x1="20" y1="100" x2="230" y2="100" stroke="rgba(255,255,255,0.06)" />
-
-            <!-- Jasper Reports Jagged Curve (Red/Orange dashed with GC spikes) -->
-            <path
-              d="M 20 65 Q 40 70, 60 55 T 100 85 T 130 30 T 160 75 T 190 25 T 230 60"
+            <!-- Outer Dial -->
+            <circle cx="100" cy="70" r="48" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" />
+            
+            <!-- Open PDF Arc (17% of dial = 195ms / 1200ms scale) -->
+            <circle
+              cx="100" cy="70" r="48"
               fill="none"
-              stroke="#f43f5e"
-              stroke-width="2"
-              stroke-dasharray="4,4"
-              opacity="0.75"
-            />
-            <text x="180" y="20" fill="#f43f5e" font-size="8" font-family="monospace">Jasper GC spikes</text>
-
-            <!-- Open PDF Smooth Low Area -->
-            <path
-              d="M 20 95 Q 60 92, 100 94 T 160 93 T 200 94 T 230 92 L 230 100 L 20 100 Z"
-              fill="url(#areaGradient)"
-            />
-
-            <!-- Open PDF Curve Line (Vibrant Indigo) -->
-            <path
-              d="M 20 95 Q 60 92, 100 94 T 160 93 T 200 94 T 230 92"
-              fill="none"
-              stroke="#818cf8"
-              stroke-width="3"
+              stroke="url(#stopwatchGradient)"
+              stroke-width="8"
+              stroke-dasharray="301.6"
+              stroke-dashoffset="250"
               stroke-linecap="round"
+              transform="rotate(-90 100 70)"
             />
 
-            <!-- Marker Point -->
-            <circle cx="200" cy="94" r="4" fill="#10b981" />
-            <text x="165" y="85" fill="#10b981" font-size="9" font-weight="700" font-family="monospace">0.38 ms p50</text>
+            <!-- Top Stopwatch Button -->
+            <rect x="94" y="14" width="12" height="6" rx="2" fill="#818cf8" />
+            <line x1="100" y1="20" x2="100" y2="24" stroke="#818cf8" stroke-width="2" />
+
+            <!-- Center Number -->
+            <text x="100" y="68" text-anchor="middle" class="gauge-number">195</text>
+            <text x="100" y="82" text-anchor="middle" class="gauge-unit">MILLISECONDS</text>
           </svg>
         </div>
 
         <div class="metrics-pill-row">
           <div class="mini-chip highlight-chip">
-            <span class="chip-label">p50: <strong>0.38 ms</strong></span>
+            <span class="chip-label">Open PDF: <strong>195 ms</strong></span>
           </div>
-          <div class="mini-chip highlight-chip">
-            <span class="chip-label">p99: <strong>0.66 ms</strong></span>
+          <div class="mini-chip muted-chip">
+            <span class="chip-label">Jasper 7: 742 ms</span>
           </div>
           <div class="mini-chip alert-chip">
-            <span class="chip-label">Jasper p99: 7.2 ms</span>
+            <span class="chip-label">Jasper 6: 1,166 ms</span>
           </div>
         </div>
 
         <p class="slide-caption">
-          <strong>100% lock-free parallelism</strong> protects REST APIs from gateway timeouts.
+          <strong>4.3x faster boot</strong>: instant JSON ingestion with zero XML compilation.
         </p>
       </div>
 
-      <!-- SLIDE 2: Concentric FinOps Donut Rings (Memory & Footprint) -->
-      <div v-show="currentSlide === 2" class="slide-pane">
-        <div class="slide-badge">💾 Cloud FinOps & Footprint</div>
+      <!-- 4. Memory Allocation & Dependency Footprint -->
+      <div v-show="currentSlide === 3" class="slide-pane">
+        <div class="slide-badge">💾 Footprint & Cloud FinOps</div>
 
         <div class="rings-wrapper">
           <svg viewBox="0 0 200 130" class="rings-svg">
@@ -232,12 +260,12 @@ onUnmounted(() => {
         </div>
 
         <p class="slide-caption">
-          Instant cold start on <strong>AWS Lambda & Google Cloud Run</strong>.
+          Runs comfortably in <strong>512MB / 1GB containers</strong> without OOM thrashing.
         </p>
       </div>
 
-      <!-- SLIDE 3: The Crisp Glowing Logo & Feature Badges -->
-      <div v-show="currentSlide === 3" class="slide-pane logo-pane">
+      <!-- 5. Studio & Ecosystem (Logo with Badges) -->
+      <div v-show="currentSlide === 4" class="slide-pane logo-pane">
         <div class="logo-center-wrap">
           <img 
             :src="withBase('/icon.png')" 
@@ -329,14 +357,18 @@ onUnmounted(() => {
 }
 
 .glow-slide-1 {
-  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.18) 0%, transparent 60%);
+  background: radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.18) 0%, transparent 60%);
 }
 
 .glow-slide-2 {
-  background: radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.2) 0%, transparent 60%);
+  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.2) 0%, transparent 60%);
 }
 
 .glow-slide-3 {
+  background: radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.2) 0%, transparent 60%);
+}
+
+.glow-slide-4 {
   background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.28) 0%, transparent 60%);
 }
 
@@ -381,7 +413,7 @@ onUnmounted(() => {
 }
 
 /* Gauge SVG */
-.gauge-wrapper {
+.gauge-wrapper, .stopwatch-wrapper {
   width: 100%;
   max-width: 210px;
   margin: 2px auto 0 auto;
@@ -416,16 +448,105 @@ onUnmounted(() => {
   to { stroke-dashoffset: 24; }
 }
 
-/* Sparkline SVG */
-.sparkline-wrapper {
+/* Barcode Visual Card */
+.barcode-graphic-wrapper {
   width: 100%;
   max-width: 240px;
-  margin: 6px auto 0 auto;
+  margin: 4px auto 0 auto;
 }
 
-.sparkline-svg {
-  width: 100%;
-  height: auto;
+.barcode-visual-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.code-icons-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.mini-barcode-lines {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 22px;
+}
+
+.mini-barcode-lines span {
+  width: 2px;
+  height: 100%;
+  background: #818cf8;
+  border-radius: 1px;
+}
+
+.mini-barcode-lines span:nth-child(2),
+.mini-barcode-lines span:nth-child(5) {
+  width: 3.5px;
+  background: #a855f7;
+}
+
+.mini-qrcode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 6px);
+  gap: 2px;
+}
+
+.qr-cell {
+  width: 6px;
+  height: 6px;
+  border: 1px solid #818cf8;
+  border-radius: 1px;
+}
+
+.qr-cell.fill {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.speedup-hero {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+}
+
+.hero-factor {
+  font-size: 32px;
+  font-weight: 900;
+  color: #10b981;
+  font-family: var(--vp-font-family-mono);
+  line-height: 1;
+}
+
+.hero-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #a7f3d0;
+  letter-spacing: 0.1em;
+}
+
+.latency-compare {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-family: var(--vp-font-family-mono);
+}
+
+.best-time strong {
+  color: #34d399;
+}
+
+.slow-time {
+  text-decoration: line-through;
+  opacity: 0.7;
 }
 
 /* Rings SVG */
@@ -459,7 +580,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   margin-top: 6px;
 }
@@ -467,7 +588,7 @@ onUnmounted(() => {
 .mini-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   padding: 3px 8px;
   border-radius: 6px;
   font-size: 11px;
