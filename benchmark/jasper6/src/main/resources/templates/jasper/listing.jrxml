@@ -148,13 +148,14 @@
                 </textElement>
                 <text><![CDATA[CONFIDENTIAL - INTERNAL USE ONLY]]></text>
             </staticText>
-            <textField evaluationTime="Report">
+            <textField>
                 <reportElement x="355" y="8" width="180" height="14" forecolor="#64748B" uuid="21980838-6b19-4a9f-a2e6-7df089bcf279"/>
                 <textElement textAlignment="Right">
                     <font size="8"/>
                 </textElement>
-                <textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
             </textField>
+
         </band>
     </pageFooter>
 </jasperReport>

@@ -24,6 +24,13 @@ application {
     mainClass.set("com.pdfgenerator.benchmark.BenchmarkStandaloneRunnerKt")
 }
 
+tasks.register<JavaExec>("exportSamples") {
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("com.pdfgenerator.benchmark.ExportPdfSamplesKt")
+    workingDir = rootProject.projectDir
+}
+
+
 tasks.shadowJar {
     archiveBaseName.set("open-pdf-benchmark-jasper7")
     archiveClassifier.set("")

@@ -26,24 +26,27 @@
     {
       "type": "text",
       "id": "invoice-title",
-      "x": 350,
+      "x": 323,
       "y": 0,
+      "width": 200,
       "value": "INVOICE",
       "style": { "fontSize": 20, "bold": true, "color": "#4f46e5", "alignment": "right" }
     },
     {
       "type": "text",
       "id": "invoice-number",
-      "x": 350,
+      "x": 323,
       "y": 28,
+      "width": 200,
       "dataBinding": "invoiceNumber | prefix:'Number: '",
       "style": { "fontSize": 10, "color": "#64748b", "alignment": "right" }
     },
     {
       "type": "text",
       "id": "invoice-date",
-      "x": 350,
+      "x": 323,
       "y": 42,
+      "width": 200,
       "dataBinding": "date | prefix:'Date: '",
       "style": { "fontSize": 10, "color": "#64748b", "alignment": "right" }
     },
@@ -54,13 +57,13 @@
       "y": 65,
       "width": "100%",
       "height": 1,
-      "style": { "fillColor": "#e2e8f0" }
+      "style": { "fillColor": "#e2e8f0", "strokeColor": "#e2e8f0" }
     },
     {
       "type": "text",
       "id": "customer-label",
       "x": 0,
-      "y": 80,
+      "y": 75,
       "value": "Billed To:",
       "style": { "fontSize": 9, "bold": true, "color": "#94a3b8" }
     },
@@ -68,7 +71,7 @@
       "type": "text",
       "id": "customer-name",
       "x": 0,
-      "y": 95,
+      "y": 90,
       "dataBinding": "customer.name",
       "style": { "fontSize": 12, "bold": true, "color": "#0f172a" }
     },
@@ -76,7 +79,7 @@
       "type": "text",
       "id": "customer-email",
       "x": 0,
-      "y": 112,
+      "y": 106,
       "dataBinding": "customer.email",
       "style": { "fontSize": 10, "color": "#475569" }
     },
@@ -84,7 +87,7 @@
       "type": "text",
       "id": "customer-address",
       "x": 0,
-      "y": 126,
+      "y": 120,
       "dataBinding": "customer.address",
       "style": { "fontSize": 10, "color": "#475569" }
     },
@@ -92,68 +95,79 @@
       "type": "table",
       "id": "items-table",
       "x": 0,
-      "y": 160,
+      "y": 150,
       "width": "100%",
       "dataBinding": "items",
       "columns": [
         { "header": "Description", "field": "description", "width": 260 },
         { "header": "Qty", "field": "quantity", "width": 60, "alignment": "center" },
-        { "header": "Unit Price ($)", "field": "unitPrice", "width": 90, "alignment": "right" },
-        { "header": "Total ($)", "field": "total", "width": 100, "alignment": "right" }
+        { "header": "Unit Price ($)", "field": "unitPrice | format:'#,##0.00'", "width": 85, "alignment": "right" },
+        { "header": "Total ($)", "field": "total | format:'#,##0.00'", "width": 90, "alignment": "right" }
       ],
       "style": {
         "headerBackground": "#f1f5f9",
         "headerTextColor": "#1e293b",
-        "borderColor": "#cbd5e1"
+        "headerFontWeight": "bold",
+        "headerFontSize": 9,
+        "borderColor": "#cbd5e1",
+        "cellBorderType": "row",
+        "fontSize": 9
       }
     },
     {
       "type": "text",
       "id": "subtotal-label",
-      "x": 340,
-      "y": 480,
+      "x": 320,
+      "y": 380,
+      "width": 100,
       "value": "Subtotal:",
       "style": { "fontSize": 10, "color": "#64748b", "alignment": "right" }
     },
     {
       "type": "text",
       "id": "subtotal-value",
-      "x": 420,
-      "y": 480,
-      "dataBinding": "subtotal | prefix:'$'",
+      "x": 425,
+      "y": 380,
+      "width": 95,
+      "dataBinding": "subtotal | format:'#,##0.00' | prefix:'$'",
       "style": { "fontSize": 10, "bold": true, "color": "#1e293b", "alignment": "right" }
     },
     {
       "type": "text",
       "id": "tax-label",
-      "x": 340,
-      "y": 498,
+      "x": 320,
+      "y": 398,
+      "width": 100,
       "value": "Tax (10%):",
       "style": { "fontSize": 10, "color": "#64748b", "alignment": "right" }
     },
     {
       "type": "text",
       "id": "tax-value",
-      "x": 420,
-      "y": 498,
-      "dataBinding": "tax | prefix:'$'",
+      "x": 425,
+      "y": 398,
+      "width": 95,
+      "dataBinding": "tax | format:'#,##0.00' | prefix:'$'",
       "style": { "fontSize": 10, "bold": true, "color": "#1e293b", "alignment": "right" }
     },
     {
       "type": "text",
       "id": "total-label",
-      "x": 340,
-      "y": 520,
+      "x": 320,
+      "y": 420,
+      "width": 100,
       "value": "Grand Total:",
       "style": { "fontSize": 12, "bold": true, "color": "#4f46e5", "alignment": "right" }
     },
     {
       "type": "text",
       "id": "total-value",
-      "x": 420,
-      "y": 520,
-      "dataBinding": "total | prefix:'$'",
+      "x": 425,
+      "y": 420,
+      "width": 95,
+      "dataBinding": "total | format:'#,##0.00' | prefix:'$'",
       "style": { "fontSize": 12, "bold": true, "color": "#4f46e5", "alignment": "right" }
     }
+
   ]
 }

@@ -14,21 +14,23 @@
       "left": 30
     },
     "header": {
-      "height": 40,
+      "height": 35,
       "elements": [
         {
           "type": "text",
           "id": "hdr-title",
           "x": 0,
           "y": 5,
+          "width": 350,
           "dataBinding": "reportTitle",
           "style": { "fontSize": 12, "bold": true, "color": "#1e293b" }
         },
         {
           "type": "text",
           "id": "hdr-date",
-          "x": 350,
+          "x": 355,
           "y": 5,
+          "width": 180,
           "dataBinding": "generatedAt",
           "style": { "fontSize": 9, "color": "#64748b", "alignment": "right" }
         },
@@ -36,7 +38,7 @@
           "type": "line",
           "id": "hdr-line",
           "x": 0,
-          "y": 25,
+          "y": 28,
           "width": "100%",
           "height": 0,
           "style": { "color": "#cbd5e1", "width": 1 }
@@ -44,13 +46,13 @@
       ]
     },
     "footer": {
-      "height": 30,
+      "height": 25,
       "elements": [
         {
           "type": "line",
           "id": "ftr-line",
           "x": 0,
-          "y": 5,
+          "y": 4,
           "width": "100%",
           "height": 0,
           "style": { "color": "#e2e8f0", "width": 1 }
@@ -59,15 +61,17 @@
           "type": "text",
           "id": "ftr-confidential",
           "x": 0,
-          "y": 12,
+          "y": 8,
+          "width": 250,
           "value": "CONFIDENTIAL - INTERNAL USE ONLY",
           "style": { "fontSize": 8, "color": "#94a3b8" }
         },
         {
           "type": "text",
           "id": "ftr-page",
-          "x": 350,
-          "y": 12,
+          "x": 355,
+          "y": 8,
+          "width": 180,
           "dataBinding": "pageNumber | prefix:'Page '",
           "style": { "fontSize": 8, "color": "#64748b", "alignment": "right" }
         }
@@ -79,7 +83,7 @@
       "type": "table",
       "id": "inventory-table",
       "x": 0,
-      "y": 10,
+      "y": 5,
       "width": "100%",
       "dataBinding": "items",
       "columns": [
@@ -88,13 +92,15 @@
         { "header": "Product Name", "field": "name", "width": 200 },
         { "header": "Category", "field": "category", "width": 85 },
         { "header": "Stock", "field": "stock", "width": 55, "alignment": "right" },
-        { "header": "Unit Price", "field": "price", "width": 75, "alignment": "right" }
+        { "header": "Unit Price", "field": "price | format:'#,##0.00' | prefix:'$'", "width": 75, "alignment": "right" }
       ],
       "style": {
         "headerBackground": "#0f172a",
         "headerTextColor": "#ffffff",
-        "alternateRowBackground": "#f8fafc",
+        "headerFontWeight": "bold",
+        "headerFontSize": 9,
         "borderColor": "#e2e8f0",
+        "cellBorderType": "row",
         "fontSize": 9
       }
     }

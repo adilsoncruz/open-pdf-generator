@@ -75,8 +75,9 @@
             <element kind="staticText" x="0" y="8" width="250" height="14" forecolor="#94A3B8" uuid="2a59a93d-d1ef-4573-afeb-fb12c1b182cb" fontSize="8">
   <text><![CDATA[CONFIDENTIAL - INTERNAL USE ONLY]]></text>
 </element>
-            <element kind="textField" x="355" y="8" width="180" height="14" forecolor="#64748B" uuid="21980838-6b19-4a9f-a2e6-7df089bcf279" evaluationTime="Report" hTextAlign="Right" fontSize="8">
-  <expression><![CDATA["Page " + $V{PAGE_NUMBER} + " of " + $V{PAGE_NUMBER}]]></expression>
+            <element kind="textField" x="355" y="8" width="180" height="14" forecolor="#64748B" uuid="21980838-6b19-4a9f-a2e6-7df089bcf279" hTextAlign="Right" fontSize="8">
+  <expression><![CDATA["Page " + $V{PAGE_NUMBER}]]></expression>
 </element>
+
         </pageFooter>
 </jasperReport>
