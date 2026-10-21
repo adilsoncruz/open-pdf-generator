@@ -6,6 +6,8 @@
               leftMargin="36" rightMargin="36" topMargin="36" bottomMargin="36" uuid="a89045bf-ec9a-41d1-817c-a0589a19c52b">
     <parameter name="companyName" class="java.lang.String"/>
     <parameter name="invoiceNumber" class="java.lang.String"/>
+    <parameter name="qrCodePayload" class="java.lang.String"/>
+    <parameter name="barcodeValue" class="java.lang.String"/>
     <parameter name="total" class="java.lang.Double"/>
     <parameter name="showLegalNotice" class="java.lang.Boolean"/>
     <parameter name="notes" class="java.lang.String"/>
@@ -32,6 +34,11 @@
             <element kind="textField" x="0" y="62" width="400" height="16" forecolor="#0F172A" uuid="1c3f59e7-8b5e-49b8-b80c-a633c7e7b5cb" fontSize="10" bold="true">
   <expression><![CDATA["Order Reference: " + $P{invoiceNumber}]]></expression>
 </element>
+            <element kind="component" x="448" y="15" width="75" height="75" uuid="e618b1ea-e8a3-4b67-a00d-5872958390bb">
+                <component kind="barcode4j:QRCode" margin="0" errorCorrectionLevel="M">
+                    <codeExpression><![CDATA[$P{qrCodePayload}]]></codeExpression>
+                </component>
+            </element>
         </title>
 
     <columnHeader height="24">
@@ -68,6 +75,11 @@
     </detail>
 
     <summary height="120">
+            <element kind="component" x="0" y="5" width="160" height="30" uuid="0927c390-3335-4309-8664-dfa04b12389a">
+                <component kind="barcode4j:Code128" moduleWidth="1.0" textPosition="bottom">
+                    <codeExpression><![CDATA[$P{barcodeValue}]]></codeExpression>
+                </component>
+            </element>
             <element kind="textField" x="250" y="10" width="265" height="20" forecolor="#4F46E5" uuid="559ea979-bfbf-450f-a1c6-2be5b6e22f87" pattern="Final Amount Due: $#,##0.00" hTextAlign="Right" fontSize="12" bold="true">
   <expression><![CDATA[$P{total}]]></expression>
 </element>

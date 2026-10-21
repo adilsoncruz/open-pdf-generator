@@ -6,6 +6,8 @@
               leftMargin="36" rightMargin="36" topMargin="36" bottomMargin="36" uuid="a89045bf-ec9a-41d1-817c-a0589a19c52b">
     <parameter name="companyName" class="java.lang.String"/>
     <parameter name="invoiceNumber" class="java.lang.String"/>
+    <parameter name="qrCodePayload" class="java.lang.String"/>
+    <parameter name="barcodeValue" class="java.lang.String"/>
     <parameter name="total" class="java.lang.Double"/>
     <parameter name="showLegalNotice" class="java.lang.Boolean"/>
     <parameter name="notes" class="java.lang.String"/>
@@ -53,6 +55,15 @@
                 </textElement>
                 <textFieldExpression><![CDATA["Order Reference: " + $P{invoiceNumber}]]></textFieldExpression>
             </textField>
+            <componentElement>
+                <reportElement x="448" y="15" width="75" height="75" uuid="e618b1ea-e8a3-4b67-a00d-5872958390bb"/>
+                <jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components"
+                           xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd"
+                           margin="0"
+                           errorCorrectionLevel="M">
+                    <jr:codeExpression><![CDATA[$P{qrCodePayload}]]></jr:codeExpression>
+                </jr:QRCode>
+            </componentElement>
         </band>
     </title>
 
@@ -127,6 +138,15 @@
 
     <summary>
         <band height="120">
+            <componentElement>
+                <reportElement x="0" y="5" width="160" height="30" uuid="0927c390-3335-4309-8664-dfa04b12389a"/>
+                <jr:Code128 xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components"
+                            xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd"
+                            moduleWidth="1.0"
+                            textPosition="bottom">
+                    <jr:codeExpression><![CDATA[$P{barcodeValue}]]></jr:codeExpression>
+                </jr:Code128>
+            </componentElement>
             <textField pattern="Final Amount Due: $#,##0.00">
                 <reportElement x="250" y="10" width="265" height="20" forecolor="#4F46E5" uuid="559ea979-bfbf-450f-a1c6-2be5b6e22f87"/>
                 <textElement textAlignment="Right">

@@ -83,6 +83,8 @@ class JasperRunner {
         val params = HashMap<String, Any>()
         params["companyName"] = data["companyName"] ?: ""
         params["invoiceNumber"] = data["invoiceNumber"] ?: ""
+        params["qrCodePayload"] = data["qrCodePayload"] ?: ""
+        params["barcodeValue"] = data["barcodeValue"] ?: ""
         params["total"] = (data["total"] as Number).toDouble()
         params["showLegalNotice"] = data["showLegalNotice"] == true
         params["notes"] = data["notes"] ?: ""

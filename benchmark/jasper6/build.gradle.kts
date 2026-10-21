@@ -11,6 +11,10 @@ dependencies {
 
     // JasperReports 6.21.4 (Standard Stable)
     implementation("net.sf.jasperreports:jasperreports:6.21.4")
+    implementation("net.sf.barcode4j:barcode4j:2.1")
+    implementation("org.apache.xmlgraphics:batik-bridge:1.17")
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:javase:3.5.3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
 
     // JMH

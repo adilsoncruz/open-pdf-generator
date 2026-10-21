@@ -13,6 +13,9 @@ dependencies {
     implementation("net.sf.jasperreports:jasperreports:7.0.3")
     implementation("net.sf.jasperreports:jasperreports-pdf:7.0.3")
     implementation("net.sf.jasperreports:jasperreports-jdt:7.0.3")
+    implementation("net.sf.jasperreports:jasperreports-barcode4j:7.0.3")
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:javase:3.5.3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
 
     // JMH

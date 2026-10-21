@@ -57,6 +57,16 @@
       "style": { "fontSize": 10, "bold": true, "color": "#0f172a" }
     },
     {
+      "type": "barcode",
+      "id": "qr-code",
+      "barcodeType": "qrcode",
+      "dataBinding": "qrCodePayload",
+      "x": 448,
+      "y": 15,
+      "width": 75,
+      "height": 75
+    },
+    {
       "type": "table",
       "id": "items-table",
       "x": 0,
@@ -78,6 +88,16 @@
         "cellBorderType": "row",
         "fontSize": 9
       }
+    },
+    {
+      "type": "barcode",
+      "id": "code128-barcode",
+      "barcodeType": "code128",
+      "dataBinding": "barcodeValue",
+      "x": 0,
+      "y": 340,
+      "width": 160,
+      "height": 30
     },
     {
       "type": "text",
