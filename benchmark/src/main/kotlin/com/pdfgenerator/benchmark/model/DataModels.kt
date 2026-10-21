@@ -31,12 +31,12 @@ data class ReportRow(
 )
 
 object BenchmarkDataFactory {
-    fun createInvoiceData(): Map<String, Any?> {
+    fun createInvoiceData(seq: Int = 1): Map<String, Any?> {
         val items = (1..10).map { i ->
-            val qty = (i % 5) + 1
-            val price = 15.0 * i
+            val qty = ((seq + i) % 5) + 1
+            val price = 15.0 * i + (seq % 10)
             mapOf(
-                "description" to "Item #$i - Enterprise Module Pack",
+                "description" to "Item #$i - Enterprise Module Pack (Batch #$seq)",
                 "quantity" to qty,
                 "unitPrice" to price,
                 "total" to (qty * price),
@@ -47,12 +47,12 @@ object BenchmarkDataFactory {
         val total = subtotal + tax
 
         return mapOf(
-            "invoiceNumber" to "INV-2026-9042",
+            "invoiceNumber" to "INV-2026-%06d".format(seq),
             "date" to "2026-10-21",
             "customer" to mapOf(
-                "name" to "Acme Global Industries LLC",
-                "email" to "billing@acmeglobal.com",
-                "address" to "100 Tech Blvd, Suite 400, Austin, TX",
+                "name" to "Customer #$seq Global Industries",
+                "email" to "client-$seq@globalcorp.internal",
+                "address" to "$seq Enterprise Way, Suite 400, Austin, TX",
             ),
             "items" to items,
             "subtotal" to subtotal,

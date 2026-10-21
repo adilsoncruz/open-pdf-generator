@@ -100,12 +100,13 @@ fun runEngineBenchmark(engine: String, count: Int, concurrency: Int): ContainerR
     val executor = Executors.newFixedThreadPool(concurrency)
     val startTime = System.nanoTime()
 
-    val futures = (1..count).map {
+    val futures = (1..count).map { seq ->
         executor.submit {
+            val uniqueData = BenchmarkDataFactory.createInvoiceData(seq)
             if (engine == "openpdf") {
-                openPdfRunner!!.renderInvoice(invoiceData)
+                openPdfRunner!!.renderInvoice(uniqueData)
             } else {
-                jasperRunner!!.renderInvoice(invoiceData)
+                jasperRunner!!.renderInvoice(uniqueData)
             }
         }
     }

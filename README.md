@@ -177,6 +177,7 @@ Under identical JVM environments, **Open PDF Generator** substantially outperfor
 |---|---|---|---|
 | **Cold Start (1st Doc Render)** | **273.6 ms** | 1166.0 ms | **4.3x faster** (Ideal for Serverless & Lambda) |
 | **Invoice (Single-thread)** | **0.50 ms** (1,874 docs/s) | 2.24 ms (424 docs/s) | **4.4x faster** latency |
+| **100,000 Invoices Stress Test** | **12.0 s** (8,310 docs/s) | 29.9 s (3,338 docs/s) | **2.5x faster** total completion |
 | **Concurrency (8 Parallel Threads)** | **23,860 docs/s** | 5,300 docs/s | **4.5x higher** parallel throughput |
 | **Container Peak RSS (cgroups)** | **75.2 MB** | 128.8 MB | **41.6% less RAM** (Safer from OOMKilled) |
 | **Direct Stream (`OutputStream`)** | **0.12 ms** (zero-copy) | 0.73 ms | **5.9x faster** streaming |
