@@ -96,8 +96,10 @@
       ],
       "style": {
         "headerBackground": "#0f172a",
+        "headerColor": "#ffffff",
         "headerTextColor": "#ffffff",
         "headerFontWeight": "bold",
+
         "headerFontSize": 9,
         "borderColor": "#e2e8f0",
         "cellBorderType": "row",
