@@ -26,8 +26,18 @@ object DataBindingResolver {
             }
         }
 
-        return resolvePath(binding, data)
+        val resolved = resolvePath(binding, data)
+        if (resolved != null) {
+            return resolved
+        }
+
+        if (binding == "pageNumber" || binding == "page") {
+            return resolvePath("_pageNumber", data)
+        }
+
+        return null
     }
+
 
     private fun resolveFromLoopItem(
         binding: String,

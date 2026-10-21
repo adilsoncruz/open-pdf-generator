@@ -73,7 +73,8 @@ object ExpressionProcessor {
             "uppercase", "upper" -> toUpperCase(value)
             "lowercase", "lower" -> toLowerCase(value)
             "capitalize", "cap" -> capitalize(value)
-            "format" -> format(value, args.getOrNull(0) ?: "#,##0.00")
+            "format" -> format(value, args.getOrNull(0) ?: "#,##0.00", args.getOrNull(1) ?: "en-US")
+
             "date" -> formatDate(value, args.getOrNull(0) ?: "dd/MM/yyyy")
             "join" -> join(value, args.getOrNull(0) ?: ", ")
             "default" -> defaultValue(value, args.getOrNull(0) ?: "")
@@ -212,6 +213,7 @@ object ExpressionProcessor {
 
         val args = mutableListOf<String>()
         transformationArgsRegex.findAll(argsStr).forEach { match ->
+            val isQuoted = match.groupValues[1].isNotEmpty() || match.groupValues[2].isNotEmpty()
             val arg =
                 match.groupValues[1].ifEmpty {
                     match.groupValues[2].ifEmpty {
@@ -219,9 +221,10 @@ object ExpressionProcessor {
                     }
                 }
             if (arg.isNotEmpty()) {
-                args.add(arg.trim())
+                args.add(if (isQuoted) arg else arg.trim())
             }
         }
+
 
         return ParsedTransformation(funcName, args)
     }
@@ -357,6 +360,7 @@ object ExpressionProcessor {
     private fun format(
         value: Any?,
         pattern: String,
+        localeTag: String = "en-US",
     ): String {
         val number =
             when (value) {
@@ -366,13 +370,15 @@ object ExpressionProcessor {
             }
 
         return try {
-            val symbols = DecimalFormatSymbols(Locale.forLanguageTag("pt-BR"))
+            val locale = if (localeTag == "pt-BR") Locale.forLanguageTag("pt-BR") else Locale.US
+            val symbols = DecimalFormatSymbols(locale)
             val formatter = DecimalFormat(pattern, symbols)
             formatter.format(number)
         } catch (e: Exception) {
             valueToString(value)
         }
     }
+
 
     private fun formatCurrency(
         value: Any?,

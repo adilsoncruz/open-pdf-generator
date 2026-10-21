@@ -65,10 +65,13 @@ class HeaderFooterPageEvent(
                     data,
                     mapOf(
                         "_pageNumber" to writer.pageNumber,
+                        "pageNumber" to writer.pageNumber,
+                        "page" to writer.pageNumber,
                         "_date" to java.time.LocalDate.now().toString(),
                         "_dateTime" to java.time.LocalDateTime.now().toString(),
                     ),
                 )
+
 
             template.pageSettings.bodyBackground?.let { bodyBackground ->
                 val bgCondition = bodyBackground.printCondition
@@ -103,10 +106,13 @@ class HeaderFooterPageEvent(
                     data,
                     mapOf(
                         "_pageNumber" to writer.pageNumber,
+                        "pageNumber" to writer.pageNumber,
+                        "page" to writer.pageNumber,
                         "_date" to java.time.LocalDate.now().toString(),
                         "_dateTime" to java.time.LocalDateTime.now().toString(),
                     ),
                 )
+
 
             template.pageSettings.header?.let { header ->
                 val headerCondition = header.printCondition

@@ -145,18 +145,41 @@ class TextRendererCoverageTest {
         every { context.useContentUnder } returns true
 
         // Background color, useContentUnder, verticalAlign bottom and else, alignment center and right
-        val elCenter = TextElement(id = "1", x = 0f, y = 0f, value = "Center", 
-            style = TextStyle(alignment = "center", verticalAlignment = "bottom", backgroundColor = "#ff0000"))
+        val elCenter =
+            TextElement(
+                id = "1",
+                x = 0f,
+                y = 0f,
+                value = "Center",
+                style =
+                    TextStyle(
+                        alignment = "center",
+                        verticalAlignment = "bottom",
+                        backgroundColor = "#ff0000",
+                    ),
+            )
         renderer.render(elCenter, context)
-        
-        val elCenterV = TextElement(id = "1v", x = 0f, y = 0f, value = "CenterV", 
-            style = TextStyle(verticalAlignment = "center"))
+
+        val elCenterV =
+            TextElement(
+                id = "1v",
+                x = 0f,
+                y = 0f,
+                value = "CenterV",
+                style = TextStyle(verticalAlignment = "center"),
+            )
         renderer.render(elCenterV, context)
-        
-        val elRight = TextElement(id = "2", x = 0f, y = 0f, value = "Right", 
-            style = TextStyle(alignment = "right", verticalAlignment = "other"))
+
+        val elRight =
+            TextElement(
+                id = "2",
+                x = 0f,
+                y = 0f,
+                value = "Right",
+                style = TextStyle(alignment = "right", verticalAlignment = "other"),
+            )
         renderer.render(elRight, context)
-        
+
         val elJustify = TextElement(id = "3", x = 0f, y = 0f, value = "Justify", 
             style = TextStyle(alignment = "justify", fontWeight = "bold", fontStyle = "italic", fontFamily = "times"))
         renderer.render(elJustify, context)

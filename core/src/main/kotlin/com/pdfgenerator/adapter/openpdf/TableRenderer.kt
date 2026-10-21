@@ -133,31 +133,73 @@ class TableRenderer : Renderer<TableElement> {
                 val resolvedY = context.resolveY(element.y)
                 val startY = pageHeight - resolvedY
                 val bottomY = margins.bottom + footerHeightPage1
-                val ct = ColumnText(context.writer.directContent)
-                ct.addElement(table)
+
+                table.calculateHeights(true)
+                val canvas = context.writer.directContent
                 val leftX = resolvedX
-                val rightX = resolvedX + totalWidth
-                ct.setSimpleColumn(leftX, bottomY, rightX, startY)
+                val totalRows = table.size()
+                val headerRowsCount = table.headerRows.coerceAtLeast(0)
+                val headerHeight =
+                    if (headerRowsCount > 0) {
+                        (0 until headerRowsCount).sumOf { table.getRowHeight(it).toDouble() }.toFloat()
+                    } else {
+                        0f
+                    }
 
-                var status = ct.go()
-                var totalRenderedHeight = startY - ct.yLine
-                while (ColumnText.hasMoreText(status)) {
-                    context.document.newPage()
-                    currentPage++
+                var currentRow = headerRowsCount
+                var isFirstPage = true
+                var firstPageHeight = 0f
 
-                    val headerHeight = getHeaderHeightForPage(currentPage)
-                    val footerHeight = getFooterHeightForPage(currentPage)
-                    val newPageStartY = pageHeight - margins.top - headerHeight
-                    val newPageBottomY = margins.bottom + footerHeight
+                while (currentRow < totalRows) {
+                    val pageStartY: Float
+                    val pageBottomY: Float
 
-                    ct.setSimpleColumn(leftX, newPageBottomY, rightX, newPageStartY)
-                    status = ct.go()
-                    totalRenderedHeight += newPageStartY - ct.yLine
+                    if (isFirstPage) {
+                        pageStartY = startY
+                        pageBottomY = bottomY
+                    } else {
+                        context.document.newPage()
+                        currentPage++
+                        val headerHeightForPage = getHeaderHeightForPage(currentPage)
+                        val footerHeightForPage = getFooterHeightForPage(currentPage)
+                        pageStartY = pageHeight - margins.top - headerHeightForPage
+                        pageBottomY = margins.bottom + footerHeightForPage
+                    }
+
+                    var currentY = pageStartY
+
+                    if (headerRowsCount > 0) {
+                        currentY = table.writeSelectedRows(0, headerRowsCount, leftX, currentY, canvas)
+                    }
+
+                    val startRow = currentRow
+                    while (currentRow < totalRows) {
+                        val rowHeight = table.getRowHeight(currentRow)
+                        if (currentY - rowHeight < pageBottomY && currentRow > startRow) {
+                            break
+                        }
+                        currentY -= rowHeight
+                        currentRow++
+                    }
+
+                    val endRow = currentRow
+                    val drawnBottomY =
+                        table.writeSelectedRows(
+                            startRow,
+                            endRow,
+                            leftX,
+                            if (headerRowsCount > 0) pageStartY - headerHeight else pageStartY,
+                            canvas,
+                        )
+
+                    if (isFirstPage) {
+                        firstPageHeight = pageStartY - drawnBottomY
+                        isFirstPage = false
+                    }
                 }
 
                 if (context.renderState != null) {
                     val elementY = context.resolveY(element.y) - context.bodyOffsetY
-                    val firstPageHeight = startY - ct.yLine
                     context.renderState.updateMaxY(elementY + kotlin.math.abs(firstPageHeight))
                 }
             } catch (e: Exception) {
@@ -237,7 +279,9 @@ class TableRenderer : Renderer<TableElement> {
                     headerFontSize,
                     if (style?.headerFontWeight == "bold") Font.BOLD else Font.NORMAL,
                 )
-            headerFont.color = style?.headerColor?.let { ColorUtil.hexToColor(it) }
+            val effectiveHeaderColor = style?.getEffectiveHeaderColor() ?: "#000000"
+            headerFont.color = ColorUtil.hexToColor(effectiveHeaderColor)
+
 
             val cell = PdfPCell(Phrase(column.header, headerFont))
 
@@ -294,6 +338,16 @@ class TableRenderer : Renderer<TableElement> {
         }
     }
 
+    private data class ColumnMeta(
+        val field: String,
+        val format: String?,
+        val hasTransformations: Boolean,
+        val hAlign: Int,
+        val vAlign: Int,
+        val isFirst: Boolean,
+        val isLast: Boolean,
+    )
+
     private fun addDataRows(
         table: PdfPTable,
         element: TableElement,
@@ -305,80 +359,83 @@ class TableRenderer : Renderer<TableElement> {
         val cellBorderType = style?.cellBorderType
         val totalRows = data.size
 
+        val borderValues = getCellBorderValues(style)
+        val borderColor = style?.borderColor?.let { ColorUtil.hexToColor(it) }
+        val paddingTop = style?.getEffectiveCellPaddingTop() ?: 5f
+        val paddingRight = style?.getEffectiveCellPaddingRight() ?: 5f
+        val paddingBottom = style?.getEffectiveCellPaddingBottom() ?: 5f
+        val paddingLeft = style?.getEffectiveCellPaddingLeft() ?: 5f
+
+        val normalBgColor = style?.cellBackground?.let { if (it != "transparent") ColorUtil.hexToColor(it) else null }
+        val altBgColor =
+            if (style?.alternateRowBackground != null && style.alternateRowBackground != "transparent") {
+                ColorUtil.hexToColor(style.alternateRowBackground)
+            } else {
+                normalBgColor
+            }
+
+        val baseFontName =
+            when (cellFontFamily.lowercase()) {
+                "helvetica-bold" -> BaseFont.HELVETICA_BOLD
+                "times" -> BaseFont.TIMES_ROMAN
+                "courier" -> BaseFont.COURIER
+                else -> BaseFont.HELVETICA
+            }
+        val cellFont = Font(FontCache.getFont(baseFontName), cellFontSize, Font.NORMAL)
+        cellFont.color = ColorUtil.hexToColor(style?.getEffectiveCellColor() ?: "#000000")
+
+        val columnMetas =
+            element.columns.mapIndexed { index, col ->
+                ColumnMeta(
+                    field = col.field,
+                    format = col.format,
+                    hasTransformations = ExpressionProcessor.hasTransformations(col.field),
+                    hAlign = getAlignment(col.alignment),
+                    vAlign = getVerticalAlignment(col.verticalAlignment ?: "center"),
+                    isFirst = index == 0,
+                    isLast = index == element.columns.size - 1,
+                )
+            }
+
         data.forEachIndexed { rowIndex, row ->
             val isLastRow = rowIndex == totalRows - 1
+            val rowBgColor = if (rowIndex % 2 == 1) altBgColor else normalBgColor
 
-            element.columns.forEachIndexed { colIndex, column ->
+            columnMetas.forEach { colMeta ->
                 val value =
-                    if (ExpressionProcessor.hasTransformations(column.field)) {
-                        ExpressionProcessor.process(column.field, row, null)
+                    if (colMeta.hasTransformations) {
+                        ExpressionProcessor.process(colMeta.field, row, null)
                     } else {
-                        row[column.field]
+                        row[colMeta.field]
                     }
-                val formattedValue = Formatter.format(value, column.format)
-
-                val baseFontName =
-                    when (cellFontFamily.lowercase()) {
-                        "helvetica-bold" -> BaseFont.HELVETICA_BOLD
-                        "times" -> BaseFont.TIMES_ROMAN
-                        "courier" -> BaseFont.COURIER
-                        else -> BaseFont.HELVETICA
-                    }
-
-                val cellFont =
-                    Font(
-                        FontCache.getFont(baseFontName),
-                        cellFontSize,
-                        Font.NORMAL,
-                    )
-                cellFont.color = ColorUtil.hexToColor(style?.getEffectiveCellColor() ?: "#000000")
+                val formattedValue = Formatter.format(value, colMeta.format)
 
                 val cell = PdfPCell(Phrase(formattedValue, cellFont))
-
-                val cellBg =
-                    if (rowIndex % 2 == 1 && style?.alternateRowBackground != null) {
-                        style.alternateRowBackground
-                    } else {
-                        style?.cellBackground
-                    }
-
-                if (cellBg != null && cellBg != "transparent") {
-                    cell.backgroundColor = ColorUtil.hexToColor(cellBg)
+                if (rowBgColor != null) {
+                    cell.backgroundColor = rowBgColor
                 }
-
-                val paddingTop = style?.getEffectiveCellPaddingTop() ?: 5f
-                val paddingRight = style?.getEffectiveCellPaddingRight() ?: 5f
-                val paddingBottom = style?.getEffectiveCellPaddingBottom() ?: 5f
-                val paddingLeft = style?.getEffectiveCellPaddingLeft() ?: 5f
 
                 cell.paddingTop = paddingTop
                 cell.paddingRight = paddingRight
                 cell.paddingBottom = paddingBottom
                 cell.paddingLeft = paddingLeft
 
-                cell.horizontalAlignment = getAlignment(column.alignment)
-
-                val vertAlign = column.verticalAlignment ?: "center"
-                cell.verticalAlignment = getVerticalAlignment(vertAlign)
-
-                cell.borderColor = style?.borderColor?.let { ColorUtil.hexToColor(it) }
-
-                val isFirstColumn = colIndex == 0
-                val isLastColumn = colIndex == element.columns.size - 1
-                val borderValues = getCellBorderValues(style)
+                cell.horizontalAlignment = colMeta.hAlign
+                cell.verticalAlignment = colMeta.vAlign
+                cell.borderColor = borderColor
 
                 when (cellBorderType) {
                     "cells" -> {
                         cell.borderWidthTop = borderValues.top / 2f
                         cell.borderWidthBottom = if (isLastRow) borderValues.bottom else borderValues.bottom / 2f
-                        cell.borderWidthLeft = if (isFirstColumn) borderValues.left else borderValues.left / 2f
-                        cell.borderWidthRight = if (isLastColumn) borderValues.right else borderValues.right / 2f
+                        cell.borderWidthLeft = if (colMeta.isFirst) borderValues.left else borderValues.left / 2f
+                        cell.borderWidthRight = if (colMeta.isLast) borderValues.right else borderValues.right / 2f
                     }
                     "row" -> {
                         cell.borderWidthTop = borderValues.top / 2f
                         cell.borderWidthBottom = if (isLastRow) borderValues.bottom else borderValues.bottom / 2f
-                        cell.borderWidthLeft = if (isFirstColumn) borderValues.left else 0f
-                        cell.borderWidthRight = if (isLastColumn) borderValues.right else 0f
+                        cell.borderWidthLeft = if (colMeta.isFirst) borderValues.left else 0f
+                        cell.borderWidthRight = if (colMeta.isLast) borderValues.right else 0f
                     }
                     else -> {
                         cell.borderWidthTop = borderValues.top / 2f
