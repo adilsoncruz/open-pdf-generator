@@ -3,18 +3,20 @@ package com.pdfgenerator.adapter.openpdf
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
-import com.google.zxing.client.j2se.MatrixToImageWriter
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.lowagie.text.Image
+import com.lowagie.text.pdf.Barcode
+import com.lowagie.text.pdf.Barcode128
+import com.lowagie.text.pdf.Barcode39
+import com.lowagie.text.pdf.BarcodeEAN
+import com.lowagie.text.pdf.BarcodePDF417
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
-import javax.imageio.ImageIO
 
 class BarcodeRenderer : Renderer<BarcodeElement> {
     private val logger = LoggerFactory.getLogger(BarcodeRenderer::class.java)
@@ -31,8 +33,7 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
         if (data.isNullOrBlank()) return
 
         try {
-            val scaleFactor = 3
-            val image = generateBarcodeImage(element, data, scaleFactor)
+            val image = generateBarcodeImage(element, data, context)
 
             val pageHeight = context.document.pageSize.height
             val x = context.resolveX(element.x)
@@ -107,23 +108,90 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
     private fun generateBarcodeImage(
         element: BarcodeElement,
         data: String,
-        scaleFactor: Int = 1,
+        context: RenderContext,
     ): Image {
         val effectiveType = (element.barcodeType ?: "qrcode").lowercase()
-        val format =
-            when (effectiveType) {
-                "qrcode", "qr_code" -> BarcodeFormat.QR_CODE
-                "barcode", "code128", "code_128" -> BarcodeFormat.CODE_128
-                "code39", "code_39" -> BarcodeFormat.CODE_39
-                "ean13", "ean_13" -> BarcodeFormat.EAN_13
-                "ean8", "ean_8" -> BarcodeFormat.EAN_8
-                "upc_a", "upca" -> BarcodeFormat.UPC_A
-                "upc_e", "upce" -> BarcodeFormat.UPC_E
-                "pdf417" -> BarcodeFormat.PDF_417
-                "datamatrix", "data_matrix" -> BarcodeFormat.DATA_MATRIX
-                else -> throw IllegalArgumentException("Unsupported barcode type: ${element.barcodeType}")
-            }
+        val canvas = if (context.useContentUnder) context.writer.directContentUnder else context.writer.directContent
 
+        return when (effectiveType) {
+            "barcode", "code128", "code_128" -> {
+                try {
+                    val b = Barcode128()
+                    b.code = data
+                    b.createImageWithBarcode(canvas, null, null)
+                } catch (e: Exception) {
+                    generateZxingImage(element, data, BarcodeFormat.CODE_128)
+                }
+            }
+            "code39", "code_39" -> {
+                try {
+                    val b = Barcode39()
+                    b.code = data
+                    b.createImageWithBarcode(canvas, null, null)
+                } catch (e: Exception) {
+                    generateZxingImage(element, data, BarcodeFormat.CODE_39)
+                }
+            }
+            "ean13", "ean_13" -> {
+                try {
+                    val b = BarcodeEAN()
+                    b.codeType = Barcode.EAN13
+                    b.code = data
+                    b.createImageWithBarcode(canvas, null, null)
+                } catch (e: Exception) {
+                    generateZxingImage(element, data, BarcodeFormat.EAN_13)
+                }
+            }
+            "ean8", "ean_8" -> {
+                try {
+                    val b = BarcodeEAN()
+                    b.codeType = Barcode.EAN8
+                    b.code = data
+                    b.createImageWithBarcode(canvas, null, null)
+                } catch (e: Exception) {
+                    generateZxingImage(element, data, BarcodeFormat.EAN_8)
+                }
+            }
+            "upc_a", "upca" -> {
+                try {
+                    val b = BarcodeEAN()
+                    b.codeType = Barcode.UPCA
+                    b.code = data
+                    b.createImageWithBarcode(canvas, null, null)
+                } catch (e: Exception) {
+                    generateZxingImage(element, data, BarcodeFormat.UPC_A)
+                }
+            }
+            "upc_e", "upce" -> {
+                try {
+                    val b = BarcodeEAN()
+                    b.codeType = Barcode.UPCE
+                    b.code = data
+                    b.createImageWithBarcode(canvas, null, null)
+                } catch (e: Exception) {
+                    generateZxingImage(element, data, BarcodeFormat.UPC_E)
+                }
+            }
+            "pdf417" -> {
+                try {
+                    val b = BarcodePDF417()
+                    b.setText(data)
+                    b.image
+                } catch (e: Exception) {
+                    generateZxingImage(element, data, BarcodeFormat.PDF_417)
+                }
+            }
+            "qrcode", "qr_code" -> generateZxingImage(element, data, BarcodeFormat.QR_CODE)
+            "datamatrix", "data_matrix" -> generateZxingImage(element, data, BarcodeFormat.DATA_MATRIX)
+            else -> throw IllegalArgumentException("Unsupported barcode type: ${element.barcodeType}")
+        }
+    }
+
+    private fun generateZxingImage(
+        element: BarcodeElement,
+        data: String,
+        format: BarcodeFormat,
+    ): Image {
         val hints = mutableMapOf<EncodeHintType, Any>()
         if (format == BarcodeFormat.QR_CODE) {
             val errorCorrection =
@@ -138,35 +206,38 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
             hints[EncodeHintType.MARGIN] = 0
         }
 
-        val width = (if (element.width > 0f) element.width.toInt() else 100).coerceAtLeast(10) * scaleFactor
-        val height = (if (element.height > 0f) element.height.toInt() else 100).coerceAtLeast(10) * scaleFactor
+        val width = (if (element.width > 0f) element.width.toInt() else 100).coerceAtLeast(10)
+        val height = (if (element.height > 0f) element.height.toInt() else 100).coerceAtLeast(10)
 
         val writer = MultiFormatWriter()
-        val bitMatrix: BitMatrix =
+        val bitMatrix =
             try {
-                writer.encode(
-                    data,
-                    format,
-                    width,
-                    height,
-                    hints,
-                )
+                writer.encode(data, format, width, height, hints)
             } catch (e: Exception) {
-                logger.warn("Fallback para CODE_128 no barcode ${element.id} ($effectiveType) devido a conteúdo incompatível '$data': ${e.message}")
-                writer.encode(
-                    data,
-                    BarcodeFormat.CODE_128,
-                    width,
-                    height,
-                )
+                logger.warn("Fallback para CODE_128 no barcode ${element.id} devido a conteúdo incompatível '$data': ${e.message}")
+                writer.encode(data, BarcodeFormat.CODE_128, width, height)
             }
 
-        val bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix)
+        return bitMatrixToImage(bitMatrix)
+    }
 
-        val outputStream = ByteArrayOutputStream()
-        ImageIO.write(bufferedImage, "PNG", outputStream)
-        val imageBytes = outputStream.toByteArray()
+    private fun bitMatrixToImage(bitMatrix: BitMatrix): Image {
+        val width = bitMatrix.width
+        val height = bitMatrix.height
+        val stride = (width + 7) / 8
+        val bytes = ByteArray(stride * height)
 
-        return Image.getInstance(imageBytes)
+        for (y in 0 until height) {
+            val rowOffset = y * stride
+            for (x in 0 until width) {
+                // In PDF DeviceGray 1-bit: 0 is black (module), 1 is white (background)
+                if (!bitMatrix.get(x, y)) {
+                    bytes[rowOffset + (x shr 3)] = (bytes[rowOffset + (x shr 3)].toInt() or (0x80 shr (x and 7))).toByte()
+                }
+            }
+        }
+
+        return Image.getInstance(width, height, 1, 1, bytes)
     }
 }
+

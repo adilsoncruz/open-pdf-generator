@@ -175,7 +175,9 @@ data class TableColumn(
 data class TableStyle(
     val headerBackground: String = "#f0f0f0",
     val headerColor: String = "#000000",
+    val headerTextColor: String? = null,
     val headerFontSize: Float = 12f,
+
     val headerFontFamily: String? = null,
     val headerFontWeight: String = "bold",
     val headerBorderWidth: Float? = null,
@@ -214,6 +216,9 @@ data class TableStyle(
     fun getEffectiveCellFontSize(): Float = fontSize ?: rowFontSize ?: 10f
 
     fun getEffectiveCellColor(): String = cellColor ?: rowColor ?: "#000000"
+
+    fun getEffectiveHeaderColor(): String = headerTextColor ?: headerColor
+
 
     fun getEffectiveHeaderTopBorderWidth(): Float = headerTopBorderWidth ?: headerBorderWidth ?: borderTopWidth ?: borderWidth
 
