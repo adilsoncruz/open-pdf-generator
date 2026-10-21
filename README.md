@@ -4,6 +4,11 @@
 
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 [![JitPack](https://jitpack.io/v/adilsoncruz/open-pdf-generator.svg)](https://jitpack.io/#adilsoncruz/open-pdf-generator)
+[![GitHub Stars](https://img.shields.io/github/stars/adilsoncruz/open-pdf-generator?style=social)](https://github.com/adilsoncruz/open-pdf-generator)
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ff69b4?logo=github)](https://github.com/sponsors/adilsoncruz)
+
+> ⚡ **2.5x to 9.8x Faster than JasperReports** | **8,650 docs/sec** in containers | **195ms Cold Start** | **4.0MB footprint**  
+> Modern, lightweight, declarative JSON alternative to legacy JasperReports and proprietary iText engines. Read the [Benchmark Case Study](https://adilsoncruz.github.io/open-pdf-generator/lib/benchmark).
 
 ## 📋 Overview
 
@@ -15,6 +20,20 @@ Open PDF Generator is a complete ecosystem for creating and generating PDFs from
 | **[Template Editor](./tools/editor/)** | Desktop app (Electron) for visual template editing |
 | **[CLI](./tools/cli/)** | Command-line interface for automation |
 | **[Documentation](./docs/)** | VitePress documentation site |
+
+## ⚡ Performance: Open PDF Generator vs JasperReports
+
+Stress test executed inside an isolated Linux container with cgroup quotas (**2 vCPU, 1 GB RAM**):
+
+| Metric | Open PDF Generator | JasperReports 7.0.3 | JasperReports 6.21.4 | Open PDF Advantage |
+|:---|:---:|:---:|:---:|:---:|
+| **Throughput (100k docs)** | **8,650 docs/sec** | 3,539 docs/sec | 3,338 docs/sec | **+144% capacity (2.5x faster)** |
+| **Complex Doc (Barcode + QR)** | **1.22 ms** | 11.88 ms | 10.58 ms | **9.8x faster (9.9x less RAM)** |
+| **Cold Start (1st doc)** | **195 ms** | 742 ms | 1,166 ms | **3.8x - 4.3x faster boot** |
+| **Container RAM (Peak RSS)** | **128 MB** | 171 MB | 164 MB | **25% less RAM (Zero GC pauses)** |
+| **Runtime Footprint** | **4.0 MB** | 25.2 MB | 13.6 MB | **6.3x lighter JAR** |
+
+👉 Read the full [Interactive Benchmark Dashboard & Case Study](https://adilsoncruz.github.io/open-pdf-generator/lib/benchmark).
 
 ## 🏗️ Project Structure
 
@@ -271,6 +290,12 @@ Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for g
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## 🌟 Star & Sponsor
+
+If Open PDF Generator makes your stack faster or saves cloud infrastructure costs:
+- ⭐ **Star this repo** on [GitHub](https://github.com/adilsoncruz/open-pdf-generator) to help more developers find it.
+- ☕ **Sponsor development** on [GitHub Sponsors](https://github.com/sponsors/adilsoncruz) to support continuous benchmarks and documentation.
 
 ## 📄 License
 

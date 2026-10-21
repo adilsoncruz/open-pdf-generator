@@ -35,6 +35,10 @@ Open PDF Generator was built from the ground up for modern microservices and web
 
 ---
 
+<BenchmarkInteractiveChart />
+
+---
+
 ## 1. Container Stress Test (100,000 Unique Documents)
 
 To evaluate real-world resilience without caching, we ran **100,000 unique commercial invoices** (`INV-000001` through `INV-100000` with unique customer names, items, prices, and taxes) inside an isolated Linux container (`eclipse-temurin:21-jre-alpine`) enforced by strict cgroup v2 quotas (**2 vCPUs**, **1 GB RAM**):
@@ -178,3 +182,15 @@ The entire benchmark suite is open source and reproducible with a single script:
 # 2. Container Benchmark with Strict cgroup Limits (2 CPUs, 1GB RAM, 100k docs)
 ./benchmark/scripts/run-container-benchmark.sh 2 1g 100000 4
 ```
+
+---
+
+## 🌟 Support Independent Open Source
+
+If Open PDF Generator saved you infrastructure costs, simplified your tech stack, or made your microservices faster, consider supporting the project:
+
+::: tip Star & Sponsor the Ecosystem
+- **⭐ Star the Repository:** Giving a star on [GitHub](https://github.com/adilsoncruz/open-pdf-generator) boosts our visibility and attracts more enterprise contributors.
+- **☕ Sponsor & Donate:** Help fund our dedicated cloud test rigs, performance profiling pipelines, and developer documentation via [GitHub Sponsors](https://github.com/sponsors/adilsoncruz).
+- **💬 Share with your Team:** Tell fellow engineers on LinkedIn, Reddit, or Hacker News about modern JSON-first PDF generation!
+:::
