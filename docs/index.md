@@ -44,7 +44,7 @@ features:
   - icon:
       src: /icons/speed.svg
     title: 2.5x Faster vs JasperReports
-    details: 8,310 docs/sec in containers, 273ms cold-start (4.3x faster), and 4.0MB footprint. Zero GC lockups under 100k document stress.
+    details: 8,650 docs/sec in containers, 195ms cold-start (4.3x faster), and 4.0MB footprint. Zero GC lockups under 100k document stress.
     link: /lib/benchmark
     linkText: View Benchmark Report
 

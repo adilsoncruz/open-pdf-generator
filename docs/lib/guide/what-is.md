@@ -20,10 +20,10 @@ You define document structure, geometry, and styling in a clean JSON format and 
 
 ### 🚀 Ultra-Lightweight & Cloud Native
 - **4.0 MB total dependency footprint** (3.4x lighter than JasperReports).
-- **273 ms cold start** on standard JVM containers — instant execution on AWS Lambda, Google Cloud Run, and Kubernetes.
+- **195 ms cold start** on standard JVM containers — instant execution on AWS Lambda, Google Cloud Run, and Kubernetes.
 - Zero external runtime compiler or heavy dynamic bytecode generation dependencies.
 
-### ⚡ Extreme Throughput (8,300+ docs/sec)
+### ⚡ Extreme Throughput (8,650 docs/sec)
 - Fully non-blocking, multi-core scalable generation pipeline.
 - Generates **100,000 invoices in ~12 seconds** inside a 2-vCPU / 1 GB RAM container.
 - Zero-copy streaming (`generateToStream`) direct to network sockets and HTTP response bodies.
