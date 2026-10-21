@@ -1,31 +1,16 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { withBase } from 'vitepress'
+import { currentSlide, isPaused, totalSlides, nextSlide, prevSlide, setSlide } from '../composables/useHeroSlider'
 
-const currentSlide = ref(0)
-const isHovered = ref(false)
 let timer = null
-
-const totalSlides = 5
-
-function nextSlide() {
-  currentSlide.value = (currentSlide.value + 1) % totalSlides
-}
-
-function prevSlide() {
-  currentSlide.value = (currentSlide.value - 1 + totalSlides) % totalSlides
-}
-
-function setSlide(idx) {
-  currentSlide.value = idx
-}
 
 onMounted(() => {
   timer = setInterval(() => {
-    if (!isHovered.value) {
+    if (!isPaused.value) {
       nextSlide()
     }
-  }, 5000)
+  }, 6000)
 })
 
 onUnmounted(() => {
@@ -36,8 +21,8 @@ onUnmounted(() => {
 <template>
   <div 
     class="hero-slider-frame"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false"
+    @mouseenter="isPaused = true"
+    @mouseleave="isPaused = false"
   >
     <!-- Background Ambient Glow -->
     <div class="ambient-glow" :class="'glow-slide-' + currentSlide"></div>
