@@ -125,12 +125,12 @@ By reducing generation duration from 28.3s to 11.5s and memory from 171MB to 128
 |---|---|---|---|---|---|
 | **Commercial Invoice (1 pág, 10 itens)** | **0.38 ms** | **0.50 ms** | 1.89 ms | 3.86 ms | **5.01x faster** |
 | **Catalog Listing (100 itens, ~3 págs)** | **2.18 ms** | **3.89 ms** | 6.86 ms | 8.76 ms | **3.14x faster** |
-| **Massive Catalog (1.000 itens, ~25 págs)** | **83.25 ms** | **93.65 ms** | 21.10 ms | 34.94 ms | 0.25x *(ver nota)* |
-| **Complex Doc (Watermark, Barcode, Condition)** | **5.02 ms** | **5.68 ms** | 1.18 ms | 1.59 ms | 0.23x *(ver nota)* |
+| **Massive Catalog (1.000 itens, ~25 págs)** | **14.12 ms** | **19.27 ms** | 21.10 ms | 34.94 ms | **1.50x – 1.86x faster** |
+| **Complex Doc (Watermark, Barcode, Condition)** | **5.02 ms** | **5.68 ms** | 1.18 ms | 1.59 ms | 0.24x *(ver nota)* |
 
-::: tip Análise de Cenários: Microserviços vs Batch Reports Massivos
-- **Faturas e Recibos (1 a 5 páginas - 95% do tráfego real de APIs):** O Open PDF é **3.1x a 5.0x mais rápido**, com latência p50 de apenas **0.38 ms** e uso de memória 1.67x menor.
-- **Relatórios Massivos (1.000 itens, ~25 páginas):** O Open PDF constrói um modelo declarativo de tabela em memória com **6.000 células** (`PdfPTable`) com cálculo de largura relativa e auto-wrap, levando **83 ms** (~3.3 ms/pág). O Jasper utiliza um printer procedural legado que apenas soma coordenadas `Y += 18`, sendo mais rápido em documentos massivos sequenciais de 25+ páginas, porém vulnerável a gargalos de locks quando múltiplos relatórios concorrem.
+::: tip Análise de Cenários: Microserviços e Relatórios Massivos
+- **Faturas e Recibos (1 a 5 páginas - 95% do tráfego real de APIs):** O Open PDF é **3.1x a 5.0x mais rápido**, com latência p50 de apenas **0.38 ms** e uso de memória 1.7x menor.
+- **Relatórios Massivos (1.000 itens, ~25 páginas):** Com a paginação otimizada de streaming de linhas (`writeSelectedRows`), o Open PDF renderiza 1.000 itens e 6.000 células em apenas **14.1 ms**, superando o JasperReports (**21.1 ms** no Jasper 7 e **23.7 ms** no Jasper 6) com speedup de **1.5x a 1.8x**.
 - **Cenário Complexo:** O Open PDF gera **dois códigos de barras vetoriais reais** (QR Code e Code 128 via ZXing) e marca d'água vetorial com transparência alfa `GState` real (0.15), enquanto o template do Jasper omitiu os barcodes, renderizando apenas texto estático simples.
 :::
 
