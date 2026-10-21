@@ -20,6 +20,7 @@ export default defineConfig({
       { text: 'Library', link: '/lib/' },
       { text: 'CLI', link: '/cli/' },
       { text: 'Editor', link: '/editor/' },
+      { text: '⚡ Benchmark', link: '/lib/benchmark' },
       {
         text: '💖 Donate',
         items: [
