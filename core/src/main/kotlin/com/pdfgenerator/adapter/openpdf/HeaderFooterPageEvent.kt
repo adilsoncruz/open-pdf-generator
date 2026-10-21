@@ -8,17 +8,11 @@ import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
-import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.BodyBackground
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.HeaderFooter
-import com.pdfgenerator.model.ImageElement
-import com.pdfgenerator.model.LineElement
-import com.pdfgenerator.model.RectangleElement
-import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.Template
-import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.model.WatermarkConfig
 import com.pdfgenerator.model.WatermarkType
 import com.pdfgenerator.util.ColorUtil
@@ -274,69 +268,6 @@ class HeaderFooterPageEvent(
         }
     }
 
-    private fun adjustElementForHeader(
-        element: Element,
-        document: Document,
-    ): Element {
-        val leftMargin = template.pageSettings.margins.left
-        val topMargin = template.pageSettings.margins.top
-        val adjustedX = leftMargin + element.x
-        val adjustedY = topMargin + element.y
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            else -> element
-        }
-    }
-
-    private fun adjustElementForFooter(
-        element: Element,
-        document: Document,
-        footer: HeaderFooter,
-    ): Element {
-        val pageHeight = document.pageSize.height
-        val leftMargin = template.pageSettings.margins.left
-        val bottomMargin = template.pageSettings.margins.bottom
-        val footerTopY = pageHeight - bottomMargin - footer.height
-        val adjustedX = leftMargin + element.x
-        val adjustedY = footerTopY + element.y
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            else -> element
-        }
-    }
-
-    private fun adjustElementForBackground(
-        element: Element,
-        document: Document,
-    ): Element {
-        val leftMargin = template.pageSettings.margins.left
-        val topMargin = template.pageSettings.margins.top
-        val adjustedX = leftMargin + element.x
-        val adjustedY = topMargin + element.y
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            else -> element
-        }
-    }
-
     private fun renderWatermark(
         writer: PdfWriter,
         document: Document,
@@ -398,11 +329,15 @@ class HeaderFooterPageEvent(
                                     }
                             }
                         val baseFont = FontCache.getFont(baseFontName)
-                        val color = ColorUtil.hexToColor(watermark.color)
+                        val baseColor = ColorUtil.hexToColor(watermark.color)
+                        val alphaInt = (opacity * 255f).toInt().coerceIn(0, 255)
+                        val colorWithAlpha = java.awt.Color(baseColor.red, baseColor.green, baseColor.blue, alphaInt)
+
+                        cb.setColorFill(colorWithAlpha)
+                        cb.setGState(gState)
 
                         cb.beginText()
                         cb.setFontAndSize(baseFont, watermark.fontSize)
-                        cb.setColorFill(color)
 
                         if (watermark.repeat) {
                             val estimatedTextWidth = watermark.fontSize * (rawText.length * 0.6f)
