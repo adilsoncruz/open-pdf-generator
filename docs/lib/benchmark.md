@@ -70,26 +70,26 @@ Jasper's threads are throttled by **internal lock contention** (synchronized cla
 
 Web servers (Spring Boot, Quarkus, Micronaut, Ktor) serve concurrent traffic. We benchmarked sustained invoice generation across increasing worker threads:
 
-| Parallel Threads | Open PDF Generator | JasperReports 6.21.4 | Concurrency Speedup |
+| Parallel Threads | Open PDF Generator | JasperReports | Concurrency Speedup |
 |---|---|---|---|
-| **1 Worker Thread** | **6,115.5 docs/sec** | 1,144.2 docs/sec | **5.34x faster** |
-| **4 Worker Threads** | **13,059.0 docs/sec** | 3,251.2 docs/sec | **4.02x faster** |
-| **8 Worker Threads** | **23,860.2 docs/sec** | 5,299.8 docs/sec | **4.50x faster** |
-| **16 Worker Threads** | **23,455.1 docs/sec** | 6,319.1 docs/sec | **3.71x faster** |
+| **1 Worker Thread** | **6,015.0 docs/sec** | 1,274.0 docs/sec | **4.72x faster** |
+| **4 Worker Threads** | **19,833.0 docs/sec** | 3,606.0 docs/sec | **5.50x faster** |
+| **8 Worker Threads** | **26,203.0 docs/sec** | 5,220.0 docs/sec | **5.02x faster** |
+| **16 Worker Threads** | **31,158.0 docs/sec** | 5,763.0 docs/sec | **5.41x faster** |
 
 ```mermaid
 xychart-beta
     title "Throughput Scaling by Thread Count (docs/sec - Higher is better)"
     x-axis ["1 Thread", "4 Threads", "8 Threads", "16 Threads"]
-    y-axis "Docs / Sec" 0 --> 28000
-    line [6115, 13059, 23860, 23455]
+    y-axis "Docs / Sec" 0 --> 35000
+    line [6015, 19833, 26203, 31158]
 ```
 
 ### Connection Pool & Tail Latency Protection
 
 Because Open PDF completes each document in fractions of a millisecond:
-- **Zero Socket Exhaustion:** HTTP connections are returned to the connection pool in **~0.5 ms** rather than being tied up for **~3 ms to 7 ms**.
-- **P99 SLA Guarantee:** Under heavy traffic spikes, p99 latency remains under **1.5 ms**, preventing cascading gateway timeouts (`504 Gateway Timeout`).
+- **Zero Socket Exhaustion:** HTTP connections are returned to the connection pool in **~0.38 ms** rather than being tied up for **~2 ms to 7 ms**.
+- **P99 SLA Guarantee:** Under heavy traffic spikes, p99 latency remains under **0.66 ms**, preventing cascading gateway timeouts (`504 Gateway Timeout`).
 
 ---
 
@@ -97,24 +97,24 @@ Because Open PDF completes each document in fractions of a millisecond:
 
 Cold starts dictate user experience in serverless runtimes (AWS Lambda, Google Cloud Run, Azure Functions) and pod autoscaling:
 
-| Metric | Open PDF Generator | JasperReports 6.21.4 | Architectural Cause |
+| Metric | Open PDF Generator | JasperReports | Architectural Advantage |
 |---|---|---|---|
-| **Cold Start (1st Document)** | **273.6 ms** | 1,166.0 ms | **4.3x faster** boot |
-| **Template Preparation** | **Instant JSON Parse (< 1 ms)** | Requires JRXML compilation | No ECJ Java compiler required |
-| **Package JAR Size** | **4.0 MB** | 13.6 MB | 3.4x smaller download & unpack |
+| **Cold Start (1st Document)** | **195.2 ms** | 742.5 ms (v7) / 1,166.0 ms (v6) | **3.8x - 4.3x faster** boot |
+| **Template Preparation** | **Instant JSON Parse (< 1 ms)** | Requires XML compilation | No bytecode compiler needed |
+| **Package JAR Size** | **4.0 MB** | 13.6 MB (v6) / 25.2 MB (v7 + JDT) | **3.4x - 6.3x smaller** footprint |
 
 ```mermaid
 xychart-beta
     title "Cold Start Latency (ms - Lower is better)"
-    x-axis ["Open PDF Generator", "JasperReports"]
-    y-axis "Time in ms" 0 --> 1350
-    bar [273, 1166]
+    x-axis ["Open PDF Generator", "JasperReports 7", "JasperReports 6"]
+    y-axis "Time in ms" 0 --> 1250
+    bar [195, 743, 1166]
 ```
 
 ::: info Cloud FinOps Impact
 In AWS Lambda and Google Cloud Run, billing is calculated directly on **vCPU-seconds** and **GB-seconds**. 
 
-By reducing generation duration from 29.9s to 12.0s and memory from 164MB to 128MB, Open PDF Generator slashes your monthly cloud billing for PDF workloads by **more than 60%**.
+By reducing generation duration from 28.3s to 11.5s and memory from 171MB to 128MB, Open PDF Generator slashes your monthly cloud billing for PDF workloads by **more than 60%**.
 :::
 
 ---
@@ -123,10 +123,16 @@ By reducing generation duration from 29.9s to 12.0s and memory from 164MB to 128
 
 | Workload Scenario | Open PDF (p50) | Open PDF (p95) | Jasper (p50) | Jasper (p95) | Speedup |
 |---|---|---|---|---|---|
-| **Commercial Invoice (1 pág, 10 itens)** | **0.50 ms** | **0.70 ms** | 2.24 ms | 3.76 ms | **4.44x** |
-| **Catalog Listing (100 itens, ~3 págs)** | **2.23 ms** | **4.43 ms** | 3.89 ms | 5.79 ms | **1.74x** |
-| **Massive Catalog (1.000 itens, ~25 págs)** | **82.27 ms** | **99.47 ms** | 22.41 ms | 26.55 ms | 0.27x |
-| **Complex Doc (Watermark, Barcode, Condition)** | **5.02 ms** | **5.68 ms** | 1.18 ms | 1.59 ms | 0.24x |
+| **Commercial Invoice (1 pág, 10 itens)** | **0.38 ms** | **0.50 ms** | 1.89 ms | 3.86 ms | **5.01x faster** |
+| **Catalog Listing (100 itens, ~3 págs)** | **2.18 ms** | **3.89 ms** | 6.86 ms | 8.76 ms | **3.14x faster** |
+| **Massive Catalog (1.000 itens, ~25 págs)** | **83.25 ms** | **93.65 ms** | 21.10 ms | 34.94 ms | 0.25x *(ver nota)* |
+| **Complex Doc (Watermark, Barcode, Condition)** | **5.02 ms** | **5.68 ms** | 1.18 ms | 1.59 ms | 0.23x *(ver nota)* |
+
+::: tip Análise de Cenários: Microserviços vs Batch Reports Massivos
+- **Faturas e Recibos (1 a 5 páginas - 95% do tráfego real de APIs):** O Open PDF é **3.1x a 5.0x mais rápido**, com latência p50 de apenas **0.38 ms** e uso de memória 1.67x menor.
+- **Relatórios Massivos (1.000 itens, ~25 páginas):** O Open PDF constrói um modelo declarativo de tabela em memória com **6.000 células** (`PdfPTable`) com cálculo de largura relativa e auto-wrap, levando **83 ms** (~3.3 ms/pág). O Jasper utiliza um printer procedural legado que apenas soma coordenadas `Y += 18`, sendo mais rápido em documentos massivos sequenciais de 25+ páginas, porém vulnerável a gargalos de locks quando múltiplos relatórios concorrem.
+- **Cenário Complexo:** O Open PDF gera **dois códigos de barras vetoriais reais** (QR Code e Code 128 via ZXing) e marca d'água vetorial com transparência alfa `GState` real (0.15), enquanto o template do Jasper omitiu os barcodes, renderizando apenas texto estático simples.
+:::
 
 ---
 
@@ -137,14 +143,14 @@ When serving downloads in REST APIs, writing directly to the HTTP `OutputStream`
 
 | Mode | Open PDF Generator (p50) | JasperReports (p50) | Speedup |
 |---|---|---|---|
-| **Buffered (`byte[]` in Heap)** | 0.50 ms | 2.24 ms | **4.44x** |
-| **Direct Stream (`OutputStream`)** | **0.12 ms** | 0.73 ms | **5.94x** |
+| **Buffered (`byte[]` in Heap)** | 0.38 ms | 1.89 ms | **5.01x** |
+| **Direct Stream (`OutputStream`)** | **0.13 ms** | 0.68 ms | **5.43x** |
 
 ### JSON Schema Contract Validation Overhead
 Open PDF Generator includes built-in JSON Schema validation (Draft-07 & 2020-12) to catch malformed payloads before rendering:
-- **Without Schema Validation:** `0.50 ms`
-- **With Schema Validation:** `0.86 ms`
-- **Safety Overhead:** Only **+0.35 ms** to guarantee structural data integrity and eliminate runtime null pointer exceptions.
+- **Without Schema Validation:** `0.38 ms`
+- **With Schema Validation:** `0.81 ms`
+- **Safety Overhead:** Only **+0.44 ms** to guarantee structural data integrity and eliminate runtime null pointer exceptions.
 
 ---
 
