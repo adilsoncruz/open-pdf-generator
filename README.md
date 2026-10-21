@@ -175,9 +175,10 @@ Under identical JVM environments, **Open PDF Generator** substantially outperfor
 
 | Metric / Scenario | Open PDF Generator | JasperReports 6.21.4 | Advantage |
 |---|---|---|---|
-| **Cold Start (1st Doc Render)** | **379.9 ms** | 2053.4 ms | **5.4x faster** (Ideal for Serverless & Lambda) |
-| **Invoice (1 page, 10 items)** | **0.62 ms** (1,581 docs/s) | 2.92 ms (346 docs/s) | **4.7x faster** latency |
-| **Catalog Listing (100 items)** | **4.44 ms** (207 docs/s) | 7.49 ms (125 docs/s) | **1.7x faster** throughput |
+| **Cold Start (1st Doc Render)** | **273.6 ms** | 1166.0 ms | **4.3x faster** (Ideal for Serverless & Lambda) |
+| **Invoice (Single-thread)** | **0.50 ms** (1,874 docs/s) | 2.24 ms (424 docs/s) | **4.4x faster** latency |
+| **Concurrency (8 Parallel Threads)** | **23,860 docs/s** | 5,300 docs/s | **4.5x higher** parallel throughput |
+| **Direct Stream (`OutputStream`)** | **0.12 ms** (zero-copy) | 0.73 ms | **5.9x faster** streaming |
 | **Distribution Size (JARs)** | **4.0 MB** | 13.6 MB | **3.4x smaller** dependencies |
 | **Template Compilation** | Instant (Native JSON) | Required (JRXML -> .jasper) | Zero build-time compilation |
 

@@ -45,6 +45,27 @@ class JasperRunner {
     }
 
     @Suppress("UNCHECKED_CAST")
+    fun renderInvoiceStream(data: Map<String, Any?>, outputStream: java.io.OutputStream) {
+        val params = HashMap<String, Any>()
+        params["invoiceNumber"] = data["invoiceNumber"] ?: ""
+        params["date"] = data["date"] ?: ""
+
+        val customer = data["customer"] as? Map<String, Any?>
+        params["customerName"] = customer?.get("name") ?: ""
+        params["customerEmail"] = customer?.get("email") ?: ""
+        params["customerAddress"] = customer?.get("address") ?: ""
+        params["subtotal"] = (data["subtotal"] as Number).toDouble()
+        params["tax"] = (data["tax"] as Number).toDouble()
+        params["total"] = (data["total"] as Number).toDouble()
+
+        val items = (data["items"] as? List<Map<String, Any?>>) ?: emptyList()
+        val dataSource = JRMapCollectionDataSource(items)
+
+        val print = JasperFillManager.fillReport(invoiceReport, params, dataSource)
+        JasperExportManager.exportReportToPdfStream(print, outputStream)
+    }
+
+    @Suppress("UNCHECKED_CAST")
     fun renderListing(data: Map<String, Any?>): ByteArray {
         val params = HashMap<String, Any>()
         params["reportTitle"] = data["reportTitle"] ?: ""

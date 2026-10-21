@@ -8,6 +8,8 @@ import com.pdfgenerator.benchmark.metrics.MemoryProfiler
 import com.pdfgenerator.benchmark.model.BenchmarkDataFactory
 import com.pdfgenerator.benchmark.openpdf.OpenPdfRunner
 import java.io.File
+import java.io.OutputStream
+import java.util.concurrent.Executors
 
 data class ScenarioSummary(
     val scenario: String,
@@ -27,11 +29,38 @@ data class ScenarioSummary(
     val memorySavingFactor: Double,
 )
 
+data class ConcurrencySummary(
+    val threads: Int,
+    val totalRequests: Int,
+    val openPdfDurationMs: Double,
+    val openPdfThroughputDocsPerSec: Double,
+    val jasperDurationMs: Double,
+    val jasperThroughputDocsPerSec: Double,
+    val speedupFactor: Double,
+)
+
+data class StreamingSummary(
+    val mode: String,
+    val openPdfLatencyP50Ms: Double,
+    val jasperLatencyP50Ms: Double,
+    val speedupFactor: Double,
+)
+
+data class SchemaValidationCostSummary(
+    val withoutValidationP50Ms: Double,
+    val withValidationP50Ms: Double,
+    val overheadMs: Double,
+    val overheadPercent: Double,
+)
+
 data class BenchmarkFullReport(
     val environment: Map<String, String>,
     val coldStart: Map<String, Double>,
     val dependencySize: Map<String, Any>,
     val scenarios: List<ScenarioSummary>,
+    val concurrency: List<ConcurrencySummary>,
+    val streaming: List<StreamingSummary>,
+    val schemaValidation: SchemaValidationCostSummary,
 )
 
 fun main() {
@@ -65,7 +94,6 @@ fun main() {
     val listing1000Data = BenchmarkDataFactory.createListingData(1000)
     val complexData = BenchmarkDataFactory.createComplexData()
 
-    // Warmup iterations
     repeat(15) {
         openPdf.renderInvoice(invoiceData)
         jasper.renderInvoice(invoiceData)
@@ -143,7 +171,91 @@ fun main() {
         println(" Done! (Speedup: %.2fx, Memory Saving: %.2fx)".format(speedup, memSaving))
     }
 
-    // 3. Dependency Footprint
+    // 3. Multi-threaded Concurrency Test (API load simulation)
+    println("\n⚡ Measuring Multi-threaded Concurrency Scalability...")
+    val concurrencyLevels = listOf(1, 4, 8, 16)
+    val requestsPerLevel = 100
+    val concurrencySummaries = mutableListOf<ConcurrencySummary>()
+
+    for (threads in concurrencyLevels) {
+        print("   Testing with $threads concurrent thread(s)...")
+        val opTimeMs = measureConcurrency(threads, requestsPerLevel) { openPdf.renderInvoice(invoiceData) }
+        val jrTimeMs = measureConcurrency(threads, requestsPerLevel) { jasper.renderInvoice(invoiceData) }
+
+        val opThroughput = (requestsPerLevel.toDouble() / opTimeMs) * 1000.0
+        val jrThroughput = (requestsPerLevel.toDouble() / jrTimeMs) * 1000.0
+        val speedup = jrTimeMs / opTimeMs.coerceAtLeast(0.001)
+
+        concurrencySummaries.add(
+            ConcurrencySummary(
+                threads = threads,
+                totalRequests = requestsPerLevel,
+                openPdfDurationMs = opTimeMs,
+                openPdfThroughputDocsPerSec = opThroughput,
+                jasperDurationMs = jrTimeMs,
+                jasperThroughputDocsPerSec = jrThroughput,
+                speedupFactor = speedup,
+            ),
+        )
+        println(" Done! (OpenPDF: %.0f docs/s vs Jasper: %.0f docs/s -> %.2fx speedup)".format(opThroughput, jrThroughput, speedup))
+    }
+
+    // 4. Streaming vs In-Memory (Zero-copy output)
+    println("\n🌊 Measuring Streaming to OutputStream (zero-copy)...")
+    val streamRuns = 30
+    val opStreamTimes = (1..streamRuns).map {
+        val s = System.nanoTime()
+        openPdf.renderInvoiceStream(invoiceData, OutputStream.nullOutputStream())
+        (System.nanoTime() - s) / 1_000_000.0
+    }
+    val jrStreamTimes = (1..streamRuns).map {
+        val s = System.nanoTime()
+        jasper.renderInvoiceStream(invoiceData, OutputStream.nullOutputStream())
+        (System.nanoTime() - s) / 1_000_000.0
+    }
+
+    val invoiceP50 = summaries.first().openPdfLatencyP50Ms
+    val jasperInvoiceP50 = summaries.first().jasperLatencyP50Ms
+    val opStreamP50 = percentile(opStreamTimes, 50.0)
+    val jrStreamP50 = percentile(jrStreamTimes, 50.0)
+
+    val streamingSummaries = listOf(
+        StreamingSummary(
+            mode = "Buffered (ByteArray in memory)",
+            openPdfLatencyP50Ms = invoiceP50,
+            jasperLatencyP50Ms = jasperInvoiceP50,
+            speedupFactor = jasperInvoiceP50 / invoiceP50.coerceAtLeast(0.001),
+        ),
+        StreamingSummary(
+            mode = "Direct Stream (OutputStream null sink)",
+            openPdfLatencyP50Ms = opStreamP50,
+            jasperLatencyP50Ms = jrStreamP50,
+            speedupFactor = jrStreamP50 / opStreamP50.coerceAtLeast(0.001),
+        ),
+    )
+    println("   - Direct Stream p50: OpenPDF %.2f ms vs Jasper %.2f ms (%.2fx speedup)".format(opStreamP50, jrStreamP50, jrStreamP50 / opStreamP50.coerceAtLeast(0.001)))
+
+    // 5. Schema Validation Overhead
+    println("\n🛡️  Measuring JSON Schema Validation Overhead...")
+    val schemaRuns = 40
+    val withSchemaTimes = (1..schemaRuns).map {
+        val s = System.nanoTime()
+        openPdf.renderInvoiceWithSchema(invoiceData)
+        (System.nanoTime() - s) / 1_000_000.0
+    }
+    val withSchemaP50 = percentile(withSchemaTimes, 50.0)
+    val overheadMs = (withSchemaP50 - invoiceP50).coerceAtLeast(0.0)
+    val overheadPercent = if (invoiceP50 > 0) (overheadMs / invoiceP50) * 100.0 else 0.0
+
+    val schemaSummary = SchemaValidationCostSummary(
+        withoutValidationP50Ms = invoiceP50,
+        withValidationP50Ms = withSchemaP50,
+        overheadMs = overheadMs,
+        overheadPercent = overheadPercent,
+    )
+    println("   - Without Schema: %.2f ms | With Schema: %.2f ms (Overhead: +%.2f ms)".format(invoiceP50, withSchemaP50, overheadMs))
+
+    // 6. Dependency Footprint
     val classpath = System.getProperty("java.class.path").split(File.pathSeparator)
     var openPdfTotalSize = 0L
     var jasperTotalSize = 0L
@@ -184,6 +296,9 @@ fun main() {
         ),
         dependencySize = dependencySizeMap,
         scenarios = summaries,
+        concurrency = concurrencySummaries,
+        streaming = streamingSummaries,
+        schemaValidation = schemaSummary,
     )
 
     val outputDir = File("build/reports/benchmark")
@@ -197,6 +312,18 @@ fun main() {
     println("✅ Benchmark completed successfully!")
     println("📄 Summary written to: ${jsonFile.absolutePath}")
     println("=================================================================")
+}
+
+fun measureConcurrency(threads: Int, totalRequests: Int, block: () -> Unit): Double {
+    val executor = Executors.newFixedThreadPool(threads)
+    val start = System.nanoTime()
+    val futures = (1..totalRequests).map {
+        executor.submit { block() }
+    }
+    futures.forEach { it.get() }
+    val elapsedMs = (System.nanoTime() - start) / 1_000_000.0
+    executor.shutdown()
+    return elapsedMs
 }
 
 fun percentile(values: List<Double>, p: Double): Double {
