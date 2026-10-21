@@ -13,17 +13,95 @@ import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TextElement
+import com.pdfgenerator.util.ColorUtil
+import com.pdfgenerator.util.ConditionEvaluator
 
 class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<ContainerElement> {
     override fun render(
         element: ContainerElement,
         context: RenderContext,
     ) {
+        if (!ConditionEvaluator.evaluate(element.printCondition, context.data, context.loopContext)) {
+            return
+        }
+
         // Container is always treated as full-width and relative in body flow.
         val containerX = 0f
         val containerY = element.y
         val containerWidth = context.containerWidth ?: element.resolveWidth(595.28f)
-        val containerHeight = if (element.height > 0f) element.height else (context.containerHeight ?: 0f)
+        val resolvedHeight = element.resolveHeight(context.containerHeight ?: 0f)
+        val baseHeight = if (resolvedHeight > 0f) resolvedHeight else (context.containerHeight ?: 0f)
+        val maxAvailableHeight =
+            (context.document.pageSize.height - context.resolveY(containerY) - context.document.bottomMargin()).coerceAtLeast(10f)
+        val containerHeight = if (element.isAutoHeight()) {
+            val contentHeight = element.elements.maxOfOrNull { child ->
+                val chH = when (child) {
+                    is com.pdfgenerator.model.TextElement -> child.height ?: (child.style?.fontSize ?: 12f)
+                    is com.pdfgenerator.model.StaticTextElement -> child.height ?: (child.style?.fontSize ?: 12f)
+                    is com.pdfgenerator.model.RichTextElement -> child.height ?: (child.style?.fontSize ?: 12f)
+                    is com.pdfgenerator.model.ImageElement -> child.height
+                    is com.pdfgenerator.model.RectangleElement -> if (child.height is Number) (child.height as Number).toFloat() else 25f
+                    is com.pdfgenerator.model.LineElement -> 1f
+                    is com.pdfgenerator.model.BarcodeElement -> child.height
+                    else -> 25f
+                }
+                child.y + chH
+            } ?: 0f
+            kotlin.math.min(kotlin.math.max(baseHeight, contentHeight), maxAvailableHeight)
+        } else {
+            kotlin.math.min(baseHeight, maxAvailableHeight)
+        }
+
+        element.style?.let { style ->
+            val cb =
+                if (context.useContentUnder) {
+                    context.writer.directContentUnder
+                } else {
+                    context.writer.directContent
+                }
+            val pageHeight = context.document.pageSize.height
+            val x = context.resolveX(containerX)
+            val y = context.resolveY(containerY)
+            val yPosition = pageHeight - y - containerHeight
+
+            cb.saveState()
+
+            val fillColor = style.getEffectiveFillColor()
+            if (!fillColor.isNullOrBlank() && !fillColor.equals("transparent", ignoreCase = true)) {
+                cb.setColorFill(ColorUtil.hexToColor(fillColor))
+                if (style.cornerRadius > 0) {
+                    cb.roundRectangle(x, yPosition, containerWidth, containerHeight, style.cornerRadius)
+                } else {
+                    cb.rectangle(x, yPosition, containerWidth, containerHeight)
+                }
+                cb.fill()
+            }
+
+            val hasExplicitBorder =
+                style.getEffectivePenStyle()?.lowercase() != "none" &&
+                    (style.borderColor != null || style.strokeColor != null || (style.strokeWidth ?: 0f) > 0f)
+            if (hasExplicitBorder) {
+                val borderColor = style.getEffectiveBorderColor() ?: "#000000"
+                val borderWidth = if (style.getEffectiveBorderWidth() > 0f) style.getEffectiveBorderWidth() else 1f
+                cb.setColorStroke(ColorUtil.hexToColor(borderColor))
+                cb.setLineWidth(borderWidth)
+
+                when (style.getEffectivePenStyle()?.lowercase()) {
+                    "dashed" -> cb.setLineDash(floatArrayOf(6f, 3f), 0f)
+                    "dotted" -> cb.setLineDash(floatArrayOf(1f, 2f), 0f)
+                    else -> {}
+                }
+
+                if (style.cornerRadius > 0) {
+                    cb.roundRectangle(x, yPosition, containerWidth, containerHeight, style.cornerRadius)
+                } else {
+                    cb.rectangle(x, yPosition, containerWidth, containerHeight)
+                }
+                cb.stroke()
+            }
+
+            cb.restoreState()
+        }
 
         element.elements.forEach { childElement ->
             val adjustedElement =

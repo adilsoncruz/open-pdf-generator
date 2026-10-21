@@ -15,6 +15,8 @@ export interface Element {
   hidden?: boolean  
   width?: number | string
   height?: number | string
+  heightMode?: 'auto' | 'fixed'
+  autoHeight?: boolean
   style?: Record<string, unknown>  
   value?: string
   dataBinding?: string
@@ -32,6 +34,26 @@ export interface ElementGroup {
   location: ElementLocation
   printCondition?: string  
   collapsed?: boolean  
+}
+
+export interface WatermarkConfig {
+  type?: 'text' | 'image'
+  text?: string
+  dataBinding?: string
+  imageSource?: string
+  fontName?: string
+  fontSize?: number
+  fontStyle?: string
+  color?: string
+  opacity?: number
+  rotation?: number
+  width?: number
+  height?: number
+  onTop?: boolean
+  repeat?: boolean
+  spacingX?: number
+  spacingY?: number
+  printCondition?: string
 }
 
 export interface Template {
@@ -70,6 +92,7 @@ export interface Template {
       groups?: ElementGroup[]
       printCondition?: string
     }
+    watermark?: WatermarkConfig
   }
   page: Element[]
   groups?: ElementGroup[]  // Grupos do body
@@ -82,6 +105,7 @@ export interface Template {
       groups?: ElementGroup[]
     }
   }
+  schema?: Record<string, any>
 }
 
 interface TemplateStore {
@@ -91,11 +115,10 @@ interface TemplateStore {
   selectedGroupId: string | null  // ID do grupo selecionado
   selectedLoopChildId: string | null  // ID do elemento filho do loop selecionado
   selectedLoopParentId: string | null
-  expandedLoopIds: string[]
+  expandedLoopIds: string[]  // IDs dos loops expandidos na sidebar
   selectedContainerChildId: string | null
   selectedContainerParentId: string | null
   expandedContainerIds: string[]
-  expandedLoopIds: string[]  // IDs dos loops expandidos na sidebar
   currentFilePath: string | null
   isDirty: boolean
   testData: Record<string, unknown>
@@ -109,6 +132,10 @@ interface TemplateStore {
   // Actions
   setTemplate: (template: Template) => void
   updateTemplate: (updates: Partial<Template>) => void
+  updatePageSettings: (updates: Partial<Template['pageSettings']>) => void
+  updateWatermark: (updates: Partial<WatermarkConfig>) => void
+  removeWatermark: () => void
+  updateMetadata: (updates: Partial<Template['metadata']>) => void
   addElement: (element: Element, location?: ElementLocation) => void
   updateElement: (id: string, updates: Partial<Element>, location?: ElementLocation) => void
   deleteElement: (id: string, location?: ElementLocation) => void
@@ -121,6 +148,7 @@ interface TemplateStore {
   updateSelectedElements: (updates: Partial<Element>) => void
   setCurrentFilePath: (path: string | null) => void
   setTestData: (data: Record<string, unknown>) => void
+  setSchema: (schema: Record<string, any> | null) => void
   markClean: () => void
   setCurrentSection: (section: ElementLocation) => void
   addHeader: () => void
@@ -147,6 +175,7 @@ interface TemplateStore {
   redo: () => void
   canUndo: () => boolean
   canRedo: () => boolean
+  jumpToHistoryIndex: (index: number) => void
   saveSnapshot: () => void  
   
   // Group Actions
@@ -180,7 +209,21 @@ interface TemplateStore {
   // UI State Actions
   toggleSidebarPinned: () => void
   toggleSidebarMinimized: () => void
+  setSidebarMinimized: (minimized: boolean) => void
 }
+
+const createDefaultContainer = (idSuffix: string = '1', height: number = 200, name: string = 'Container 1'): Element => ({
+  type: 'container',
+  id: `container-${idSuffix}`,
+  name,
+  x: 0,
+  y: 0,
+  width: '100%',
+  height,
+  heightMode: 'auto',
+  autoHeight: true,
+  elements: [],
+})
 
 const defaultTemplate: Template = {
   version: '1.0',
@@ -202,14 +245,88 @@ const defaultTemplate: Template = {
       left: 30,
     },
   },
-  page: [],
+  page: [createDefaultContainer('body-1', 200, 'Container 1')],
+}
+
+const ensureContainersInSection = (elements: Element[] | undefined, defaultName: string, defaultHeight: number = 100): Element[] => {
+  if (!elements || elements.length === 0) {
+    return [{
+      type: 'container',
+      id: `container-${defaultName.toLowerCase()}-${Date.now()}`,
+      name: `${defaultName} Container`,
+      x: 0,
+      y: 0,
+      width: '100%',
+      height: defaultHeight,
+      heightMode: 'auto',
+      autoHeight: true,
+      elements: [],
+    }]
+  }
+
+  const hasContainer = elements.some((el) => el.type === 'container')
+  if (!hasContainer) {
+    return [{
+      type: 'container',
+      id: `container-${defaultName.toLowerCase()}-${Date.now()}`,
+      name: `${defaultName} Container`,
+      x: 0,
+      y: 0,
+      width: '100%',
+      height: defaultHeight,
+      heightMode: 'auto',
+      autoHeight: true,
+      elements: elements,
+    }]
+  }
+
+  const looseElements = elements.filter((el) => el.type !== 'container' && el.type !== 'page_break' && el.type !== 'spacer')
+  if (looseElements.length > 0) {
+    const topElements = elements.filter((el) => el.type === 'container' || el.type === 'page_break' || el.type === 'spacer')
+    let attached = false
+    return topElements.map((c) => {
+      if (!attached && c.type === 'container') {
+        attached = true
+        return { ...c, elements: [...(c.elements || []), ...looseElements], x: 0, width: '100%' }
+      }
+      return { ...c, x: 0, width: '100%' }
+    })
+  }
+
+  return elements.map((el) => (el.type === 'container' || el.type === 'page_break' || el.type === 'spacer' ? { ...el, x: 0, width: '100%' } : el))
 }
 
 const normalizeBodyContainers = (template: Template): Template => ({
   ...template,
-  page: (template.page || []).map((el) =>
-    (el.type === 'container' || el.type === 'page_break' || el.type === 'spacer') ? { ...el, x: 0, width: '100%' } : el
-  ),
+  page: ensureContainersInSection(template.page, 'Body', 200),
+  pageSettings: {
+    ...template.pageSettings,
+    header: template.pageSettings.header
+      ? {
+          ...template.pageSettings.header,
+          elements: ensureContainersInSection(template.pageSettings.header.elements, 'Header', template.pageSettings.header.height || 100),
+        }
+      : undefined,
+    footer: template.pageSettings.footer
+      ? {
+          ...template.pageSettings.footer,
+          elements: ensureContainersInSection(template.pageSettings.footer.elements, 'Footer', template.pageSettings.footer.height || 80),
+        }
+      : undefined,
+    bodyBackground: template.pageSettings.bodyBackground
+      ? {
+          ...template.pageSettings.bodyBackground,
+          elements: ensureContainersInSection(template.pageSettings.bodyBackground.elements, 'Background', 200),
+        }
+      : undefined,
+    watermark: template.pageSettings.watermark,
+  },
+  summaryPage: template.summaryPage
+    ? {
+        ...template.summaryPage,
+        elements: ensureContainersInSection(template.summaryPage.elements, 'Summary', 200),
+      }
+    : undefined,
 })
 
 const restackBodyContainers = (elements: Element[], template?: Template): Element[] => {
@@ -249,7 +366,6 @@ const restackBodyContainers = (elements: Element[], template?: Template): Elemen
   });
 }
 
-
 const saveToHistory = (state: TemplateStore, newTemplate: Template) => {
   const newHistory = state.history.slice(0, state.historyIndex + 1)
   newHistory.push(JSON.parse(JSON.stringify(newTemplate))) // Deep clone
@@ -268,6 +384,55 @@ const saveToHistory = (state: TemplateStore, newTemplate: Template) => {
     history: newHistory,
     historyIndex: newHistory.length - 1,
   }
+}
+
+export function flattenElements(elements: Element[]): Element[] {
+  const result: Element[] = []
+  for (const el of elements) {
+    result.push(el)
+    if (el.elements && el.elements.length > 0) {
+      result.push(...flattenElements(el.elements))
+    }
+  }
+  return result
+}
+
+export function findParentContainer(template: Template, elementId: string): Element | null {
+  const sections: (Element[] | undefined)[] = [
+    template.page,
+    template.pageSettings.header?.elements,
+    template.pageSettings.footer?.elements,
+    template.pageSettings.bodyBackground?.elements,
+    template.summaryPage?.elements,
+  ]
+  for (const list of sections) {
+    if (!list) continue
+    for (const el of list) {
+      if (el.type === 'container' && el.elements?.some(child => child.id === elementId)) {
+        return el
+      }
+    }
+  }
+  return null
+}
+
+export function findParentLoop(template: Template, elementId: string): Element | null {
+  const sections: (Element[] | undefined)[] = [
+    template.page,
+    template.pageSettings.header?.elements,
+    template.pageSettings.footer?.elements,
+    template.pageSettings.bodyBackground?.elements,
+    template.summaryPage?.elements,
+  ]
+  for (const list of sections) {
+    if (!list) continue
+    for (const el of list) {
+      if (el.type === 'loop' && el.elements?.some(child => child.id === elementId)) {
+        return el
+      }
+    }
+  }
+  return null
 }
 
 export const useTemplateStore = create<TemplateStore>((set, get) => ({
@@ -307,7 +472,83 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       const newTemplate = { ...state.template, ...updates }
       return {
         template: newTemplate,
-      isDirty: true,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
+    }),
+
+  updatePageSettings: (updates) =>
+    set((state) => {
+      const newTemplate = {
+        ...state.template,
+        pageSettings: {
+          ...state.template.pageSettings,
+          ...updates,
+        },
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
+    }),
+
+  updateWatermark: (updates) =>
+    set((state) => {
+      const currentWatermark = state.template.pageSettings.watermark || {
+        type: 'text',
+        text: 'CONFIDENTIAL',
+        fontSize: 60,
+        fontStyle: 'bold',
+        color: '#94a3b8',
+        opacity: 0.2,
+        rotation: 45,
+        onTop: false,
+      }
+      const newTemplate = {
+        ...state.template,
+        pageSettings: {
+          ...state.template.pageSettings,
+          watermark: {
+            ...currentWatermark,
+            ...updates,
+          },
+        },
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
+    }),
+
+  removeWatermark: () =>
+    set((state) => {
+      const newPageSettings = { ...state.template.pageSettings }
+      delete newPageSettings.watermark
+      const newTemplate = {
+        ...state.template,
+        pageSettings: newPageSettings,
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
+    }),
+
+  updateMetadata: (updates) =>
+    set((state) => {
+      const newTemplate = {
+        ...state.template,
+        metadata: {
+          ...state.template.metadata,
+          ...updates,
+        },
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
         ...saveToHistory(state, newTemplate),
       }
     }),
@@ -315,49 +556,220 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
   addElement: (element, location = 'body') =>
     set((state) => {
       let normalizedElement = { ...element }
+      const size = state.template.pageSettings.size
+      const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 }
+      const margins = state.template.pageSettings.margins
+      const headerHeight = state.template.pageSettings.header?.height || 0
+      const footerHeight = state.template.pageSettings.footer?.height || 0
+      
+      let sectionHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0)
+      if (location === 'header') sectionHeight = headerHeight
+      else if (location === 'footer') sectionHeight = footerHeight
+      else if (location === 'body') sectionHeight -= (headerHeight + footerHeight)
+
       if (element.type === 'container' || element.type === 'page_break' || element.type === 'spacer') {
-        const size = state.template.pageSettings.size
-        const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 }
-        const margins = state.template.pageSettings.margins
-        const headerHeight = state.template.pageSettings.header?.height || 0
-        const footerHeight = state.template.pageSettings.footer?.height || 0
-        
-        let sectionHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0)
-        if (location === 'header') sectionHeight = headerHeight
-        else if (location === 'footer') sectionHeight = footerHeight
-        else if (location === 'body') sectionHeight -= (headerHeight + footerHeight)
-        
+        // Obter os elementos atuais da seção para posicionar o novo container abaixo do anterior
+        let sectionElements: Element[] = []
+        if (location === 'header') sectionElements = state.template.pageSettings.header?.elements || []
+        else if (location === 'footer') sectionElements = state.template.pageSettings.footer?.elements || []
+        else if (location === 'bodyBackground') sectionElements = state.template.pageSettings.bodyBackground?.elements || []
+        else if (location === 'summary') sectionElements = state.template.summaryPage?.elements || []
+        else sectionElements = state.template.page || []
+
+        const containers = sectionElements.filter(el => el.type === 'container')
+        let nextY = 0
+        if (containers.length > 0) {
+          const lastContainer = containers[containers.length - 1]
+          const lastY = typeof lastContainer.y === 'number' ? lastContainer.y : 0
+          const lastHeight = typeof lastContainer.height === 'number' ? lastContainer.height : 120
+          nextY = lastY + lastHeight
+        } else if (typeof element.y === 'number' && element.y > 0) {
+          nextY = element.y
+        }
+
+        const remainingHeight = Math.max(30, sectionHeight - nextY)
         normalizedElement = {
           ...element,
           x: 0,
+          y: nextY,
           width: '100%',
-          height: element.type === 'page_break' ? 20 : (element.type === 'spacer' ? 50 : Math.min(typeof element.height === 'number' ? element.height : 150, Math.max(0, sectionHeight)))
+          height: element.type === 'page_break' ? 20 : (element.type === 'spacer' ? 50 : Math.min(typeof element.height === 'number' ? element.height : 120, remainingHeight))
         }
       }
       const selectedId = state.selectedElementIds[0]
+      const selectedParentId = state.selectedContainerParentId
+
       const insertIntoElements = (elements: Element[]) => {
-        const selectedContainer = elements.find(
-          (el) => el.id === selectedId && el.type === 'container'
-        )
-        if (selectedContainer && normalizedElement.type !== 'container' && normalizedElement.type !== 'page_break') {
+        // Se for um container, page_break ou spacer, adiciona na raiz da seção
+        if (normalizedElement.type === 'container' || normalizedElement.type === 'page_break' || normalizedElement.type === 'spacer') {
           return {
-            newElements: elements.map((el) =>
-              el.id === selectedContainer.id
-                ? { ...el, elements: [...(el.elements || []), normalizedElement] }
-                : el
-            ),
-            newSelectedId: selectedContainer.id
+            newElements: [...elements, normalizedElement],
+            newSelectedId: normalizedElement.id,
+            newSelectedChildId: null,
           }
         }
+
+        // NÃO É CONTAINER: OBRIGATORIAMENTE DEVE ESTAR DENTRO DE UM CONTAINER!
+        // 1. Verificar se o elemento atualmente selecionado é um container
+        let targetContainer = elements.find((el) => el.id === selectedId && el.type === 'container')
+
+        // 2. Se o selecionado for filho de um container (ou tiver selectedContainerParentId)
+        if (!targetContainer && (selectedParentId || selectedId)) {
+          if (selectedParentId) {
+            targetContainer = elements.find((el) => el.id === selectedParentId && el.type === 'container')
+          }
+          if (!targetContainer && selectedId) {
+            targetContainer = elements.find(
+              (el) => el.type === 'container' && el.elements?.some((child) => child.id === selectedId)
+            )
+          }
+        }
+
+        // 3. Se nenhum container estiver selecionado, usar o último container existente na seção
+        if (!targetContainer) {
+          const containers = elements.filter((el) => el.type === 'container')
+          if (containers.length > 0) {
+            targetContainer = containers[containers.length - 1]
+          }
+        }
+
+        // 4. Se a seção não possuir NENHUM container, criar um automaticamente 100%
+        if (!targetContainer) {
+          const autoContainerId = `container-${location}-${Date.now()}`
+          const adaptedChild = {
+            ...normalizedElement,
+            x: normalizedElement.x ?? 20,
+            y: normalizedElement.y ?? 20,
+          }
+          const autoContainer: Element = {
+            type: 'container',
+            id: autoContainerId,
+            name: `${location.toUpperCase()} Container`,
+            x: 0,
+            y: 0,
+            width: '100%',
+            height: Math.min(200, Math.max(30, sectionHeight)),
+            heightMode: 'auto',
+            autoHeight: true,
+            elements: [adaptedChild],
+          }
+          return {
+            newElements: [...elements, autoContainer],
+            newSelectedId: autoContainerId,
+            newSelectedChildId: adaptedChild.id,
+          }
+        }
+
+        // 5. Inserir dentro de targetContainer
+        const containerChildren = targetContainer.elements || []
+        let childY = normalizedElement.y ?? 20
+        let childX = normalizedElement.x ?? 20
+        let childWidth = normalizedElement.width
+        if (containerChildren.length > 0) {
+          const lastChild = containerChildren[containerChildren.length - 1]
+          const lastY = typeof lastChild.y === 'number' ? lastChild.y : 0
+          const lastH = typeof lastChild.height === 'number' ? lastChild.height : 25
+          childY = lastY + lastH + 10
+          childX = lastChild.x ?? childX
+          if (childWidth === undefined && typeof lastChild.width === 'number') {
+            childWidth = lastChild.width
+          }
+          if ((lastChild.positionMode || lastChild.position || '').toUpperCase() === 'RELATIVE') {
+            normalizedElement.positionMode = 'RELATIVE'
+            normalizedElement.position = 'relative'
+            normalizedElement.relativeOffsetY = 0
+          }
+        }
+        const adaptedChild = {
+          ...normalizedElement,
+          x: childX,
+          y: childY,
+          ...(childWidth !== undefined ? { width: childWidth } : {})
+        }
+
+        const childH = typeof adaptedChild.height === 'number' ? adaptedChild.height : 25
+        const childBottom = childY + childH
+        const requiredContainerHeight = childBottom + 15
+        const currentContainerHeight = typeof targetContainer.height === 'number' ? targetContainer.height : 150
+        const isFixed = targetContainer.heightMode === 'fixed' || targetContainer.autoHeight === false
+        const maxContainerHeight = Math.max(30, sectionHeight - (targetContainer.y || 0))
+
+        if (isFixed) {
+          if (childBottom > currentContainerHeight) {
+            alert(`O container "${targetContainer.name || targetContainer.id}" possui altura fixa (${currentContainerHeight} pt) e não há espaço suficiente para adicionar este elemento (necessário: ${childBottom} pt). Altere para auto-height ou aumente a altura do container.`)
+            return {
+              newElements: elements,
+              newSelectedId: targetContainer.id,
+              newSelectedChildId: null,
+            }
+          }
+        } else {
+          // AUTO-HEIGHT: não pode ultrapassar o tamanho disponível da página!
+          if (childBottom > maxContainerHeight) {
+            alert(`Não é possível adicionar o elemento: o container ultrapassaria o limite da página (altura máxima disponível: ${Math.round(maxContainerHeight)} pt, necessário: ${Math.round(childBottom)} pt).`)
+            return {
+              newElements: elements,
+              newSelectedId: targetContainer.id,
+              newSelectedChildId: null,
+            }
+          }
+        }
+
+        let newContainerHeight = currentContainerHeight
+        let deltaHeight = 0
+        if (!isFixed && requiredContainerHeight > currentContainerHeight) {
+          const clampedHeight = Math.min(requiredContainerHeight, maxContainerHeight)
+          deltaHeight = clampedHeight - currentContainerHeight
+          newContainerHeight = clampedHeight
+        }
+
+        const targetIndex = elements.findIndex((el) => el.id === targetContainer!.id)
+
+        // Verificar se os containers subsequentes ultrapassariam a página ao serem empurrados
+        if (deltaHeight > 0) {
+          const wouldExceedPage = elements.some((el, idx) => {
+            if (idx > targetIndex) {
+              const elY = (typeof el.y === 'number' ? el.y : 0) + deltaHeight
+              const elH = typeof el.height === 'number' ? el.height : 30
+              return elY + elH > sectionHeight
+            }
+            return false
+          })
+          if (wouldExceedPage) {
+            alert(`Não é possível adicionar o elemento: os containers seguintes seriam empurrados para fora da página.`)
+            return {
+              newElements: elements,
+              newSelectedId: targetContainer.id,
+              newSelectedChildId: null,
+            }
+          }
+        }
+
         return {
-          newElements: [...elements, normalizedElement],
-          newSelectedId: normalizedElement.id
+          newElements: elements.map((el, idx) => {
+            if (el.id === targetContainer!.id) {
+              return {
+                ...el,
+                height: newContainerHeight,
+                elements: [...containerChildren, adaptedChild],
+              }
+            }
+            if (deltaHeight > 0 && idx > targetIndex && typeof el.y === 'number') {
+              return {
+                ...el,
+                y: el.y + deltaHeight,
+              }
+            }
+            return el
+          }),
+          newSelectedId: targetContainer.id,
+          newSelectedChildId: adaptedChild.id,
         }
       }
 
       let newTemplate
       if (location === 'header' && state.template.pageSettings.header) {
-        const { newElements, newSelectedId } = insertIntoElements(state.template.pageSettings.header.elements)
+        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.pageSettings.header.elements)
         newTemplate = {
             ...state.template,
             pageSettings: {
@@ -371,12 +783,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
+          selectedContainerChildId: newSelectedChildId,
+          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
           selectedElementLocation: 'header',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else if (location === 'footer' && state.template.pageSettings.footer) {
-        const { newElements, newSelectedId } = insertIntoElements(state.template.pageSettings.footer.elements)
+        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.pageSettings.footer.elements)
         newTemplate = {
             ...state.template,
             pageSettings: {
@@ -390,12 +804,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
+          selectedContainerChildId: newSelectedChildId,
+          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
           selectedElementLocation: 'footer',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else if (location === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
-        const { newElements, newSelectedId } = insertIntoElements(state.template.pageSettings.bodyBackground.elements)
+        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.pageSettings.bodyBackground.elements)
         newTemplate = {
             ...state.template,
             pageSettings: {
@@ -409,12 +825,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
+          selectedContainerChildId: newSelectedChildId,
+          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
           selectedElementLocation: 'bodyBackground',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else if (location === 'summary' && state.template.summaryPage) {
-        const { newElements, newSelectedId } = insertIntoElements(state.template.summaryPage.elements)
+        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.summaryPage.elements)
         newTemplate = {
             ...state.template,
             summaryPage: {
@@ -425,12 +843,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
+          selectedContainerChildId: newSelectedChildId,
+          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
           selectedElementLocation: 'summary',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else {
-        const { newElements, newSelectedId } = insertIntoElements(state.template.page)
+        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.page)
         newTemplate = {
           ...state.template,
           page: restackBodyContainers(newElements, state.template),
@@ -438,6 +858,8 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
+          selectedContainerChildId: newSelectedChildId,
+          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
           selectedElementLocation: 'body',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
@@ -458,33 +880,42 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         }))
       }
 
-      const applyUpdates = (elements: Element[]) => {
+      const applyUpdates = (elements: Element[]): Element[] => {
         return elements.map((el) => {
-          if (el.id !== id) return el
-          
-          let result = { ...el, ...updates }
-          
-          if (el.type === 'container') {
-             const size = state.template.pageSettings.size
-             const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 }
-             const margins = state.template.pageSettings.margins
-             const headerHeight = state.template.pageSettings.header?.height || 0
-             const footerHeight = state.template.pageSettings.footer?.height || 0
-             
-             let sectionHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0)
-             if (loc === 'header') sectionHeight = headerHeight
-             else if (loc === 'footer') sectionHeight = footerHeight
-             else if (loc === 'body') sectionHeight -= (headerHeight + footerHeight)
-             
-             if (typeof result.height === 'number') {
-               result.height = Math.min(result.height, Math.max(0, sectionHeight))
-             }
-             
-             result.x = 0
-             result.width = '100%'
+          if (el.id === id) {
+            let result = { ...el, ...updates }
+            
+            if (el.type === 'container') {
+               const size = state.template.pageSettings.size
+               const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 }
+               const margins = state.template.pageSettings.margins
+               const headerHeight = state.template.pageSettings.header?.height || 0
+               const footerHeight = state.template.pageSettings.footer?.height || 0
+               
+               let sectionHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0)
+               if (loc === 'header') sectionHeight = headerHeight
+               else if (loc === 'footer') sectionHeight = footerHeight
+               else if (loc === 'body') sectionHeight -= (headerHeight + footerHeight)
+               
+               if (typeof result.height === 'number') {
+                 result.height = Math.min(result.height, Math.max(0, sectionHeight))
+               }
+               
+               result.x = 0
+               result.width = '100%'
+            }
+            
+            return result
           }
-          
-          return result
+
+          if (el.elements && el.elements.length > 0) {
+            return {
+              ...el,
+              elements: applyUpdates(el.elements),
+            }
+          }
+
+          return el
         })
       }
       
@@ -570,7 +1001,6 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     set((state) => {
       const loc = location || state.selectedElementLocation
       
-      
       const updateGroupsAfterDelete = (groups: ElementGroup[] | undefined) => {
         if (!groups) return undefined
         
@@ -583,102 +1013,145 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           .filter(group => group.elementIds.length > 0) // Remover grupos vazios
       }
       
+      let newTemplate: Template
+
       if (loc === 'header' && state.template.pageSettings.header) {
-        return {
-          template: {
-            ...state.template,
-            pageSettings: {
-              ...state.template.pageSettings,
-              header: {
-                ...state.template.pageSettings.header,
-                elements: state.template.pageSettings.header.elements.filter((el) => el.id !== id),
-                groups: updateGroupsAfterDelete(state.template.pageSettings.header.groups),
-              },
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            header: {
+              ...state.template.pageSettings.header,
+              elements: state.template.pageSettings.header.elements.filter((el) => el.id !== id),
+              groups: updateGroupsAfterDelete(state.template.pageSettings.header.groups),
             },
           },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
         }
       } else if (loc === 'footer' && state.template.pageSettings.footer) {
-        return {
-          template: {
-            ...state.template,
-            pageSettings: {
-              ...state.template.pageSettings,
-              footer: {
-                ...state.template.pageSettings.footer,
-                elements: state.template.pageSettings.footer.elements.filter((el) => el.id !== id),
-                groups: updateGroupsAfterDelete(state.template.pageSettings.footer.groups),
-              },
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            footer: {
+              ...state.template.pageSettings.footer,
+              elements: state.template.pageSettings.footer.elements.filter((el) => el.id !== id),
+              groups: updateGroupsAfterDelete(state.template.pageSettings.footer.groups),
             },
           },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
         }
       } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
-        return {
-          template: {
-            ...state.template,
-            pageSettings: {
-              ...state.template.pageSettings,
-              bodyBackground: {
-                ...state.template.pageSettings.bodyBackground,
-                elements: state.template.pageSettings.bodyBackground.elements.filter((el) => el.id !== id),
-                groups: updateGroupsAfterDelete(state.template.pageSettings.bodyBackground.groups),
-              },
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: state.template.pageSettings.bodyBackground.elements.filter((el) => el.id !== id),
+              groups: updateGroupsAfterDelete(state.template.pageSettings.bodyBackground.groups),
             },
           },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
         }
       } else if (loc === 'summary' && state.template.summaryPage) {
-        return {
-          template: {
-            ...state.template,
-            summaryPage: {
-              ...state.template.summaryPage,
-              elements: state.template.summaryPage.elements.filter((el) => el.id !== id),
-              groups: updateGroupsAfterDelete(state.template.summaryPage.groups),
-            },
+        newTemplate = {
+          ...state.template,
+          summaryPage: {
+            ...state.template.summaryPage,
+            elements: state.template.summaryPage.elements.filter((el) => el.id !== id),
+            groups: updateGroupsAfterDelete(state.template.summaryPage.groups),
           },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
         }
       } else {
-        return {
-          template: {
-            ...state.template,
-            page: restackBodyContainers(state.template.page.filter((el) => el.id !== id), state.template),
-            groups: updateGroupsAfterDelete(state.template.groups),
-          },
-          selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
-          isDirty: true,
+        newTemplate = {
+          ...state.template,
+          page: restackBodyContainers(state.template.page.filter((el) => el.id !== id), state.template),
+          groups: updateGroupsAfterDelete(state.template.groups),
         }
+      }
+
+      return {
+        template: newTemplate,
+        selectedElementIds: state.selectedElementIds.filter(selectedId => selectedId !== id),
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
       }
     }),
 
   selectElement: (id, location = 'body') =>
-    set({
-      selectedElementIds: id ? [id] : [],
-      selectedElementLocation: location,
-      selectedGroupId: null, 
-      selectedLoopChildId: null, 
-      selectedLoopParentId: null,
-      selectedContainerChildId: null,
-      selectedContainerParentId: null,
+    set((state) => {
+      if (!id) {
+        return {
+          selectedElementIds: [],
+          selectedElementLocation: location,
+          selectedGroupId: null,
+          selectedLoopChildId: null,
+          selectedLoopParentId: null,
+          selectedContainerChildId: null,
+          selectedContainerParentId: null,
+        }
+      }
+
+      let containerChildId: string | null = null
+      let containerParentId: string | null = null
+      let loopChildId: string | null = null
+      let loopParentId: string | null = null
+
+      const parentContainer = findParentContainer(state.template, id)
+      if (parentContainer) {
+        containerChildId = id
+        containerParentId = parentContainer.id
+      }
+      const parentLoop = findParentLoop(state.template, id)
+      if (parentLoop) {
+        loopChildId = id
+        loopParentId = parentLoop.id
+      }
+
+      return {
+        selectedElementIds: [id],
+        selectedElementLocation: location,
+        selectedGroupId: null,
+        selectedContainerChildId: containerChildId,
+        selectedContainerParentId: containerParentId,
+        selectedLoopChildId: loopChildId,
+        selectedLoopParentId: loopParentId,
+      }
     }),
 
   toggleElementSelection: (id, location) =>
     set((state) => {
       const loc = location || state.selectedElementLocation
       const isSelected = state.selectedElementIds.includes(id)
-      
+      const nextSelected = isSelected
+        ? state.selectedElementIds.filter(selectedId => selectedId !== id)
+        : [...state.selectedElementIds, id]
+
+      let containerChildId: string | null = null
+      let containerParentId: string | null = null
+      let loopChildId: string | null = null
+      let loopParentId: string | null = null
+
+      if (nextSelected.length === 1) {
+        const singleId = nextSelected[0]
+        const parentContainer = findParentContainer(state.template, singleId)
+        if (parentContainer) {
+          containerChildId = singleId
+          containerParentId = parentContainer.id
+        }
+        const parentLoop = findParentLoop(state.template, singleId)
+        if (parentLoop) {
+          loopChildId = singleId
+          loopParentId = parentLoop.id
+        }
+      }
+
       return {
-        selectedElementIds: isSelected
-          ? state.selectedElementIds.filter(selectedId => selectedId !== id)
-          : [...state.selectedElementIds, id],
+        selectedElementIds: nextSelected,
         selectedElementLocation: loc,
-        selectedGroupId: null, 
+        selectedGroupId: null,
+        selectedContainerChildId: containerChildId,
+        selectedContainerParentId: containerParentId,
+        selectedLoopChildId: loopChildId,
+        selectedLoopParentId: loopParentId,
       }
     }),
 
@@ -686,12 +1159,21 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     set({
       selectedElementIds: ids,
       selectedElementLocation: location,
+      selectedGroupId: null,
+      selectedLoopChildId: null,
+      selectedLoopParentId: null,
+      selectedContainerChildId: null,
+      selectedContainerParentId: null,
     }),
 
   clearSelection: () =>
     set({
       selectedElementIds: [],
       selectedGroupId: null,
+      selectedLoopChildId: null,
+      selectedLoopParentId: null,
+      selectedContainerChildId: null,
+      selectedContainerParentId: null,
     }),
 
   selectAllElements: () =>
@@ -705,14 +1187,22 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         elements = template.pageSettings.footer.elements
       } else if (currentSection === 'bodyBackground' && template.pageSettings.bodyBackground) {
         elements = template.pageSettings.bodyBackground.elements
+      } else if (currentSection === 'summary' && template.summaryPage) {
+        elements = template.summaryPage.elements
       } else {
         elements = template.page
       }
       
+      const flat = flattenElements(elements)
+
       return {
-        selectedElementIds: elements.map(el => el.id),
+        selectedElementIds: flat.map(el => el.id),
         selectedElementLocation: currentSection,
         selectedGroupId: null,
+        selectedContainerChildId: null,
+        selectedContainerParentId: null,
+        selectedLoopChildId: null,
+        selectedLoopParentId: null,
       }
     }),
 
@@ -724,20 +1214,27 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       const historyState = saveToHistory(state, template)
       
-      const filterElements = (elements: Element[]) =>
-        elements.filter(el => !selectedElementIds.includes(el.id))
-      
+      const filterElements = (elements: Element[]): Element[] =>
+        elements
+          .filter(el => !selectedElementIds.includes(el.id))
+          .map(el => {
+            if (el.elements && el.elements.length > 0) {
+              return {
+                ...el,
+                elements: filterElements(el.elements),
+              }
+            }
+            return el
+          })
       
       const updateGroupsAfterDelete = (groups: ElementGroup[] | undefined) => {
         if (!groups) return undefined
-        
-        // Remover elementIds dos grupos e filtrar grupos vazios
         return groups
           .map(group => ({
             ...group,
             elementIds: group.elementIds.filter(elementId => !selectedElementIds.includes(elementId))
           }))
-          .filter(group => group.elementIds.length > 0) // Remover grupos vazios
+          .filter(group => group.elementIds.length > 0)
       }
       
       let newTemplate: Template
@@ -799,6 +1296,10 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         ...historyState,
         template: newTemplate,
         selectedElementIds: [],
+        selectedContainerChildId: null,
+        selectedContainerParentId: null,
+        selectedLoopChildId: null,
+        selectedLoopParentId: null,
         isDirty: true,
       }
     }),
@@ -809,10 +1310,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       if (selectedElementIds.length === 0) return state
       
-      const updateElements = (elements: Element[]) =>
-        elements.map(el =>
-          selectedElementIds.includes(el.id) ? { ...el, ...updates } : el
-        )
+      const updateElements = (elements: Element[]): Element[] =>
+        elements.map(el => {
+          let updated = selectedElementIds.includes(el.id) ? { ...el, ...updates } : el
+          if (updated.elements && updated.elements.length > 0) {
+            updated = {
+              ...updated,
+              elements: updateElements(updated.elements),
+            }
+          }
+          return updated
+        })
       
       let newTemplate: Template
       
@@ -849,6 +1357,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (selectedElementLocation === 'summary' && template.summaryPage) {
+        newTemplate = {
+          ...template,
+          summaryPage: {
+            ...template.summaryPage,
+            elements: updateElements(template.summaryPage.elements),
+          },
+        }
       } else {
         newTemplate = {
           ...template,
@@ -872,6 +1388,21 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       testData: data,
     }),
 
+  setSchema: (schema) =>
+    set((state) => {
+      const newTemplate = { ...state.template }
+      if (schema && Object.keys(schema).length > 0) {
+        newTemplate.schema = schema
+      } else {
+        delete newTemplate.schema
+      }
+      return {
+        template: newTemplate,
+        isDirty: true,
+        ...saveToHistory(state, newTemplate),
+      }
+    }),
+
   markClean: () =>
     set({
       isDirty: false,
@@ -892,10 +1423,21 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           ...state.template.pageSettings,
           header: {
             height: 100,
-            elements: [],
-          },
+            elements: [
+              {
+                type: 'container',
+                id: `container-header-${Date.now()}`,
+                name: 'Header Container',
+                x: 0,
+                y: 0,
+                width: '100%',
+                height: 100,
+                elements: [],
+              },
+            ],
           },
         },
+      },
       currentSection: 'header',
       isDirty: true,
     })),
@@ -908,10 +1450,21 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           ...state.template.pageSettings,
           footer: {
             height: 80,
-            elements: [],
-          },
+            elements: [
+              {
+                type: 'container',
+                id: `container-footer-${Date.now()}`,
+                name: 'Footer Container',
+                x: 0,
+                y: 0,
+                width: '100%',
+                height: 80,
+                elements: [],
+              },
+            ],
           },
         },
+      },
       currentSection: 'footer',
       isDirty: true,
     })),
@@ -949,7 +1502,18 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         pageSettings: {
           ...state.template.pageSettings,
           bodyBackground: {
-            elements: [],
+            elements: [
+              {
+                type: 'container',
+                id: `container-bg-${Date.now()}`,
+                name: 'Background Container',
+                x: 0,
+                y: 0,
+                width: '100%',
+                height: 200,
+                elements: [],
+              },
+            ],
           },
         },
       },
@@ -975,7 +1539,18 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       template: {
         ...state.template,
         summaryPage: {
-          elements: [],
+          elements: [
+            {
+              type: 'container',
+              id: `container-summary-${Date.now()}`,
+              name: 'Summary Container',
+              x: 0,
+              y: 0,
+              width: '100%',
+              height: 200,
+              elements: [],
+            },
+          ],
         },
       },
       currentSection: 'summary',
@@ -1261,15 +1836,29 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
   reorderElement: (id, newIndex, location = 'body') =>
     set((state) => {
-      const reorder = (elements: Element[]) => {
+      const reorder = (elements: Element[]): Element[] => {
         const oldIndex = elements.findIndex((el) => el.id === id)
-        if (oldIndex < 0 || oldIndex === newIndex) return elements
-        
-        const newElements = [...elements]
-        const [element] = newElements.splice(oldIndex, 1)
-        newElements.splice(newIndex, 0, element)
-        
-        return newElements
+        if (oldIndex >= 0) {
+          if (oldIndex === newIndex) return elements
+          const newElements = [...elements]
+          const [element] = newElements.splice(oldIndex, 1)
+          newElements.splice(newIndex, 0, element)
+          return newElements
+        }
+
+        return elements.map(el => {
+          if (el.type === 'container' && el.elements) {
+            const childIdx = el.elements.findIndex(c => c.id === id)
+            if (childIdx >= 0) {
+              if (childIdx === newIndex) return el
+              const newChildren = [...el.elements]
+              const [movedChild] = newChildren.splice(childIdx, 1)
+              newChildren.splice(newIndex, 0, movedChild)
+              return { ...el, elements: newChildren }
+            }
+          }
+          return el
+        })
       }
 
       const historyState = saveToHistory(state, state.template)
@@ -1315,6 +1904,18 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
                 ...state.template.pageSettings.bodyBackground,
                 elements: reorder(state.template.pageSettings.bodyBackground.elements),
               },
+            },
+          },
+          isDirty: true,
+        }
+      } else if (location === 'summary' && state.template.summaryPage) {
+        return {
+          ...historyState,
+          template: {
+            ...state.template,
+            summaryPage: {
+              ...state.template.summaryPage,
+              elements: reorder(state.template.summaryPage.elements),
             },
           },
           isDirty: true,
@@ -1421,7 +2022,8 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       let parentId: string | null = null
 
       if (selectedContainerChildId) {
-        const container = allElements.find(el => el.id === selectedElementIds[0]) as any
+        const parentIdTarget = state.selectedContainerParentId || selectedElementIds[0]
+        const container = allElements.find(el => el.id === parentIdTarget) as any
         if (container && container.elements) {
           const child = container.elements.find((el: any) => el.id === selectedContainerChildId)
           if (child) {
@@ -1431,8 +2033,8 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           }
         }
       } else {
-        // Filtrar apenas os elementos selecionados
-        elementsToCopy = allElements.filter(el => selectedElementIds.includes(el.id))
+        const flatElements = flattenElements(allElements)
+        elementsToCopy = flatElements.filter(el => selectedElementIds.includes(el.id))
       }
       
       if (elementsToCopy.length === 0) return state
@@ -1454,7 +2056,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
   pasteElement: () =>
     set((state) => {
-      const { copiedElements, currentSection, template, selectedElementIds, selectedContainerChildId } = state
+      const { copiedElements, currentSection, template, selectedElementIds, selectedContainerChildId, selectedContainerParentId } = state
       
       if (!copiedElements || copiedElements.elements.length === 0) {
         console.log('⚠️ Nenhum elemento copiado')
@@ -1465,8 +2067,8 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       const newElements = copiedElements.elements.map((element, index) => ({
         ...element,
         id: `${element.type}-${timestamp + index}`,
-        x: element.x + 20,
-        y: element.y + 20,
+        x: (element.x || 0) + 20,
+        y: (element.y || 0) + 20,
       }))
       
       console.log(`📋 Pasting ${newElements.length} element(s) to section:`, currentSection)
@@ -1476,7 +2078,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       let targetContainerId: string | null = null
       
       if (selectedContainerChildId) {
-        targetContainerId = selectedElementIds[0]
+        targetContainerId = selectedContainerParentId || selectedElementIds[0]
       } else if (selectedElementIds.length === 1) {
         let allElements: any[] = []
         if (currentSection === 'header' && template.pageSettings.header) {
@@ -1613,11 +2215,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       if (state.historyIndex <= 0) return state
       
       const newIndex = state.historyIndex - 1
-      const previousTemplate = state.history[newIndex]
+      const previousTemplate = JSON.parse(JSON.stringify(state.history[newIndex]))
       
       return {
         template: previousTemplate,
         historyIndex: newIndex,
+        selectedElementIds: [],
+        selectedContainerChildId: null,
+        selectedLoopChildId: null,
         isDirty: true,
       }
     }),
@@ -1627,17 +2232,34 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       if (state.historyIndex >= state.history.length - 1) return state
       
       const newIndex = state.historyIndex + 1
-      const nextTemplate = state.history[newIndex]
+      const nextTemplate = JSON.parse(JSON.stringify(state.history[newIndex]))
       
       return {
         template: nextTemplate,
         historyIndex: newIndex,
+        selectedElementIds: [],
+        selectedContainerChildId: null,
+        selectedLoopChildId: null,
         isDirty: true,
       }
     }),
 
   canUndo: () => get().historyIndex > 0,
   canRedo: () => get().historyIndex < get().history.length - 1,
+
+  jumpToHistoryIndex: (index: number) =>
+    set((state) => {
+      if (index < 0 || index >= state.history.length) return state
+      const targetTemplate = state.history[index]
+      return {
+        template: JSON.parse(JSON.stringify(targetTemplate)),
+        historyIndex: index,
+        selectedElementIds: [],
+        selectedContainerChildId: null,
+        selectedLoopChildId: null,
+        isDirty: true,
+      }
+    }),
   
   saveSnapshot: () =>
     set((state) => {
@@ -1668,11 +2290,18 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       const historyState = saveToHistory(state, state.template)
       
-      // Atualizar elementos para incluir groupId
-      const updateElementsWithGroup = (elements: Element[]) =>
-        elements.map(el =>
-          elementIds.includes(el.id) ? { ...el, groupId } : el
-        )
+      // Atualizar elementos para incluir groupId (recursivo para containers)
+      const updateElementsWithGroup = (elements: Element[]): Element[] =>
+        elements.map(el => {
+          let updated = el
+          if (elementIds.includes(el.id)) {
+            updated = { ...updated, groupId }
+          }
+          if (updated.elements && updated.elements.length > 0) {
+            updated = { ...updated, elements: updateElementsWithGroup(updated.elements) }
+          }
+          return updated
+        })
       
       let newTemplate: Template
       
@@ -1712,6 +2341,15 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (location === 'summary' && state.template.summaryPage) {
+        newTemplate = {
+          ...state.template,
+          summaryPage: {
+            ...state.template.summaryPage,
+            elements: updateElementsWithGroup(state.template.summaryPage.elements),
+            groups: [...(state.template.summaryPage.groups || []), newGroup],
+          },
+        }
       } else {
         newTemplate = {
           ...state.template,
@@ -1725,6 +2363,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       return {
         ...historyState,
         template: newTemplate,
+        selectedGroupId: groupId,
         isDirty: true,
       }
     }),
@@ -1773,6 +2412,14 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'summary' && state.template.summaryPage) {
+        newTemplate = {
+          ...state.template,
+          summaryPage: {
+            ...state.template.summaryPage,
+            groups: updateGroups(state.template.summaryPage.groups || []),
+          },
+        }
       } else {
         newTemplate = {
           ...state.template,
@@ -1793,15 +2440,19 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       
       const historyState = saveToHistory(state, state.template)
       
-      // Remover groupId dos elementos
-      const removeGroupFromElements = (elements: Element[]) =>
+      // Remover groupId dos elementos (recursivo para containers)
+      const removeGroupFromElements = (elements: Element[]): Element[] =>
         elements.map(el => {
+          let updated = el
           if (el.groupId === groupId) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { groupId: _removed, ...rest } = el
-            return rest as Element
+            updated = rest as Element
           }
-          return el
+          if (updated.elements && updated.elements.length > 0) {
+            updated = { ...updated, elements: removeGroupFromElements(updated.elements) }
+          }
+          return updated
         })
       
       const filterGroups = (groups: ElementGroup[]) =>
@@ -1845,6 +2496,15 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'summary' && state.template.summaryPage) {
+        newTemplate = {
+          ...state.template,
+          summaryPage: {
+            ...state.template.summaryPage,
+            elements: removeGroupFromElements(state.template.summaryPage.elements),
+            groups: filterGroups(state.template.summaryPage.groups || []),
+          },
+        }
       } else {
         newTemplate = {
           ...state.template,
@@ -1862,11 +2522,10 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       }
     }),
 
-  ungroupElements: (groupId, location) =>
-    set(() => {
-      // Alias para deleteGroup - apenas desagrupa sem deletar elementos
-      return get().deleteGroup(groupId, location)
-    }),
+  ungroupElements: (groupId, location) => {
+    // Alias para deleteGroup - apenas desagrupa sem deletar elementos
+    get().deleteGroup(groupId, location)
+  },
 
   toggleGroupCollapse: (groupId, location) =>
     set((state) => {
@@ -2139,6 +2798,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: addToLoop(state.template.pageSettings.bodyBackground.elements),
+            },
+          },
+        }
       } else if (loc === 'summary' && state.template.summaryPage) {
         newTemplate = {
           ...state.template,
@@ -2202,6 +2872,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             footer: {
               ...state.template.pageSettings.footer,
               elements: updateInLoop(state.template.pageSettings.footer.elements),
+            },
+          },
+        }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: updateInLoop(state.template.pageSettings.bodyBackground.elements),
             },
           },
         }
@@ -2269,6 +2950,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: deleteFromLoop(state.template.pageSettings.bodyBackground.elements),
+            },
+          },
+        }
       } else if (loc === 'summary' && state.template.summaryPage) {
         newTemplate = {
           ...state.template,
@@ -2299,18 +2991,21 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     set((state) => ({
       selectedLoopParentId: loopId,
       selectedLoopChildId: childId,
-      selectedElementIds: [loopId], 
+      selectedElementIds: [childId], 
       selectedElementLocation: location || state.currentSection,
       selectedGroupId: null,
+      selectedContainerChildId: null,
+      selectedContainerParentId: null,
     })),
   selectContainerChild: (containerId, childId, location) => {
-      console.log(containerId, childId)
       set((state) => ({
         selectedContainerParentId: containerId,
         selectedContainerChildId: childId,
-        selectedElementIds: [containerId],
+        selectedElementIds: [childId],
         selectedElementLocation: location || state.currentSection,
         selectedGroupId: null,
+        selectedLoopChildId: null,
+        selectedLoopParentId: null,
       }))
   },
   clearLoopChildSelection: () =>
@@ -2382,6 +3077,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             },
           },
         }
+      } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+        newTemplate = {
+          ...state.template,
+          pageSettings: {
+            ...state.template.pageSettings,
+            bodyBackground: {
+              ...state.template.pageSettings.bodyBackground,
+              elements: reorderInLoop(state.template.pageSettings.bodyBackground.elements),
+            },
+          },
+        }
       } else if (loc === 'summary' && state.template.summaryPage) {
         newTemplate = {
           ...state.template,
@@ -2416,20 +3122,74 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       isSidebarMinimized: !state.isSidebarMinimized,
     })),
 
+  setSidebarMinimized: (minimized: boolean) =>
+    set({ isSidebarMinimized: minimized }),
+
+  addElementToContainer: (containerId, element, location) =>
+    get().addElementToLoop(containerId, element, location),
+
+  deleteContainerChildElement: (containerId, childId, location) =>
+    get().deleteLoopChildElement(containerId, childId, location),
+
+  reorderContainerChildren: (containerId, fromIndex, toIndex, location) =>
+    get().reorderLoopChildren(containerId, fromIndex, toIndex, location),
+
   updateContainerChildElement: (containerId, childId, updates, location) =>
       set((state) => {
         const loc = location || state.currentSection
         const historyState = saveToHistory(state, state.template)
         const newChildId = updates.id !== undefined ? updates.id : childId
 
+        const size = state.template.pageSettings.size
+        const pageSize = size === 'Letter' ? { width: 612, height: 792 } : { width: 595, height: 842 }
+        const margins = state.template.pageSettings.margins
+        const headerHeight = state.template.pageSettings.header?.height || 0
+        const footerHeight = state.template.pageSettings.footer?.height || 0
+        
+        let sectionHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0)
+        if (loc === 'header') sectionHeight = headerHeight
+        else if (loc === 'footer') sectionHeight = footerHeight
+        else if (loc === 'body') sectionHeight -= (headerHeight + footerHeight)
+
         const updateInContainer = (elements: Element[]): Element[] => {
-          return elements.map(el => {
-            if (el.id === containerId) {
+          const targetIndex = elements.findIndex(el => el.id === containerId)
+          if (targetIndex === -1) return elements
+
+          const targetEl = elements[targetIndex]
+          const isFixed = targetEl.heightMode === 'fixed' || targetEl.autoHeight === false
+          const currentH = typeof targetEl.height === 'number' ? targetEl.height : 150
+          const maxAllowed = Math.max(30, sectionHeight - (targetEl.y || 0))
+          const updatedChildren = (targetEl.elements || []).map(child =>
+            child.id === childId ? { ...child, ...updates } : child
+          )
+
+          let newHeight = currentH
+          let deltaHeight = 0
+          if (!isFixed) {
+            const maxChildBottom = updatedChildren.reduce((max, ch) => {
+              const cy = typeof ch.y === 'number' ? ch.y : 0
+              const chH = typeof ch.height === 'number' ? ch.height : 25
+              return Math.max(max, cy + chH + 15)
+            }, 100)
+            const clamped = Math.min(maxChildBottom, maxAllowed)
+            if (clamped > currentH) {
+              deltaHeight = clamped - currentH
+              newHeight = clamped
+            }
+          }
+
+          return elements.map((el, idx) => {
+            if (idx === targetIndex) {
               return {
                 ...el,
-                elements: (el.elements || []).map(child =>
-                  child.id === childId ? { ...child, ...updates } : child
-                ),
+                height: newHeight,
+                elements: updatedChildren,
+              }
+            }
+            if (deltaHeight > 0 && idx > targetIndex && typeof el.y === 'number') {
+              return {
+                ...el,
+                y: el.y + deltaHeight,
               }
             }
             return el
@@ -2457,6 +3217,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               footer: {
                 ...state.template.pageSettings.footer,
                 elements: updateInContainer(state.template.pageSettings.footer.elements),
+              },
+            },
+          }
+        } else if (loc === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
+          newTemplate = {
+            ...state.template,
+            pageSettings: {
+              ...state.template.pageSettings,
+              bodyBackground: {
+                ...state.template.pageSettings.bodyBackground,
+                elements: updateInContainer(state.template.pageSettings.bodyBackground.elements),
               },
             },
           }

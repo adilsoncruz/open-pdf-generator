@@ -284,6 +284,13 @@ class PDFGenerator(
                 )
             }
 
+            if (template.schema != null) {
+                val schemaErrors = com.pdfgenerator.validator.SchemaValidator.validate(template.schema, data)
+                if (schemaErrors.isNotEmpty()) {
+                    throw PDFSchemaValidationException(schemaErrors)
+                }
+            }
+
             val headerCondition = template.pageSettings.header?.printCondition
             val footerCondition = template.pageSettings.footer?.printCondition
             val templateHeaderHeight = template.pageSettings.header?.height ?: 0f
@@ -322,7 +329,8 @@ class PDFGenerator(
 
             if (template.pageSettings.header != null ||
                 template.pageSettings.footer != null ||
-                template.pageSettings.bodyBackground != null
+                template.pageSettings.bodyBackground != null ||
+                template.pageSettings.watermark != null
             ) {
                 writer.pageEvent = HeaderFooterPageEvent(template, data, config)
             }
@@ -379,7 +387,12 @@ class PDFGenerator(
 
                         val effectiveY =
                             if (isRelativeFlow) {
-                                val offsetY = element.relativeOffsetY ?: 0f
+                                val isHeightFull = when (element) {
+                                    is RectangleElement -> element.height.toString() == "100%" || element.height.toString() == "100.0%"
+                                    is ContainerElement -> element.height.toString() == "100%" || element.height.toString() == "100.0%"
+                                    else -> false
+                                }
+                                val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
                                 renderState.currentY + offsetY
                             } else {
                                 element.y
@@ -517,6 +530,7 @@ class PDFGenerator(
 
         val elementCondition =
             when (element) {
+                is ContainerElement -> element.printCondition
                 is TextElement -> element.printCondition
                 is BarcodeElement -> element.printCondition
                 is LoopElement -> element.printCondition
@@ -662,7 +676,13 @@ class PDFGenerator(
                     element.elements.maxOfOrNull { child ->
                         child.y + getElementHeight(child, data, context)
                     } ?: 0f
-                kotlin.math.max(element.height, contentHeight)
+                val defaultHeight = context?.containerHeight ?: (context?.document?.pageSize?.height ?: 842f)
+                val resolvedH = element.resolveHeight(defaultHeight)
+                if (element.isAutoHeight()) {
+                    kotlin.math.max(resolvedH, contentHeight)
+                } else {
+                    resolvedH
+                }
             }
             is PageBreakElement -> 0f
             is SpacerElement -> element.height
@@ -782,6 +802,7 @@ class PDFGenerator(
                     }
 
                     is BarcodeElement -> element.height
+                    is ContainerElement -> element.resolveHeight(loopHeight)
                     else -> 20f
                 }
             y + height

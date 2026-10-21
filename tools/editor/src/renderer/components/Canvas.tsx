@@ -1,9 +1,9 @@
-import { useState, useEffect, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
-import { useTemplateStore, type Element, type ElementLocation } from '../store/templateStore'
+import React, { useState, useEffect, useRef, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
+import { useTemplateStore, type Element, type ElementLocation, flattenElements } from '../store/templateStore'
+import { useUIStore } from '../store/uiStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
-import { Select, Button, Divider } from './atoms'
+import { Select, Button, Divider, Icon } from './atoms'
 import { IconButton } from './molecules'
-import { RulersAndGuides, type Guide } from './RulersAndGuides'
 // Component to render Loop child elements
 interface LoopChildElementProps {
   child: Element
@@ -20,18 +20,70 @@ interface ContainerChildElementProps {
   location: ElementLocation
   containerWidth: number
   containerHeight: number
+  effectiveY?: number
+  effectiveX?: number
+  effectiveWidth?: number | string
 }
 
-function ContainerChildElement({ child, containerId, location, containerWidth, containerHeight }: ContainerChildElementProps) {
+function getHeaderBorderValues(style: Record<string, unknown> | undefined) {
+  const borderWidth = (style?.headerBorderWidth as number) ?? (style?.borderWidth as number) ?? 1
+  const borderType = style?.headerBorderType
+
+  switch (borderType) {
+    case 'none':
+      return { top: 0, right: 0, bottom: 0, left: 0 }
+    case 'row':
+      return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
+    case 'columns':
+    case 'cells':
+    case 'all':
+      return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
+    case 'top-bottom':
+      return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
+    case 'left-right':
+      return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
+    default:
+      return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
+  }
+}
+
+function getCellBorderValues(style: Record<string, unknown> | undefined) {
+  const borderWidth = (style?.borderWidth as number) ?? 1
+  const borderType = style?.cellBorderType
+
+  switch (borderType) {
+    case 'none':
+      return { top: 0, right: 0, bottom: 0, left: 0 }
+    case 'row':
+      return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
+    case 'columns':
+      return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
+    case 'cells':
+    case 'all':
+      return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
+    case 'top-bottom':
+      return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
+    case 'left-right':
+      return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
+    default:
+      return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
+  }
+}
+
+function ContainerChildElement({ child, containerId, location, containerWidth, containerHeight, effectiveY, effectiveX, effectiveWidth }: ContainerChildElementProps) {
   const {
     selectedContainerChildId,
     selectedContainerParentId,
+    selectedElementIds,
     selectContainerChild,
+    toggleElementSelection,
     updateContainerChildElement,
+    updateElement,
     saveSnapshot,
-    testData
+    testData,
+    template
   } = useTemplateStore()
-  const isSelected = selectedContainerChildId === child.id && selectedContainerParentId === containerId
+  const isSelected = selectedElementIds.includes(child.id) || (selectedContainerChildId === child.id && selectedContainerParentId === containerId)
 
   // Find loop element in all sections
   const findComponentElement = (containerElementId: string): Element | undefined => {
@@ -89,7 +141,16 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   }
 
   const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [dragStart, setDragStart] = useState({
+    x: 0,
+    y: 0,
+    initialX: 0,
+    initialY: 0,
+    initialPositions: {} as Record<string, { x: number; y: number }>,
+    initialOffsetY: 10,
+  })
+  const [isResizing, setIsResizing] = useState<string | null>(null)
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, initialW: 100, initialH: 20 })
 
   // Resolve dimensions (support for "100%")
   const resolveWidth = (value: string | number | undefined): number => {
@@ -105,27 +166,94 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   }
 
   const handleMouseDown = (e: ReactMouseEvent) => {
+    if (e.button !== 0) return
     e.stopPropagation()
-    console.log(`mouseDown ${containerId} - ${child.id}`)
-    selectContainerChild(containerId, child.id, location)
+
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+      toggleElementSelection(child.id, location)
+      return
+    }
+
+    if (!isSelected) {
+      selectContainerChild(containerId, child.id, location)
+    }
+
+    const isMulti = selectedElementIds.length > 1
+    const initialPositions: Record<string, { x: number; y: number }> = {}
+
+    if (isMulti) {
+      let sectionElements: Element[] = []
+      if (location === 'header' && template.pageSettings.header) {
+        sectionElements = template.pageSettings.header.elements
+      } else if (location === 'footer' && template.pageSettings.footer) {
+        sectionElements = template.pageSettings.footer.elements
+      } else if (location === 'bodyBackground' && template.pageSettings.bodyBackground) {
+        sectionElements = template.pageSettings.bodyBackground.elements
+      } else if (location === 'summary' && template.summaryPage) {
+        sectionElements = template.summaryPage.elements
+      } else {
+        sectionElements = template.page || []
+      }
+      const flat = flattenElements(sectionElements)
+      flat.forEach((el) => {
+        if (selectedElementIds.includes(el.id)) {
+          initialPositions[el.id] = { x: el.x || 0, y: el.y || 0 }
+        }
+      })
+    } else {
+      initialPositions[child.id] = { x: child.x || 0, y: child.y || 0 }
+    }
+
     setIsDragging(true)
-    setDragStart({ x: e.clientX - child.x, y: e.clientY - child.y })
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      initialX: child.x || 0,
+      initialY: child.y || 0,
+      initialPositions,
+      initialOffsetY: child.height === '100%' ? 0 : (typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 10),
+    })
+  }
+
+  const handleResizeMouseDown = (e: ReactMouseEvent, direction: string) => {
+    e.stopPropagation()
+    setIsResizing(direction)
+    const initialW = resolveWidth(child.width)
+    const initialH = resolveHeight(child.height)
+    setResizeStart({ x: e.clientX, y: e.clientY, initialW, initialH })
   }
 
   useEffect(() => {
     if (!isDragging) return
 
     const handleMouseMove = (e: globalThis.MouseEvent) => {
-      const childWidth = resolveWidth(child.width)
-      const childHeight = resolveHeight(child.height)
-      
-      let newX = e.clientX - dragStart.x
-      let newY = e.clientY - dragStart.y
-      
-      newX = Math.max(0, Math.min(newX, Math.max(0, containerWidth - childWidth)))
-      newY = Math.max(0, Math.min(newY, Math.max(0, containerHeight - childHeight)))
-      
-      updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
+      const deltaX = e.clientX - dragStart.x
+      const deltaY = e.clientY - dragStart.y
+      if (Object.keys(dragStart.initialPositions || {}).length > 1) {
+        Object.keys(dragStart.initialPositions).forEach((id) => {
+          const initPos = dragStart.initialPositions[id]
+          const newX = initPos.x + deltaX
+          const newY = initPos.y + deltaY
+          updateElement(id, { x: newX, y: newY }, location)
+        })
+      } else {
+        const childWidth = resolveWidth(child.width)
+        const childHeight = resolveHeight(child.height)
+        
+        let newX = dragStart.initialX + deltaX
+        let newY = dragStart.initialY + deltaY
+        
+        newX = Math.max(0, Math.min(newX, Math.max(0, containerWidth - childWidth)))
+        newY = Math.max(0, Math.min(newY, Math.max(0, containerHeight - childHeight)))
+        
+        const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
+        if (isChildRelative && effectiveY !== undefined) {
+          const newOffsetY = child.height === '100%' ? 0 : Math.max(0, dragStart.initialOffsetY + deltaY)
+          updateContainerChildElement(containerId, child.id, { x: newX, y: newY, relativeOffsetY: newOffsetY }, location)
+        } else {
+          updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
+        }
+      }
     }
 
     const handleMouseUp = () => {
@@ -140,7 +268,34 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, dragStart, containerId, child.id, location, updateContainerChildElement, saveSnapshot])
+  }, [isDragging, dragStart, containerId, child.id, location, updateContainerChildElement, updateElement, saveSnapshot])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
+      const deltaX = e.clientX - resizeStart.x
+      const deltaY = e.clientY - resizeStart.y
+      
+      const newWidth = Math.max(10, Math.min(containerWidth - (child.x || 0), resizeStart.initialW + deltaX))
+      const newHeight = Math.max(10, Math.min(containerHeight - (child.y || 0), resizeStart.initialH + deltaY))
+      
+      updateContainerChildElement(containerId, child.id, { width: newWidth, height: newHeight }, location)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(null)
+      saveSnapshot()
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, resizeStart, containerId, child.id, child.x, child.y, containerWidth, containerHeight, location, updateContainerChildElement, saveSnapshot])
 
   // Renderizar baseado no tipo
   const renderContent = () => {
@@ -149,7 +304,9 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       case 'static_text':
       case 'rich_text':
       case 'link': {
-        const textWidth = child.width ? resolveWidth(child.width) : undefined
+        const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
+        const rawW = isChildRelative && effectiveWidth !== undefined ? effectiveWidth : child.width
+        const textWidth = rawW ? resolveWidth(rawW) : undefined
         const textHeight = child.height ? resolveHeight(child.height) : undefined
         const displayText = resolveChildDisplayText(child, child.type === 'text' ? 'campo' : 'Texto')
         return (
@@ -226,6 +383,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
             style={{
               width: rectWidth,
               height: rectHeight,
+              boxSizing: 'border-box',
               backgroundColor: child.style?.fillColor || '#e0e0e0',
               borderRadius: child.style?.cornerRadius || 0,
               border: child.style?.borderColor ? `1px solid ${child.style.borderColor}` : 'none',
@@ -347,6 +505,195 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
                    </div>
                  )
       }
+      case 'table': {
+        const columns = Array.isArray(child.columns) ? child.columns : []
+        const hasValidColumns = columns.length > 0 && columns.every((col: unknown) => col && typeof col === 'object')
+        const tableStyle = child.style || {}
+        const headerBg = tableStyle.headerBackground || '#f0f0f0'
+        const headerColor = tableStyle.headerColor || '#000000'
+        const headerFontSize = (tableStyle.headerFontSize as number) || 12
+        const fontSize = (tableStyle.fontSize as number) || 10
+        const cellColor = tableStyle.cellColor || '#000000'
+        const cellBg = (tableStyle.cellBackground as string) || '#ffffff'
+        const borderColor = (tableStyle.borderColor as string) || '#cccccc'
+        const headerBorderColor = (tableStyle.headerBorderColor as string) || borderColor
+        const borderStyle = (tableStyle.borderStyle as string) || 'solid'
+        const headerPadding = (tableStyle.headerPadding as number) ?? 5
+        const cellPadding = (tableStyle.cellPadding as number) ?? 5
+        const headerBorderValues = getHeaderBorderValues(tableStyle)
+        const cellBorderValues = getCellBorderValues(tableStyle)
+        const headerBorderType = (tableStyle.headerBorderType as string) || 'all'
+        const cellBorderType = (tableStyle.cellBorderType as string) || 'all'
+        const columnWidths = columns.map((col: Record<string, unknown>) => (col.width as number) || 100)
+        const totalWidth = columnWidths.reduce((sum: number, w: number) => sum + w, 0)
+        const rawW = child.width ?? 400
+        const resolvedW = rawW === '100%' ? containerWidth : (typeof rawW === 'number' ? rawW : 400)
+        const proportionalWidths = columnWidths.map((w: number) => totalWidth > 0 ? (w / totalWidth) * resolvedW : (columns.length > 0 ? resolvedW / columns.length : 100))
+
+        return (
+          <div
+            style={{
+              width: resolvedW,
+              minHeight: 40,
+            }}
+          >
+            {hasValidColumns ? (
+              <table className="w-full pointer-events-none border-collapse" style={{ tableLayout: 'fixed' }}>
+                <thead>
+                  <tr style={{ backgroundColor: headerBg === 'transparent' ? 'transparent' : headerBg, color: headerColor, fontSize: `${headerFontSize}px` }}>
+                    {columns.map((col: Record<string, unknown>, i: number) => {
+                      const isFirst = i === 0
+                      const isLast = i === columns.length - 1
+                      let hLeft = headerBorderValues.left
+                      let hRight = headerBorderValues.right
+
+                      if (headerBorderType === 'columns') {
+                        hLeft = isFirst ? headerBorderValues.left : headerBorderValues.left / 2
+                        hRight = isLast ? headerBorderValues.right : headerBorderValues.right / 2
+                      } else if (headerBorderType === 'row') {
+                        hLeft = isFirst ? headerBorderValues.left : 0
+                        hRight = isLast ? headerBorderValues.right : 0
+                      } else if (headerBorderType === 'none') {
+                        hLeft = 0
+                        hRight = 0
+                      }
+
+                      return (
+                        <th
+                          key={`ch-th-${i}`}
+                          className="font-semibold"
+                          style={{
+                            width: proportionalWidths[i],
+                            padding: `${headerPadding}px`,
+                            borderTopWidth: `${headerBorderValues.top}px`,
+                            borderTopStyle: borderStyle as any,
+                            borderTopColor: headerBorderColor,
+                            borderBottomWidth: `${headerBorderValues.bottom}px`,
+                            borderBottomStyle: borderStyle as any,
+                            borderBottomColor: headerBorderColor,
+                            borderLeftWidth: `${hLeft}px`,
+                            borderLeftStyle: borderStyle as any,
+                            borderLeftColor: headerBorderColor,
+                            borderRightWidth: `${hRight}px`,
+                            borderRightStyle: borderStyle as any,
+                            borderRightColor: headerBorderColor,
+                            textAlign: (col.headerAlignment as any) || (col.alignment as any) || 'left',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {String(col?.header || 'Header')}
+                        </th>
+                      )
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ fontSize: `${fontSize}px`, color: cellColor, backgroundColor: cellBg === 'transparent' ? 'transparent' : cellBg }}>
+                    {columns.map((col: Record<string, unknown>, i: number) => {
+                      const isFirst = i === 0
+                      const isLast = i === columns.length - 1
+                      let cLeft = cellBorderValues.left
+                      let cRight = cellBorderValues.right
+                      let cTop = cellBorderValues.top
+                      let cBottom = cellBorderValues.bottom
+
+                      if (cellBorderType === 'cells' || cellBorderType === 'all') {
+                        cLeft = isFirst ? cellBorderValues.left : cellBorderValues.left / 2
+                        cRight = isLast ? cellBorderValues.right : cellBorderValues.right / 2
+                      } else if (cellBorderType === 'row') {
+                        cLeft = isFirst ? cellBorderValues.left : 0
+                        cRight = isLast ? cellBorderValues.right : 0
+                      } else if (cellBorderType === 'columns') {
+                        cTop = 0
+                        cBottom = 0
+                        cLeft = isFirst ? cellBorderValues.left : cellBorderValues.left / 2
+                        cRight = isLast ? cellBorderValues.right : cellBorderValues.right / 2
+                      } else if (cellBorderType === 'none') {
+                        cTop = 0
+                        cBottom = 0
+                        cLeft = 0
+                        cRight = 0
+                      }
+
+                      return (
+                        <td
+                          key={`ch-td-${i}`}
+                          style={{
+                            width: proportionalWidths[i],
+                            padding: `${cellPadding}px`,
+                            borderTopWidth: `${cTop}px`,
+                            borderTopStyle: borderStyle as any,
+                            borderTopColor: borderColor,
+                            borderBottomWidth: `${cBottom}px`,
+                            borderBottomStyle: borderStyle as any,
+                            borderBottomColor: borderColor,
+                            borderLeftWidth: `${cLeft}px`,
+                            borderLeftStyle: borderStyle as any,
+                            borderLeftColor: borderColor,
+                            borderRightWidth: `${cRight}px`,
+                            borderRightStyle: borderStyle as any,
+                            borderRightColor: borderColor,
+                            textAlign: (col.alignment as any) || 'left',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {String(col?.field || 'field')}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            ) : (
+              <div className="w-full min-h-[40px] flex items-center justify-center text-slate-400 text-xs border border-dashed border-slate-600 rounded bg-slate-900/40 p-2">
+                📊 Tabela sem colunas (configure no painel)
+              </div>
+            )}
+          </div>
+        )
+      }
+      case 'barcode': {
+        const barcodeType = ((child.barcodeType as string) || 'qrcode').toLowerCase()
+        const is2D = barcodeType === 'qrcode' || barcodeType === 'qr_code' || barcodeType === 'datamatrix' || barcodeType === 'data_matrix'
+        const rawBinding = (child.value as string) || (child.dataBinding as string) || (is2D ? 'https://openpdf.dev' : '123456789012')
+        const bw = resolveWidth(child.width || (is2D ? 100 : 140))
+        const bh = resolveHeight(child.height || (is2D ? 100 : 50))
+
+        return (
+          <div
+            className="select-none border border-dashed border-slate-400 flex flex-col items-center justify-center bg-white p-1.5 overflow-hidden"
+            style={{ width: bw, height: bh }}
+          >
+            {is2D ? (
+              <svg className="w-3/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 3h7v7H3V3zm2 2v3h3V5H5zm9-2h7v7h-7V3zm2 2v3h3V5h-3zM3 14h7v7H3v-7zm2 2v3h3v-3H5zm9-2h3v3h-3v-3zm4 0h3v3h-3v-3zm-2 3h2v2h-2v-2zm-2 2h3v2h-3v-2zm4 0h3v2h-3v-2z" />
+              </svg>
+            ) : (
+              <svg className="w-4/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 48 20" fill="currentColor" preserveAspectRatio="none">
+                <rect x="2" y="1" width="2" height="18" />
+                <rect x="6" y="1" width="1" height="18" />
+                <rect x="9" y="1" width="3" height="18" />
+                <rect x="14" y="1" width="1" height="18" />
+                <rect x="17" y="1" width="2" height="18" />
+                <rect x="21" y="1" width="4" height="18" />
+                <rect x="27" y="1" width="1" height="18" />
+                <rect x="30" y="1" width="2" height="18" />
+                <rect x="34" y="1" width="3" height="18" />
+                <rect x="39" y="1" width="1" height="18" />
+                <rect x="42" y="1" width="2" height="18" />
+                <rect x="45" y="1" width="1" height="18" />
+              </svg>
+            )}
+            <span className="text-[9px] font-mono text-slate-600 text-center truncate w-full px-1 mt-0.5 leading-tight">
+              {rawBinding}
+            </span>
+          </div>
+        )
+      }
       default:
         return <div className="w-10 h-10 bg-gray-300" />
     }
@@ -354,19 +701,52 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
 
   return (
     <div
-      className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500 ring-offset-1' : ''}`}
+      className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500' : ''}`}
       style={{
-        left: child.x || 0,
-        top: child.y || 0,
+        left: child.width === '100%' ? 0 : (effectiveX !== undefined ? effectiveX : (child.x || 0)),
+        top: child.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : (child.y || 0)),
+        ...(child.width === '100%' ? { width: '100%' } : (effectiveWidth !== undefined && !child.width ? { width: effectiveWidth } : {})),
       }}
       onMouseDown={handleMouseDown}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!selectedElementIds.includes(child.id)) {
+          selectContainerChild(containerId, child.id, location)
+        }
+        useUIStore.getState().openContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          targetType: 'element',
+          elementId: child.id,
+          containerId,
+          location,
+        })
+      }}
     >
       {renderContent()}
-      {/* Label do elemento */}
+      {/* Label do elemento e handles de redimensionamento */}
       {isSelected && (
-        <div className="absolute -top-4 left-0 text-[9px] bg-purple-500 text-white px-1 rounded">
-          {child.type}
-        </div>
+        <>
+          <div className="absolute -top-4 left-0 text-[9px] bg-purple-500 text-white px-1 rounded z-30">
+            {child.type}
+          </div>
+          {/* Resize handle canto inferior direito */}
+          <div
+            className="absolute -right-1 -bottom-1 w-2.5 h-2.5 bg-white border-2 border-purple-500 rounded-full cursor-se-resize z-40"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
+          />
+          {/* Resize handle lateral direita */}
+          <div
+            className="absolute -right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white border-2 border-purple-500 rounded-full cursor-e-resize z-40"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
+          />
+          {/* Resize handle borda inferior */}
+          <div
+            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-2 border-purple-500 rounded-full cursor-s-resize z-40"
+            onMouseDown={(e) => handleResizeMouseDown(e, 's')}
+          />
+        </>
       )}
     </div>
   )
@@ -376,13 +756,15 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
   const { 
     selectedLoopChildId, 
     selectedLoopParentId, 
+    selectedElementIds,
     selectLoopChild, 
+    toggleElementSelection,
     updateLoopChildElement,
     saveSnapshot,
     testData
   } = useTemplateStore()
   
-  const isSelected = selectedLoopChildId === child.id && selectedLoopParentId === loopId
+  const isSelected = selectedElementIds.includes(child.id) || (selectedLoopChildId === child.id && selectedLoopParentId === loopId)
   
   // Find loop element in all sections
   const findLoopElement = (loopElementId: string): Element | undefined => {
@@ -487,8 +869,15 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
   }
   
   const handleMouseDown = (e: ReactMouseEvent) => {
+    if (e.button !== 0) return
     e.stopPropagation()
-    selectLoopChild(loopId, child.id, location)
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+      toggleElementSelection(child.id, location)
+      return
+    }
+    if (!isSelected) {
+      selectLoopChild(loopId, child.id, location)
+    }
     setIsDragging(true)
     setDragStart({ x: e.clientX - child.x, y: e.clientY - child.y })
   }
@@ -607,6 +996,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
             style={{
               width: rectWidth,
               height: rectHeight,
+              boxSizing: 'border-box',
               backgroundColor: child.style?.fillColor || '#e0e0e0',
               borderRadius: child.style?.cornerRadius || 0,
               border: child.style?.borderColor ? `1px solid ${child.style.borderColor}` : 'none',
@@ -650,6 +1040,44 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
           </svg>
         )
       }
+      case 'barcode': {
+        const barcodeType = ((child.barcodeType as string) || 'qrcode').toLowerCase()
+        const is2D = barcodeType === 'qrcode' || barcodeType === 'qr_code' || barcodeType === 'datamatrix' || barcodeType === 'data_matrix'
+        const rawBinding = (child.value as string) || (child.dataBinding as string) || (is2D ? 'https://openpdf.dev' : '123456789012')
+        const bw = resolveWidth(child.width || (is2D ? 100 : 140))
+        const bh = resolveHeight(child.height || (is2D ? 100 : 50))
+
+        return (
+          <div
+            className="select-none border border-dashed border-slate-400 flex flex-col items-center justify-center bg-white p-1.5 overflow-hidden"
+            style={{ width: bw, height: bh }}
+          >
+            {is2D ? (
+              <svg className="w-3/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 3h7v7H3V3zm2 2v3h3V5H5zm9-2h7v7h-7V3zm2 2v3h3V5h-3zM3 14h7v7H3v-7zm2 2v3h3v-3H5zm9-2h3v3h-3v-3zm4 0h3v3h-3v-3zm-2 3h2v2h-2v-2zm-2 2h3v2h-3v-2zm4 0h3v2h-3v-2z" />
+              </svg>
+            ) : (
+              <svg className="w-4/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 48 20" fill="currentColor" preserveAspectRatio="none">
+                <rect x="2" y="1" width="2" height="18" />
+                <rect x="6" y="1" width="1" height="18" />
+                <rect x="9" y="1" width="3" height="18" />
+                <rect x="14" y="1" width="1" height="18" />
+                <rect x="17" y="1" width="2" height="18" />
+                <rect x="21" y="1" width="4" height="18" />
+                <rect x="27" y="1" width="1" height="18" />
+                <rect x="30" y="1" width="2" height="18" />
+                <rect x="34" y="1" width="3" height="18" />
+                <rect x="39" y="1" width="1" height="18" />
+                <rect x="42" y="1" width="2" height="18" />
+                <rect x="45" y="1" width="1" height="18" />
+              </svg>
+            )}
+            <span className="text-[9px] font-mono text-slate-600 text-center truncate w-full px-1 mt-0.5 leading-tight">
+              {rawBinding}
+            </span>
+          </div>
+        )
+      }
       default:
         return <div className="w-10 h-10 bg-gray-300" />
     }
@@ -657,12 +1085,25 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
   
   return (
     <div
-      className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500 ring-offset-1' : ''}`}
+      className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500' : ''}`}
       style={{
-        left: child.x || 0,
-        top: child.y || 0,
+        left: child.width === '100%' ? 0 : (child.x || 0),
+        top: child.height === '100%' ? 0 : (child.y || 0),
+        ...(child.width === '100%' ? { width: '100%' } : {}),
       }}
       onMouseDown={handleMouseDown}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        selectLoopChild(loopId, child.id, location)
+        useUIStore.getState().openContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          targetType: 'element',
+          elementId: child.id,
+          location,
+        })
+      }}
     >
       {renderContent()}
       {/* Label do elemento */}
@@ -676,9 +1117,19 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
 }
 
 export default function Canvas() {
-  const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, currentSection, setCurrentSection, clearSelection } = useTemplateStore()
-  const [zoom, setZoom] = useState(100) // Zoom em porcentagem
-  const [guides, setGuides] = useState<Guide[]>([])
+  const { 
+    template, 
+    selectedElementIds, 
+    selectedElementLocation, 
+    selectElement, 
+    toggleElementSelection, 
+    updateElement, 
+    currentSection, 
+    setCurrentSection, 
+    clearSelection,
+  } = useTemplateStore()
+  const { zoom, setZoom } = useUIStore()
+  const pageRef = useRef<HTMLDivElement>(null)
 
   let pageSize;
   switch(template.pageSettings.size) {
@@ -696,6 +1147,111 @@ export default function Canvas() {
   const scale = zoom / 100 // Converte porcentagem para escala
   const margins = template.pageSettings.margins
 
+  // Estados para réguas e linhas guias interativas (inicia vazio)
+  const [horizontalGuides, setHorizontalGuides] = useState<number[]>([])
+  const [verticalGuides, setVerticalGuides] = useState<number[]>([])
+  const [draggingGuide, setDraggingGuide] = useState<{ type: 'h' | 'v'; index: number; isNew?: boolean } | null>(null)
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+
+  const addHorizontalGuide = (yPos: number) => {
+    setHorizontalGuides((prev) => [...prev, Math.round(yPos)])
+  }
+
+  const addVerticalGuide = (xPos: number) => {
+    setVerticalGuides((prev) => [...prev, Math.round(xPos)])
+  }
+
+  const removeGuide = (type: 'h' | 'v', index: number) => {
+    if (type === 'h') {
+      setHorizontalGuides((prev) => prev.filter((_, i) => i !== index))
+    } else {
+      setVerticalGuides((prev) => prev.filter((_, i) => i !== index))
+    }
+  }
+
+  // Puxar linha guia horizontal a partir da régua superior
+  const handleRulerMouseDownH = (e: ReactMouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const pageRect = pageRef.current?.getBoundingClientRect()
+    const initialY = pageRect
+      ? Math.max(0, Math.min(pageSize.height, Math.round((e.clientY - pageRect.top) / scale)))
+      : 0
+    const newIndex = horizontalGuides.length
+    setHorizontalGuides((prev) => [...prev, initialY])
+    setDraggingGuide({ type: 'h', index: newIndex, isNew: true })
+  }
+
+  // Puxar linha guia vertical a partir da régua esquerda
+  const handleRulerMouseDownV = (e: ReactMouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const pageRect = pageRef.current?.getBoundingClientRect()
+    const initialX = pageRect
+      ? Math.max(0, Math.min(pageSize.width, Math.round((e.clientX - pageRect.left) / scale)))
+      : 0
+    const newIndex = verticalGuides.length
+    setVerticalGuides((prev) => [...prev, initialX])
+    setDraggingGuide({ type: 'v', index: newIndex, isNew: true })
+  }
+
+  // Monitora arrasto de guias no escopo global da janela
+  useEffect(() => {
+    if (!draggingGuide) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const pageRect = pageRef.current?.getBoundingClientRect()
+      if (!pageRect) return
+
+      if (draggingGuide.type === 'h') {
+        const rawY = (e.clientY - pageRect.top) / scale
+        const clampedY = Math.max(0, Math.min(pageSize.height, Math.round(rawY)))
+        setHorizontalGuides((prev) =>
+          prev.map((g, i) => (i === draggingGuide.index ? clampedY : g))
+        )
+      } else {
+        const rawX = (e.clientX - pageRect.left) / scale
+        const clampedX = Math.max(0, Math.min(pageSize.width, Math.round(rawX)))
+        setVerticalGuides((prev) =>
+          prev.map((g, i) => (i === draggingGuide.index ? clampedX : g))
+        )
+      }
+    }
+
+    const handleMouseUp = (e: MouseEvent) => {
+      const pageRect = pageRef.current?.getBoundingClientRect()
+      if (pageRect) {
+        if (draggingGuide.type === 'h') {
+          const rawY = (e.clientY - pageRect.top) / scale
+          if (draggingGuide.isNew && rawY < 0) {
+            setHorizontalGuides((prev) =>
+              prev.map((g, i) => (i === draggingGuide.index ? Math.round(margins.top) : g))
+            )
+          } else if (rawY < 0 || rawY > pageSize.height) {
+            setHorizontalGuides((prev) => prev.filter((_, i) => i !== draggingGuide.index))
+          }
+        } else {
+          const rawX = (e.clientX - pageRect.left) / scale
+          if (draggingGuide.isNew && rawX < 0) {
+            setVerticalGuides((prev) =>
+              prev.map((g, i) => (i === draggingGuide.index ? Math.round(margins.left) : g))
+            )
+          } else if (rawX < 0 || rawX > pageSize.width) {
+            setVerticalGuides((prev) => prev.filter((_, i) => i !== draggingGuide.index))
+          }
+        }
+      }
+      setDraggingGuide(null)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [draggingGuide, scale, pageSize.width, pageSize.height, margins.top, margins.left])
+
   const headerHeight = template.pageSettings.header?.height || 0;
   const footerHeight = template.pageSettings.footer?.height || 0;
   const bodyUsableHeight = pageSize.height - (margins.top || 0) - (margins.bottom || 0) - headerHeight - footerHeight;
@@ -709,7 +1265,6 @@ export default function Canvas() {
 
   const numberOfPages = Math.max(1, Math.ceil(maxBodyBottom / bodyUsableHeight));
   const totalCanvasHeight = margins.top + headerHeight + (numberOfPages * bodyUsableHeight) + footerHeight + margins.bottom;
-
 
   // Detect if any BODY element is touching the margins
   const checkMarginSnap = () => {
@@ -758,11 +1313,11 @@ export default function Canvas() {
   const marginSnap = checkMarginSnap()
 
   const handleZoomIn = () => {
-    setZoom((prev) => Math.min(200, prev + 25))
+    setZoom(Math.min(200, zoom + 25))
   }
 
   const handleZoomOut = () => {
-    setZoom((prev) => Math.max(25, prev - 25))
+    setZoom(Math.max(25, zoom - 25))
   }
 
   const handleZoomReset = () => {
@@ -812,79 +1367,73 @@ export default function Canvas() {
   }, [])
 
   return (
-    <div className="flex-1 flex flex-col theme-bg relative overflow-hidden">
-      {/* Zoom Controls - Fixed at bottom (outside scrollable area) */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 theme-surface rounded-xl shadow-lg border theme-border p-2 flex items-center gap-2">
-        <IconButton
-          icon="zoom-out"
-          iconSize="md"
-          onClick={handleZoomOut}
-          tooltip="Zoom Out (Ctrl+-)"
-          className="hover:bg-primary-500/20"
-        />
-        
-        <Select
-          value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
-          size="sm"
-          className="w-20"
-          options={[
-            { value: '25', label: '25%' },
-            { value: '50', label: '50%' },
-            { value: '75', label: '75%' },
-            { value: '100', label: '100%' },
-            { value: '125', label: '125%' },
-            { value: '150', label: '150%' },
-            { value: '175', label: '175%' },
-            { value: '200', label: '200%' },
-          ]}
-        />
-        
-        <IconButton
-          icon="zoom-in"
-          iconSize="md"
-          onClick={handleZoomIn}
-          tooltip="Zoom In (Ctrl++)"
-          className="hover:bg-primary-500/20"
-        />
-        
-        <Divider orientation="vertical" className="h-6 mx-1" />
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleZoomFit}
-          title="Fit to Screen"
-        >
-          Fit
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleZoomReset}
-          title="Actual Size (100%)"
-        >
-          100%
-        </Button>
+    <div className={`flex-1 flex flex-col h-full overflow-hidden select-none bg-slate-950 ${draggingGuide ? (draggingGuide.type === 'h' ? 'cursor-ns-resize' : 'cursor-ew-resize') : ''}`}>
+      {/* RÉGUA SUPERIOR (HORIZONTAL RULER) */}
+      <div 
+        className="h-6 bg-slate-950 border-b border-slate-800 flex items-center relative overflow-hidden select-none cursor-row-resize text-slate-400 pl-6 z-20 shrink-0 hover:bg-slate-900 transition-colors"
+        onMouseDown={handleRulerMouseDownH}
+        title="Arraste para baixo para criar uma nova linha guia horizontal"
+      >
+        <div className="absolute left-1 text-[9px] font-mono text-slate-400 pointer-events-none">pt</div>
+        <div className="flex-1 flex items-end h-full pointer-events-none">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <div key={i} className="flex-1 border-r border-slate-800 h-2 relative">
+              {i % 2 === 0 && (
+                <span className="absolute -top-3 left-0.5 text-[8px] font-mono text-slate-400">
+                  {i * 25}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-      
-      {/* Scrollable content area */}
-      <div className="flex-1 overflow-auto p-8">
-        <div className="inline-block min-w-full min-h-full">
+
+      {/* ÁREA CENTRAL: RÉGUA VERTICAL + CANVAS SCROLLÁVEL */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* RÉGUA VERTICAL (LEFT VERTICAL RULER) */}
+        <div 
+          className="w-6 bg-slate-950 border-r border-slate-800 flex flex-col relative select-none cursor-col-resize text-slate-400 z-20 shrink-0 overflow-hidden hover:bg-slate-900 transition-colors"
+          onMouseDown={handleRulerMouseDownV}
+          title="Arraste para a direita para criar uma nova linha guia vertical"
+        >
+          <div className="flex-1 flex flex-col pointer-events-none">
+            {Array.from({ length: 40 }).map((_, i) => (
+              <div key={i} className="flex-1 border-b border-slate-800 w-2 relative">
+                {i % 2 === 0 && (
+                  <span className="absolute top-0.5 left-2 text-[7px] font-mono text-slate-500 transform -rotate-90 origin-top-left">
+                    {i * 25}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Scrollable content area */}
+        <div
+          id="canvas-scroll-container"
+          className="flex-1 overflow-auto p-8 bg-slate-950/80"
+          onContextMenu={(e) => {
+            e.preventDefault()
+            useUIStore.getState().openContextMenu({
+              x: e.clientX,
+              y: e.clientY,
+              targetType: 'canvas',
+              location: currentSection,
+            })
+          }}
+        >
+          <div className="inline-block min-w-full min-h-full">
         {/* Wrapper que define o tamanho real para scroll funcionar com zoom */}
         <div 
           className="flex justify-center items-start min-w-max"
           style={{ 
-            minWidth: pageSize.width * scale + 100, // +100 para labels laterais
+            minWidth: pageSize.width * scale + 240, // +240 para labels laterais à direita
             minHeight: pageSize.height * scale + 50, // +50 para margem inferior
           }}
         >
         
-        <div className="relative" style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
-          
-          <RulersAndGuides width={pageSize.width} height={pageSize.height} scale={scale} guides={guides} setGuides={setGuides} />
-          
+        <div ref={pageRef} className="relative" style={{ width: pageSize.width, height: pageSize.height, transform: `scale(${scale})`, transformOrigin: 'top center' }}>
           {currentSection === 'bodyBackground' && template.pageSettings.bodyBackground ? (
             
             <>
@@ -922,6 +1471,7 @@ export default function Canvas() {
                       <CanvasElement
                         key={element.id}
                         element={element}
+                        scale={scale}
                         isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'bodyBackground'}
                         onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'bodyBackground') : selectElement(element.id, 'bodyBackground')}
                         onUpdate={(updates) => updateElement(element.id, updates, 'bodyBackground')}
@@ -930,7 +1480,7 @@ export default function Canvas() {
                         pageSize={pageSize}
                         selectedElementIds={selectedElementIds}
                         selectedElementLocation={selectedElementLocation}
-                        allElements={template.pageSettings.bodyBackground?.elements ?? []}
+                        allElements={flattenElements(template.pageSettings.bodyBackground?.elements ?? [])}
                         onUpdateMultiple={() => {}}
                         updateElement={updateElement}
                       />
@@ -1074,6 +1624,7 @@ export default function Canvas() {
                     <CanvasElement
                       key={element.id}
                       element={element}
+                      scale={scale}
                       isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
                       onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
                       onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
@@ -1082,7 +1633,7 @@ export default function Canvas() {
                       pageSize={pageSize}
                       selectedElementIds={selectedElementIds}
                       selectedElementLocation={selectedElementLocation}
-                      allElements={template.summaryPage?.background?.elements ?? []}
+                      allElements={flattenElements(template.summaryPage?.background?.elements ?? [])}
                       onUpdateMultiple={() => {}}
                       updateElement={updateElement}
                     />
@@ -1105,6 +1656,7 @@ export default function Canvas() {
                       <CanvasElement
                         key={element.id}
                         element={element}
+                        scale={scale}
                         isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
                         onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
                         onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
@@ -1113,7 +1665,7 @@ export default function Canvas() {
                         pageSize={pageSize}
                         selectedElementIds={selectedElementIds}
                         selectedElementLocation={selectedElementLocation}
-                        allElements={template.summaryPage?.elements ?? []}
+                        allElements={flattenElements(template.summaryPage?.elements ?? [])}
                         onUpdateMultiple={() => {}}
                         updateElement={updateElement}
                       />
@@ -1334,6 +1886,7 @@ export default function Canvas() {
                   <CanvasElement
                     key={element.id}
                     element={element}
+                    scale={scale}
                     isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'header'}
                     onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'header') : selectElement(element.id, 'header')}
                     onUpdate={(updates) => updateElement(element.id, updates, 'header')}
@@ -1342,7 +1895,7 @@ export default function Canvas() {
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
                     selectedElementLocation={selectedElementLocation}
-                    allElements={template.pageSettings.header?.elements ?? []}
+                    allElements={flattenElements(template.pageSettings.header?.elements ?? [])}
                     onUpdateMultiple={() => {}}
                     updateElement={updateElement}
                   />
@@ -1381,6 +1934,7 @@ export default function Canvas() {
                   <CanvasElement
                     key={element.id}
                     element={element}
+                    scale={scale}
                     isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'footer'}
                     onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'footer') : selectElement(element.id, 'footer')}
                     onUpdate={(updates) => updateElement(element.id, updates, 'footer')}
@@ -1389,7 +1943,7 @@ export default function Canvas() {
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
                     selectedElementLocation={selectedElementLocation}
-                    allElements={template.pageSettings.footer?.elements ?? []}
+                    allElements={flattenElements(template.pageSettings.footer?.elements ?? [])}
                     onUpdateMultiple={() => {}}
                     updateElement={updateElement}
                   />
@@ -1405,7 +1959,7 @@ export default function Canvas() {
           {/* Body Section - container com coordenadas relativas */}
           <div
             className={`absolute ${
-              currentSection === 'body' ? 'border-2 border-dashed border-gray-400' : ''
+              currentSection === 'body' ? 'outline outline-2 outline-dashed outline-gray-400 -outline-offset-2' : ''
             }`}
             style={{
               top: margins.top + (template.pageSettings.header?.height || 0),
@@ -1421,31 +1975,208 @@ export default function Canvas() {
               }
             }}
           >
-            {template.page
-              .filter((element) => !element.hidden)
-              .map((element) => (
-                <CanvasElement
-                  key={element.id}
-                  element={element}
-                  isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'body'}
-                  onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'body') : selectElement(element.id, 'body')}
-                  onUpdate={(updates) => updateElement(element.id, updates, 'body')}
-                        location="body"
-                  margins={margins}
-                  pageSize={pageSize}
-                  selectedElementIds={selectedElementIds}
-                  selectedElementLocation={selectedElementLocation}
-                  allElements={template.page}
-                  onUpdateMultiple={() => {}}
-                  updateElement={updateElement}
-                />
-              ))}
+            {(() => {
+              let currentFlowY = 0
+              let lastFlowX: number | undefined = undefined
+              let lastFlowWidth: number | string | undefined = undefined
+              return template.page
+                .filter((element) => !element.hidden)
+                .map((element) => {
+                  const isRelativeFlow =
+                    ((element.positionMode || element.position || '') as string).toUpperCase() === 'RELATIVE' &&
+                    element.type !== 'container'
+
+                  let effectiveY: number | undefined = undefined
+                  let effectiveX: number | undefined = undefined
+                  let effectiveWidth: number | string | undefined = undefined
+
+                  if (isRelativeFlow) {
+                    const isHeightFull = element.height === '100%'
+                    const offsetY = isHeightFull ? 0 : (typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 0)
+                    if (currentFlowY === 0) {
+                      effectiveY = isHeightFull ? 0 : (typeof element.y === 'number' && element.y > 0 ? element.y : offsetY)
+                    } else {
+                      effectiveY = currentFlowY + offsetY
+                      if (lastFlowX !== undefined) {
+                        effectiveX = lastFlowX
+                      }
+                      if (lastFlowWidth !== undefined) {
+                        effectiveWidth = lastFlowWidth
+                      }
+                    }
+                  }
+
+                  const isContainerFixed = element.heightMode === 'fixed' || element.autoHeight === false
+                  const containerBaseHeight = typeof element.height === 'number' ? element.height : 150
+                  const currentContainerY = typeof effectiveY === 'number' ? effectiveY : (typeof element.y === 'number' ? element.y : 0)
+                  const maxAllowed = Math.max(30, bodyUsableHeight - currentContainerY)
+                  const containerAutoHeight = Math.min(
+                    isContainerFixed
+                      ? containerBaseHeight
+                      : Math.max(
+                          containerBaseHeight,
+                          (element.elements || []).reduce((max: number, ch: Element) => {
+                            const cy = typeof ch.y === 'number' ? ch.y : 0
+                            const chH = typeof ch.height === 'number' ? ch.height : 25
+                            return Math.max(max, cy + chH + 15)
+                          }, 0)
+                        ),
+                    maxAllowed
+                  )
+
+                  const elHeight =
+                    element.type === 'container'
+                      ? containerAutoHeight
+                      : typeof element.height === 'number'
+                      ? element.height
+                      : 25
+
+                  if (isRelativeFlow && effectiveY !== undefined) {
+                    currentFlowY = effectiveY + elHeight
+                    lastFlowX = effectiveX !== undefined ? effectiveX : element.x
+                    lastFlowWidth = effectiveWidth !== undefined ? effectiveWidth : element.width
+                  } else {
+                    currentFlowY = Math.max(currentFlowY, (element.y || 0) + elHeight)
+                    lastFlowX = element.x
+                    lastFlowWidth = element.width
+                  }
+
+                  return (
+                    <CanvasElement
+                      key={element.id}
+                      element={element}
+                      effectiveY={effectiveY}
+                      effectiveX={effectiveX}
+                      effectiveWidth={effectiveWidth}
+                      scale={scale}
+                      isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'body'}
+                      onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'body') : selectElement(element.id, 'body')}
+                      onUpdate={(updates) => updateElement(element.id, updates, 'body')}
+                      location="body"
+                      margins={margins}
+                      pageSize={pageSize}
+                      selectedElementIds={selectedElementIds}
+                      selectedElementLocation={selectedElementLocation}
+                      allElements={flattenElements(template.page)}
+                      onUpdateMultiple={() => {}}
+                      updateElement={updateElement}
+                    />
+                  )
+                })
+            })()}
             
             
             {currentSection !== 'body' && (
               <div className="absolute inset-0 bg-gray-400/30 cursor-not-allowed" style={{ zIndex: 100 }} />
             )}
           </div>
+
+          {/* Camada de Marca d'Água (Watermark) */}
+          {template.pageSettings.watermark && (() => {
+            const wm = template.pageSettings.watermark
+            const rotation = wm.rotation ?? 45
+            const opacity = wm.opacity ?? 0.2
+
+            const imageTileWidth = wm.width || (wm.repeat ? Math.round(pageSize.width * 0.25) : Math.round(pageSize.width * 0.6))
+
+            const renderWatermarkContent = () => (
+              wm.type === 'image' && wm.imageSource ? (
+                <img
+                  src={wm.imageSource}
+                  alt="Watermark"
+                  style={{
+                    width: `${imageTileWidth}px`,
+                    height: wm.height ? `${wm.height}px` : 'auto',
+                    maxWidth: pageSize.width * 0.8,
+                    objectFit: 'contain',
+                  }}
+                />
+              ) : (
+                <span
+                  style={{
+                    fontSize: `${wm.fontSize || 60}px`,
+                    fontWeight: wm.fontStyle?.includes('bold') ? 'bold' : 'normal',
+                    fontStyle: wm.fontStyle?.includes('italic') ? 'italic' : 'normal',
+                    fontFamily: wm.fontName || 'Outfit, sans-serif',
+                    color: wm.color || '#94a3b8',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  {wm.text || (wm.dataBinding ? `{{${wm.dataBinding}}}` : 'WATERMARK')}
+                </span>
+              )
+            )
+
+            if (wm.repeat) {
+              const rawText = wm.text || (wm.dataBinding ? `{{${wm.dataBinding}}}` : 'WATERMARK')
+              const estimatedTextWidth = (wm.fontSize || 60) * (rawText.length * 0.6)
+              const defaultStepX = wm.type === 'image'
+                ? Math.round(imageTileWidth * 1.8)
+                : Math.min(320, Math.max(160, estimatedTextWidth * 1.5))
+              const defaultStepY = wm.type === 'image'
+                ? Math.round((wm.height || imageTileWidth) * 1.8)
+                : Math.min(260, Math.max(120, (wm.fontSize || 60) * 3.5))
+
+              const stepX = wm.spacingX || defaultStepX
+              const stepY = wm.spacingY || defaultStepY
+
+              const gridItems: { x: number; y: number }[] = []
+              let rowIndex = 0
+              for (let y = -stepY / 2; y <= totalCanvasHeight + stepY; y += stepY) {
+                const offsetX = (rowIndex % 2 !== 0) ? stepX / 2 : 0
+                for (let x = -stepX / 2 + offsetX; x <= pageSize.width + stepX; x += stepX) {
+                  gridItems.push({ x, y })
+                }
+                rowIndex++
+              }
+
+              return (
+                <div
+                  className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+                  style={{ zIndex: wm.onTop ? 45 : 3 }}
+                >
+                  {gridItems.map((pt, idx) => (
+                    <div
+                      key={`wm-grid-${idx}`}
+                      className="absolute flex items-center justify-center pointer-events-none select-none"
+                      style={{
+                        left: pt.x,
+                        top: pt.y,
+                        transform: `translate(-50%, -50%) rotate(-${rotation}deg)`,
+                        opacity,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {renderWatermarkContent()}
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+
+            return (
+              <div
+                className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+                style={{ zIndex: wm.onTop ? 45 : 3 }}
+              >
+                {Array.from({ length: numberOfPages }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute flex items-center justify-center pointer-events-none select-none"
+                    style={{
+                      left: '50%',
+                      top: (pageSize.height / 2) + (i * bodyUsableHeight),
+                      transform: `translate(-50%, -50%) rotate(-${rotation}deg)`,
+                      opacity,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {renderWatermarkContent()}
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
 
           
           {/* Page Separators */}
@@ -1582,9 +2313,9 @@ export default function Canvas() {
             <>
               {/* Label Margin Top */}
               <div
-                className="absolute text-xs text-gray-400"
+                className="absolute text-xs text-gray-400 select-none pointer-events-none"
                 style={{
-                  left: -160,
+                  left: pageSize.width + 10,
                   top: margins.top,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -1596,9 +2327,9 @@ export default function Canvas() {
               {/* Label Header End */}
               {template.pageSettings.header && (
                 <div
-                  className="absolute text-xs text-gray-500"
+                  className="absolute text-xs text-gray-500 select-none pointer-events-none"
                   style={{
-                    left: -200,
+                    left: pageSize.width + 10,
                     top: margins.top + template.pageSettings.header.height,
                     transform: 'translateY(-50%)',
                     whiteSpace: 'nowrap',
@@ -1611,9 +2342,9 @@ export default function Canvas() {
               {/* Label Footer Start */}
               {template.pageSettings.footer && (
                 <div
-                  className="absolute text-xs text-gray-500"
+                  className="absolute text-xs text-gray-500 select-none pointer-events-none"
                   style={{
-                    left: -200,
+                    left: pageSize.width + 10,
                     top: totalCanvasHeight - margins.bottom - template.pageSettings.footer.height,
                     transform: 'translateY(-50%)',
                     whiteSpace: 'nowrap',
@@ -1625,9 +2356,9 @@ export default function Canvas() {
               
               {/* Label Margin Bottom */}
               <div
-                className="absolute text-xs text-gray-400"
+                className="absolute text-xs text-gray-400 select-none pointer-events-none"
                 style={{
-                  left: -160,
+                  left: pageSize.width + 10,
                   top: totalCanvasHeight - margins.bottom,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -1638,7 +2369,7 @@ export default function Canvas() {
               
               {/* Label Margin Left */}
               <div
-                className="absolute text-xs text-blue-600"
+                className="absolute text-xs text-blue-600 select-none pointer-events-none"
                 style={{
                   left: margins.left,
                   top: -25,
@@ -1651,7 +2382,7 @@ export default function Canvas() {
               
               {/* Label Margin Right */}
               <div
-                className="absolute text-xs text-blue-600"
+                className="absolute text-xs text-blue-600 select-none pointer-events-none"
                 style={{
                   left: pageSize.width - margins.right,
                   top: -25,
@@ -1669,9 +2400,9 @@ export default function Canvas() {
             <>
               {/* Label Margin Top */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
-                  left: -150,
+                  left: pageSize.width + 10,
                   top: margins.top,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -1682,9 +2413,9 @@ export default function Canvas() {
               
               {/* Label Margin Bottom */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
-                  left: -150,
+                  left: pageSize.width + 10,
                   top: totalCanvasHeight - margins.bottom,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -1695,7 +2426,7 @@ export default function Canvas() {
               
               {/* Label Margin Left */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
                   left: margins.left,
                   top: -25,
@@ -1708,7 +2439,7 @@ export default function Canvas() {
               
               {/* Label Margin Right */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
                   left: pageSize.width - margins.right,
                   top: -25,
@@ -1720,10 +2451,62 @@ export default function Canvas() {
               </div>
             </>
           )}
+
+          {/* LINHAS GUIAS INTERATIVAS (CYAN #06b6d4) COM TOOLTIPS */}
+          <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 50, width: pageSize.width, height: pageSize.height }}>
+            {/* Guias Horizontais */}
+            {horizontalGuides.map((yPos, idx) => (
+              <div
+                key={`h-guide-${idx}`}
+                className="absolute left-0 right-0 pointer-events-auto cursor-ns-resize group"
+                style={{ top: yPos }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  setDraggingGuide({ type: 'h', index: idx })
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation()
+                  removeGuide('h', idx)
+                }}
+                title="Arraste para mover ou clique duplo para remover"
+              >
+                <div className="h-0.5 bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
+                  <div className={`absolute left-2 -top-5 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 transition-opacity ${draggingGuide?.type === 'h' && draggingGuide?.index === idx ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    Y: {Math.round(yPos)}pt
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Guias Verticais */}
+            {verticalGuides.map((xPos, idx) => (
+              <div
+                key={`v-guide-${idx}`}
+                className="absolute top-0 bottom-0 pointer-events-auto cursor-ew-resize group"
+                style={{ left: xPos }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  setDraggingGuide({ type: 'v', index: idx })
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation()
+                  removeGuide('v', idx)
+                }}
+                title="Arraste para mover ou clique duplo para remover"
+              >
+                <div className="w-0.5 h-full bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
+                  <div className={`absolute -left-6 top-2 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 transition-opacity whitespace-nowrap ${draggingGuide?.type === 'v' && draggingGuide?.index === idx ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    X: {Math.round(xPos)}pt
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
         {/* Fim do container com scale */}
         </div>
         {/* Fim do wrapper para scroll */}
+      </div>
       </div>
       </div>
     </div>
@@ -1732,6 +2515,10 @@ export default function Canvas() {
 
 interface CanvasElementProps {
   element: Element
+  effectiveY?: number
+  effectiveX?: number
+  effectiveWidth?: number | string
+  scale?: number
   isSelected: boolean
   onSelect: (ctrlKey: boolean) => void
   onUpdate: (updates: Partial<Element>) => void
@@ -1761,12 +2548,14 @@ function getFontFamily(pdfFont?: string): string {
   return fontMap[pdfFont] || 'Arial, sans-serif'
 }
 
-function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
+function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale = 1, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
   const template = useTemplateStore(state => state.template)
   const testData = useTemplateStore(state => state.testData)
   const saveSnapshot = useTemplateStore(state => state.saveSnapshot)
+  const selectedContainerChildId = useTemplateStore(state => state.selectedContainerChildId)
+  const selectedLoopChildId = useTemplateStore(state => state.selectedLoopChildId)
   const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialPositions: {} as Record<string, {x: number, y: number}> })
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialPositions: {} as Record<string, {x: number, y: number}>, initialOffsetY: 10 })
   const [isResizing, setIsResizing] = useState<string | null>(null)
   const [resizeStart, setResizeStart] = useState({ 
     x: 0, y: 0, 
@@ -1899,13 +2688,13 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     e.stopPropagation()
     
     
-    if (e.ctrlKey || e.metaKey) {
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
       onSelect(true)
       return
     }
     
     
-    if (!isSelected) {
+    if (!isSelected || selectedContainerChildId || selectedLoopChildId) {
       onSelect(false)
     }
     
@@ -1926,24 +2715,35 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     setDragStart({
       x: e.clientX,
       y: e.clientY,
-      initialPositions
+      initialPositions,
+      initialOffsetY: element.height === '100%' ? 0 : (typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 0)
     })
+  }
+
+  const elementWrapperRef = useRef<HTMLDivElement>(null)
+
+  const getElementDimensions = () => {
+    const el = elementWrapperRef.current
+    const w = typeof element.width === 'number' ? element.width : (el && el.offsetWidth > 0 ? el.offsetWidth : 120)
+    const h = typeof element.height === 'number' ? element.height : (el && el.offsetHeight > 0 ? el.offsetHeight : 24)
+    return { width: Math.max(10, w), height: Math.max(10, h) }
   }
 
   const handleResizeMouseDown = (e: ReactMouseEvent<HTMLDivElement>, direction: string) => {
     if (e.button !== 0) return
     
     e.stopPropagation()
-    onSelect(false) 
+    e.preventDefault()
     
     setIsResizing(direction)
+    const dims = getElementDimensions()
     setResizeStart({
       x: e.clientX,
       y: e.clientY,
       elementX: element.x || 0,
-      elementY: element.y || 0,
-      elementWidth: typeof element.width === 'number' ? element.width : 100,
-      elementHeight: typeof element.height === 'number' ? element.height : 100,
+      elementY: (effectiveY !== undefined ? effectiveY : element.y) || 0,
+      elementWidth: dims.width,
+      elementHeight: dims.height,
     })
   }
 
@@ -1951,13 +2751,13 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     if (!isDragging) return
 
     const handleMouseMove = (e: globalThis.MouseEvent) => {
-      // Calcular delta do movimento
-      const deltaX = e.clientX - dragStart.x
-      const deltaY = e.clientY - dragStart.y
+      const currentScale = scale || 1
+      // Calcular delta do movimento com compensacao de zoom
+      const deltaX = (e.clientX - dragStart.x) / currentScale
+      const deltaY = (e.clientY - dragStart.y) / currentScale
       
       if (isMultiSelection && Object.keys(dragStart.initialPositions).length > 1) {
         // Mover todos os elementos selecionados juntos
-        
         Object.keys(dragStart.initialPositions).forEach(id => {
           const initialPos = dragStart.initialPositions[id]
           const newX = initialPos.x + deltaX
@@ -1965,24 +2765,18 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
           updateElement(id, { x: newX, y: newY }, selectedElementLocation ?? undefined)
         })
       } else {
-        
         const initialPos = dragStart.initialPositions[element.id]
-        
         if (!initialPos) return 
         
         let newX = initialPos.x + deltaX
         let newY = initialPos.y + deltaY
         
-        
         if (element.width === '100%') {
           newX = 0
         }
-        
-        
         if (element.height === '100%') {
           newY = 0
         }
-        
         
         if (element.width !== '100%' || element.height !== '100%') {
           const width = typeof element.width === 'number' ? element.width : 0
@@ -1992,7 +2786,13 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
           if (element.height !== '100%') newY = snapped.y
         }
         
-        onUpdate({ x: newX, y: newY })
+        const isRelative = (element.positionMode || element.position || '').toUpperCase() === 'RELATIVE'
+        if (isRelative && effectiveY !== undefined) {
+          const newOffset = element.height === '100%' ? 0 : Math.max(0, dragStart.initialOffsetY + deltaY)
+          onUpdate({ x: newX, y: newY, relativeOffsetY: newOffset })
+        } else {
+          onUpdate({ x: newX, y: newY })
+        }
       }
     }
 
@@ -2008,14 +2808,15 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, dragStart, onUpdate, onUpdateMultiple, isMultiSelection, selectedElementLocation, element.id, element.x, element.y, element.width, element.height, saveSnapshot])
+  }, [isDragging, dragStart, scale, onUpdate, isMultiSelection, selectedElementLocation, element.id, element.width, element.height, saveSnapshot])
 
   useEffect(() => {
     if (!isResizing) return
 
     const handleMouseMove = (e: globalThis.MouseEvent): void => {
-      const deltaX = e.clientX - resizeStart.x
-      const deltaY = e.clientY - resizeStart.y
+      const currentScale = scale || 1
+      const deltaX = (e.clientX - resizeStart.x) / currentScale
+      const deltaY = (e.clientY - resizeStart.y) / currentScale
       
       const updates: Partial<Element> = {}
 
@@ -2073,51 +2874,8 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
-  }
-  }, [isResizing, resizeStart, onUpdate, saveSnapshot])
-
-  // Helper to calculate border values dynamically
-  const getHeaderBorderValues = (style: Record<string, unknown> | undefined) => {
-    const borderWidth = style?.headerBorderWidth ?? style?.borderWidth ?? 1
-    const borderType = style?.headerBorderType
-    
-    switch (borderType) {
-      case 'none':
-        return { top: 0, right: 0, bottom: 0, left: 0 }
-      case 'row':
-      case 'all':
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-      case 'columns':
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-      case 'top-bottom':
-        return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
-      case 'left-right':
-        return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
-      default:
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
     }
-  }
-  
-  const getCellBorderValues = (style: Record<string, unknown> | undefined) => {
-    const borderWidth = style?.borderWidth ?? 1
-    const borderType = style?.cellBorderType
-    
-    switch (borderType) {
-      case 'none':
-        return { top: 0, right: 0, bottom: 0, left: 0 }
-      case 'row':
-      case 'all':
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-      case 'cells':
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-      case 'top-bottom':
-        return { top: borderWidth, right: 0, bottom: borderWidth, left: 0 }
-      case 'left-right':
-        return { top: 0, right: borderWidth, bottom: 0, left: borderWidth }
-      default:
-        return { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth }
-    }
-  }
+  }, [isResizing, resizeStart, scale, onUpdate, saveSnapshot])
 
   const renderElement = () => {
     switch (element.type) {
@@ -2166,8 +2924,10 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         const textBorderStyle = element.style?.borderStyle || 'solid'
         const textBgColor = element.style?.backgroundColor || 'transparent'
 
+        const isElRelative = (element.positionMode || element.position || '').toUpperCase() === 'RELATIVE'
+        const resolvedElWidth = (isElRelative && effectiveWidth !== undefined) ? effectiveWidth : (element.width || 'auto')
         const textStyles: CSSProperties = {
-          width: element.width || 'auto',
+          width: resolvedElWidth,
           height: element.height || 'auto',
           fontSize: element.style?.fontSize || 12,
           fontWeight: element.style?.fontWeight || 'normal',
@@ -2238,29 +2998,36 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         )
       }
 
-            case 'page_break': {
+      case 'page_break': {
         const pbWidth = element.width === '100%' ? (pageSize.width - margins.left - margins.right) : (element.width || (pageSize.width - margins.left - margins.right))
         return (
           <div
+            className={`cursor-pointer select-none ${isSelected ? 'ring-2 ring-indigo-500 rounded' : ''}`}
             style={{
               width: pbWidth,
-              height: 20,
-              borderBottom: '4px dashed #999',
+              height: 24,
+              borderBottom: isSelected ? '3px dashed #6366f1' : '3px dashed #94a3b8',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              position: 'relative'
+              position: 'relative',
             }}
+            onMouseDown={handleMouseDown}
           >
-            <span style={{
-              background: 'white',
-              padding: '0 10px',
-              color: '#999',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              transform: 'translateY(10px)'
-            }}>
-              PAGE BREAK
+            <span
+              style={{
+                background: isSelected ? '#eef2ff' : 'white',
+                padding: '1px 10px',
+                color: isSelected ? '#4f46e5' : '#64748b',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                borderRadius: '4px',
+                border: isSelected ? '1px solid #818cf8' : '1px solid #cbd5e1',
+                transform: 'translateY(10px)',
+                pointerEvents: 'none',
+              }}
+            >
+              ✂ PAGE BREAK
             </span>
           </div>
         )
@@ -2335,6 +3102,7 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             style={{
               width: resolvedWidth,
               height: resolvedHeight,
+              boxSizing: 'border-box',
               backgroundColor: element.style?.fillColor || 'transparent',
               borderTopWidth: `${element.style?.borderTopWidth ?? borderWidth}px`,
               borderTopStyle: borderStyle,
@@ -2436,10 +3204,13 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
         )
       }
 
-      case 'image':
+      case 'image': {
+        const imageSource = element.source || element.url || element.value
         return (
           <div
-            className={`cursor-move select-none border-2 border-dashed border-gray-400 flex items-center justify-center ${
+            className={`cursor-move select-none border-2 border-dashed border-gray-400 flex items-center overflow-hidden ${
+              element.alignment === 'left' ? 'justify-start' : element.alignment === 'right' ? 'justify-end' : 'justify-center'
+            } ${
               isSelected ? 'ring-2 ring-primary-500' : ''
             }`}
             style={{
@@ -2448,13 +3219,19 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             }}
             onMouseDown={handleMouseDown}
           >
-            {element.source ? (
-              <img src={element.source} alt="" className="max-w-full max-h-full pointer-events-none" />
+            {imageSource ? (
+              <img
+                src={imageSource}
+                alt=""
+                className="w-full h-full pointer-events-none"
+                style={{ objectFit: (element.fit as any) || 'contain' }}
+              />
             ) : (
               <span className="text-gray-400 text-sm">🖼️ Image</span>
             )}
           </div>
         )
+      }
 
       case 'table': {
         try {
@@ -2682,30 +3459,43 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
       }
 
       case 'barcode': {
-        const barcodeType = element.barcodeType || 'qrcode'
-        
-        
-        const barcodeBinding = element.dataBinding || element.value || 'Sem dados'
-        
+        const barcodeType = ((element.barcodeType as string) || 'qrcode').toLowerCase()
+        const is2D = barcodeType === 'qrcode' || barcodeType === 'qr_code' || barcodeType === 'datamatrix' || barcodeType === 'data_matrix'
+        const barcodeBinding = (element.value as string) || (element.dataBinding as string) || (is2D ? 'https://openpdf.dev' : '123456789012')
+
         return (
           <div
-            className={`cursor-move select-none border-2 border-dashed border-gray-400 flex flex-col items-center justify-center bg-white ${
+            className={`cursor-move select-none border border-dashed border-slate-400 flex flex-col items-center justify-center bg-white p-1.5 overflow-hidden ${
               isSelected ? 'ring-2 ring-primary-500' : ''
             }`}
             style={{
-              width: element.width || 100,
-              height: element.height || 100,
+              width: element.width || (is2D ? 100 : 140),
+              height: element.height || (is2D ? 100 : 50),
             }}
             onMouseDown={handleMouseDown}
           >
-            <div className="text-3xl mb-1">
-              {barcodeType === 'qrcode' ? '⊞' : '|||'}
-            </div>
-            <span className="text-gray-500 text-xs text-center px-2 break-all">
-              {barcodeType === 'qrcode' ? 'QR Code' : 'Barcode'}
-            </span>
-            <span className="text-gray-400 text-xs text-center px-1 break-all mt-1 max-w-full overflow-hidden">
-              {element.dataBinding ? `{${element.dataBinding}}` : barcodeBinding}
+            {is2D ? (
+              <svg className="w-3/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 3h7v7H3V3zm2 2v3h3V5H5zm9-2h7v7h-7V3zm2 2v3h3V5h-3zM3 14h7v7H3v-7zm2 2v3h3v-3H5zm9-2h3v3h-3v-3zm4 0h3v3h-3v-3zm-2 3h2v2h-2v-2zm-2 2h3v2h-3v-2zm4 0h3v2h-3v-2z" />
+              </svg>
+            ) : (
+              <svg className="w-4/5 h-3/5 text-slate-900 shrink-0" viewBox="0 0 48 20" fill="currentColor" preserveAspectRatio="none">
+                <rect x="2" y="1" width="2" height="18" />
+                <rect x="6" y="1" width="1" height="18" />
+                <rect x="9" y="1" width="3" height="18" />
+                <rect x="14" y="1" width="1" height="18" />
+                <rect x="17" y="1" width="2" height="18" />
+                <rect x="21" y="1" width="4" height="18" />
+                <rect x="27" y="1" width="1" height="18" />
+                <rect x="30" y="1" width="2" height="18" />
+                <rect x="34" y="1" width="3" height="18" />
+                <rect x="39" y="1" width="1" height="18" />
+                <rect x="42" y="1" width="2" height="18" />
+                <rect x="45" y="1" width="1" height="18" />
+              </svg>
+            )}
+            <span className="text-[9px] font-mono text-slate-600 text-center truncate w-full px-1 mt-0.5 leading-tight">
+              {barcodeBinding}
             </span>
           </div>
         )
@@ -2723,6 +3513,9 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
               ? element.width
               : 400
         const loopHeight = typeof element.height === 'number' ? element.height : 150
+        const loopBorderWidth = element.style?.borderStyle === 'none' ? 0 : (element.style?.borderWidth ?? element.style?.strokeWidth ?? 2)
+        const innerLoopWidth = Math.max(0, loopWidth - (loopBorderWidth * 2))
+        const innerLoopHeight = Math.max(0, loopHeight - (loopBorderWidth * 2))
         
         return (
           <div
@@ -2732,11 +3525,15 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
             style={{
               width: loopWidth,
               height: loopHeight,
-              backgroundColor: 'rgba(139, 92, 246, 0.03)',
-              borderWidth: element.style?.borderWidth || 2,
+              boxSizing: 'border-box',
+              backgroundColor:
+                (element.style?.fillColor || element.style?.backgroundColor) === 'transparent'
+                  ? 'transparent'
+                  : (element.style?.fillColor || element.style?.backgroundColor || 'transparent'),
+              borderWidth: loopBorderWidth,
               borderStyle: (element.style?.borderStyle as string) || 'dashed',
-              borderColor: element.style?.borderColor || '#8b5cf6',
-              borderRadius: 4,
+              borderColor: element.style?.borderColor || element.style?.strokeColor || '#8b5cf6',
+              borderRadius: element.style?.cornerRadius ?? 4,
             }}
             onMouseDown={handleMouseDown}
           >
@@ -2777,8 +3574,8 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                       child={child} 
                       loopId={element.id}
                       location={location}
-                      loopWidth={loopWidth}
-                      loopHeight={loopHeight}
+                      loopWidth={innerLoopWidth}
+                      loopHeight={innerLoopHeight}
                     />
                   ))}
                 </>
@@ -2805,7 +3602,36 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                   : typeof element.width === 'number'
                     ? element.width
                     : 400
-              const containerHeight = typeof element.height === 'number' ? element.height : 150
+              const headerH = template.pageSettings.header?.height || 0
+              const footerH = template.pageSettings.footer?.height || 0
+              const sectionMaxH = location === 'header'
+                ? headerH
+                : location === 'footer'
+                ? footerH
+                : Math.max(0, pageSize.height - margins.top - margins.bottom - headerH - footerH)
+              const containerStartY = typeof effectiveY === 'number' ? effectiveY : (typeof element.y === 'number' ? element.y : 0)
+              const maxAllowedContainerH = Math.max(30, sectionMaxH - containerStartY)
+
+              const isFixed = element.heightMode === 'fixed' || element.autoHeight === false
+              const baseHeight = element.height === '100%'
+                ? sectionMaxH
+                : typeof element.height === 'number' ? element.height : 150
+              const containerHeight = Math.min(
+                isFixed
+                  ? baseHeight
+                  : Math.max(
+                      baseHeight,
+                      (containerElements || []).reduce((max: number, ch: Element) => {
+                        const cy = typeof ch.y === 'number' ? ch.y : 0
+                        const chH = typeof ch.height === 'number' ? ch.height : 25
+                        return Math.max(max, cy + chH + 15)
+                      }, 0)
+                    ),
+                maxAllowedContainerH
+              )
+              const containerBorderWidth = element.style?.borderStyle === 'none' ? 0 : (element.style?.borderWidth ?? element.style?.strokeWidth ?? 2)
+              const innerContainerWidth = Math.max(0, containerWidth - (containerBorderWidth * 2))
+              const innerContainerHeight = Math.max(0, containerHeight - (containerBorderWidth * 2))
 
               return (
                 <div
@@ -2815,11 +3641,15 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                   style={{
                     width: containerWidth,
                     height: containerHeight,
-                    backgroundColor: 'rgba(139, 92, 246, 0.03)',
-                    borderWidth: element.style?.borderWidth || 2,
+                    boxSizing: 'border-box',
+                    backgroundColor:
+                      (element.style?.fillColor || element.style?.backgroundColor) === 'transparent'
+                        ? 'transparent'
+                        : (element.style?.fillColor || element.style?.backgroundColor || 'transparent'),
+                    borderWidth: containerBorderWidth,
                     borderStyle: (element.style?.borderStyle as string) || 'dashed',
-                    borderColor: element.style?.borderColor || '#8b5cf6',
-                    borderRadius: 4,
+                    borderColor: element.style?.borderColor || element.style?.strokeColor || '#8b5cf6',
+                    borderRadius: element.style?.cornerRadius ?? 4,
                   }}
                   onMouseDown={handleMouseDown}
                 >
@@ -2843,6 +3673,18 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                   </div>
 */}
 
+                  {isSelected && (
+                    <div className="absolute top-1 right-1 pointer-events-none z-20">
+                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded shadow-sm border ${
+                        isFixed
+                          ? 'bg-amber-950/90 text-amber-300 border-amber-700/70'
+                          : 'bg-indigo-950/90 text-indigo-300 border-indigo-700/70'
+                      }`}>
+                        {isFixed ? 'Fixed-Height' : 'Auto-Height'}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="relative w-full h-full">
                     {containerElements.length === 0 ? (
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -2853,16 +3695,58 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
                     ) : (
                       <>
 
-                        {containerElements.map((child: Element) => (
-                          <ContainerChildElement
-                            key={child.id}
-                            child={child}
-                            containerId={element.id}
-                            location={location}
-                            containerWidth={containerWidth}
-                            containerHeight={containerHeight}
-                          />
-                        ))}
+                        {(() => {
+                          let containerFlowY = 0
+                          let lastChildX: number | undefined = undefined
+                          let lastChildWidth: number | string | undefined = undefined
+                          return containerElements.map((child: Element) => {
+                            const isRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
+                            let effectiveChildY: number | undefined = undefined
+                            let effectiveChildX: number | undefined = undefined
+                            let effectiveChildWidth: number | string | undefined = undefined
+
+                            if (isRelative) {
+                              const isChildHeightFull = child.height === '100%'
+                              const offset = isChildHeightFull ? 0 : (typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 0)
+                              if (containerFlowY === 0) {
+                                effectiveChildY = isChildHeightFull ? 0 : (typeof child.y === 'number' && child.y > 0 ? child.y : offset)
+                              } else {
+                                effectiveChildY = containerFlowY + offset
+                                if (lastChildX !== undefined) {
+                                  effectiveChildX = lastChildX
+                                }
+                                if (lastChildWidth !== undefined) {
+                                  effectiveChildWidth = lastChildWidth
+                                }
+                              }
+                            }
+
+                            const chHeight = typeof child.height === 'number' ? child.height : 25
+                            if (isRelative && effectiveChildY !== undefined) {
+                              containerFlowY = effectiveChildY + chHeight
+                              lastChildX = effectiveChildX !== undefined ? effectiveChildX : child.x
+                              lastChildWidth = effectiveChildWidth !== undefined ? effectiveChildWidth : child.width
+                            } else {
+                              containerFlowY = Math.max(containerFlowY, (child.y || 0) + chHeight)
+                              lastChildX = child.x
+                              lastChildWidth = child.width
+                            }
+
+                            return (
+                              <ContainerChildElement
+                                key={child.id}
+                                child={child}
+                                effectiveY={effectiveChildY}
+                                effectiveX={effectiveChildX}
+                                effectiveWidth={effectiveChildWidth}
+                                containerId={element.id}
+                                location={location}
+                                containerWidth={innerContainerWidth}
+                                containerHeight={innerContainerHeight}
+                              />
+                            )
+                          })
+                        })()}
                       </>
                     )}
                   </div>
@@ -2903,8 +3787,9 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
       zIndex: 10,
     }
 
-    const width = typeof element.width === 'string' ? 100 : (element.width || 100)
-    const height = typeof element.height === 'string' ? 100 : (element.height || 100)
+    const dims = getElementDimensions()
+    const width = dims.width
+    const height = dims.height
 
     return (
       <>
@@ -2965,21 +3850,40 @@ function CanvasElement({ element, isSelected, onSelect, onUpdate, margins, pageS
     <div
       className="absolute"
       style={{
-        left: element.x,
-        top: element.y,
+        left: element.width === '100%' ? 0 : (effectiveX !== undefined ? effectiveX : element.x),
+        top: element.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : element.y),
+        ...(element.width === '100%' ? { width: '100%' } : (effectiveWidth !== undefined && element.width === undefined ? { width: effectiveWidth } : {})),
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!selectedElementIds.includes(element.id)) {
+          onSelect(false)
+        }
+        useUIStore.getState().openContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          targetType: element.type === 'container' ? 'container' : 'element',
+          elementId: element.id,
+          location,
+        })
       }}
     >
-      <div className="relative">
+      <div ref={elementWrapperRef} className="relative">
         {renderElement()}
         {renderResizeHandles()}
         
         
         {elementGroup && (
           <div
-            className="absolute -top-1 -right-1 z-20 pointer-events-none"
-            title={`Group: ${elementGroup.name}${elementGroup.printCondition ? `\nCondition: ${elementGroup.printCondition}` : ''}`}
+            className="absolute -top-1 -right-1 z-20 pointer-events-auto cursor-pointer group/badge"
+            title={`Grupo: ${elementGroup.name}${elementGroup.printCondition ? `\nCondição: ${elementGroup.printCondition}` : ''}\nClique para editar grupo`}
+            onClick={(e) => {
+              e.stopPropagation()
+              useTemplateStore.getState().selectGroup(elementGroup.id, location)
+            }}
           >
-            <div className="bg-purple-500 text-white p-1 rounded-full shadow-lg">
+            <div className="bg-purple-500 hover:bg-purple-600 text-white p-1 rounded-full shadow-lg transition transform hover:scale-110">
               <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="3" y="3" width="7" height="7" rx="1" />
                 <rect x="14" y="3" width="7" height="7" rx="1" />

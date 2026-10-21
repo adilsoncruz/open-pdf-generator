@@ -13,7 +13,10 @@ hero:
       text: Get Started
       link: /lib/guide/getting-started
     - theme: alt
-      text: View on GitHub
+      text: 💖 Sponsor
+      link: https://github.com/sponsors/adilsoncruz
+    - theme: alt
+      text: GitHub
       link: https://github.com/adilsoncruz/open-pdf-generator
 
 features:
@@ -27,7 +30,7 @@ features:
   - icon:
       src: /icons/editor.svg
     title: Visual Template Editor
-    details: Desktop application for creating PDF templates visually with drag-and-drop, real-time preview, and data binding.
+    details: Desktop application with the Studio Slate design system, multi-tabs, drag-and-drop canvas, and real-time PDF preview.
     link: /editor/index.html
     linkText: Explore Editor
 
@@ -40,13 +43,13 @@ features:
 
   - icon:
       src: /icons/code.svg
-    title: Data Binding
-    details: Use mustache syntax to bind template elements to dynamic data from JSON with loops and conditionals.
+    title: Data Binding & Conditions
+    details: Use mustache syntax and pipes to format data, plus boolean conditions to dynamically show or hide elements and groups.
 
   - icon:
       src: /icons/grid.svg
-    title: Rich Elements
-    details: Text, images, tables, rectangles, lines, barcodes, QR codes, and more with customizable properties.
+    title: Rich Elements & Layouts
+    details: Containers, tables, text, loops, page breaks, shapes, barcodes, watermarks, and summary pages with full styling.
 
   - icon:
       src: /icons/plug.svg
@@ -159,5 +162,28 @@ dependencies {
 | [Editor Documentation](/editor/index.html) | Create templates visually with the desktop app |
 | [Examples](/lib/examples/) | Real-world template examples |
 
+</div>
+
+## Support & Sponsor
+
+Open PDF Generator is completely free and open source. If this project helps you or your team build better documents, consider sponsoring continuous development:
+
+<div style="margin: 20px 0; display: flex; gap: 12px; flex-wrap: wrap;">
+  <a 
+    href="https://github.com/sponsors/adilsoncruz" 
+    target="_blank"
+    rel="noopener noreferrer"
+    style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, #ec4899, #db2777); color: white; border-radius: 10px; font-weight: 600; text-decoration: none; box-shadow: 0 4px 14px rgba(219, 39, 119, 0.35);"
+  >
+    💖 Sponsor on GitHub
+  </a>
+  <a 
+    href="https://buymeacoffee.com/adilsoncruz" 
+    target="_blank"
+    rel="noopener noreferrer"
+    style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, #FFDD00, #FBBF24); color: #000000; border-radius: 10px; font-weight: 600; text-decoration: none; box-shadow: 0 4px 14px rgba(251, 191, 36, 0.35);"
+  >
+    ☕ Buy Me a Coffee
+  </a>
 </div>
 

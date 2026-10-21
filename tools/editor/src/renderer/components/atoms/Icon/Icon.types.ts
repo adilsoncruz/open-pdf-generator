@@ -25,6 +25,7 @@ export type IconName =
   | 'close'
   | 'check'
   | 'chevron-down'
+  | 'chevron-up'
   | 'chevron-left'
   | 'chevron-right'
   | 'folder'

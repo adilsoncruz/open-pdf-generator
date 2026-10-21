@@ -3,6 +3,12 @@ import type { SVGProps } from 'react'
 type IconComponent = (props: SVGProps<SVGSVGElement>) => JSX.Element
 
 export const icons: Record<string, IconComponent> = {
+  search: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
   link: (props) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
@@ -175,6 +181,11 @@ export const icons: Record<string, IconComponent> = {
   'chevron-down': (props) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
       <polyline points="6 9 12 15 18 9" />
+    </svg>
+  ),
+  'chevron-up': (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <polyline points="18 15 12 9 6 15" />
     </svg>
   ),
   'chevron-right': (props) => (

@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useTemplateStore, type Element } from '../../../store/templateStore'
+import { useTemplateStore, type Element, flattenElements } from '../../../store/templateStore'
 import { useUIStore } from '../../../store/uiStore'
 import { usePreviewStore } from '../../../store/previewStore'
+import { Icon } from '../../atoms'
 import {
   Toolbar,
   Sidebar,
   Canvas,
   PropertiesPanel,
   DataPanel,
+  SchemaPanel,
   PDFPreview,
   HelpModal,
   ElementsToolbar,
+  StatusBar,
 } from '../../organisms'
+import ContextMenu from '../../ContextMenu'
 import type { ToolbarRef } from '../../organisms'
 
 /**
@@ -25,6 +29,7 @@ import type { ToolbarRef } from '../../organisms'
  */
 export function EditorPage() {
   const [showDataPanel, setShowDataPanel] = useState(false)
+  const [showSchemaPanel, setShowSchemaPanel] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
   const [helpModalInitialTab, setHelpModalInitialTab] = useState<'text' | 'conditions'>('text')
   
@@ -50,9 +55,11 @@ export function EditorPage() {
     selectedLoopChildId,
     selectedLoopParentId,
     deleteLoopChildElement,
+    isSidebarMinimized,
+    setSidebarMinimized,
   } = useTemplateStore()
 
-  const { theme } = useUIStore()
+  const { theme, toggleTheme, sidebarTab, setSidebarTab } = useUIStore()
   const { mode: previewMode, setMode: setPreviewMode, clearPreview } = usePreviewStore()
   const toolbarRef = useRef<ToolbarRef>(null)
 
@@ -135,12 +142,16 @@ export function EditorPage() {
             template.pageSettings.bodyBackground
           ) {
             allElements = template.pageSettings.bodyBackground.elements
+          } else if (selectedElementLocation === 'summary' && template.summaryPage) {
+            allElements = template.summaryPage.elements
           } else {
             allElements = template.page
           }
 
+          const flatElements = flattenElements(allElements)
+
           selectedElementIds.forEach((id) => {
-            const currentElement = allElements.find((el) => el.id === id)
+            const currentElement = flatElements.find((el) => el.id === id)
             if (currentElement) {
               const updates: Partial<Element> = {}
               switch (e.key) {
@@ -166,7 +177,10 @@ export function EditorPage() {
 
       // Delete/Backspace: delete selected elements
       if ((e.key === 'Delete' || e.key === 'Backspace') && !isInputField) {
-        if (selectedContainerChildId && selectedContainerParentId) {
+        if (selectedElementIds.length > 1) {
+          e.preventDefault()
+          deleteSelectedElements()
+        } else if (selectedContainerChildId && selectedContainerParentId) {
           e.preventDefault()
           deleteLoopChildElement(selectedContainerParentId, selectedContainerChildId, selectedElementLocation)
         } else if (selectedLoopChildId && selectedLoopParentId) {
@@ -183,6 +197,42 @@ export function EditorPage() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && !isInputField) {
         e.preventDefault()
         selectAllElements()
+        return
+      }
+
+      // Ctrl+G / Cmd+G: Group / Ungroup
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g' && !isInputField) {
+        e.preventDefault()
+        const store = useTemplateStore.getState()
+        const currentLoc = store.selectedElementLocation || store.currentSection
+        const groups = (() => {
+          if (currentLoc === 'header') return store.template.pageSettings.header?.groups || []
+          if (currentLoc === 'footer') return store.template.pageSettings.footer?.groups || []
+          if (currentLoc === 'bodyBackground') return store.template.pageSettings.bodyBackground?.groups || []
+          if (currentLoc === 'summary') return store.template.summaryPage?.groups || []
+          return store.template.groups || []
+        })()
+
+        if (e.shiftKey) {
+          // Ungroup
+          const activeGrp = groups.find(
+            (g) => g.id === store.selectedGroupId || store.selectedElementIds.some((id) => g.elementIds.includes(id))
+          )
+          if (activeGrp) {
+            store.ungroupElements(activeGrp.id, currentLoc)
+          }
+        } else {
+          // Group
+          const activeGrp = groups.find(
+            (g) => g.id === store.selectedGroupId || store.selectedElementIds.some((id) => g.elementIds.includes(id))
+          )
+          if (!activeGrp && store.selectedElementIds.length >= 2) {
+            const name = prompt('Nome do Grupo:', `Grupo ${groups.length + 1}`)
+            if (name && name.trim()) {
+              store.createGroup(name.trim(), store.selectedElementIds, currentLoc)
+            }
+          }
+        }
         return
       }
 
@@ -234,6 +284,17 @@ export function EditorPage() {
         }
       }
 
+      // Ctrl+S / Cmd+S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        if (e.shiftKey) {
+          toolbarRef.current?.handleSaveAs()
+        } else {
+          toolbarRef.current?.handleSave()
+        }
+        return
+      }
+
       // Ctrl+Z: Undo
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !isInputField) {
         e.preventDefault()
@@ -274,7 +335,8 @@ export function EditorPage() {
 
   // Menu events from Electron
   useEffect(() => {
-    window.electronAPI.onMenuUndo(() => {
+    if (!window.electronAPI) return
+    window.electronAPI.onMenuUndo?.(() => {
       if (canUndo()) undo()
     })
     window.electronAPI.onMenuRedo(() => {
@@ -350,6 +412,115 @@ export function EditorPage() {
 
         {/* Main Content */}
         <div className="flex flex-1 overflow-hidden">
+          {/* Left Vertical Icon Rail (Estilo Figma / Studio Slate) */}
+          <div className="w-12 bg-slate-950 border-r border-slate-800 flex flex-col items-center py-3 justify-between select-none shrink-0 z-20">
+            {/* Top Navigation Icons */}
+            <div className="flex flex-col items-center gap-4 text-slate-400">
+              <button 
+                onClick={() => {
+                  if (sidebarTab === 'document' && !isSidebarMinimized) {
+                    setSidebarMinimized(true)
+                  } else {
+                    setSidebarTab('document')
+                    setSidebarMinimized(false)
+                    clearSelection()
+                  }
+                }}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
+                  sidebarTab === 'document' && !isSidebarMinimized
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+                title="Propriedades do Documento"
+              >
+                <Icon name="file-text" size="sm" />
+              </button>
+              <button 
+                onClick={() => {
+                  if (sidebarTab === 'elements' && !isSidebarMinimized) {
+                    setSidebarMinimized(true)
+                  } else {
+                    setSidebarTab('elements')
+                    setSidebarMinimized(false)
+                  }
+                }}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
+                  sidebarTab === 'elements' && !isSidebarMinimized
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+                title="Biblioteca de Componentes"
+              >
+                <Icon name="layers" size="sm" />
+              </button>
+              <button 
+                onClick={() => setShowSchemaPanel(true)}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm relative ${
+                  showSchemaPanel
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+                title="Validação de Schema (JSON Schema)"
+              >
+                <span className="font-mono text-xs font-semibold">{`{ }`}</span>
+                {template.schema && (
+                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                )}
+              </button>
+              <button 
+                onClick={() => {
+                  if (sidebarTab === 'history' && !isSidebarMinimized) {
+                    setSidebarMinimized(true)
+                  } else {
+                    setSidebarTab('history')
+                    setSidebarMinimized(false)
+                    clearSelection()
+                  }
+                }}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
+                  sidebarTab === 'history' && !isSidebarMinimized
+                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+                title="Histórico / Versões"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Bottom Actions: Theme, Help, Settings */}
+            <div className="flex flex-col items-center gap-3 text-slate-400">
+              <button
+                onClick={toggleTheme}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
+                title={theme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
+              >
+                <Icon name={theme === 'dark' ? 'sun' : 'moon'} size="sm" />
+              </button>
+              <button 
+                onClick={() => setShowHelpModal(true)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
+                title="Ajuda e Documentação"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              <button 
+                onClick={() => toolbarRef.current?.openSettings()}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
+                title="Configurações"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
           {/* Left Sidebar */}
           <Sidebar />
 
@@ -370,15 +541,18 @@ export function EditorPage() {
             </div>
           )}
 
-          {/* Right Toolbar - Add Elements */}
-          <ElementsToolbar />
-
-          {/* Right Panel - Properties */}
-          {showPropertiesPanel && <PropertiesPanel />}
+          {/* Right Panel - Properties (exibido somente na aba de elementos/componentes) */}
+          {sidebarTab === 'elements' && <PropertiesPanel />}
         </div>
+
+        {/* Status Bar */}
+        <StatusBar />
 
         {/* Data Panel Modal */}
         {showDataPanel && <DataPanel onClose={() => setShowDataPanel(false)} />}
+
+        {/* Schema Validation Panel Modal */}
+        {showSchemaPanel && <SchemaPanel onClose={() => setShowSchemaPanel(false)} />}
 
         {/* Help Modal */}
         <HelpModal
@@ -386,6 +560,9 @@ export function EditorPage() {
           onClose={() => setShowHelpModal(false)}
           initialTab={helpModalInitialTab}
         />
+
+        {/* Global Context Menu */}
+        <ContextMenu />
       </div>
     </>
   )

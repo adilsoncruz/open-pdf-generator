@@ -304,15 +304,23 @@ data class RectangleStyle(
     val cornerRadius: Float = 0f,
     val penStyle: String? = null,
     val borderStyle: String? = null,
+    val backgroundColor: String? = null,
+    val strokeColor: String? = null,
+    val strokeWidth: Float? = null,
 ) {
+    fun getEffectiveFillColor(): String? = fillColor ?: backgroundColor
+
     fun getEffectivePenStyle(): String? = penStyle ?: borderStyle
 
+    fun getEffectiveBorderWidth(): Float = strokeWidth ?: borderWidth
+
     fun getEffectiveBorderColor(): String? {
-        return borderColor ?: if (borderWidth > 0) "#000000" else null
+        return borderColor ?: strokeColor ?: if (getEffectiveBorderWidth() > 0) "#000000" else null
     }
 
     fun shouldDrawBorder(): Boolean {
-        return borderColor != null || borderWidth > 0
+        if (getEffectivePenStyle()?.lowercase() == "none") return false
+        return borderColor != null || strokeColor != null || getEffectiveBorderWidth() > 0
     }
 }
 
@@ -388,14 +396,15 @@ data class LineStyle(
 data class BarcodeElement(
     override val type: String = "barcode",
     override val id: String,
-    override val x: Float,
-    override val y: Float,
+    override val x: Float = 0f,
+    override val y: Float = 0f,
     override val positionMode: PositionMode? = null,
     override val relativeOffsetY: Float? = null,
-    val width: Float,
-    val height: Float,
-    val barcodeType: String = "qrcode",
-    val dataBinding: String,
+    val width: Float = 100f,
+    val height: Float = 100f,
+    val barcodeType: String? = "qrcode",
+    val dataBinding: String? = "",
+    val value: String? = null,
     val style: BarcodeStyle? = null,
     val printCondition: String? = null,
 ) : Element {
@@ -405,9 +414,6 @@ data class BarcodeElement(
 
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
-        if (dataBinding.isBlank()) {
-            errors.add(ValidationError(id, "BarcodeElement deve ter dataBinding"))
-        }
         val supportedTypes =
             listOf(
                 "qrcode", "qr_code",
@@ -420,7 +426,8 @@ data class BarcodeElement(
                 "pdf417",
                 "datamatrix", "data_matrix",
             )
-        if (barcodeType.lowercase() !in supportedTypes) {
+        val effectiveType = (barcodeType ?: "qrcode").lowercase()
+        if (effectiveType !in supportedTypes) {
             errors.add(
                 ValidationError(
                     id,
@@ -517,9 +524,15 @@ data class ContainerElement(
     override val y: Float = 0f,
     override val relativeOffsetY: Float? = null,
     val width: Any = 400f,
-    val height: Float = 50f,
+    val height: Any = 50f,
     val elements: List<Element>,
+    val style: RectangleStyle? = null,
+    val printCondition: String? = null,
+    val heightMode: String? = "auto",
+    val autoHeight: Boolean? = true,
 ) : Element {
+    fun isAutoHeight(): Boolean = (heightMode ?: "auto").equals("auto", ignoreCase = true) && (autoHeight != false)
+
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {
             is Number -> width.toFloat()
@@ -532,6 +545,21 @@ data class ContainerElement(
                 }
             }
             else -> containerWidth
+        }
+    }
+
+    fun resolveHeight(containerHeight: Float): Float {
+        return when (height) {
+            is Number -> height.toFloat()
+            is String -> {
+                if (height.endsWith("%")) {
+                    val percentage = height.removeSuffix("%").toFloatOrNull() ?: 100f
+                    containerHeight * (percentage / 100f)
+                } else {
+                    height.toFloatOrNull() ?: containerHeight
+                }
+            }
+            else -> containerHeight
         }
     }
 

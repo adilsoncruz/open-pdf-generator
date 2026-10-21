@@ -114,12 +114,13 @@ export default function ElementsToolbar() {
       case 'barcode':
         element = {
           ...baseElement,
-          width: '100%',
+          width: 100,
           height: 100,
-          barcodeType: 'qrcode', // 'qrcode' ou 'barcode'
-          dataBinding: '', 
+          barcodeType: 'qrcode',
+          value: 'https://openpdf.dev',
+          dataBinding: 'https://openpdf.dev',
           style: {
-            errorCorrection: 'M', // L, M, Q, H (para QR Code)
+            errorCorrection: 'M',
           },
         }
         break
@@ -193,6 +194,8 @@ export default function ElementsToolbar() {
           x: 0,
           width: 400,
           height: 150,
+          heightMode: 'auto',
+          autoHeight: true,
           positionMode: 'RELATIVE',
           relativeOffsetY: 0,
           elements: [],

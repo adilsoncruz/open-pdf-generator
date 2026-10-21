@@ -8,6 +8,7 @@ import { useTranslation } from '../i18n'
 import { Icon, Badge, Button } from './atoms'
 import { MenuItem, DropdownMenu, IconButton } from './molecules'
 import { TabBar } from './TabBar'
+import { StudioLogo } from './pages/LoadingPage'
 
 // CLI status interface
 interface CLIStatus {
@@ -38,6 +39,7 @@ export interface ToolbarRef {
   handleSaveAs: () => void
   handleExport: () => void
   handleGeneratePDF: () => void
+  openSettings: () => void
 }
 
 const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTogglePreview, previewMode = 'hidden' }, ref) => {
@@ -50,9 +52,13 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     setTemplate,
     setCurrentFilePath,
     markClean,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useTemplateStore()
   
-  const { theme, toggleTheme } = useUIStore()
+  const { theme, toggleTheme, zoom, setZoom, snapToGuides, toggleSnapToGuides } = useUIStore()
   const { mode: previewModeFromStore, triggerRefresh, refreshTrigger } = usePreviewStore()
   
   // Use previewMode from store if not passed as prop
@@ -71,6 +77,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   
   // Check CLI status on mount
   const checkCLIStatus = useCallback(async () => {
+    if (!window.electronAPI?.getCLIStatus) return
     try {
       const status = await window.electronAPI.getCLIStatus()
       setCLIStatus(status)
@@ -85,6 +92,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
   useEffect(() => {
     const loadVersions = async () => {
+      if (!window.electronAPI?.getAppVersions) return
       try {
         const versions = await window.electronAPI.getAppVersions()
         setAppVersions(versions)
@@ -157,60 +165,21 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
   }
 
   const handleNew = () => {
-
-    useTabStore.getState().addTab({
-      name: 'New Template',
-      path: null,
-      isDirty: false,
-      stateSnapshot: {
-        ...useTemplateStore.getState(),
-        template: {
-          version: '1.0',
-          metadata: {
-            name: 'New Template',
-        description: '',
-        author: '',
-        created: new Date().toISOString(),
-        modified: new Date().toISOString(),
-        tags: [],
-      },
-      pageSettings: {
-        size: 'A4',
-        orientation: 'portrait',
-        margins: { top: 30, right: 30, bottom: 30, left: 30 },
-      },
-      page: [],
-        },
-        currentFilePath: null,
-        isDirty: false,
-        history: [],
-        historyIndex: 0,
-        selectedElementIds: [],
-      }
-    })
-    setCurrentFilePath(null)
+    useTabStore.getState().createNewTemplateTab()
   }
 
   const handleOpen = async () => {
-      console.log("handleOpen 0")
-    console.log("handleOpen 0.1")
     // Loop to keep file dialog open until valid template or user cancels
     let keepTrying = true
     while (keepTrying) {
-        console.log("handleOpen 0.1.1")
-
       const result = await window.electronAPI.openFile()
-       console.log("handleOpen 0.2")
       if (!result) {
         // User cancelled the file dialog
         break
       }
-      console.log("handleOpen 1.0")
       try {
         // First, try to parse JSON to catch syntax errors
-        console.log("handleOpen 1")
         const loadedTemplate = JSON.parse(result.content)
-        console.log("handleOpen 2")
         // Always do basic structural validation first (CLI may not validate structure properly)
         let structuralError = ''
         if (!loadedTemplate.version) {
@@ -220,15 +189,12 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         } else if (!loadedTemplate.elements && !loadedTemplate.page) {
           structuralError = t.validation.missingElements
         }
-        console.log("handleOpen 3")
         if (structuralError) {
           keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${structuralError}\n\n${t.validation.selectAnotherFile}`)
           continue
         }
-        console.log("handleOpen 4")
         // Validate template using CLI (if available) for deeper validation
         const validation = await window.electronAPI.validateTemplate(result.path)
-        console.log("handleOpen 5")
         if (!validation.valid) {
           // CLI validation failed - show friendly error message
           if (validation.errorCode !== 'CLI_NOT_INSTALLED' && validation.errorCode !== 'JAVA_NOT_INSTALLED') {
@@ -238,20 +204,26 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
           // If CLI not installed, we already did structural validation above, so proceed
         }
         
-        // Valid template - load it and exit loop
+        // Valid template - open as new tab
+        const tabTitle = result.convertedFromJasper
+          ? 'Converted Template'
+          : result.path.split(/[/\\]/).pop() || loadedTemplate.metadata?.name || 'Opened Template'
+
         useTabStore.getState().addTab({
-          name: loadedTemplate.metadata?.name || 'Opened Template',
+          name: tabTitle,
           path: result.convertedFromJasper ? null : result.path,
           isDirty: false,
           stateSnapshot: {
-            ...useTemplateStore.getState(),
             template: loadedTemplate,
             currentFilePath: result.convertedFromJasper ? null : result.path,
             isDirty: false,
             history: [loadedTemplate],
             historyIndex: 0,
             selectedElementIds: [],
-          }
+            selectedElementLocation: 'body',
+            selectedGroupId: null,
+            currentSection: 'body',
+          },
         })
         if (result.convertedFromJasper) {
           alert('Template JASPER (.jrxml) convertido para JSON. Use "Save As" para salvar o template convertido.')
@@ -271,6 +243,11 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
       const result = await window.electronAPI.writeFile(currentFilePath, content)
       if (result.success) {
         markClean()
+        useTabStore.getState().updateActiveTab({
+          path: currentFilePath,
+          name: currentFilePath.split(/[/\\]/).pop() || 'template.json',
+          isDirty: false,
+        })
         // Update preview if open
         if (effectivePreviewMode !== 'hidden') {
           triggerRefresh()
@@ -285,12 +262,18 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
   const handleSaveAs = async () => {
     const content = JSON.stringify(template, null, 2)
-    const fileName = template.metadata.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json'
+    const rawName = template?.metadata?.name || 'template'
+    const fileName = rawName.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json'
 
     const result = await window.electronAPI.saveFile(content, fileName)
     if (result) {
       setCurrentFilePath(result)
       markClean()
+      useTabStore.getState().updateActiveTab({
+        path: result,
+        name: result.split(/[/\\]/).pop() || fileName,
+        isDirty: false,
+      })
       // Update preview if open
       if (effectivePreviewMode !== 'hidden') {
         triggerRefresh()
@@ -300,7 +283,8 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
   const handleExport = async () => {
     const content = JSON.stringify(template, null, 2)
-    const fileName = template.metadata.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json'
+    const rawName = template?.metadata?.name || 'template'
+    const fileName = rawName.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json'
 
     await window.electronAPI.saveFile(content, fileName)
   }
@@ -372,7 +356,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
             'https://adoptium.net/'
           )
         } else {
-          alert(`${t.pdf.error}: ${getErrorMessage(result.errorCode)}`)
+          alert(`${t.pdf.error}:\n\n${result.cliError || getErrorMessage(result.errorCode)}`)
         }
       }
     } catch (error) {
@@ -387,103 +371,135 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     handleSave,
     handleSaveAs,
     handleExport,
-    handleGeneratePDF
+    handleGeneratePDF,
+    openSettings: () => setShowCLIModal(true),
   }))
 
   return (
-    <div className="theme-bg-secondary border-b theme-border px-4 py-2 flex items-center justify-between">
-      <div className="flex items-center space-x-2 flex-1 min-w-0 mr-4">
+    <div className="bg-slate-900 border-b border-slate-800 px-4 py-2 flex items-center justify-between h-14 text-slate-200">
+      {/* 1. SEÇÃO ESQUERDA: Logo + Menu Arquivo + Nome do Template + Status Salvo */}
+      <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2 pr-2 border-r border-slate-800">
+          <StudioLogo className="w-7 h-7 rounded-lg shadow-sm shadow-indigo-500/30" />
+          <span className="text-xs font-semibold tracking-wider uppercase text-slate-300">
+            Open PDF
+          </span>
+        </div>
+
+        {/* Menu Arquivo */}
+        <DropdownMenu
+          isOpen={showFileMenu}
+          onOpenChange={setShowFileMenu}
+          trigger={
+            <button
+              className="px-2.5 py-1 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded transition flex items-center gap-1.5"
+              title={t.toolbar.file}
+            >
+              <Icon name="file-text" size="sm" />
+              <span>{t.toolbar.file}</span>
+              <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          }
+        >
+          <MenuItem shortcut="Ctrl+N" onClick={() => { handleNew(); setShowFileMenu(false) }}>
+            {t.toolbar.new}
+          </MenuItem>
+          <MenuItem shortcut="Ctrl+O" onClick={() => { handleOpen(); setShowFileMenu(false) }}>
+            {t.toolbar.open}
+          </MenuItem>
+          <div className="border-t border-slate-800 my-1" />
+          <MenuItem shortcut="Ctrl+S" onClick={() => { handleSave(); setShowFileMenu(false) }}>
+            {t.toolbar.save}
+          </MenuItem>
+          <MenuItem shortcut="Ctrl+Shift+S" onClick={() => { handleSaveAs(); setShowFileMenu(false) }}>
+            {t.toolbar.saveAs}
+          </MenuItem>
+          <div className="border-t border-slate-800 my-1" />
+          <MenuItem onClick={() => { handleExport(); setShowFileMenu(false) }}>
+            {t.toolbar.export}
+          </MenuItem>
+        </DropdownMenu>
+
+        {/* Nome do Documento */}
+        <div className="flex items-center gap-2 bg-slate-950/60 px-2.5 py-1 rounded border border-slate-800">
+          <span className="text-xs text-slate-300 font-mono truncate max-w-[180px]">
+            {currentFilePath ? currentFilePath.split('/').pop() : template?.metadata?.name || 'template.json'}
+          </span>
+          <button
+            onClick={handleSave}
+            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer ${
+              isDirty
+                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20'
+                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+            }`}
+            title="Salvar template (Ctrl+S / Cmd+S)"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            <span>{isDirty ? t.common.unsaved : 'Salvo'}</span>
+          </button>
+        </div>
         
-        <div className="flex items-center gap-3 pr-4 border-r theme-border">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-glow-sm">
-            <Icon name="file-text" size="md" className="text-white" />
-          </div>
-          <h1 className="text-lg font-semibold theme-text hidden lg:block whitespace-nowrap">
-            PDF Template Editor
-          </h1>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex items-center space-x-1 pr-2 border-r theme-border flex-shrink-0">
-           <IconButton icon="plus" size="sm" onClick={handleNew} title={t.toolbar.new} variant="ghost" />
-           <IconButton icon="folder" size="sm" onClick={handleOpen} title={t.toolbar.open} variant="ghost" />
-           <IconButton icon="save" size="sm" onClick={handleSave} title={t.toolbar.save} variant="ghost" />
-           <IconButton icon="download" size="sm" onClick={handleExport} title={t.toolbar.export} variant="ghost" />
-        </div>
-
-        {/* Tab Bar */}
-        <div className="flex-1 min-w-0 h-full flex items-center">
-          <TabBar />
-        </div>
-
-        <div className="flex items-center space-x-2 pl-2 border-l theme-border flex-shrink-0">
-          {/* Changes status */}
-          {isDirty && (
-            <Badge variant="warning">• {t.common.unsaved}</Badge>
-          )}
-        </div>
-        
-        {/* Update Notification */}
         <UpdateNotification />
       </div>
 
-      <div className="flex items-center space-x-3">
-        {/* CLI Status Indicator */}
+      {/* 2. SEÇÃO CENTRAL: Abas de Templates (Multi-tabs) */}
+      <div className="flex-1 flex items-center justify-start px-3 min-w-0 overflow-hidden">
+        <TabBar />
+      </div>
+
+      {/* 3. SEÇÃO DIREITA: Test Data + Split Preview + Gerar PDF Principal */}
+      <div className="flex items-center space-x-2">
+        {/* Indicador de Status CLI */}
         {cliStatus && !cliStatus.installed && (
-          <Button
+          <button
             onClick={() => setShowCLIModal(true)}
-            variant="ghost"
-            leftIcon={<Icon name="warning" size="sm" />}
-            className="px-3 py-1.5 text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30"
-            title={t.toolbar.cliNotInstalled}
+            className="px-2.5 py-1 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded flex items-center gap-1.5 hover:bg-amber-500/20"
           >
-            {t.toolbar.cliNotInstalled}
-          </Button>
+            <Icon name="warning" size="sm" />
+            <span>{t.toolbar.cliNotInstalled}</span>
+          </button>
         )}
-        
 
-
-
-        {/* 4. Preview Toggle Button */}
-        {onTogglePreview && (
-          <Button
-            onClick={onTogglePreview}
-            variant={effectivePreviewMode !== 'hidden' ? 'primary' : 'secondary'}
-            leftIcon={<Icon name={effectivePreviewMode === 'split' ? 'split' : 'preview'} size="sm" />}
-            title={`${t.toolbar.preview} (Ctrl+Shift+P)`}
-          >
-            {t.toolbar.preview}
-          </Button>
-        )}
-        
-        {/* 3. Test Data */}
-        <Button
+        {/* Dados de Teste */}
+        <button
           onClick={onToggleDataPanel}
-          variant="secondary"
-          leftIcon={<Icon name="data" size="sm" />}
+          className="px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800 border border-slate-800 rounded-lg transition flex items-center gap-1.5"
         >
-          {t.toolbar.testData}
-        </Button>
+          <Icon name="data" size="sm" />
+          <span>{t.toolbar.testData}</span>
+        </button>
 
-        <div className="w-px h-8 theme-border"></div>
-        
-        {/* 2. Theme Toggle */}
-        <IconButton
-          icon={theme === 'dark' ? 'sun' : 'moon'}
-          iconSize="md"
-          onClick={toggleTheme}
-          tooltip={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-          className="w-10 h-10 theme-surface border theme-border hover:border-primary-500"
-        />
-        
-        {/* 1. Settings Button */}
-        <IconButton
-          icon="settings"
-          iconSize="md"
-          onClick={() => setShowCLIModal(true)}
-          tooltip={t.toolbar.settings}
-          className="w-10 h-10 theme-surface border theme-border hover:border-primary-500"
-        />
+        {/* Alternar Preview / Split View */}
+        {onTogglePreview && (
+          <button
+            onClick={onTogglePreview}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition flex items-center gap-1.5 ${
+              effectivePreviewMode !== 'hidden'
+                ? 'bg-slate-800 text-indigo-400 border-indigo-500/40'
+                : 'text-slate-300 border-slate-800 hover:bg-slate-800'
+            }`}
+            title="Alternar Visualização (Ctrl+Shift+P)"
+          >
+            <Icon name={effectivePreviewMode === 'split' ? 'split' : 'preview'} size="sm" />
+            <span>{t.toolbar.preview}</span>
+          </button>
+        )}
+
+        {/* Ação Primária: Gerar PDF */}
+        <button
+          onClick={handleGeneratePDF}
+          className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm shadow-indigo-600/30 transition flex items-center gap-1.5"
+          title="Exportar/Gerar arquivo PDF final"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Gerar PDF</span>
+        </button>
       </div>
       
       {/* CLI Installation Modal */}
