@@ -194,6 +194,8 @@ export default function ElementsToolbar() {
           x: 0,
           width: 400,
           height: 150,
+          heightMode: 'auto',
+          autoHeight: true,
           positionMode: 'RELATIVE',
           relativeOffsetY: 0,
           elements: [],

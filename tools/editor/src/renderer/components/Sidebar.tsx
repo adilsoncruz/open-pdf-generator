@@ -33,7 +33,14 @@ export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<'elements' | 'layers'>('layers')
   const { 
     selectedElementIds, 
+    selectedElementLocation,
+    selectedGroupId,
+    selectGroup,
+    createGroup,
+    ungroupElements,
+    deleteSelectedElements,
     selectElement, 
+    toggleElementSelection, 
     selectedContainerParentId, 
     addElement,
     deleteElement,
@@ -63,6 +70,20 @@ export default function Sidebar() {
 
   const [showAddBandDropdown, setShowAddBandDropdown] = useState(false)
 
+  const currentGroups = (() => {
+    if (currentSection === 'header') return template.pageSettings.header?.groups || []
+    if (currentSection === 'footer') return template.pageSettings.footer?.groups || []
+    if (currentSection === 'bodyBackground') return template.pageSettings.bodyBackground?.groups || []
+    if (currentSection === 'summary') return template.summaryPage?.groups || []
+    return template.groups || []
+  })()
+
+  const activeGroup = currentGroups.find(
+    g => g.id === selectedGroupId || selectedElementIds.some(id => g.elementIds.includes(id))
+  )
+  const canGroup = selectedElementIds.length >= 2 && !activeGroup
+  const canUngroup = !!activeGroup
+
   const renderElementRow = (
     el: Element, 
     sectionKey: ElementLocation, 
@@ -73,6 +94,7 @@ export default function Sidebar() {
     const isSelected = selectedElementIds.includes(el.id) || (parentContainerId && selectedContainerChildId === el.id)
     const isDraggingThis = draggedElementId === el.id
     const isDragOverThis = dragOverElementId === el.id
+    const elGroup = currentGroups.find(g => g.elementIds.includes(el.id) || g.id === el.groupId)
 
     const handleMoveUp = (e: React.MouseEvent) => {
       e.stopPropagation()
@@ -93,8 +115,8 @@ export default function Sidebar() {
         case 'text': return 'T'
         case 'static_text': return 'S'
         case 'rich_text': return '¶'
-        case 'link': return '🔗'
-        case 'image': return '🖼'
+        case 'link': return <Icon name="link" size="xs" className="w-3 h-3 text-slate-400" />
+        case 'image': return <Icon name="image" size="xs" className="w-3 h-3 text-slate-400" />
         case 'table': return '▦'
         case 'barcode': return '▥'
         case 'rectangle': return '▭'
@@ -163,10 +185,32 @@ export default function Sidebar() {
           setDraggedElementId(null)
           setDragOverElementId(null)
         }}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setCurrentSection(sectionKey)
+          if (!selectedElementIds.includes(el.id)) {
+            if (parentContainerId) {
+              selectContainerChild(parentContainerId, el.id, sectionKey)
+            } else {
+              selectElement(el.id, sectionKey)
+            }
+          }
+          useUIStore.getState().openContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+            targetType: el.type === 'container' ? 'container' : 'element',
+            elementId: el.id,
+            containerId: parentContainerId,
+            location: sectionKey,
+          })
+        }}
         onClick={(e) => {
           e.stopPropagation()
           setCurrentSection(sectionKey)
-          if (parentContainerId) {
+          if (e.ctrlKey || e.metaKey || e.shiftKey) {
+            toggleElementSelection(el.id, sectionKey)
+          } else if (parentContainerId) {
             selectContainerChild(parentContainerId, el.id, sectionKey)
           } else {
             selectElement(el.id, sectionKey)
@@ -184,8 +228,20 @@ export default function Sidebar() {
       >
         <div className="flex items-center gap-1.5 truncate flex-1 min-w-0">
           <span className="text-[10px] text-slate-500 hover:text-slate-300 cursor-grab select-none">⠿</span>
-          <span className="text-[10px] font-mono text-slate-400 w-3 text-center">{getIcon()}</span>
+          <span className="text-[10px] font-mono text-slate-400 w-3.5 h-3.5 flex items-center justify-center shrink-0">{getIcon()}</span>
           <span className="truncate">{getLabel()}</span>
+          {elGroup && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation()
+                selectGroup(elGroup.id, sectionKey)
+              }}
+              className="text-[9px] px-1 py-0.2 rounded bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 hover:text-white font-mono shrink-0 select-none cursor-pointer transition"
+              title={`Grupo: ${elGroup.name}\nClique para editar grupo`}
+            >
+              {elGroup.name}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           <button
@@ -295,10 +351,29 @@ export default function Sidebar() {
                 }}
               >
                 <div
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setCurrentSection(sectionKey)
+                    if (!selectedElementIds.includes(el.id)) {
+                      selectElement(el.id, sectionKey)
+                    }
+                    useUIStore.getState().openContextMenu({
+                      x: e.clientX,
+                      y: e.clientY,
+                      targetType: 'container',
+                      elementId: el.id,
+                      location: sectionKey,
+                    })
+                  }}
                   onClick={(e) => {
                     e.stopPropagation()
                     setCurrentSection(sectionKey)
-                    selectElement(el.id, sectionKey)
+                    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                      toggleElementSelection(el.id, sectionKey)
+                    } else {
+                      selectElement(el.id, sectionKey)
+                    }
                   }}
                   className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-pointer transition group ${
                     draggedElementId === el.id ? 'opacity-40 bg-slate-800' : ''

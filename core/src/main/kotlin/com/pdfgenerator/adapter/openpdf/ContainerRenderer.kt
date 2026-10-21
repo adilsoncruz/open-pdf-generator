@@ -29,8 +29,28 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         val containerX = 0f
         val containerY = element.y
         val containerWidth = context.containerWidth ?: element.resolveWidth(595.28f)
-        val defaultHeight = context.containerHeight ?: (context.document.pageSize.height - context.template.pageSettings.margins.top - context.template.pageSettings.margins.bottom)
-        val containerHeight = element.resolveHeight(defaultHeight)
+        val resolvedHeight = element.resolveHeight(context.containerHeight ?: 0f)
+        val baseHeight = if (resolvedHeight > 0f) resolvedHeight else (context.containerHeight ?: 0f)
+        val maxAvailableHeight =
+            (context.document.pageSize.height - context.resolveY(containerY) - context.document.bottomMargin()).coerceAtLeast(10f)
+        val containerHeight = if (element.isAutoHeight()) {
+            val contentHeight = element.elements.maxOfOrNull { child ->
+                val chH = when (child) {
+                    is com.pdfgenerator.model.TextElement -> child.height ?: (child.style?.fontSize ?: 12f)
+                    is com.pdfgenerator.model.StaticTextElement -> child.height ?: (child.style?.fontSize ?: 12f)
+                    is com.pdfgenerator.model.RichTextElement -> child.height ?: (child.style?.fontSize ?: 12f)
+                    is com.pdfgenerator.model.ImageElement -> child.height
+                    is com.pdfgenerator.model.RectangleElement -> if (child.height is Number) (child.height as Number).toFloat() else 25f
+                    is com.pdfgenerator.model.LineElement -> 1f
+                    is com.pdfgenerator.model.BarcodeElement -> child.height
+                    else -> 25f
+                }
+                child.y + chH
+            } ?: 0f
+            kotlin.math.min(kotlin.math.max(baseHeight, contentHeight), maxAvailableHeight)
+        } else {
+            kotlin.math.min(baseHeight, maxAvailableHeight)
+        }
 
         element.style?.let { style ->
             val cb =

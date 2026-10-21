@@ -678,7 +678,11 @@ class PDFGenerator(
                     } ?: 0f
                 val defaultHeight = context?.containerHeight ?: (context?.document?.pageSize?.height ?: 842f)
                 val resolvedH = element.resolveHeight(defaultHeight)
-                kotlin.math.max(resolvedH, contentHeight)
+                if (element.isAutoHeight()) {
+                    kotlin.math.max(resolvedH, contentHeight)
+                } else {
+                    resolvedH
+                }
             }
             is PageBreakElement -> 0f
             is SpacerElement -> element.height

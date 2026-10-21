@@ -146,5 +146,107 @@ class MissingRenderersTest {
             assertTrue(outputFile.exists())
             assertTrue(outputFile.length() > 0)
         }
+
+        @Test
+        fun `should render container with auto height expanding based on children`(
+            @TempDir tempDir: File,
+        ) {
+            val templateJson =
+                """
+                {
+                  "version": "1.0",
+                  "pageSettings": {
+                    "size": "A4",
+                    "orientation": "portrait",
+                    "margins": {"top": 30, "right": 30, "bottom": 30, "left": 30}
+                  },
+                  "pageElements": [
+                    {
+                      "type": "container",
+                      "id": "container_auto",
+                      "x": 0,
+                      "y": 0,
+                      "width": "100%",
+                      "height": 50,
+                      "heightMode": "auto",
+                      "autoHeight": true,
+                      "style": {"backgroundColor": "#EEEEEE"},
+                      "elements": [
+                        {
+                          "type": "text",
+                          "id": "t1",
+                          "x": 10,
+                          "y": 100,
+                          "height": 40,
+                          "value": "Far below base height"
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """.trimIndent()
+
+            val template = Template.fromString(templateJson)
+            val container = (template.page ?: template.pageElements)!!.first() as com.pdfgenerator.model.ContainerElement
+            assertTrue(container.isAutoHeight())
+
+            val generator = PDFGenerator()
+            val outputFile = File(tempDir, "container_auto.pdf")
+            generator.generate(template, emptyMap(), outputFile)
+
+            assertTrue(outputFile.exists())
+            assertTrue(outputFile.length() > 0)
+        }
+
+        @Test
+        fun `should render container with fixed height keeping specified height`(
+            @TempDir tempDir: File,
+        ) {
+            val templateJson =
+                """
+                {
+                  "version": "1.0",
+                  "pageSettings": {
+                    "size": "A4",
+                    "orientation": "portrait",
+                    "margins": {"top": 30, "right": 30, "bottom": 30, "left": 30}
+                  },
+                  "pageElements": [
+                    {
+                      "type": "container",
+                      "id": "container_fixed",
+                      "x": 0,
+                      "y": 0,
+                      "width": "100%",
+                      "height": 100,
+                      "heightMode": "fixed",
+                      "autoHeight": false,
+                      "style": {"backgroundColor": "#DDDDDD"},
+                      "elements": [
+                        {
+                          "type": "text",
+                          "id": "t1",
+                          "x": 10,
+                          "y": 20,
+                          "height": 20,
+                          "value": "Fixed container text"
+                        }
+                      ]
+                    }
+                  ]
+                }
+                """.trimIndent()
+
+            val template = Template.fromString(templateJson)
+            val container = (template.page ?: template.pageElements)!!.first() as com.pdfgenerator.model.ContainerElement
+            kotlin.test.assertFalse(container.isAutoHeight())
+
+            val generator = PDFGenerator()
+            val outputFile = File(tempDir, "container_fixed.pdf")
+            generator.generate(template, emptyMap(), outputFile)
+
+            assertTrue(outputFile.exists())
+            assertTrue(outputFile.length() > 0)
+        }
     }
 }

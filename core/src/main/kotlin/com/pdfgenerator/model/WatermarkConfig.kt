@@ -24,5 +24,8 @@ data class WatermarkConfig(
     val width: Float? = null,
     val height: Float? = null,
     val onTop: Boolean = false,
+    val repeat: Boolean = false,
+    val spacingX: Float? = null,
+    val spacingY: Float? = null,
     val printCondition: String? = null,
 )

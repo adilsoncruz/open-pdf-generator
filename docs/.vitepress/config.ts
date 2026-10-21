@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'Open PDF Generator',
   description: 'Open source toolkit for generating PDFs from JSON templates',
+  appearance: 'dark',
   
   // Base path for GitHub Pages (repo name)
   base: '/open-pdf-generator/',
@@ -19,6 +20,13 @@ export default defineConfig({
       { text: 'Library', link: '/lib/' },
       { text: 'CLI', link: '/cli/' },
       { text: 'Editor', link: '/editor/' },
+      {
+        text: '💖 Donate',
+        items: [
+          { text: 'GitHub Sponsors', link: 'https://github.com/sponsors/adilsoncruz' },
+          { text: 'Buy Me a Coffee', link: 'https://buymeacoffee.com/adilsoncruz' }
+        ]
+      },
       {
         text: 'GitHub',
         link: 'https://github.com/adilsoncruz/open-pdf-generator'
@@ -42,6 +50,8 @@ export default defineConfig({
             { text: 'Text', link: '/lib/guide/elements/text' },
             { text: 'Image', link: '/lib/guide/elements/image' },
             { text: 'Table', link: '/lib/guide/elements/table' },
+            { text: 'Container', link: '/lib/guide/elements/container' },
+            { text: 'Page Break', link: '/lib/guide/elements/page-break' },
             { text: 'Rectangle', link: '/lib/guide/elements/rectangle' },
             { text: 'Line', link: '/lib/guide/elements/line' },
             { text: 'Barcode', link: '/lib/guide/elements/barcode' },
@@ -54,13 +64,17 @@ export default defineConfig({
           items: [
             { text: 'Data Binding', link: '/lib/guide/data-binding' },
             { text: 'Conditions', link: '/lib/guide/conditions' },
-            { text: 'Transformations', link: '/lib/guide/transformations' }
+            { text: 'Transformations', link: '/lib/guide/transformations' },
+            { text: 'Schema Validation', link: '/lib/guide/schema-validation' }
           ]
         },
         {
           text: 'Advanced',
           items: [
             { text: 'Header & Footer', link: '/lib/guide/advanced/header-footer' },
+            { text: 'Watermark', link: '/lib/guide/advanced/watermark' },
+            { text: 'Summary Page', link: '/lib/guide/advanced/summary-page' },
+            { text: 'Groups', link: '/lib/guide/advanced/groups' },
             { text: 'Pagination', link: '/lib/guide/advanced/pagination' },
             { text: 'Positioning', link: '/lib/guide/advanced/positioning' },
             { text: 'Performance', link: '/lib/guide/advanced/performance' }

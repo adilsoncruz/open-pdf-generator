@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useTemplateStore, type Element, type ElementGroup, type ElementLocation } from '../store/templateStore'
+import { useState, useEffect, useRef } from 'react'
+import { useTemplateStore, type Element, type ElementGroup, type ElementLocation, flattenElements } from '../store/templateStore'
 import { Icon, Input, Select, Checkbox, Divider, ColorInput, Button, TextArea } from './atoms'
 import type { IconName } from './atoms/Icon/Icon.types'
 import { NumberField, ColorField, PropertyGroup, PropertyRow, TabBar, IconButton } from './molecules'
@@ -25,10 +25,26 @@ interface ElementInspectorProps {
   onUpdate: (field: string | Record<string, any>, value?: any) => void
   onStyleUpdate: (field: string | Record<string, any>, value?: any) => void
   parentName?: string
+  isMultiSelection?: boolean
+  selectedCount?: number
 }
 
 function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentName }: ElementInspectorProps) {
   const [tableTab, setTableTab] = useState<'general' | 'columns' | 'styles'>('general')
+  const [localId, setLocalId] = useState(element.id || '')
+
+  useEffect(() => {
+    setLocalId(element.id || '')
+  }, [element.id])
+
+  const handleIdCommit = () => {
+    const trimmed = localId.trim()
+    if (trimmed && trimmed !== element.id) {
+      onUpdate('id', trimmed)
+    } else {
+      setLocalId(element.id || '')
+    }
+  }
 
   const columns = Array.isArray(element.columns) ? element.columns : []
 
@@ -104,14 +120,17 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
     <div className="w-[300px] bg-slate-900 border-l border-slate-800 flex flex-col h-full shrink-0 select-none text-slate-200">
       {/* Header */}
       <div className="border-b border-slate-800 bg-slate-950/40 shrink-0 px-3.5 pt-2.5 pb-2">
-        <div className="flex items-center justify-between">
-          <div className="relative">
-            <span className="text-xs font-semibold text-slate-200 tracking-wide">
+        <div className="flex items-center justify-between gap-2">
+          <div className="relative min-w-0 flex-1">
+            <span className="text-xs font-semibold text-slate-200 tracking-wide block">
               Properties Panel
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono truncate block" title={element.id}>
+              #{element.id}
             </span>
             <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
           </div>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50 uppercase">
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50 uppercase shrink-0">
             {parentName ? `${parentName} / table` : 'table'}
           </span>
         </div>
@@ -162,6 +181,31 @@ function StudioSlateTableInspector({ element, onUpdate, onStyleUpdate, parentNam
         {/* TAB 1: GERAL */}
         {tableTab === 'general' && (
           <>
+            {/* Identification / ID */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] font-semibold text-slate-300">ID da Tabela</span>
+                <span className="text-[10px] text-slate-500 font-mono">identificador</span>
+              </div>
+              <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+                <span className="text-slate-500 font-mono text-xs mr-2 select-none">#</span>
+                <input
+                  type="text"
+                  value={localId}
+                  onChange={(e) => setLocalId(e.target.value)}
+                  onBlur={handleIdCommit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleIdCommit()
+                      ;(e.target as HTMLInputElement).blur()
+                    }
+                  }}
+                  className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+                  placeholder="id_da_tabela"
+                />
+              </div>
+            </div>
+
             {/* Transform */}
             <div>
               <div className="text-xs font-semibold text-slate-200 mb-2">Transform</div>
@@ -897,7 +941,86 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
     return <StudioSlateTableInspector {...props} />
   }
 
-  const { element, onUpdate, onStyleUpdate, parentName } = props
+  const { element, onUpdate, onStyleUpdate, parentName, isMultiSelection, selectedCount } = props
+  const [localId, setLocalId] = useState(element.id || '')
+
+  useEffect(() => {
+    setLocalId(element.id || '')
+  }, [element.id])
+
+  const handleIdCommit = () => {
+    const trimmed = localId.trim()
+    if (trimmed && trimmed !== element.id) {
+      onUpdate('id', trimmed)
+    } else {
+      setLocalId(element.id || '')
+    }
+  }
+
+  useEffect(() => {
+    if (element.type === 'static_text' && element.dataBinding) {
+      onUpdate('dataBinding', undefined)
+    }
+  }, [element.type, element.dataBinding])
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      if (result) {
+        onUpdate({
+          url: result,
+          value: result,
+          source: result,
+        })
+      }
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  const handleRemoveImage = () => {
+    onUpdate({
+      url: '',
+      value: '',
+      source: '',
+    })
+  }
+
+  const store = useTemplateStore()
+  const { selectedElementIds, selectedElementLocation, currentSection, template, createGroup, ungroupElements, deleteSelectedElements, selectGroup } = store
+
+  const allTemplateGroups = [
+    ...(template.groups || []),
+    ...(template.pageSettings.header?.groups || []),
+    ...(template.pageSettings.footer?.groups || []),
+    ...(template.pageSettings.bodyBackground?.groups || []),
+    ...(template.summaryPage?.groups || []),
+  ]
+
+  const elementGroup = allTemplateGroups.find(
+    g => g.elementIds.includes(element.id) || g.id === (element as any).groupId
+  )
+
+  const currentGroups = (() => {
+    if (selectedElementLocation === 'header') return template.pageSettings.header?.groups || []
+    if (selectedElementLocation === 'footer') return template.pageSettings.footer?.groups || []
+    if (selectedElementLocation === 'bodyBackground') return template.pageSettings.bodyBackground?.groups || []
+    if (selectedElementLocation === 'summary') return template.summaryPage?.groups || []
+    return template.groups || []
+  })()
+
+  const activeGroup = currentGroups.find(g => 
+    selectedElementIds.some(id => g.elementIds.includes(id))
+  )
+  const canGroup = isMultiSelection && !activeGroup
+  const canUngroup = !!activeGroup
+
   const isTextElement = ['text', 'rich_text', 'link', 'static_text'].includes(element.type)
   const isMediaElement = ['image', 'barcode'].includes(element.type)
   const isShapeOrContainer = ['rectangle', 'container', 'line', 'spacer'].includes(element.type)
@@ -914,21 +1037,80 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
   return (
     <div className="w-[300px] bg-slate-900 border-l border-slate-800 flex flex-col h-full shrink-0 select-none text-slate-200">
       {/* 1. Header */}
-      <div className="border-b border-slate-800 bg-slate-950/40 shrink-0 px-3.5 pt-2.5 pb-0">
-        <div className="flex items-center justify-between">
-          <div className="relative pb-2">
-            <span className="text-xs font-semibold text-slate-200 tracking-wide">
-              Properties Panel
-            </span>
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
-          </div>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50 uppercase">
-            {parentName ? `${parentName} / ${element.type}` : element.type}
+      <div className="border-b border-slate-800 bg-slate-950/40 shrink-0 px-3.5 pt-2.5 pb-2">
+        <div className="flex items-center justify-between gap-2">
+          {isMultiSelection ? (
+            <div className="relative min-w-0 flex-1">
+              <span className="text-xs font-semibold text-indigo-400 tracking-wide block">
+                Multi-seleção
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium truncate block">
+                {selectedCount} elementos selecionados
+              </span>
+              <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
+            </div>
+          ) : (
+            <div className="relative min-w-0 flex-1">
+              <span className="text-xs font-semibold text-slate-200 tracking-wide block">
+                Properties Panel
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono truncate block" title={element.id}>
+                #{element.id}
+              </span>
+              <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
+            </div>
+          )}
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700/50 uppercase shrink-0">
+            {isMultiSelection ? `${selectedCount} selecionados` : (parentName ? `${parentName} / ${element.type}` : element.type)}
           </span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
+        {/* Identificação / ID */}
+        {!isMultiSelection ? (
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-semibold text-slate-300">ID do Elemento</span>
+              <span className="text-[10px] text-slate-500 font-mono">identificador</span>
+            </div>
+            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+              <span className="text-slate-500 font-mono text-xs mr-2 select-none">#</span>
+              <input
+                type="text"
+                value={localId}
+                onChange={(e) => setLocalId(e.target.value)}
+                onBlur={handleIdCommit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleIdCommit()
+                    ;(e.target as HTMLInputElement).blur()
+                  }
+                }}
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+                placeholder="id_do_elemento"
+              />
+            </div>
+            {elementGroup && (
+              <div className="mt-2 flex items-center justify-between p-2 rounded-lg bg-purple-950/40 border border-purple-800/40">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                  <span className="text-[11px] text-purple-300 font-medium truncate">
+                    Grupo: {elementGroup.name}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => selectGroup(elementGroup.id, (elementGroup.location || selectedElementLocation || 'body') as any)}
+                  className="px-2 py-0.5 rounded bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 text-[10px] font-medium border border-purple-500/40 transition cursor-pointer"
+                >
+                  Propriedades do Grupo
+                </button>
+              </div>
+            )}
+          </div>
+        ) : null}
+
         {/* 2. Transform Section */}
         <div>
           <div className="text-xs font-semibold text-slate-200 mb-2">
@@ -1404,21 +1586,142 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         )}
 
         {/* Media Properties (Image / Barcode) */}
-        {element.type === 'image' && (
-          <div>
-            <div className="text-xs font-semibold text-slate-200 mb-2">Image Source</div>
-            <input
-              type="text"
-              value={(element.url as string) || (element.value as string) || ''}
-              onChange={(e) => {
-                onUpdate('url', e.target.value)
-                onUpdate('value', e.target.value)
-              }}
-              placeholder="https://exemplo.com/imagem.png"
-              className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
-            />
-          </div>
-        )}
+        {element.type === 'image' && (() => {
+          const imageSrc = (element.url as string) || (element.source as string) || (element.value as string) || ''
+          const isBase64 = imageSrc.startsWith('data:image')
+          const base64SizeKB = isBase64 ? Math.round((imageSrc.length * 0.75) / 1024) : 0
+
+          return (
+            <div>
+              <div className="text-xs font-semibold text-slate-200 mb-2">Imagem</div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/gif"
+                className="hidden"
+                onChange={handleImageFileSelect}
+              />
+
+              {imageSrc ? (
+                <div className="space-y-2 mb-3">
+                  <div className="relative group bg-slate-950/80 border border-slate-800 rounded-lg p-2 flex flex-col items-center justify-center">
+                    <img
+                      src={imageSrc}
+                      alt="Preview"
+                      className="max-h-24 max-w-full rounded object-contain border border-slate-800/60 bg-slate-900/60"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none'
+                      }}
+                    />
+                    <div className="mt-2 flex items-center justify-between w-full px-1">
+                      {isBase64 ? (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          Base64 (~{base64SizeKB} KB)
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                          Remoto / URL
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 transition cursor-pointer"
+                      >
+                        <Icon name="trash" size="xs" />
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition cursor-pointer"
+                  >
+                    <Icon name="upload" size="xs" />
+                    Substituir por Imagem Local
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition cursor-pointer shadow-sm"
+                  >
+                    <Icon name="upload" size="xs" />
+                    Procurar Imagem Local
+                  </button>
+                  <p className="text-[10px] text-slate-500 text-center">
+                    PNG, JPG, SVG, WebP ou GIF (converte em Base64)
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-400 block">
+                  {isBase64 ? 'Origem dos Dados' : 'URL ou Caminho da Imagem'}
+                </label>
+                {isBase64 ? (
+                  <div className="flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-400 font-mono">
+                    <span className="truncate pr-2">data:image/...;base64 (~{base64SizeKB} KB)</span>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard?.writeText(imageSrc)}
+                      title="Copiar Base64"
+                      className="text-slate-400 hover:text-indigo-400 shrink-0 cursor-pointer"
+                    >
+                      <Icon name="copy" size="xs" />
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={imageSrc}
+                    onChange={(e) => {
+                      onUpdate({
+                        url: e.target.value,
+                        value: e.target.value,
+                        source: e.target.value,
+                      })
+                    }}
+                    placeholder="https://exemplo.com/imagem.png"
+                    className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Ajuste (Fit)</label>
+                  <select
+                    value={element.fit || 'contain'}
+                    onChange={(e) => onUpdate('fit', e.target.value)}
+                    className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="contain">Contain</option>
+                    <option value="cover">Cover</option>
+                    <option value="fill">Fill</option>
+                    <option value="scale-down">Scale Down</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Alinhamento</label>
+                  <select
+                    value={element.alignment || 'center'}
+                    onChange={(e) => onUpdate('alignment', e.target.value)}
+                    className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="left">Esquerda</option>
+                    <option value="center">Centro</option>
+                    <option value="right">Direita</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         {element.type === 'barcode' && (
           <div>
@@ -1474,21 +1777,68 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         )}
 
         {/* Container specific */}
-        {element.type === 'container' && (
-          <div>
-            <div className="text-xs font-semibold text-slate-200 mb-2">Container Settings</div>
-            <div>
-              <label className="text-[10px] text-slate-400 block mb-1">Nome do Container</label>
-              <input
-                type="text"
-                value={(element.name as string) || ''}
-                onChange={(e) => onUpdate('name', e.target.value)}
-                placeholder="Container 1"
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans"
-              />
+        {element.type === 'container' && (() => {
+          const isFixed = element.heightMode === 'fixed' || element.autoHeight === false
+
+          return (
+            <div className="space-y-3">
+              <div className="text-xs font-semibold text-slate-200">Container Settings</div>
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Nome do Container</label>
+                <input
+                  type="text"
+                  value={(element.name as string) || ''}
+                  onChange={(e) => onUpdate('name', e.target.value)}
+                  placeholder="Container 1"
+                  className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Comportamento de Altura</label>
+                <div className="grid grid-cols-2 gap-1.5 bg-slate-950/70 p-1 rounded-lg border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUpdate({
+                        heightMode: 'auto',
+                        autoHeight: true,
+                      })
+                    }}
+                    className={`py-1.5 text-xs font-medium rounded-md transition cursor-pointer ${
+                      !isFixed
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Auto-Height
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUpdate({
+                        heightMode: 'fixed',
+                        autoHeight: false,
+                      })
+                    }}
+                    className={`py-1.5 text-xs font-medium rounded-md transition cursor-pointer ${
+                      isFixed
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Fixed-Height
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
+                  {!isFixed
+                    ? 'O container se expande automaticamente conforme novos elementos são adicionados.'
+                    : 'Tamanho fixo. Impede a inserção de elementos que ultrapassem a altura do container.'}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Page Break specific */}
         {element.type === 'page_break' && (
@@ -1641,8 +1991,8 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
         </div>
         )}
 
-        {/* 5. Data Binding Section (Não exibido para Container nem Page Break) */}
-        {element.type !== 'container' && element.type !== 'page_break' && element.type !== 'spacer' && (
+        {/* 5. Data Binding Section (Não exibido para static_text, container, line, spacer, page_break) */}
+        {element.type !== 'container' && element.type !== 'static_text' && element.type !== 'line' && element.type !== 'spacer' && element.type !== 'page_break' && (
           <div>
             <div className="text-xs font-semibold text-slate-200 mb-2">
               Data Binding
@@ -1695,6 +2045,24 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
             Deixe vazio para imprimir sempre
           </span>
         </div>
+
+        {/* 7. Delete Action Button */}
+        <div className="pt-2 border-t border-slate-800 space-y-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (isMultiSelection) {
+                deleteSelectedElements()
+              } else {
+                useTemplateStore.getState().deleteElement(element.id, useTemplateStore.getState().selectedElementLocation)
+              }
+            }}
+            className="w-full py-1.5 px-3 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 text-red-300 text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer"
+          >
+            <Icon name="trash" size="xs" />
+            <span>{isMultiSelection ? `Excluir ${selectedCount} elementos` : 'Excluir elemento'}</span>
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -1703,7 +2071,7 @@ function StudioSlateElementInspector(props: ElementInspectorProps) {
 export default function PropertiesPanel() {
   // HOOKS DEVEM VIR PRIMEIRO (antes de qualquer return)
   const [activeTab, setActiveTab] = useState<string>('appearance')
-  
+  const watermarkFileInputRef = useRef<HTMLInputElement>(null)
   
   const store = useTemplateStore()
   
@@ -1725,6 +2093,41 @@ export default function PropertiesPanel() {
   const handleInputBlur = () => {
     saveSnapshot()
   }
+
+  const handleWatermarkImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      if (result) {
+        store.updateWatermark({ imageSource: result })
+      }
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  const handleRemoveWatermarkImage = () => {
+    store.updateWatermark({ imageSource: '' })
+  }
+
+  // Se um grupo estiver selecionado, exibe diretamente as propriedades do grupo
+  if (selectedGroupId) {
+    const allGroups: ElementGroup[] = [
+      ...(template.groups || []),
+      ...(template.pageSettings.header?.groups || []),
+      ...(template.pageSettings.footer?.groups || []),
+      ...(template.pageSettings.bodyBackground?.groups || []),
+      ...(template.summaryPage?.groups || []),
+    ]
+    const selectedGroup = allGroups.find(g => g.id === selectedGroupId)
+    if (selectedGroup) {
+      const loc = (selectedGroup.location || selectedElementLocation || 'body') as any
+      return <GroupPropertiesPanel group={selectedGroup} location={loc} />
+    }
+  }
   
   // Buscar elementos selecionados na location correta (PRIORIDADE sobre grupos)
   const selectedElements = (() => {
@@ -1733,22 +2136,22 @@ export default function PropertiesPanel() {
     let elements: Element[] = []
     
     if (selectedElementLocation === 'header' && template.pageSettings.header) {
-      elements = template.pageSettings.header.elements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.pageSettings.header.elements
     } else if (selectedElementLocation === 'footer' && template.pageSettings.footer) {
-      elements = template.pageSettings.footer.elements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.pageSettings.footer.elements
     } else if (selectedElementLocation === 'bodyBackground' && template.pageSettings.bodyBackground) {
-      elements = template.pageSettings.bodyBackground.elements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.pageSettings.bodyBackground.elements
     } else if (selectedElementLocation === 'summary' && template.summaryPage) {
-      elements = template.summaryPage.elements.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.summaryPage.elements
     } else {
-      elements = template.page.filter((el) => selectedElementIds.includes(el.id))
+      elements = template.page || []
     }
     
-    return elements
+    const flat = flattenElements(elements)
+    return flat.filter((el) => selectedElementIds.includes(el.id))
   })()
 
-  
-  if (selectedLoopChildId && selectedLoopParentId) {
+  if (selectedElements.length <= 1 && selectedLoopChildId && selectedLoopParentId) {
     // Encontrar o loop pai e o elemento filho
     let loopElement: Element | null = null
     
@@ -1785,7 +2188,7 @@ export default function PropertiesPanel() {
     }
   }
 
-  if (selectedContainerChildId && selectedContainerParentId) {
+  if (selectedElements.length <= 1 && selectedContainerChildId && selectedContainerParentId) {
       // Encontrar o loop pai e o elemento filho
       let containerElement: Element | null = null
 
@@ -1824,29 +2227,6 @@ export default function PropertiesPanel() {
 
   
   if (selectedElements.length === 0) {
-    // Buscar grupo selecionado
-    const selectedGroup = (() => {
-      if (!selectedGroupId) return null
-      
-      if (selectedElementLocation === 'header' && template.pageSettings.header) {
-        return template.pageSettings.header.groups?.find(g => g.id === selectedGroupId) || null
-      } else if (selectedElementLocation === 'footer' && template.pageSettings.footer) {
-        return template.pageSettings.footer.groups?.find(g => g.id === selectedGroupId) || null
-      } else if (selectedElementLocation === 'bodyBackground' && template.pageSettings.bodyBackground) {
-        return template.pageSettings.bodyBackground.groups?.find(g => g.id === selectedGroupId) || null
-      } else if (selectedElementLocation === 'summary' && template.summaryPage) {
-        return template.summaryPage.groups?.find(g => g.id === selectedGroupId) || null
-      } else {
-        return template.groups?.find(g => g.id === selectedGroupId) || null
-      }
-    })()
-    
-    
-    if (selectedGroup) {
-      return <GroupPropertiesPanel group={selectedGroup} location={selectedElementLocation} />
-    }
-    
-    
     if (store.currentSection === 'summary' && template.summaryPage) {
       return <SummaryPropertiesPanel />
     }
@@ -1927,6 +2307,370 @@ export default function PropertiesPanel() {
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-800/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-300 block">Marca d'Água (Watermark)</label>
+                <span className="text-[10px] text-slate-500">Exibida em todas as páginas</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={!!template.pageSettings.watermark}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    store.updateWatermark({
+                      type: 'text',
+                      text: 'CONFIDENTIAL',
+                      fontSize: 60,
+                      fontStyle: 'bold',
+                      color: '#94a3b8',
+                      opacity: 0.2,
+                      rotation: 45,
+                      onTop: false,
+                    })
+                  } else {
+                    store.removeWatermark()
+                  }
+                }}
+                className="w-4 h-4 accent-indigo-600 rounded bg-slate-950 border-slate-700 cursor-pointer"
+              />
+            </div>
+
+            {template.pageSettings.watermark && (
+              <div className="p-3 bg-slate-950/70 border border-slate-800/80 rounded-lg space-y-3">
+                {/* Tipo de marca d'água */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-slate-400">Tipo:</span>
+                  <div className="flex bg-slate-900 rounded p-0.5 border border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => store.updateWatermark({ type: 'text' })}
+                      className={`px-2 py-1 text-[10px] font-medium rounded ${
+                        (template.pageSettings.watermark.type || 'text') === 'text'
+                          ? 'bg-indigo-600 text-white'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Texto
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => store.updateWatermark({ type: 'image' })}
+                      className={`px-2 py-1 text-[10px] font-medium rounded ${
+                        template.pageSettings.watermark.type === 'image'
+                          ? 'bg-indigo-600 text-white'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Imagem
+                    </button>
+                  </div>
+                </div>
+
+                {/* Campos para Texto */}
+                {(template.pageSettings.watermark.type || 'text') === 'text' && (
+                  <>
+                    <div>
+                      <span className="text-[10px] text-slate-500 block mb-1">Texto Estático:</span>
+                      <input
+                        type="text"
+                        value={template.pageSettings.watermark.text || ''}
+                        onChange={(e) => store.updateWatermark({ text: e.target.value })}
+                        placeholder="Ex: CONFIDENTIAL, DRAFT"
+                        className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-medium"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 block mb-1">Data Binding (opcional):</span>
+                      <input
+                        type="text"
+                        value={template.pageSettings.watermark.dataBinding || ''}
+                        onChange={(e) => store.updateWatermark({ dataBinding: e.target.value })}
+                        placeholder="Ex: status, watermarkText"
+                        className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block mb-1">Tamanho da Fonte:</span>
+                        <input
+                          type="number"
+                          min={10}
+                          max={200}
+                          value={template.pageSettings.watermark.fontSize || 60}
+                          onChange={(e) => store.updateWatermark({ fontSize: Number(e.target.value) || 60 })}
+                          className="w-full px-2 py-1 bg-slate-900 border border-slate-800 rounded text-slate-200 text-xs font-mono"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 block mb-1">Estilo:</span>
+                        <select
+                          value={template.pageSettings.watermark.fontStyle || 'bold'}
+                          onChange={(e) => store.updateWatermark({ fontStyle: e.target.value })}
+                          className="w-full px-2 py-1 bg-slate-900 border border-slate-800 rounded text-slate-200 text-xs font-medium"
+                        >
+                          <option value="normal">Normal</option>
+                          <option value="bold">Negrito</option>
+                          <option value="italic">Itálico</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 block mb-1">Cor:</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={template.pageSettings.watermark.color || '#94a3b8'}
+                          onChange={(e) => store.updateWatermark({ color: e.target.value })}
+                          className="w-7 h-7 rounded border border-slate-800 bg-transparent cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={template.pageSettings.watermark.color || '#94a3b8'}
+                          onChange={(e) => store.updateWatermark({ color: e.target.value })}
+                          className="flex-1 px-2 py-1 bg-slate-900 border border-slate-800 rounded text-slate-200 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Campos para Imagem */}
+                {template.pageSettings.watermark.type === 'image' && (() => {
+                  const imageSrc = template.pageSettings.watermark.imageSource || ''
+                  const isBase64 = imageSrc.startsWith('data:image')
+                  const base64SizeKB = isBase64 ? Math.round((imageSrc.length * 0.75) / 1024) : 0
+
+                  return (
+                    <div className="space-y-3">
+                      <input
+                        ref={watermarkFileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/gif"
+                        className="hidden"
+                        onChange={handleWatermarkImageFileSelect}
+                      />
+
+                      {imageSrc ? (
+                        <div className="space-y-2">
+                          <div className="relative group bg-slate-950/80 border border-slate-800 rounded-lg p-2 flex flex-col items-center justify-center">
+                            <img
+                              src={imageSrc}
+                              alt="Preview"
+                              className="max-h-24 max-w-full rounded object-contain border border-slate-800/60 bg-slate-900/60"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none'
+                              }}
+                            />
+                            <div className="mt-2 flex items-center justify-between w-full px-1">
+                              {isBase64 ? (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                  Base64 (~{base64SizeKB} KB)
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                                  Remoto / URL
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={handleRemoveWatermarkImage}
+                                className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 transition cursor-pointer"
+                              >
+                                <Icon name="trash" size="xs" />
+                                Remover
+                              </button>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => watermarkFileInputRef.current?.click()}
+                            className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition cursor-pointer"
+                          >
+                            <Icon name="upload" size="xs" />
+                            Substituir por Imagem Local
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <button
+                            type="button"
+                            onClick={() => watermarkFileInputRef.current?.click()}
+                            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition cursor-pointer shadow-sm"
+                          >
+                            <Icon name="upload" size="xs" />
+                            Procurar Imagem Local
+                          </button>
+                          <p className="text-[10px] text-slate-500 text-center">
+                            PNG, JPG, SVG, WebP ou GIF (converte em Base64)
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-slate-400 block">
+                          {isBase64 ? 'Origem dos Dados' : 'URL ou Caminho da Imagem'}
+                        </label>
+                        {isBase64 ? (
+                          <div className="flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-400 font-mono">
+                            <span className="truncate pr-2">data:image/...;base64 (~{base64SizeKB} KB)</span>
+                            <button
+                              type="button"
+                              onClick={() => navigator.clipboard?.writeText(imageSrc)}
+                              title="Copiar Base64"
+                              className="text-slate-400 hover:text-indigo-400 shrink-0 cursor-pointer"
+                            >
+                              <Icon name="copy" size="xs" />
+                            </button>
+                          </div>
+                        ) : (
+                          <input
+                            type="text"
+                            value={imageSrc}
+                            onChange={(e) => store.updateWatermark({ imageSource: e.target.value })}
+                            placeholder="https://exemplo.com/logo.png"
+                            className="w-full bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono text-[11px]"
+                          />
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-[10px] text-slate-500 block mb-1">Largura (px):</span>
+                          <input
+                            type="number"
+                            placeholder="Auto"
+                            value={template.pageSettings.watermark.width || ''}
+                            onChange={(e) => store.updateWatermark({ width: e.target.value ? Number(e.target.value) : undefined })}
+                            className="w-full px-2 py-1 bg-slate-900 border border-slate-800 rounded text-slate-200 text-xs font-mono"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 block mb-1">Altura (px):</span>
+                          <input
+                            type="number"
+                            placeholder="Auto"
+                            value={template.pageSettings.watermark.height || ''}
+                            onChange={(e) => store.updateWatermark({ height: e.target.value ? Number(e.target.value) : undefined })}
+                            className="w-full px-2 py-1 bg-slate-900 border border-slate-800 rounded text-slate-200 text-xs font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Controles Comuns: Rotação, Opacidade, OnTop, Condição */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] text-slate-500">Rotação:</span>
+                    <span className="font-mono text-[10px] text-slate-300">{template.pageSettings.watermark.rotation ?? 45}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={-180}
+                    max={180}
+                    value={template.pageSettings.watermark.rotation ?? 45}
+                    onChange={(e) => store.updateWatermark({ rotation: Number(e.target.value) })}
+                    className="w-full accent-indigo-500 h-1 bg-slate-800 rounded"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] text-slate-500">Opacidade:</span>
+                    <span className="font-mono text-[10px] text-slate-300">{Math.round((template.pageSettings.watermark.opacity ?? 0.2) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={template.pageSettings.watermark.opacity ?? 0.2}
+                    onChange={(e) => store.updateWatermark({ opacity: Number(e.target.value) })}
+                    className="w-full accent-indigo-500 h-1 bg-slate-800 rounded"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] text-slate-300">Renderizar sobre o conteúdo</span>
+                  <input
+                    type="checkbox"
+                    checked={template.pageSettings.watermark.onTop || false}
+                    onChange={(e) => store.updateWatermark({ onTop: e.target.checked })}
+                    className="w-4 h-4 accent-indigo-600 rounded bg-slate-900 border-slate-700 cursor-pointer"
+                  />
+                </div>
+
+                {/* Repetição em mosaico / grade preenchendo a folha */}
+                <div className="pt-2 border-t border-slate-800/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-medium text-slate-300 block">Repetir na página (Mosaico)</span>
+                      <span className="text-[10px] text-slate-500">Preenche toda a folha em grade alternada</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={template.pageSettings.watermark.repeat || false}
+                      onChange={(e) => store.updateWatermark({ repeat: e.target.checked })}
+                      className="w-4 h-4 accent-indigo-600 rounded bg-slate-900 border-slate-700 cursor-pointer"
+                    />
+                  </div>
+
+                  {template.pageSettings.watermark.repeat && (
+                    <div className="space-y-2 pt-1 pl-1">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] text-slate-400">Espaçamento Horizontal:</span>
+                          <span className="font-mono text-[10px] text-slate-300">
+                            {template.pageSettings.watermark.spacingX ? `${template.pageSettings.watermark.spacingX} pt` : 'Automático'}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={80}
+                          max={400}
+                          value={template.pageSettings.watermark.spacingX ?? 200}
+                          onChange={(e) => store.updateWatermark({ spacingX: Number(e.target.value) })}
+                          className="w-full accent-indigo-500 h-1 bg-slate-800 rounded"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] text-slate-400">Espaçamento Vertical:</span>
+                          <span className="font-mono text-[10px] text-slate-300">
+                            {template.pageSettings.watermark.spacingY ? `${template.pageSettings.watermark.spacingY} pt` : 'Automático'}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={60}
+                          max={350}
+                          value={template.pageSettings.watermark.spacingY ?? 150}
+                          onChange={(e) => store.updateWatermark({ spacingY: Number(e.target.value) })}
+                          className="w-full accent-indigo-500 h-1 bg-slate-800 rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-slate-500 block mb-1">Condição de Impressão:</span>
+                  <input
+                    type="text"
+                    value={template.pageSettings.watermark.printCondition || ''}
+                    onChange={(e) => store.updateWatermark({ printCondition: e.target.value })}
+                    placeholder="Ex: status == 'draft'"
+                    className="w-full px-2 py-1 bg-slate-900 border border-slate-800 rounded text-slate-200 text-xs font-mono"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[11px] leading-relaxed">
@@ -2027,6 +2771,9 @@ export default function PropertiesPanel() {
     return (
       <StudioSlateElementInspector
         element={selectedElement}
+        isMultiSelection={isMultiSelection}
+        selectedCount={selectedElements.length}
+        parentName={selectedElementLocation}
         onUpdate={(field, value) => {
           const updates = typeof field === 'string' ? { [field]: value } : field
           if (isMultiSelection) {
@@ -5256,9 +6003,9 @@ function GroupPropertiesPanel({
   group: ElementGroup; 
   location: 'body' | 'header' | 'footer' | 'bodyBackground' | 'summary' 
 }): JSX.Element {
-  const { updateGroup, deleteGroup, template } = useTemplateStore()
+  const { updateGroup, deleteGroup, selectGroup, template } = useTemplateStore()
   
-  // Buscar elementos do grupo
+  // Buscar elementos do grupo (incluindo filhos de container)
   const groupElements = (() => {
     let allElements: Element[] = []
     
@@ -5268,104 +6015,116 @@ function GroupPropertiesPanel({
       allElements = template.pageSettings.footer.elements
     } else if (location === 'bodyBackground' && template.pageSettings.bodyBackground) {
       allElements = template.pageSettings.bodyBackground.elements
+    } else if (location === 'summary' && template.summaryPage) {
+      allElements = template.summaryPage.elements
     } else {
-      allElements = template.page
+      allElements = template.page || []
     }
     
-    return allElements.filter(el => group.elementIds.includes(el.id))
+    const flat = flattenElements(allElements)
+    return flat.filter(el => group.elementIds.includes(el.id))
   })()
   
   return (
-    <div className="w-[360px] theme-bg-secondary border-l theme-border p-4 overflow-y-auto">
-      <h2 className="text-sm font-semibold theme-text border-b pb-3 mb-3">
-        Group Properties
-      </h2>
-      
-      {/* Group Name */}
-      <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-        <div className="flex items-center mb-2">
-          <svg 
-            className="w-4 h-4 mr-2 text-purple-600" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2"
-          >
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-          </svg>
-          <label className="text-xs font-semibold text-purple-800">
-            Group Name
-          </label>
+    <div className="w-[300px] bg-slate-900 border-l border-slate-800 flex flex-col h-full shrink-0 select-none">
+      {/* Header */}
+      <div className="p-3.5 border-b border-slate-800 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+          <h2 className="text-sm font-semibold text-slate-200">Propriedades do Grupo</h2>
         </div>
-        <Input
-          value={group.name}
-          onChange={(e) => updateGroup(group.id, { name: e.target.value }, location)}
-          placeholder="Group name"
-          className="border-purple-300"
-        />
-      </div>
-      
-      {/* Print Condition */}
-      <div className="mb-4">
-        <label className="block text-xs font-semibold theme-text mb-2">
-          Print Condition
-        </label>
-        <TextArea
-          value={group.printCondition || ''}
-          onChange={(e) => updateGroup(group.id, { printCondition: e.target.value }, location)}
-          placeholder="Ex: invoice.total > 1000"
-          rows={3}
-          className="font-mono"
-        />
-        <p className="text-xs theme-text-muted mt-1">
-          If empty, the group will always print. Use JavaScript expressions like:
-        </p>
-        <ul className="text-xs theme-text-muted mt-1 ml-4 list-disc">
-          <li><code>invoice.total &gt; 1000</code></li>
-          <li><code>invoice.discount &gt; 0</code></li>
-          <li><code>invoice.status === "Aprovado"</code></li>
-        </ul>
-      </div>
-      
-      {/* Elementos do Grupo */}
-      <div className="mb-4">
-        <label className="block text-xs font-semibold theme-text mb-2">
-          Elements ({group.elementIds.length})
-        </label>
-        <div className="space-y-1 max-h-60 overflow-y-auto">
-          {groupElements.map((element) => (
-            <div
-              key={element.id}
-              className="px-3 py-2 theme-bg-tertiary border theme-border rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-            >
-              <div className="font-medium theme-text">{element.id}</div>
-              <div className="theme-text-muted text-xs">
-                Type: {element.type} • Position: ({Math.round(element.x)}, {Math.round(element.y)})
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      
-      <div className="border-t pt-4">
         <button
-          onClick={() => {
-            if (confirm(`Ungroup "${group.name}"?\n\nElements will remain, but will no longer be part of the group.`)) {
-              deleteGroup(group.id, location)
-            }
-          }}
-          className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm font-medium flex items-center justify-center gap-2"
+          onClick={() => selectGroup(null)}
+          className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition"
+          title="Fechar"
         >
-          <Icon name="close" size="sm" />
-          Ungroup Elements
+          <Icon name="close" size="xs" />
         </button>
-        <p className="text-xs theme-text-muted mt-2 text-center">
-          Elements will not be deleted
-        </p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
+        {/* Identificação / Nome */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-semibold text-slate-300">Nome do Grupo</span>
+            <span className="text-[10px] text-slate-500 font-mono">#{group.id}</span>
+          </div>
+          <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-purple-500 transition">
+            <input
+              type="text"
+              value={group.name}
+              onChange={(e) => updateGroup(group.id, { name: e.target.value }, location)}
+              className="w-full bg-transparent text-slate-200 text-xs focus:outline-none"
+              placeholder="Nome do grupo..."
+            />
+          </div>
+        </div>
+
+        {/* Print Condition */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-semibold text-slate-300">Condição de Impressão</span>
+            <span className="text-[10px] text-purple-400 font-mono">printCondition</span>
+          </div>
+          <textarea
+            value={group.printCondition || ''}
+            onChange={(e) => updateGroup(group.id, { printCondition: e.target.value || null }, location)}
+            placeholder="Ex: invoice.total > 1000"
+            rows={3}
+            className="w-full bg-slate-950/70 border border-slate-800 rounded-lg p-2.5 text-xs text-purple-200 font-mono focus:outline-none focus:border-purple-500 transition resize-none"
+          />
+          <div className="mt-1.5 p-2 rounded bg-slate-950/50 border border-slate-800/80 text-[10px] text-slate-400 space-y-1">
+            <div className="text-slate-300 font-medium">Expressões suportadas na lib:</div>
+            <div className="font-mono text-purple-300">• invoice.total &gt; 1000</div>
+            <div className="font-mono text-purple-300">• status == 'APROVADO'</div>
+            <div className="font-mono text-purple-300">• _pageNumber == 1</div>
+            <div className="font-mono text-purple-300">• tipo in ['A', 'B']</div>
+            <div className="text-slate-500 italic">Deixe vazio para imprimir sempre.</div>
+          </div>
+        </div>
+
+        {/* Elementos do Grupo */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-300">Elementos no Grupo</span>
+            <span className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.2 rounded font-mono">
+              {groupElements.length} itens
+            </span>
+          </div>
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {groupElements.map((element) => (
+              <div
+                key={element.id}
+                className="px-2.5 py-1.5 bg-slate-950/60 border border-slate-800/80 rounded-lg text-xs flex items-center justify-between"
+              >
+                <div className="truncate flex-1 min-w-0 pr-2">
+                  <div className="font-mono text-slate-200 text-[11px] truncate">#{element.id}</div>
+                  <div className="text-[9px] text-slate-500 uppercase">{element.type}</div>
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono">
+                  {Math.round(element.x)},{Math.round(element.y)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Ação Desagrupar */}
+        <div className="pt-2 border-t border-slate-800">
+          <button
+            onClick={() => {
+              deleteGroup(group.id, location)
+              selectGroup(null)
+            }}
+            className="w-full py-1.5 px-3 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer"
+          >
+            <Icon name="ungroup" size="xs" />
+            <span>Desagrupar Elementos</span>
+          </button>
+          <p className="text-[10px] text-slate-500 mt-1.5 text-center">
+            Os elementos permanecerão no documento.
+          </p>
+        </div>
       </div>
     </div>
   )

@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
-import { useTemplateStore, type Element, type ElementLocation } from '../store/templateStore'
+import React, { useState, useEffect, useRef, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react'
+import { useTemplateStore, type Element, type ElementLocation, flattenElements } from '../store/templateStore'
 import { useUIStore } from '../store/uiStore'
 import { processExpression, hasTransformations } from '../utils/expressionProcessor'
-import { Select, Button, Divider } from './atoms'
+import { Select, Button, Divider, Icon } from './atoms'
 import { IconButton } from './molecules'
 // Component to render Loop child elements
 interface LoopChildElementProps {
@@ -74,12 +74,16 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   const {
     selectedContainerChildId,
     selectedContainerParentId,
+    selectedElementIds,
     selectContainerChild,
+    toggleElementSelection,
     updateContainerChildElement,
+    updateElement,
     saveSnapshot,
-    testData
+    testData,
+    template
   } = useTemplateStore()
-  const isSelected = selectedContainerChildId === child.id && selectedContainerParentId === containerId
+  const isSelected = selectedElementIds.includes(child.id) || (selectedContainerChildId === child.id && selectedContainerParentId === containerId)
 
   // Find loop element in all sections
   const findComponentElement = (containerElementId: string): Element | undefined => {
@@ -137,7 +141,14 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   }
 
   const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialX: 0, initialY: 0, initialOffsetY: 10 })
+  const [dragStart, setDragStart] = useState({
+    x: 0,
+    y: 0,
+    initialX: 0,
+    initialY: 0,
+    initialPositions: {} as Record<string, { x: number; y: number }>,
+    initialOffsetY: 10,
+  })
   const [isResizing, setIsResizing] = useState<string | null>(null)
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, initialW: 100, initialH: 20 })
 
@@ -155,15 +166,52 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   }
 
   const handleMouseDown = (e: ReactMouseEvent) => {
+    if (e.button !== 0) return
     e.stopPropagation()
-    selectContainerChild(containerId, child.id, location)
+
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+      toggleElementSelection(child.id, location)
+      return
+    }
+
+    if (!isSelected) {
+      selectContainerChild(containerId, child.id, location)
+    }
+
+    const isMulti = selectedElementIds.length > 1
+    const initialPositions: Record<string, { x: number; y: number }> = {}
+
+    if (isMulti) {
+      let sectionElements: Element[] = []
+      if (location === 'header' && template.pageSettings.header) {
+        sectionElements = template.pageSettings.header.elements
+      } else if (location === 'footer' && template.pageSettings.footer) {
+        sectionElements = template.pageSettings.footer.elements
+      } else if (location === 'bodyBackground' && template.pageSettings.bodyBackground) {
+        sectionElements = template.pageSettings.bodyBackground.elements
+      } else if (location === 'summary' && template.summaryPage) {
+        sectionElements = template.summaryPage.elements
+      } else {
+        sectionElements = template.page || []
+      }
+      const flat = flattenElements(sectionElements)
+      flat.forEach((el) => {
+        if (selectedElementIds.includes(el.id)) {
+          initialPositions[el.id] = { x: el.x || 0, y: el.y || 0 }
+        }
+      })
+    } else {
+      initialPositions[child.id] = { x: child.x || 0, y: child.y || 0 }
+    }
+
     setIsDragging(true)
     setDragStart({
       x: e.clientX,
       y: e.clientY,
       initialX: child.x || 0,
       initialY: child.y || 0,
-      initialOffsetY: child.height === '100%' ? 0 : (typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 0)
+      initialPositions,
+      initialOffsetY: child.height === '100%' ? 0 : (typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 10),
     })
   }
 
@@ -179,24 +227,32 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
     if (!isDragging) return
 
     const handleMouseMove = (e: globalThis.MouseEvent) => {
-      const childWidth = resolveWidth(child.width)
-      const childHeight = resolveHeight(child.height)
-      
       const deltaX = e.clientX - dragStart.x
       const deltaY = e.clientY - dragStart.y
-      
-      let newX = dragStart.initialX + deltaX
-      let newY = dragStart.initialY + deltaY
-      
-      newX = Math.max(0, Math.min(newX, Math.max(0, containerWidth - childWidth)))
-      newY = Math.max(0, Math.min(newY, Math.max(0, containerHeight - childHeight)))
-      
-      const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
-      if (isChildRelative && effectiveY !== undefined) {
-        const newOffsetY = child.height === '100%' ? 0 : Math.max(0, dragStart.initialOffsetY + deltaY)
-        updateContainerChildElement(containerId, child.id, { x: newX, y: newY, relativeOffsetY: newOffsetY }, location)
+      if (Object.keys(dragStart.initialPositions || {}).length > 1) {
+        Object.keys(dragStart.initialPositions).forEach((id) => {
+          const initPos = dragStart.initialPositions[id]
+          const newX = initPos.x + deltaX
+          const newY = initPos.y + deltaY
+          updateElement(id, { x: newX, y: newY }, location)
+        })
       } else {
-        updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
+        const childWidth = resolveWidth(child.width)
+        const childHeight = resolveHeight(child.height)
+        
+        let newX = dragStart.initialX + deltaX
+        let newY = dragStart.initialY + deltaY
+        
+        newX = Math.max(0, Math.min(newX, Math.max(0, containerWidth - childWidth)))
+        newY = Math.max(0, Math.min(newY, Math.max(0, containerHeight - childHeight)))
+        
+        const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
+        if (isChildRelative && effectiveY !== undefined) {
+          const newOffsetY = child.height === '100%' ? 0 : Math.max(0, dragStart.initialOffsetY + deltaY)
+          updateContainerChildElement(containerId, child.id, { x: newX, y: newY, relativeOffsetY: newOffsetY }, location)
+        } else {
+          updateContainerChildElement(containerId, child.id, { x: newX, y: newY }, location)
+        }
       }
     }
 
@@ -212,7 +268,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, dragStart, containerId, child.id, location, updateContainerChildElement, saveSnapshot])
+  }, [isDragging, dragStart, containerId, child.id, location, updateContainerChildElement, updateElement, saveSnapshot])
 
   useEffect(() => {
     if (!isResizing) return
@@ -652,6 +708,21 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
         ...(child.width === '100%' ? { width: '100%' } : (effectiveWidth !== undefined && !child.width ? { width: effectiveWidth } : {})),
       }}
       onMouseDown={handleMouseDown}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!selectedElementIds.includes(child.id)) {
+          selectContainerChild(containerId, child.id, location)
+        }
+        useUIStore.getState().openContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          targetType: 'element',
+          elementId: child.id,
+          containerId,
+          location,
+        })
+      }}
     >
       {renderContent()}
       {/* Label do elemento e handles de redimensionamento */}
@@ -685,13 +756,15 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
   const { 
     selectedLoopChildId, 
     selectedLoopParentId, 
+    selectedElementIds,
     selectLoopChild, 
+    toggleElementSelection,
     updateLoopChildElement,
     saveSnapshot,
     testData
   } = useTemplateStore()
   
-  const isSelected = selectedLoopChildId === child.id && selectedLoopParentId === loopId
+  const isSelected = selectedElementIds.includes(child.id) || (selectedLoopChildId === child.id && selectedLoopParentId === loopId)
   
   // Find loop element in all sections
   const findLoopElement = (loopElementId: string): Element | undefined => {
@@ -796,8 +869,15 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
   }
   
   const handleMouseDown = (e: ReactMouseEvent) => {
+    if (e.button !== 0) return
     e.stopPropagation()
-    selectLoopChild(loopId, child.id, location)
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+      toggleElementSelection(child.id, location)
+      return
+    }
+    if (!isSelected) {
+      selectLoopChild(loopId, child.id, location)
+    }
     setIsDragging(true)
     setDragStart({ x: e.clientX - child.x, y: e.clientY - child.y })
   }
@@ -1012,6 +1092,18 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
         ...(child.width === '100%' ? { width: '100%' } : {}),
       }}
       onMouseDown={handleMouseDown}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        selectLoopChild(loopId, child.id, location)
+        useUIStore.getState().openContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          targetType: 'element',
+          elementId: child.id,
+          location,
+        })
+      }}
     >
       {renderContent()}
       {/* Label do elemento */}
@@ -1025,7 +1117,17 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
 }
 
 export default function Canvas() {
-  const { template, selectedElementIds, selectedElementLocation, selectElement, toggleElementSelection, updateElement, currentSection, setCurrentSection, clearSelection } = useTemplateStore()
+  const { 
+    template, 
+    selectedElementIds, 
+    selectedElementLocation, 
+    selectElement, 
+    toggleElementSelection, 
+    updateElement, 
+    currentSection, 
+    setCurrentSection, 
+    clearSelection,
+  } = useTemplateStore()
   const { zoom, setZoom } = useUIStore()
   const pageRef = useRef<HTMLDivElement>(null)
 
@@ -1308,13 +1410,25 @@ export default function Canvas() {
         </div>
 
         {/* Scrollable content area */}
-        <div id="canvas-scroll-container" className="flex-1 overflow-auto p-8 bg-slate-950/80">
+        <div
+          id="canvas-scroll-container"
+          className="flex-1 overflow-auto p-8 bg-slate-950/80"
+          onContextMenu={(e) => {
+            e.preventDefault()
+            useUIStore.getState().openContextMenu({
+              x: e.clientX,
+              y: e.clientY,
+              targetType: 'canvas',
+              location: currentSection,
+            })
+          }}
+        >
           <div className="inline-block min-w-full min-h-full">
         {/* Wrapper que define o tamanho real para scroll funcionar com zoom */}
         <div 
           className="flex justify-center items-start min-w-max"
           style={{ 
-            minWidth: pageSize.width * scale + 100, // +100 para labels laterais
+            minWidth: pageSize.width * scale + 240, // +240 para labels laterais à direita
             minHeight: pageSize.height * scale + 50, // +50 para margem inferior
           }}
         >
@@ -1366,7 +1480,7 @@ export default function Canvas() {
                         pageSize={pageSize}
                         selectedElementIds={selectedElementIds}
                         selectedElementLocation={selectedElementLocation}
-                        allElements={template.pageSettings.bodyBackground?.elements ?? []}
+                        allElements={flattenElements(template.pageSettings.bodyBackground?.elements ?? [])}
                         onUpdateMultiple={() => {}}
                         updateElement={updateElement}
                       />
@@ -1519,7 +1633,7 @@ export default function Canvas() {
                       pageSize={pageSize}
                       selectedElementIds={selectedElementIds}
                       selectedElementLocation={selectedElementLocation}
-                      allElements={template.summaryPage?.background?.elements ?? []}
+                      allElements={flattenElements(template.summaryPage?.background?.elements ?? [])}
                       onUpdateMultiple={() => {}}
                       updateElement={updateElement}
                     />
@@ -1551,7 +1665,7 @@ export default function Canvas() {
                         pageSize={pageSize}
                         selectedElementIds={selectedElementIds}
                         selectedElementLocation={selectedElementLocation}
-                        allElements={template.summaryPage?.elements ?? []}
+                        allElements={flattenElements(template.summaryPage?.elements ?? [])}
                         onUpdateMultiple={() => {}}
                         updateElement={updateElement}
                       />
@@ -1781,7 +1895,7 @@ export default function Canvas() {
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
                     selectedElementLocation={selectedElementLocation}
-                    allElements={template.pageSettings.header?.elements ?? []}
+                    allElements={flattenElements(template.pageSettings.header?.elements ?? [])}
                     onUpdateMultiple={() => {}}
                     updateElement={updateElement}
                   />
@@ -1829,7 +1943,7 @@ export default function Canvas() {
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
                     selectedElementLocation={selectedElementLocation}
-                    allElements={template.pageSettings.footer?.elements ?? []}
+                    allElements={flattenElements(template.pageSettings.footer?.elements ?? [])}
                     onUpdateMultiple={() => {}}
                     updateElement={updateElement}
                   />
@@ -1892,11 +2006,29 @@ export default function Canvas() {
                     }
                   }
 
+                  const isContainerFixed = element.heightMode === 'fixed' || element.autoHeight === false
+                  const containerBaseHeight = typeof element.height === 'number' ? element.height : 150
+                  const currentContainerY = typeof effectiveY === 'number' ? effectiveY : (typeof element.y === 'number' ? element.y : 0)
+                  const maxAllowed = Math.max(30, bodyUsableHeight - currentContainerY)
+                  const containerAutoHeight = Math.min(
+                    isContainerFixed
+                      ? containerBaseHeight
+                      : Math.max(
+                          containerBaseHeight,
+                          (element.elements || []).reduce((max: number, ch: Element) => {
+                            const cy = typeof ch.y === 'number' ? ch.y : 0
+                            const chH = typeof ch.height === 'number' ? ch.height : 25
+                            return Math.max(max, cy + chH + 15)
+                          }, 0)
+                        ),
+                    maxAllowed
+                  )
+
                   const elHeight =
-                    typeof element.height === 'number'
+                    element.type === 'container'
+                      ? containerAutoHeight
+                      : typeof element.height === 'number'
                       ? element.height
-                      : element.type === 'container'
-                      ? 150
                       : 25
 
                   if (isRelativeFlow && effectiveY !== undefined) {
@@ -1925,7 +2057,7 @@ export default function Canvas() {
                       pageSize={pageSize}
                       selectedElementIds={selectedElementIds}
                       selectedElementLocation={selectedElementLocation}
-                      allElements={template.page}
+                      allElements={flattenElements(template.page)}
                       onUpdateMultiple={() => {}}
                       updateElement={updateElement}
                     />
@@ -1938,6 +2070,113 @@ export default function Canvas() {
               <div className="absolute inset-0 bg-gray-400/30 cursor-not-allowed" style={{ zIndex: 100 }} />
             )}
           </div>
+
+          {/* Camada de Marca d'Água (Watermark) */}
+          {template.pageSettings.watermark && (() => {
+            const wm = template.pageSettings.watermark
+            const rotation = wm.rotation ?? 45
+            const opacity = wm.opacity ?? 0.2
+
+            const imageTileWidth = wm.width || (wm.repeat ? Math.round(pageSize.width * 0.25) : Math.round(pageSize.width * 0.6))
+
+            const renderWatermarkContent = () => (
+              wm.type === 'image' && wm.imageSource ? (
+                <img
+                  src={wm.imageSource}
+                  alt="Watermark"
+                  style={{
+                    width: `${imageTileWidth}px`,
+                    height: wm.height ? `${wm.height}px` : 'auto',
+                    maxWidth: pageSize.width * 0.8,
+                    objectFit: 'contain',
+                  }}
+                />
+              ) : (
+                <span
+                  style={{
+                    fontSize: `${wm.fontSize || 60}px`,
+                    fontWeight: wm.fontStyle?.includes('bold') ? 'bold' : 'normal',
+                    fontStyle: wm.fontStyle?.includes('italic') ? 'italic' : 'normal',
+                    fontFamily: wm.fontName || 'Outfit, sans-serif',
+                    color: wm.color || '#94a3b8',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  {wm.text || (wm.dataBinding ? `{{${wm.dataBinding}}}` : 'WATERMARK')}
+                </span>
+              )
+            )
+
+            if (wm.repeat) {
+              const rawText = wm.text || (wm.dataBinding ? `{{${wm.dataBinding}}}` : 'WATERMARK')
+              const estimatedTextWidth = (wm.fontSize || 60) * (rawText.length * 0.6)
+              const defaultStepX = wm.type === 'image'
+                ? Math.round(imageTileWidth * 1.8)
+                : Math.min(320, Math.max(160, estimatedTextWidth * 1.5))
+              const defaultStepY = wm.type === 'image'
+                ? Math.round((wm.height || imageTileWidth) * 1.8)
+                : Math.min(260, Math.max(120, (wm.fontSize || 60) * 3.5))
+
+              const stepX = wm.spacingX || defaultStepX
+              const stepY = wm.spacingY || defaultStepY
+
+              const gridItems: { x: number; y: number }[] = []
+              let rowIndex = 0
+              for (let y = -stepY / 2; y <= totalCanvasHeight + stepY; y += stepY) {
+                const offsetX = (rowIndex % 2 !== 0) ? stepX / 2 : 0
+                for (let x = -stepX / 2 + offsetX; x <= pageSize.width + stepX; x += stepX) {
+                  gridItems.push({ x, y })
+                }
+                rowIndex++
+              }
+
+              return (
+                <div
+                  className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+                  style={{ zIndex: wm.onTop ? 45 : 3 }}
+                >
+                  {gridItems.map((pt, idx) => (
+                    <div
+                      key={`wm-grid-${idx}`}
+                      className="absolute flex items-center justify-center pointer-events-none select-none"
+                      style={{
+                        left: pt.x,
+                        top: pt.y,
+                        transform: `translate(-50%, -50%) rotate(-${rotation}deg)`,
+                        opacity,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {renderWatermarkContent()}
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+
+            return (
+              <div
+                className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+                style={{ zIndex: wm.onTop ? 45 : 3 }}
+              >
+                {Array.from({ length: numberOfPages }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute flex items-center justify-center pointer-events-none select-none"
+                    style={{
+                      left: '50%',
+                      top: (pageSize.height / 2) + (i * bodyUsableHeight),
+                      transform: `translate(-50%, -50%) rotate(-${rotation}deg)`,
+                      opacity,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {renderWatermarkContent()}
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
 
           
           {/* Page Separators */}
@@ -2074,9 +2313,9 @@ export default function Canvas() {
             <>
               {/* Label Margin Top */}
               <div
-                className="absolute text-xs text-gray-400"
+                className="absolute text-xs text-gray-400 select-none pointer-events-none"
                 style={{
-                  left: -160,
+                  left: pageSize.width + 10,
                   top: margins.top,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -2088,9 +2327,9 @@ export default function Canvas() {
               {/* Label Header End */}
               {template.pageSettings.header && (
                 <div
-                  className="absolute text-xs text-gray-500"
+                  className="absolute text-xs text-gray-500 select-none pointer-events-none"
                   style={{
-                    left: -200,
+                    left: pageSize.width + 10,
                     top: margins.top + template.pageSettings.header.height,
                     transform: 'translateY(-50%)',
                     whiteSpace: 'nowrap',
@@ -2103,9 +2342,9 @@ export default function Canvas() {
               {/* Label Footer Start */}
               {template.pageSettings.footer && (
                 <div
-                  className="absolute text-xs text-gray-500"
+                  className="absolute text-xs text-gray-500 select-none pointer-events-none"
                   style={{
-                    left: -200,
+                    left: pageSize.width + 10,
                     top: totalCanvasHeight - margins.bottom - template.pageSettings.footer.height,
                     transform: 'translateY(-50%)',
                     whiteSpace: 'nowrap',
@@ -2117,9 +2356,9 @@ export default function Canvas() {
               
               {/* Label Margin Bottom */}
               <div
-                className="absolute text-xs text-gray-400"
+                className="absolute text-xs text-gray-400 select-none pointer-events-none"
                 style={{
-                  left: -160,
+                  left: pageSize.width + 10,
                   top: totalCanvasHeight - margins.bottom,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -2130,7 +2369,7 @@ export default function Canvas() {
               
               {/* Label Margin Left */}
               <div
-                className="absolute text-xs text-blue-600"
+                className="absolute text-xs text-blue-600 select-none pointer-events-none"
                 style={{
                   left: margins.left,
                   top: -25,
@@ -2143,7 +2382,7 @@ export default function Canvas() {
               
               {/* Label Margin Right */}
               <div
-                className="absolute text-xs text-blue-600"
+                className="absolute text-xs text-blue-600 select-none pointer-events-none"
                 style={{
                   left: pageSize.width - margins.right,
                   top: -25,
@@ -2161,9 +2400,9 @@ export default function Canvas() {
             <>
               {/* Label Margin Top */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
-                  left: -150,
+                  left: pageSize.width + 10,
                   top: margins.top,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -2174,9 +2413,9 @@ export default function Canvas() {
               
               {/* Label Margin Bottom */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
-                  left: -150,
+                  left: pageSize.width + 10,
                   top: totalCanvasHeight - margins.bottom,
                   transform: 'translateY(-50%)',
                   whiteSpace: 'nowrap',
@@ -2187,7 +2426,7 @@ export default function Canvas() {
               
               {/* Label Margin Left */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
                   left: margins.left,
                   top: -25,
@@ -2200,7 +2439,7 @@ export default function Canvas() {
               
               {/* Label Margin Right */}
               <div
-                className="absolute text-xs text-green-500"
+                className="absolute text-xs text-green-500 select-none pointer-events-none"
                 style={{
                   left: pageSize.width - margins.right,
                   top: -25,
@@ -2449,7 +2688,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
     e.stopPropagation()
     
     
-    if (e.ctrlKey || e.metaKey) {
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
       onSelect(true)
       return
     }
@@ -2965,10 +3204,13 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         )
       }
 
-      case 'image':
+      case 'image': {
+        const imageSource = element.source || element.url || element.value
         return (
           <div
-            className={`cursor-move select-none border-2 border-dashed border-gray-400 flex items-center justify-center ${
+            className={`cursor-move select-none border-2 border-dashed border-gray-400 flex items-center overflow-hidden ${
+              element.alignment === 'left' ? 'justify-start' : element.alignment === 'right' ? 'justify-end' : 'justify-center'
+            } ${
               isSelected ? 'ring-2 ring-primary-500' : ''
             }`}
             style={{
@@ -2977,13 +3219,19 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
             }}
             onMouseDown={handleMouseDown}
           >
-            {element.source ? (
-              <img src={element.source} alt="" className="max-w-full max-h-full pointer-events-none" />
+            {imageSource ? (
+              <img
+                src={imageSource}
+                alt=""
+                className="w-full h-full pointer-events-none"
+                style={{ objectFit: (element.fit as any) || 'contain' }}
+              />
             ) : (
               <span className="text-gray-400 text-sm">🖼️ Image</span>
             )}
           </div>
         )
+      }
 
       case 'table': {
         try {
@@ -3354,16 +3602,33 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                   : typeof element.width === 'number'
                     ? element.width
                     : 400
-              const containerHeight =
-                element.height === '100%'
-                  ? (location === 'header'
-                    ? (template.pageSettings.header?.height || 100)
-                    : location === 'footer'
-                      ? (template.pageSettings.footer?.height || 100)
-                      : (pageSize.height - margins.top - margins.bottom - (location === 'body' ? ((template.pageSettings.header?.height || 0) + (template.pageSettings.footer?.height || 0)) : 0)))
-                  : typeof element.height === 'number'
-                    ? element.height
-                    : 150
+              const headerH = template.pageSettings.header?.height || 0
+              const footerH = template.pageSettings.footer?.height || 0
+              const sectionMaxH = location === 'header'
+                ? headerH
+                : location === 'footer'
+                ? footerH
+                : Math.max(0, pageSize.height - margins.top - margins.bottom - headerH - footerH)
+              const containerStartY = typeof effectiveY === 'number' ? effectiveY : (typeof element.y === 'number' ? element.y : 0)
+              const maxAllowedContainerH = Math.max(30, sectionMaxH - containerStartY)
+
+              const isFixed = element.heightMode === 'fixed' || element.autoHeight === false
+              const baseHeight = element.height === '100%'
+                ? sectionMaxH
+                : typeof element.height === 'number' ? element.height : 150
+              const containerHeight = Math.min(
+                isFixed
+                  ? baseHeight
+                  : Math.max(
+                      baseHeight,
+                      (containerElements || []).reduce((max: number, ch: Element) => {
+                        const cy = typeof ch.y === 'number' ? ch.y : 0
+                        const chH = typeof ch.height === 'number' ? ch.height : 25
+                        return Math.max(max, cy + chH + 15)
+                      }, 0)
+                    ),
+                maxAllowedContainerH
+              )
               const containerBorderWidth = element.style?.borderStyle === 'none' ? 0 : (element.style?.borderWidth ?? element.style?.strokeWidth ?? 2)
               const innerContainerWidth = Math.max(0, containerWidth - (containerBorderWidth * 2))
               const innerContainerHeight = Math.max(0, containerHeight - (containerBorderWidth * 2))
@@ -3407,6 +3672,18 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                     </span>
                   </div>
 */}
+
+                  {isSelected && (
+                    <div className="absolute top-1 right-1 pointer-events-none z-20">
+                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded shadow-sm border ${
+                        isFixed
+                          ? 'bg-amber-950/90 text-amber-300 border-amber-700/70'
+                          : 'bg-indigo-950/90 text-indigo-300 border-indigo-700/70'
+                      }`}>
+                        {isFixed ? 'Fixed-Height' : 'Auto-Height'}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="relative w-full h-full">
                     {containerElements.length === 0 ? (
@@ -3577,6 +3854,20 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         top: element.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : element.y),
         ...(element.width === '100%' ? { width: '100%' } : (effectiveWidth !== undefined && element.width === undefined ? { width: effectiveWidth } : {})),
       }}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!selectedElementIds.includes(element.id)) {
+          onSelect(false)
+        }
+        useUIStore.getState().openContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          targetType: element.type === 'container' ? 'container' : 'element',
+          elementId: element.id,
+          location,
+        })
+      }}
     >
       <div ref={elementWrapperRef} className="relative">
         {renderElement()}
@@ -3585,10 +3876,14 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         
         {elementGroup && (
           <div
-            className="absolute -top-1 -right-1 z-20 pointer-events-none"
-            title={`Group: ${elementGroup.name}${elementGroup.printCondition ? `\nCondition: ${elementGroup.printCondition}` : ''}`}
+            className="absolute -top-1 -right-1 z-20 pointer-events-auto cursor-pointer group/badge"
+            title={`Grupo: ${elementGroup.name}${elementGroup.printCondition ? `\nCondição: ${elementGroup.printCondition}` : ''}\nClique para editar grupo`}
+            onClick={(e) => {
+              e.stopPropagation()
+              useTemplateStore.getState().selectGroup(elementGroup.id, location)
+            }}
           >
-            <div className="bg-purple-500 text-white p-1 rounded-full shadow-lg">
+            <div className="bg-purple-500 hover:bg-purple-600 text-white p-1 rounded-full shadow-lg transition transform hover:scale-110">
               <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="3" y="3" width="7" height="7" rx="1" />
                 <rect x="14" y="3" width="7" height="7" rx="1" />
