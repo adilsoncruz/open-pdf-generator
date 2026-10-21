@@ -7,7 +7,7 @@ Comprehensive, reproducible benchmark comparing **Open PDF Generator** against *
 - **Cold Start:** Open PDF Generator starts **4.3x faster** (273.62 ms vs 1166.03 ms), ideal for Serverless, AWS Lambda, and rapid container scale-out.
 - **Single-Page Invoices:** **4.4x lower latency** and generates **1874 docs/sec** (compared to 424 docs/sec in Jasper).
 - **Dependency Footprint:** Open PDF Generator is **3.4x lighter** (4.0 MB vs 13.6 MB), completely eliminating legacy Apache Commons Digester/Collections and Eclipse ECJ compiler dependencies.
-- **Container RSS Memory:** In isolated Docker containers with cgroup quotas, Open PDF uses **41.6% less physical RAM (RSS)** (75.2 MB vs 128.8 MB).
+- **Container RSS Memory:** In isolated Docker containers with cgroup quotas, Open PDF uses **23.4% less physical RAM (RSS)** (109.2 MB vs 142.6 MB).
 - **JSON Schema Safety:** Validating payloads upfront with full JSON Schema compliance adds just **0.35 ms** overhead.
 
 ## Benchmark Environment
@@ -26,12 +26,12 @@ Workload executed inside an isolated Docker container (`eclipse-temurin:21-jre-a
 
 | Metric | Open PDF Generator | JasperReports 6.21.4 | Advantage |
 |---|---|---|---|
-| **Workload** | 500 invoices (4 threads) | 500 invoices (4 threads) | Identical workload |
-| **Total Duration** | **0.37 s** | 1.05 s | **2.81x faster** |
-| **Throughput** | **1337.3 docs/s** | 476.6 docs/s | **+181% more throughput** |
-| **Peak Process RSS Memory** | **75.2 MB** | 128.8 MB | **41.6% less RAM** |
-| **Cgroup Peak Memory** | **77.9 MB** | 129.3 MB | Safer from OOMKilled |
-| **Average CPU Usage** | 11.2% | 8.4% | Higher CPU saturation efficiency |
+| **Workload** | 10000 invoices (4 threads) | 10000 invoices (4 threads) | Identical workload |
+| **Total Duration** | **2.28 s** | 6.18 s | **2.70x faster** |
+| **Throughput** | **4378.3 docs/s** | 1618.9 docs/s | **+170% more throughput** |
+| **Peak Process RSS Memory** | **109.2 MB** | 142.6 MB | **23.4% less RAM** |
+| **Cgroup Peak Memory** | **109.6 MB** | 145.5 MB | Safer from OOMKilled |
+| **Average CPU Usage** | 7.7% | 6.6% | Higher CPU saturation efficiency |
 
 ## Throughput & Latency (Single-thread)
 
@@ -121,8 +121,8 @@ xychart-beta
 xychart-beta
     title "Peak Container RSS Memory (MB)"
     x-axis ["Open PDF Generator", "JasperReports"]
-    y-axis "Memory (MB)" 0 --> 160
-    bar [75, 128]
+    y-axis "Memory (MB)" 0 --> 178
+    bar [109, 142]
 ```
 
 ### Concurrency Throughput (Higher is better)
