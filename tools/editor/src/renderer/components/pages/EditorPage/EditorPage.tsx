@@ -468,17 +468,6 @@ export function EditorPage() {
                 )}
               </button>
               <button 
-                onClick={() => setShowDataPanel(true)}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
-                  showDataPanel
-                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-                }`}
-                title="Dados JSON de Teste"
-              >
-                <Icon name="data" size="sm" />
-              </button>
-              <button 
                 onClick={() => {
                   if (sidebarTab === 'history' && !isSidebarMinimized) {
                     setSidebarMinimized(true)
