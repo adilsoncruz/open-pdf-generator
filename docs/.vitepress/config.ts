@@ -64,7 +64,8 @@ export default defineConfig({
           items: [
             { text: 'Data Binding', link: '/lib/guide/data-binding' },
             { text: 'Conditions', link: '/lib/guide/conditions' },
-            { text: 'Transformations', link: '/lib/guide/transformations' }
+            { text: 'Transformations', link: '/lib/guide/transformations' },
+            { text: 'Schema Validation', link: '/lib/guide/schema-validation' }
           ]
         },
         {

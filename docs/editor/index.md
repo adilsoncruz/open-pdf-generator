@@ -104,7 +104,7 @@ Fine-tune element dimensions, colors, fonts, borders, data bindings, conditions,
 
 ### Test Data & Schema Editor
 
-Built-in JSON editor to test template bindings with formatted preview, minify, and schema validation.
+Built-in JSON and Schema editors to test template bindings with formatted preview, real-time syntax checking, live schema validation against active test data, schema auto-inference, and one-click mock data generation. Learn more in the [Schema Validation Guide](/lib/guide/schema-validation).
 
 ![Test Data Modal](/images/editor/screenshots/data-panel.png)
 
