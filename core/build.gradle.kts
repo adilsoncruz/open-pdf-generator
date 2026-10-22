@@ -19,7 +19,7 @@ dependencies {
     implementation("com.github.librepdf:openpdf:2.0.3")
 
     implementation("com.google.code.gson:gson:2.11.0")
-    implementation("com.networknt:json-schema-validator:1.5.1")
+    implementation("com.networknt:json-schema-validator:1.5.6")
 
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.google.zxing:javase:3.5.3") {
@@ -34,9 +34,9 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
-    testImplementation("io.mockk:mockk:1.13.13")
-    testImplementation("org.assertj:assertj-core:3.26.3")
-    testImplementation("org.apache.pdfbox:pdfbox:2.0.31")
+    testImplementation("io.mockk:mockk:1.13.17")
+    testImplementation("org.assertj:assertj-core:3.27.3")
+    testImplementation("org.apache.pdfbox:pdfbox:2.0.32")
     testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.1.0")
 }
 

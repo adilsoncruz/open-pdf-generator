@@ -34,17 +34,17 @@ dependencies {
     // Core's transitive dependencies (needed since we're using a JAR)
     implementation("com.github.librepdf:openpdf:2.0.3")
     implementation("com.google.code.gson:gson:2.11.0")
-    implementation("com.networknt:json-schema-validator:1.5.1")
+    implementation("com.networknt:json-schema-validator:1.5.6")
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.google.zxing:javase:3.5.3")
-    implementation("org.slf4j:slf4j-api:2.0.9")
-    implementation("ch.qos.logback:logback-classic:1.4.14")
+    implementation("org.slf4j:slf4j-api:2.0.16")
+    implementation("ch.qos.logback:logback-classic:1.5.12")
 
     // CLI Framework
     implementation("com.github.ajalt.clikt:clikt:4.2.1")
 
     // Async support
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
     testImplementation(kotlin("test"))
 }
