@@ -1,0 +1,43 @@
+name: "✨ Feature Request"
+description: Suggest an idea or new capability for Open PDF Generator
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a feature! Please provide as much detail as possible.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Target Component
+      description: Where should this feature be implemented?
+      options:
+        - "Core Engine (Kotlin/Java)"
+        - "CLI (tools/cli)"
+        - "Editor Desktop (tools/editor)"
+        - "Documentation (docs)"
+        - "Cross-layer (Multiple components)"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Use Case
+      description: Is your feature request related to a problem or a specific PDF generation use case?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / Expected API or UI
+      description: Describe the solution you'd like to see, including JSON template schema changes or UI mockups if applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered.
+    validations:
+      required: false

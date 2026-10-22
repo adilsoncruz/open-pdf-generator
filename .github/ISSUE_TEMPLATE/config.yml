@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/adilsoncruz/open-pdf-generator/discussions
+    about: Ask questions, discuss ideas, and share templates with the community.
+  - name: Security Vulnerability Reporting
+    url: mailto:adilsoncruz.ac@gmail.com
+    about: Privately report security vulnerabilities.

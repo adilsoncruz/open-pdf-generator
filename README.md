@@ -2,7 +2,8 @@
 
 > 🚀 Open source toolkit for generating PDFs from JSON templates
 
-[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+[![CI](https://github.com/adilsoncruz/open-pdf-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/adilsoncruz/open-pdf-generator/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![JitPack](https://jitpack.io/v/adilsoncruz/open-pdf-generator.svg)](https://jitpack.io/#adilsoncruz/open-pdf-generator)
 [![GitHub Stars](https://img.shields.io/github/stars/adilsoncruz/open-pdf-generator?style=social)](https://github.com/adilsoncruz/open-pdf-generator)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ff69b4?logo=github)](https://github.com/sponsors/adilsoncruz)
@@ -283,7 +284,9 @@ cd docs && npm install && npm run dev
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) and our [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for guidelines.
+
+For security concerns, please refer to our [Security Policy](./SECURITY.md).
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
