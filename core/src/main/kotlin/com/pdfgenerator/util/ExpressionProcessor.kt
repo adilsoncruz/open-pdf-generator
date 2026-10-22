@@ -13,8 +13,10 @@ object ExpressionProcessor {
     private const val TRANSFORMATION_ARG_SEPARATOR = ':'
     private const val MAX_EXPRESSION_CACHE_SIZE = 1024
 
-    private val templatePlaceholderRegex = """\$\{([^}]+)\}""".toRegex()
-    private val transformationArgsRegex = """'([^']*)'|"([^"]*)"|([^:]+)""".toRegex()
+    private val templatePlaceholderRegex = """(?:\$\{([^}]+)\}|\{\{([^}]+)\}\})""".toRegex()
+    private val functionCallRegex = """^([a-zA-Z0-9_]+)\s*\((.*)\)$""".toRegex()
+    private val functionArgsRegex = """\s*(?:'([^']*)'|"([^"]*)"|([^,]+))\s*""".toRegex()
+    private val colonArgsRegex = """\s*(?:'([^']*)'|"([^"]*)"|([^:]+))\s*""".toRegex()
 
     private val expressionCacheLock = Any()
     private val parsedExpressionCache =
@@ -34,12 +36,41 @@ object ExpressionProcessor {
         val args: List<String>,
     )
 
+    fun containsTemplateExpression(text: String?): Boolean {
+        if (text == null) return false
+        return (text.contains("\${") && text.contains("}")) || (text.contains("{{") && text.contains("}}"))
+    }
+
+    fun processTemplate(
+        template: String,
+        data: Map<String, Any?>,
+        loopContext: com.pdfgenerator.engine.LoopContext? = null,
+    ): String {
+        if (!containsTemplateExpression(template)) {
+            return template
+        }
+
+        return templatePlaceholderRegex.replace(template) { match ->
+            val expr = match.groupValues[1].ifEmpty { match.groupValues[2] }.trim()
+            process(expr, data, loopContext)
+        }
+    }
+
     fun process(
         expression: String,
         data: Map<String, Any?>,
         loopContext: com.pdfgenerator.engine.LoopContext? = null,
     ): String {
-        val parsedExpression = getOrParseExpression(expression)
+        val trimmed = expression.trim()
+        val cleanExpr = when {
+            trimmed.startsWith("\${") && trimmed.endsWith("}") ->
+                trimmed.substring(2, trimmed.length - 1).trim()
+            trimmed.startsWith("{{") && trimmed.endsWith("}}") ->
+                trimmed.substring(2, trimmed.length - 2).trim()
+            else -> trimmed
+        }
+
+        val parsedExpression = getOrParseExpression(cleanExpr)
         val rawValue = DataBindingResolver.resolve(parsedExpression.binding, data, loopContext)
 
         if (parsedExpression.transformations.isEmpty()) {
@@ -54,8 +85,8 @@ object ExpressionProcessor {
         return valueToString(currentValue)
     }
 
-    fun hasTransformations(expression: String): Boolean {
-        return expression.contains(EXPRESSION_PART_SEPARATOR)
+    fun hasTransformations(expression: String?): Boolean {
+        return expression?.contains(EXPRESSION_PART_SEPARATOR) == true
     }
 
     fun extractBinding(expression: String): String {
@@ -113,7 +144,7 @@ object ExpressionProcessor {
         val objMap = value as Map<String, Any?>
 
         return templatePlaceholderRegex.replace(templateStr) { match ->
-            val propPath = match.groupValues[1].trim()
+            val propPath = match.groupValues[1].ifEmpty { match.groupValues[2] }.trim()
 
             val parsedExpression = getOrParseExpression(propPath)
             val propValue = resolvePropPath(parsedExpression.binding, objMap)
@@ -202,31 +233,46 @@ object ExpressionProcessor {
     }
 
     private fun parseTransformation(transformation: String): ParsedTransformation {
-        val colonIndex = transformation.indexOf(TRANSFORMATION_ARG_SEPARATOR)
+        val trimmed = transformation.trim()
 
-        if (colonIndex == -1) {
-            return ParsedTransformation(transformation.trim(), emptyList())
+        val funcMatch = functionCallRegex.matchEntire(trimmed)
+        if (funcMatch != null) {
+            val funcName = funcMatch.groupValues[1].trim()
+            val argsStr = funcMatch.groupValues[2].trim()
+            val args = if (argsStr.isEmpty()) emptyList() else parseArgs(argsStr, functionArgsRegex)
+            return ParsedTransformation(funcName, args)
         }
 
-        val funcName = transformation.substring(0, colonIndex).trim()
-        val argsStr = transformation.substring(colonIndex + 1)
+        val colonIndex = trimmed.indexOf(TRANSFORMATION_ARG_SEPARATOR)
+        if (colonIndex == -1) {
+            return ParsedTransformation(trimmed, emptyList())
+        }
 
+        val funcName = trimmed.substring(0, colonIndex).trim()
+        val argsStr = trimmed.substring(colonIndex + 1)
+        val args = parseArgs(argsStr, colonArgsRegex)
+        return ParsedTransformation(funcName, args)
+    }
+
+    private fun parseArgs(argsStr: String, regex: Regex): List<String> {
         val args = mutableListOf<String>()
-        transformationArgsRegex.findAll(argsStr).forEach { match ->
-            val isQuoted = match.groupValues[1].isNotEmpty() || match.groupValues[2].isNotEmpty()
-            val arg =
-                match.groupValues[1].ifEmpty {
-                    match.groupValues[2].ifEmpty {
-                        match.groupValues[3]
+        regex.findAll(argsStr).forEach { match ->
+            val single = match.groups[1]
+            val double = match.groups[2]
+            val unquoted = match.groups[3]
+
+            when {
+                single != null -> args.add(single.value)
+                double != null -> args.add(double.value)
+                unquoted != null -> {
+                    val trimmed = unquoted.value.trim()
+                    if (trimmed.isNotEmpty()) {
+                        args.add(trimmed)
                     }
                 }
-            if (arg.isNotEmpty()) {
-                args.add(if (isQuoted) arg else arg.trim())
             }
         }
-
-
-        return ParsedTransformation(funcName, args)
+        return args
     }
 
     private fun valueToString(value: Any?): String {

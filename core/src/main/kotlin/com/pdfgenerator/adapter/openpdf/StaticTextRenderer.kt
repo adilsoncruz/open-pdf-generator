@@ -20,7 +20,7 @@ class StaticTextRenderer : Renderer<StaticTextElement> {
         val text = element.value
         if (text.isBlank()) return
 
-        val isMultiline = element.style?.multiline == true
+        val isMultiline = element.multiline == true || element.style?.multiline == true || text.contains("\n")
 
         if (isMultiline) {
             renderMultiline(element, text, context)

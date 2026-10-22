@@ -339,7 +339,7 @@ class TableRenderer : Renderer<TableElement> {
     }
 
     private data class ColumnMeta(
-        val field: String,
+        val field: String?,
         val format: String?,
         val hasTransformations: Boolean,
         val hAlign: Int,
@@ -403,10 +403,10 @@ class TableRenderer : Renderer<TableElement> {
 
             columnMetas.forEach { colMeta ->
                 val value =
-                    if (colMeta.hasTransformations) {
-                        ExpressionProcessor.process(colMeta.field, row, null)
-                    } else {
-                        row[colMeta.field]
+                    when {
+                        colMeta.field == null -> ""
+                        colMeta.hasTransformations -> ExpressionProcessor.process(colMeta.field, row, null)
+                        else -> row[colMeta.field]
                     }
                 val formattedValue = Formatter.format(value, colMeta.format)
 

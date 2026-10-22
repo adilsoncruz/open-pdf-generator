@@ -388,8 +388,8 @@ class PDFGenerator(
                         val effectiveY =
                             if (isRelativeFlow) {
                                 val isHeightFull = when (element) {
-                                    is RectangleElement -> element.height.toString() == "100%" || element.height.toString() == "100.0%"
-                                    is ContainerElement -> element.height.toString() == "100%" || element.height.toString() == "100.0%"
+                                    is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                                    is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
                                     else -> false
                                 }
                                 val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
@@ -777,7 +777,7 @@ class PDFGenerator(
                     is TextElement -> element.height ?: 20f
                     is StaticTextElement -> element.height ?: 20f
                     is ImageElement -> {
-                        if (element.height.toString() == "100%" || element.height.toString() == "100.0%") {
+                        if (element.height?.toString() == "100%" || element.height?.toString() == "100.0%") {
                             loopHeight
                         } else {
                             element.height
