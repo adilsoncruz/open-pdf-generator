@@ -233,4 +233,52 @@ class WatermarkSnapshotTest {
         val pdfBytes = generator.generate(templateJson, "{}")
         assertPdfByFile("watermarks/watermark-ontop-overlay.pdf", pdfBytes)
     }
+
+    @Test
+    @DisplayName("Watermark: Base64 image watermark with rotation and opacity")
+    fun testWatermarkBase64Image() {
+        val samplePngBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+
+        val templateJson = """
+        {
+          "version": "1.0",
+          "pageSettings": {
+            "size": "A4",
+            "orientation": "portrait",
+            "showMargins": true,
+            "margins": { "top": 36, "right": 36, "bottom": 36, "left": 36 },
+            "watermark": {
+              "type": "image",
+              "imageSource": "$samplePngBase64",
+              "width": 180,
+              "height": 180,
+              "opacity": 0.25,
+              "rotation": 30,
+              "onTop": true
+            }
+          },
+          "pageElements": [
+            {
+              "type": "text",
+              "id": "wm-img-title",
+              "x": 0,
+              "y": 10,
+              "value": "Raster Graphic Watermark Verification",
+              "style": { "fontSize": 16, "fontWeight": "bold", "color": "#0f172a" }
+            },
+            {
+              "type": "text",
+              "id": "wm-img-desc",
+              "x": 0,
+              "y": 35,
+              "value": "Verifying WatermarkType.IMAGE rendering using Base64 data source, transparency and rotation matrix.",
+              "style": { "fontSize": 10, "color": "#64748b" }
+            }
+          ]
+        }
+        """.trimIndent()
+
+        val pdfBytes = generator.generate(templateJson, "{}")
+        assertPdfByFile("watermarks/watermark-base64-image.pdf", pdfBytes)
+    }
 }
