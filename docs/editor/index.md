@@ -27,14 +27,14 @@ const downloads = {
     available: true
   },
   windows: {
-    url: '#',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.exe',
     label: 'Download for Windows',
-    available: false
+    available: true
   },
   linux: {
-    url: '#',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.AppImage',
     label: 'Download for Linux',
-    available: false
+    available: true
   }
 }
 </script>
@@ -45,7 +45,7 @@ A powerful desktop application for designing and previewing PDF templates with a
 
 <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 24px 0;">
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem; font-weight: 600; color: var(--vp-c-brand-1);">v1.1.0</span>
-  <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">macOS</span>
+  <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">macOS · Windows · Linux</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">Studio Slate</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">MIT License</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">Open Source</span>
@@ -67,8 +67,8 @@ A powerful desktop application for designing and previewing PDF templates with a
     Version 1.1.0 · {{ osName }} · ~117 MB
   </p>
   
-  <p v-if="os !== 'macos'" style="margin-top: 8px; font-size: 0.85rem;">
-    Available now for <a href="https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.dmg">macOS</a>
+  <p style="margin-top: 8px; font-size: 0.85rem; color: var(--vp-c-text-2);">
+    Cross-platform desktop application for macOS, Windows, and Linux.
   </p>
   
   <p style="margin-top: 12px;">
@@ -132,13 +132,37 @@ Instant PDF compilation with full data binding resolution, loops, and automatic 
 
 ## Installation
 
-1. Download the `.dmg` file from the button above.
-2. Open the downloaded disk image.
-3. Drag **PDF Template Editor** into your Applications folder.
-4. Launch from Applications or Spotlight.
+::: code-group
+
+```bash [macOS]
+# 1. Download the .dmg file from the button above
+# 2. Open the downloaded disk image
+# 3. Drag "PDF Template Editor" into your Applications folder
+# 4. Launch from Applications or Spotlight
+```
+
+```bash [Windows]
+# 1. Download the .exe installer from the button above
+# 2. Run PDF-Template-Editor-1.1.0.exe
+# 3. Follow the installation setup wizard
+# 4. Launch from Start Menu or Desktop shortcut
+```
+
+```bash [Linux]
+# Option A: AppImage (Recommended)
+chmod +x PDF-Template-Editor-1.1.0.AppImage
+./PDF-Template-Editor-1.1.0.AppImage
+
+# Option B: Debian / Ubuntu package (.deb)
+sudo dpkg -i PDF-Template-Editor-1.1.0.deb
+```
+
+:::
 
 ::: tip First Launch
-On macOS, if prompted with a security warning, go to **System Preferences → Privacy & Security** and click **Open Anyway**.
+- **macOS**: If prompted with an unverified developer warning, go to **System Preferences → Privacy & Security** and click **Open Anyway**.
+- **Windows**: If Windows SmartScreen appears, click **More info** → **Run anyway**.
+- **Linux**: Ensure FUSE 2 is installed if running AppImage on modern distributions (`sudo apt install libfuse2`).
 :::
 
 ---

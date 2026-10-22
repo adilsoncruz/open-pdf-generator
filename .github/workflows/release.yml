@@ -223,10 +223,10 @@ jobs:
           files: tools/cli/build/libs/*.jar
 
   # =========================
-  # Release: Electron App
+  # Build: Electron App (Matrix)
   # =========================
-  release-editor:
-    name: Release Editor (${{ matrix.os }})
+  build-editor:
+    name: Build Editor (${{ matrix.os }})
     needs: changes
     if: needs.changes.outputs.editor == 'true' || inputs.release_editor == true
     runs-on: ${{ matrix.os }}
@@ -263,6 +263,43 @@ jobs:
         working-directory: tools/editor
         shell: bash
         run: node node_modules/electron-builder/out/cli/cli.js --publish never
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: editor-dist-${{ matrix.os }}
+          path: |
+            tools/editor/release/*.dmg
+            tools/editor/release/*.exe
+            tools/editor/release/*.AppImage
+            tools/editor/release/*.deb
+            tools/editor/release/*.zip
+          if-no-files-found: error
+
+  # =========================
+  # Release: Electron App
+  # =========================
+  release-editor:
+    name: Publish Editor Release
+    needs: [changes, build-editor]
+    if: needs.changes.outputs.editor == 'true' || inputs.release_editor == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Download all editor artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: editor-dist-*
+          path: release-artifacts
+          merge-multiple: true
 
       - name: Read version
         id: version
@@ -305,6 +342,7 @@ jobs:
         run: |
           TAG="editor-v${{ steps.version.outputs.version }}"
           echo "Checking tag: $TAG"
+          git fetch --tags
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag exists"
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -313,11 +351,8 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create tag (macOS only)
-        if: >
-          matrix.os == 'macos-latest' &&
-          steps.releasetype.outputs.skip == 'false' &&
-          steps.tagcheck.outputs.exists == 'false'
+      - name: Create tag
+        if: steps.releasetype.outputs.skip == 'false' && steps.tagcheck.outputs.exists == 'false'
         run: |
           TAG="editor-v${{ steps.version.outputs.version }}"
           echo "Creating tag: $TAG"
@@ -325,7 +360,7 @@ jobs:
           git push origin "$TAG"
 
       - name: Create / Update GitHub Release
-        if: steps.releasetype.outputs.skip == 'false' && steps.tagcheck.outputs.exists == 'false'
+        if: steps.releasetype.outputs.skip == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: editor-v${{ steps.version.outputs.version }}
@@ -338,11 +373,12 @@ jobs:
             
             ### Downloads
             
-            - **macOS**: `.dmg` file
-            - **Windows**: `.exe` installer
-            - **Linux**: `.AppImage`
+            - **macOS**: `.dmg` (Universal) or `.zip`
+            - **Windows**: `.exe` installer (NSIS) or `.zip` (x64)
+            - **Linux**: `.AppImage` or `.deb` (x64)
           files: |
-            tools/editor/release/*.dmg
-            tools/editor/release/*.exe
-            tools/editor/release/*.AppImage
-            tools/editor/release/*.zip
+            release-artifacts/*.dmg
+            release-artifacts/*.exe
+            release-artifacts/*.AppImage
+            release-artifacts/*.deb
+            release-artifacts/*.zip
