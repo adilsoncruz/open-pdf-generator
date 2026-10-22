@@ -112,7 +112,7 @@ class TextSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("text-font-families-styles.pdf", pdfBytes)
+        assertPdfByFile("text/text-font-families-styles.pdf", pdfBytes)
     }
 
     @Test
@@ -180,7 +180,7 @@ class TextSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("text-alignments-justify.pdf", pdfBytes)
+        assertPdfByFile("text/text-alignments-justify.pdf", pdfBytes)
     }
 
     @Test
@@ -248,7 +248,7 @@ class TextSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("text-vertical-align-paddings.pdf", pdfBytes)
+        assertPdfByFile("text/text-vertical-align-paddings.pdf", pdfBytes)
     }
 
     @Test
@@ -288,7 +288,7 @@ class TextSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("text-multiline-line-heights.pdf", pdfBytes)
+        assertPdfByFile("text/text-multiline-line-heights.pdf", pdfBytes)
     }
 
     @Test
@@ -362,6 +362,6 @@ class TextSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("text-databinding-transformations.pdf", pdfBytes)
+        assertPdfByFile("text/text-databinding-transformations.pdf", pdfBytes)
     }
 }

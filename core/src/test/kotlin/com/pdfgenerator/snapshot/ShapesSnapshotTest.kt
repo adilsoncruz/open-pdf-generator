@@ -158,7 +158,7 @@ class ShapesSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("shapes-rectangles.pdf", pdfBytes)
+        assertPdfByFile("shapes/shapes-rectangles.pdf", pdfBytes)
     }
 
     @Test
@@ -351,7 +351,7 @@ class ShapesSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("shapes-lines.pdf", pdfBytes)
+        assertPdfByFile("shapes/shapes-lines.pdf", pdfBytes)
     }
 
     @Test
@@ -478,6 +478,6 @@ class ShapesSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("shapes-percentages.pdf", pdfBytes)
+        assertPdfByFile("shapes/shapes-percentages.pdf", pdfBytes)
     }
 }

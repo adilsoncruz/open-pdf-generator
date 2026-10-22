@@ -487,6 +487,7 @@ object ExpressionProcessor {
             is Long -> kotlin.math.abs(value)
             is Float -> kotlin.math.abs(value)
             is Double -> kotlin.math.abs(value)
+            is Number -> kotlin.math.abs(value.toDouble())
             is String -> value.toDoubleOrNull()?.let { kotlin.math.abs(it) } ?: 0.0
             else -> 0
         }

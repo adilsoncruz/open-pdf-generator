@@ -74,7 +74,7 @@ class PdfElementSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("text-elements.pdf", pdfBytes)
+        assertPdfByFile("text/text-elements.pdf", pdfBytes)
     }
 
     @Test
@@ -135,7 +135,7 @@ class PdfElementSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("table-elements.pdf", pdfBytes)
+        assertPdfByFile("tables/table-elements.pdf", pdfBytes)
     }
 
     @Test
@@ -206,7 +206,7 @@ class PdfElementSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("barcode-and-qr.pdf", pdfBytes)
+        assertPdfByFile("barcodes/barcode-and-qr.pdf", pdfBytes)
     }
 
     @Test
@@ -260,7 +260,7 @@ class PdfElementSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("container-layout.pdf", pdfBytes)
+        assertPdfByFile("containers/container-layout.pdf", pdfBytes)
     }
 
     @Test
@@ -331,7 +331,7 @@ class PdfElementSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("watermark-and-headers.pdf", pdfBytes)
+        assertPdfByFile("watermarks/watermark-and-headers.pdf", pdfBytes)
     }
 
     @Test
@@ -435,6 +435,6 @@ class PdfElementSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("invoice-full-document.pdf", pdfBytes)
+        assertPdfByFile("documents/invoice-full-document.pdf", pdfBytes)
     }
 }

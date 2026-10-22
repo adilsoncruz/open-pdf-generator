@@ -170,7 +170,7 @@ class ContainerSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("container-styled-cards.pdf", pdfBytes)
+        assertPdfByFile("containers/container-styled-cards.pdf", pdfBytes)
     }
 
     @Test
@@ -234,7 +234,7 @@ class ContainerSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("container-auto-height.pdf", pdfBytes)
+        assertPdfByFile("containers/container-auto-height.pdf", pdfBytes)
     }
 
     @Test
@@ -344,6 +344,6 @@ class ContainerSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("container-nested-layout.pdf", pdfBytes)
+        assertPdfByFile("containers/container-nested-layout.pdf", pdfBytes)
     }
 }

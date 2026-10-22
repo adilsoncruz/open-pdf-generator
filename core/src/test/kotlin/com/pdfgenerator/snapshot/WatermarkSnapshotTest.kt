@@ -59,7 +59,7 @@ class WatermarkSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("watermark-single-centered.pdf", pdfBytes)
+        assertPdfByFile("watermarks/watermark-single-centered.pdf", pdfBytes)
     }
 
     @Test
@@ -112,7 +112,7 @@ class WatermarkSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("watermark-repeated-grid.pdf", pdfBytes)
+        assertPdfByFile("watermarks/watermark-repeated-grid.pdf", pdfBytes)
     }
 
     @Test
@@ -171,7 +171,7 @@ class WatermarkSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("watermark-dynamic-binding.pdf", pdfBytes)
+        assertPdfByFile("watermarks/watermark-dynamic-binding.pdf", pdfBytes)
     }
 
     @Test
@@ -231,6 +231,6 @@ class WatermarkSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("watermark-ontop-overlay.pdf", pdfBytes)
+        assertPdfByFile("watermarks/watermark-ontop-overlay.pdf", pdfBytes)
     }
 }

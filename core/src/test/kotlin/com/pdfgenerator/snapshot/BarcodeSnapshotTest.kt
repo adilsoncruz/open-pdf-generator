@@ -139,7 +139,7 @@ class BarcodeSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("barcode-1d-formats.pdf", pdfBytes)
+        assertPdfByFile("barcodes/barcode-1d-formats.pdf", pdfBytes)
     }
 
     @Test
@@ -293,7 +293,7 @@ class BarcodeSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("barcode-2d-formats.pdf", pdfBytes)
+        assertPdfByFile("barcodes/barcode-2d-formats.pdf", pdfBytes)
     }
 
     @Test
@@ -375,6 +375,6 @@ class BarcodeSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("barcode-data-binding.pdf", pdfBytes)
+        assertPdfByFile("barcodes/barcode-data-binding.pdf", pdfBytes)
     }
 }

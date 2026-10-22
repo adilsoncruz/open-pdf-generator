@@ -83,7 +83,7 @@ class PageStructureSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("page-a4-landscape.pdf", pdfBytes)
+        assertPdfByFile("pages/page-a4-landscape.pdf", pdfBytes)
     }
 
     @Test
@@ -150,7 +150,7 @@ class PageStructureSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("page-watermark-confidential.pdf", pdfBytes)
+        assertPdfByFile("pages/page-watermark-confidential.pdf", pdfBytes)
     }
 
     @Test
@@ -273,6 +273,6 @@ class PageStructureSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, "{}")
-        assertPdfByFile("page-header-footer-flow.pdf", pdfBytes)
+        assertPdfByFile("pages/page-header-footer-flow.pdf", pdfBytes)
     }
 }

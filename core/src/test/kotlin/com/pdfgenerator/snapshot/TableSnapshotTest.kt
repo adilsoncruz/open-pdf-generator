@@ -70,7 +70,7 @@ class TableSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("table-column-alignments-formats.pdf", pdfBytes)
+        assertPdfByFile("tables/table-column-alignments-formats.pdf", pdfBytes)
     }
 
     @Test
@@ -133,7 +133,7 @@ class TableSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("table-header-styles-colors.pdf", pdfBytes)
+        assertPdfByFile("tables/table-header-styles-colors.pdf", pdfBytes)
     }
 
     @Test
@@ -220,7 +220,7 @@ class TableSnapshotTest {
         """.trimIndent()
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("table-borders-padding.pdf", pdfBytes)
+        assertPdfByFile("tables/table-borders-padding.pdf", pdfBytes)
     }
 
     @Test
@@ -282,6 +282,6 @@ class TableSnapshotTest {
         val dataJson = com.google.gson.Gson().toJson(mapOf("logs" to rows))
 
         val pdfBytes = generator.generate(templateJson, dataJson)
-        assertPdfByFile("table-multipage-autoflow.pdf", pdfBytes)
+        assertPdfByFile("tables/table-multipage-autoflow.pdf", pdfBytes)
     }
 }
