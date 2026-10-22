@@ -9,4 +9,5 @@ data class PDFGeneratorConfig(
     val enableImageCache: Boolean = true,
     val imageCacheSize: Int = 100,
     val resourcesDirectory: File? = null,
+    val showMargins: Boolean = false,
 )

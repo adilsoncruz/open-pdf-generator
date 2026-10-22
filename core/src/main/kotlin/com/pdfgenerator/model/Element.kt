@@ -32,6 +32,7 @@ data class TextElement(
     override val relativeOffsetY: Float? = null,
     val width: Float? = null,
     val height: Float? = null,
+    val multiline: Boolean? = null,
     val dataBinding: String? = null,
     val value: String? = null,
     val style: TextStyle? = null,
@@ -59,6 +60,7 @@ data class StaticTextElement(
     override val relativeOffsetY: Float? = null,
     val width: Float? = null,
     val height: Float? = null,
+    val multiline: Boolean? = null,
     val value: String,
     val style: TextStyle? = null,
 ) : Element {
@@ -163,7 +165,8 @@ data class TableElement(
 
 data class TableColumn(
     val header: String,
-    val field: String,
+    @com.google.gson.annotations.SerializedName("field", alternate = ["key"])
+    val field: String = "",
     val width: Float? = null,
     val alignment: String = "left",
     val verticalAlignment: String? = null,
@@ -490,7 +493,7 @@ data class LoopElement(
     override val y: Float = 0f,
     override val positionMode: PositionMode? = null,
     override val relativeOffsetY: Float? = null,
-    val width: Any = 400f,
+    val width: Any? = 400f,
     val height: Float = 50f,
     val dataBinding: String,
     val startY: Float? = null,
@@ -528,8 +531,8 @@ data class ContainerElement(
     override val x: Float = 0f,
     override val y: Float = 0f,
     override val relativeOffsetY: Float? = null,
-    val width: Any = 400f,
-    val height: Any = 50f,
+    val width: Any? = 400f,
+    val height: Any? = 50f,
     val elements: List<Element>,
     val style: RectangleStyle? = null,
     val printCondition: String? = null,
@@ -617,7 +620,7 @@ class ElementDeserializer : JsonDeserializer<Element> {
 
         return when (type) {
             "text" -> gson.fromJson(json, TextElement::class.java)
-            "static_text" -> gson.fromJson(json, StaticTextElement::class.java)
+            "static_text", "staticText" -> gson.fromJson(json, StaticTextElement::class.java)
             "image" -> gson.fromJson(json, ImageElement::class.java)
             "table" -> gson.fromJson(json, TableElement::class.java)
             "rectangle" -> gson.fromJson(json, RectangleElement::class.java)
@@ -626,9 +629,9 @@ class ElementDeserializer : JsonDeserializer<Element> {
             "conditional" -> gson.fromJson(json, ConditionalElement::class.java)
             "loop" -> gson.fromJson(json, LoopElement::class.java)
             "container" -> gson.fromJson(json, ContainerElement::class.java)
-            "page_break" -> gson.fromJson(json, PageBreakElement::class.java)
+            "page_break", "pageBreak" -> gson.fromJson(json, PageBreakElement::class.java)
             "spacer" -> gson.fromJson(json, SpacerElement::class.java)
-            "rich_text" -> gson.fromJson(json, RichTextElement::class.java)
+            "rich_text", "richText" -> gson.fromJson(json, RichTextElement::class.java)
             "link" -> gson.fromJson(json, LinkElement::class.java)
             else -> throw IllegalArgumentException("Unknown element type: $type")
         }

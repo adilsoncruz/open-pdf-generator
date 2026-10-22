@@ -132,7 +132,7 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
                     is TextElement -> element.height ?: 20f
                     is StaticTextElement -> element.height ?: 20f
                     is ImageElement -> {
-                        if (element.height.toString() == "100%" || element.height.toString() == "100.0%") {
+                        if (element.height?.toString() == "100%" || element.height?.toString() == "100.0%") {
                             loopHeight
                         } else {
                             element.height

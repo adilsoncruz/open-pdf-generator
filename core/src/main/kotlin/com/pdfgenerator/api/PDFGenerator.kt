@@ -388,8 +388,8 @@ class PDFGenerator(
                         val effectiveY =
                             if (isRelativeFlow) {
                                 val isHeightFull = when (element) {
-                                    is RectangleElement -> element.height.toString() == "100%" || element.height.toString() == "100.0%"
-                                    is ContainerElement -> element.height.toString() == "100%" || element.height.toString() == "100.0%"
+                                    is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                                    is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
                                     else -> false
                                 }
                                 val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
@@ -452,15 +452,10 @@ class PDFGenerator(
                         bg.elements.forEach { element ->
                             try {
                                 if (shouldRenderElement(element, summaryBackgroundGroupIndex, data)) {
-                                    renderEngine.render(element, summaryContext.copy(useContentUnder = true))
-                                    if (shouldRenderElement(element, summaryBackgroundGroupIndex, data)) {
-                                        val adjustedElement =
-                                            adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
-                                        renderEngine.render(
-                                            adjustedElement,
-                                            summaryContext.copy(useContentUnder = true),
-                                        )
-                                    }
+                                    renderEngine.render(
+                                        element,
+                                        summaryContext.copy(useContentUnder = true),
+                                    )
                                 }
                             } catch (e: Exception) {
                                 logger.error(
@@ -475,8 +470,7 @@ class PDFGenerator(
                     template.summaryPage.elements.forEach { element ->
                         try {
                             if (shouldRenderElement(element, summaryGroupIndex, data)) {
-                                val adjustedElement = adjustElementForBody(element, summaryOffsetX, summaryOffsetY)
-                                renderEngine.render(adjustedElement, summaryContext)
+                                renderEngine.render(element, summaryContext)
                             }
                         } catch (e: Exception) {
                             logger.error("Erro ao renderizar elemento da summary ${element.id}: ${e.message}", e)
@@ -549,32 +543,6 @@ class PDFGenerator(
         }
 
         return true
-    }
-
-    private fun adjustElementForBody(
-        element: Element,
-        bodyOffsetX: Float,
-        bodyOffsetY: Float,
-    ): Element {
-        val adjustedX = bodyOffsetX + element.x
-        val adjustedY = bodyOffsetY + element.y
-
-        return when (element) {
-            is TextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is StaticTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ImageElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RectangleElement -> element.copy(x = adjustedX, y = adjustedY)
-            is BarcodeElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LineElement -> element.copy(x = adjustedX, y = adjustedY)
-            is TableElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LoopElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ContainerElement -> element.copy(x = adjustedX, y = adjustedY)
-            is ConditionalElement -> element.copy(x = adjustedX, y = adjustedY)
-            is PageBreakElement -> element.copy(x = adjustedX, y = adjustedY)
-            is SpacerElement -> element.copy(x = adjustedX, y = adjustedY)
-            is RichTextElement -> element.copy(x = adjustedX, y = adjustedY)
-            is LinkElement -> element.copy(x = adjustedX, y = adjustedY)
-        }
     }
 
     private fun getElementHeight(
@@ -761,7 +729,7 @@ class PDFGenerator(
 
     private fun calculateLoopItemHeight(
         elements: List<Element>,
-        loopWidth: Any,
+        loopWidth: Any?,
         loopHeight: Float,
     ): Float {
         if (elements.isEmpty()) {
@@ -777,7 +745,7 @@ class PDFGenerator(
                     is TextElement -> element.height ?: 20f
                     is StaticTextElement -> element.height ?: 20f
                     is ImageElement -> {
-                        if (element.height.toString() == "100%" || element.height.toString() == "100.0%") {
+                        if (element.height?.toString() == "100%" || element.height?.toString() == "100.0%") {
                             loopHeight
                         } else {
                             element.height

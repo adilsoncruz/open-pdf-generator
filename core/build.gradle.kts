@@ -36,6 +36,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
     testImplementation("io.mockk:mockk:1.13.13")
     testImplementation("org.assertj:assertj-core:3.26.3")
+    testImplementation("org.apache.pdfbox:pdfbox:2.0.31")
+    testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.1.0")
 }
 
 tasks.test {

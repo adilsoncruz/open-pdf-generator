@@ -103,6 +103,7 @@ data class PageSettings(
     val footer: HeaderFooter? = null,
     val bodyBackground: BodyBackground? = null,
     val watermark: WatermarkConfig? = null,
+    val showMargins: Boolean = false,
 ) {
     fun getPageSize(): Rectangle {
         val baseSize =

@@ -158,7 +158,7 @@ class TextRenderer : Renderer<TextElement> {
             return
         }
 
-        val isMultiline = element.style?.multiline == true
+        val isMultiline = element.multiline == true || element.style?.multiline == true || text.contains("\n")
 
         if (isMultiline) {
             renderMultiline(element, text, context)
@@ -367,26 +367,39 @@ class TextRenderer : Renderer<TextElement> {
         element: TextElement,
         context: RenderContext,
     ): String? {
+        val fromBinding =
+            if (!element.dataBinding.isNullOrBlank()) {
+                val binding = element.dataBinding
+                when {
+                    ExpressionProcessor.containsTemplateExpression(binding) ->
+                        ExpressionProcessor.processTemplate(binding, context.data, context.loopContext)
+                    ExpressionProcessor.hasTransformations(binding) ->
+                        ExpressionProcessor.process(binding, context.data, context.loopContext)
+                    else ->
+                        DataBindingResolver.resolve(binding, context.data, context.loopContext)?.toString()
+                }
+            } else {
+                null
+            }
+
+        if (fromBinding != null) {
+            return fromBinding
+        }
+
+        val rawValue = element.value
         return when {
-            !element.dataBinding.isNullOrBlank() -> {
-                if (ExpressionProcessor.hasTransformations(element.dataBinding)) {
-                    ExpressionProcessor.process(element.dataBinding, context.data, context.loopContext)
+            rawValue.isNullOrBlank() -> null
+            ExpressionProcessor.containsTemplateExpression(rawValue) ->
+                ExpressionProcessor.processTemplate(rawValue, context.data, context.loopContext)
+            context.loopContext != null -> {
+                if (ExpressionProcessor.hasTransformations(rawValue)) {
+                    ExpressionProcessor.process(rawValue, context.data, context.loopContext)
                 } else {
-                    val value = DataBindingResolver.resolve(element.dataBinding, context.data, context.loopContext)
-                    value?.toString()
+                    val fieldValue = DataBindingResolver.resolve(rawValue, context.data, context.loopContext)
+                    fieldValue?.toString() ?: rawValue
                 }
             }
-            !element.value.isNullOrBlank() && context.loopContext != null -> {
-                // Inside a loop, try to resolve value as a field from the loop item
-                // Also supports transformations like "name | uppercase"
-                if (ExpressionProcessor.hasTransformations(element.value)) {
-                    ExpressionProcessor.process(element.value, context.data, context.loopContext)
-                } else {
-                    val fieldValue = DataBindingResolver.resolve(element.value, context.data, context.loopContext)
-                    fieldValue?.toString() ?: element.value
-                }
-            }
-            else -> element.value
+            else -> rawValue
         }
     }
 

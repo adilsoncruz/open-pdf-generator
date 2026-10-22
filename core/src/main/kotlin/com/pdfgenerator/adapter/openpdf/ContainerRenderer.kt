@@ -153,8 +153,8 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
                 )
             is TableElement -> element.copy(x = containerX + element.x, y = containerY + element.y)
             is RectangleElement -> {
-                val isFullWidth = element.width.toString() == "100%" || element.width.toString() == "100.0%"
-                val isFullHeight = element.height.toString() == "100%" || element.height.toString() == "100.0%"
+                val isFullWidth = element.width?.toString() == "100%" || element.width?.toString() == "100.0%"
+                val isFullHeight = element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
                 element.copy(
                     x = if (isFullWidth) containerX else containerX + element.x,
                     y = if (isFullHeight) containerY else containerY + element.y,

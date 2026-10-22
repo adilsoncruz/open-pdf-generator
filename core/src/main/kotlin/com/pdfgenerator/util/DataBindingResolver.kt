@@ -11,27 +11,36 @@ object DataBindingResolver {
         data: Map<String, Any?>,
         loopContext: LoopContext? = null,
     ): Any? {
-        if (binding.startsWith("$")) {
-            return resolveLoopVariable(binding, loopContext)
+        val trimmed = binding.trim()
+        val cleanBinding = when {
+            trimmed.startsWith("\${") && trimmed.endsWith("}") ->
+                trimmed.substring(2, trimmed.length - 1).trim()
+            trimmed.startsWith("{{") && trimmed.endsWith("}}") ->
+                trimmed.substring(2, trimmed.length - 2).trim()
+            else -> trimmed
         }
 
-        if (binding == "loopIndex" && loopContext != null) {
+        if (cleanBinding.startsWith("$")) {
+            return resolveLoopVariable(cleanBinding, loopContext)
+        }
+
+        if (cleanBinding == "loopIndex" && loopContext != null) {
             return loopContext.index
         }
 
         if (loopContext != null) {
-            val itemValue = resolveFromLoopItem(binding, loopContext)
+            val itemValue = resolveFromLoopItem(cleanBinding, loopContext)
             if (itemValue != null) {
                 return itemValue
             }
         }
 
-        val resolved = resolvePath(binding, data)
+        val resolved = resolvePath(cleanBinding, data)
         if (resolved != null) {
             return resolved
         }
 
-        if (binding == "pageNumber" || binding == "page") {
+        if (cleanBinding == "pageNumber" || cleanBinding == "page") {
             return resolvePath("_pageNumber", data)
         }
 

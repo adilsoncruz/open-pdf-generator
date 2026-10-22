@@ -450,6 +450,48 @@ class ExpressionProcessorTest {
     }
 
     @Nested
+    inner class FunctionCallAndTemplateTests {
+        @Test
+        fun `should support function call syntax with parentheses`() {
+            val data = mapOf(
+                "code" to "42",
+                "date" to "2026-10-22",
+                "text" to "Hello World",
+            )
+
+            assertEquals("00042", ExpressionProcessor.process("code | padLeft(5, '0')", data))
+            assertEquals("2026-10-22", ExpressionProcessor.process("date | date('yyyy-MM-dd')", data))
+            assertEquals("Hello…", ExpressionProcessor.process("text | truncate(6, '…')", data))
+        }
+
+        @Test
+        fun `should process template interpolation with dollar and curly braces`() {
+            val data = mapOf(
+                "customer" to mapOf(
+                    "name" to "Acme Corp",
+                    "account" to "gold-tier",
+                    "refId" to "123",
+                ),
+                "financial" to mapOf(
+                    "subtotal" to 1450.75,
+                ),
+            )
+
+            val template = "Customer: \${customer.name}, Account: \${customer.account | uppercase}, Ref: \${customer.refId | padLeft(6, '0')}"
+            val result = ExpressionProcessor.processTemplate(template, data)
+            assertEquals("Customer: Acme Corp, Account: GOLD-TIER, Ref: 000123", result)
+        }
+
+        @Test
+        fun `should process template interpolation with mustache double curlies`() {
+            val data = mapOf("user" to mapOf("name" to "Alice"))
+            val template = "Hello {{user.name | uppercase}}!"
+            val result = ExpressionProcessor.processTemplate(template, data)
+            assertEquals("Hello ALICE!", result)
+        }
+    }
+
+    @Nested
     inner class EdgeCases {
         @Test
         fun `should handle empty expression`() {
