@@ -44,7 +44,7 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:4.2.1")
 
     // Async support
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
     testImplementation(kotlin("test"))
 }
