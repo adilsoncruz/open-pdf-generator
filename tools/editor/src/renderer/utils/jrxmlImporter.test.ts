@@ -194,5 +194,40 @@ describe('jrxmlImporter', () => {
         expect(template.page.some(e => e.type === 'qrcode')).toBe(true)
       }
     })
+
+    it('converts sample fatura_servico.jrxml cleanly', () => {
+      const filePath = path.resolve(__dirname, '../../../samples/jasper/fatura_servico.jrxml')
+      expect(fs.existsSync(filePath)).toBe(true)
+      const content = fs.readFileSync(filePath, 'utf-8')
+      const template = convertJrxmlToTemplate(content)
+      expect(template.metadata.name).toBe('fatura_servico')
+      expect(template.pageSettings.size).toBe('A4')
+      expect(template.pageSettings.footer).toBeDefined()
+      expect(template.summaryPage).toBeDefined()
+      expect(template.summaryPage?.elements.some(e => e.type === 'qrcode')).toBe(true)
+    })
+
+    it('converts sample relatorio_pedidos.jrxml cleanly', () => {
+      const filePath = path.resolve(__dirname, '../../../samples/jasper/relatorio_pedidos.jrxml')
+      expect(fs.existsSync(filePath)).toBe(true)
+      const content = fs.readFileSync(filePath, 'utf-8')
+      const template = convertJrxmlToTemplate(content)
+      expect(template.metadata.name).toBe('relatorio_pedidos')
+      expect(template.pageSettings.header).toBeDefined()
+      expect(template.pageSettings.footer).toBeDefined()
+      expect(template.page.length).toBeGreaterThan(5)
+    })
+
+    it('converts sample certificado_conclusao.jrxml with landscape orientation', () => {
+      const filePath = path.resolve(__dirname, '../../../samples/jasper/certificado_conclusao.jrxml')
+      expect(fs.existsSync(filePath)).toBe(true)
+      const content = fs.readFileSync(filePath, 'utf-8')
+      const template = convertJrxmlToTemplate(content)
+      expect(template.metadata.name).toBe('certificado_conclusao')
+      expect(template.pageSettings.size).toBe('A4')
+      expect(template.pageSettings.orientation).toBe('landscape')
+      expect(template.pageSettings.watermark?.text).toBe('CERTIFICADO')
+      expect(template.page.some(e => e.type === 'barcode')).toBe(true)
+    })
   })
 })
