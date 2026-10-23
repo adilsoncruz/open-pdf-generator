@@ -99,6 +99,7 @@ interface OpenFileResult {
   path: string
   content: string
   convertedFromJasper?: boolean
+  isJrxml?: boolean
 }
 
 /**
@@ -928,28 +929,78 @@ ipcMain.handle('dialog:openFile', async () => {
   console.log(`dialog:openFile: extension ${extension}`)
 
   if (extension === '.jrxml') {
-    const conversion = await convertJrxmlToJson(filePath)
-    console.log(`dialog:openFile:conversion - ${conversion.content}`)
-    console.log(`dialog:openfile: conversion success ${conversion.success}`)
-    if (!conversion.success || !conversion.content) {
-      throw new Error(conversion.error || 'Failed to convert JRXML template')
+    try {
+      const conversion = await convertJrxmlToJson(filePath)
+      if (conversion.success && conversion.content) {
+        fs.writeFile(filePath.replace(/\.jrxml$/i, '.json'), conversion.content).catch(() => {})
+        return {
+          path: filePath.replace(/\.jrxml$/i, '.json'),
+          content: conversion.content,
+          convertedFromJasper: true,
+          isJrxml: true,
+        }
+      }
+    } catch {
+      // CLI not available or failed; fallback to raw content for native renderer parsing
     }
-    console.log(`dialog:openFile:conversion success`)
-    fs.writeFile(filePath.replace("jrxml", "json"), conversion.content)
-    const openResult: OpenFileResult = {
-      path: filePath.replace("jrxml", "json"),
-      content: conversion.content,
+    const content = await fs.readFile(filePath, 'utf-8')
+    return {
+      path: filePath,
+      content,
       convertedFromJasper: true,
-    }
-    return openResult
+      isJrxml: true,
+    } as OpenFileResult
   }
-  console.log(`dialog:openFile:read file ${filePath}`)
   const content = await fs.readFile(filePath, 'utf-8')
- console.log(`dialog:openFile:read file success`)
   return {
     path: filePath,
     content,
   } as OpenFileResult
+})
+
+// Abrir arquivo Jasper individual
+ipcMain.handle('dialog:openJasperFile', async () => {
+  if (!mainWindow) return null
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [
+      { name: 'Jasper Reports (*.jrxml)', extensions: ['jrxml'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  })
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+  const filePath = result.filePaths[0]
+  const content = await fs.readFile(filePath, 'utf-8')
+  return {
+    path: filePath,
+    content,
+    convertedFromJasper: true,
+    isJrxml: true,
+  } as OpenFileResult
+})
+
+// Abrir arquivo PDF para importação com IA
+ipcMain.handle('dialog:openPdfFile', async () => {
+  if (!mainWindow) return null
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [
+      { name: 'PDF Documents (*.pdf)', extensions: ['pdf'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  })
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+  const filePath = result.filePaths[0]
+  const buffer = await fs.readFile(filePath)
+  return {
+    path: filePath,
+    base64: buffer.toString('base64'),
+    name: path.basename(filePath),
+  }
 })
 
 // Abrir arquivo de dados JSON

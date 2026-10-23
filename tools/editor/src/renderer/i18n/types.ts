@@ -40,6 +40,8 @@ export interface Translations {
     save: string
     saveAs: string
     export: string
+    importJasper: string
+    importAI: string
     preview: string
     testData: string
     settings: string

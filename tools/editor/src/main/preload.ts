@@ -4,6 +4,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('electronAPI', {
   // Dialog APIs
   openFile: () => ipcRenderer.invoke('dialog:openFile'),
+  openJasperFile: () => ipcRenderer.invoke('dialog:openJasperFile'),
+  openPdfFile: () => ipcRenderer.invoke('dialog:openPdfFile'),
   openDataFile: () => ipcRenderer.invoke('dialog:openDataFile'),
   saveFile: (content: string, defaultPath?: string) =>
     ipcRenderer.invoke('dialog:saveFile', content, defaultPath),
@@ -117,7 +119,9 @@ export interface UpdateStatus {
 }
 
 export interface ElectronAPI {
-  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean } | null>
+  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean; isJrxml?: boolean } | null>
+  openJasperFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean; isJrxml?: boolean } | null>
+  openPdfFile: () => Promise<{ path: string; base64: string; name: string } | null>
   openDataFile: () => Promise<{ path: string; content: string } | null>
   saveFile: (content: string, defaultPath?: string) => Promise<string | null>
   readFile: (filePath: string) => Promise<{ success: boolean; content?: string; error?: string }>

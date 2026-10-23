@@ -140,6 +140,8 @@ const pt: Translations = {
     save: 'Salvar',
     saveAs: 'Salvar Como...',
     export: 'Exportar...',
+    importJasper: 'Importar Jasper (.jrxml)',
+    importAI: 'Importar PDF com IA...',
     preview: 'Visualizar',
     testData: 'Dados de Teste',
     settings: 'Configurações',

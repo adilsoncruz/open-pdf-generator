@@ -28,7 +28,9 @@ export interface UpdateStatus {
 
 export interface ElectronAPI {
   // Dialog APIs
-  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean } | null>
+  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean; isJrxml?: boolean } | null>
+  openJasperFile?: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean; isJrxml?: boolean } | null>
+  openPdfFile?: () => Promise<{ path: string; base64: string; name: string } | null>
   openDataFile: () => Promise<{ path: string; content: string } | null>
   saveFile: (content: string, defaultPath?: string) => Promise<string | null>
   

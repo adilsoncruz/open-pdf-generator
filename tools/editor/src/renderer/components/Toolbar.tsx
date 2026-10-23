@@ -10,6 +10,8 @@ import { Icon, Button } from './atoms'
 import { MenuItem, DropdownMenu } from './molecules'
 import { TabBar } from './TabBar'
 import { StudioLogo } from './pages/LoadingPage'
+import { convertJrxmlToTemplate } from '../utils/jrxmlImporter'
+import { AiImportModal } from './AiImportModal'
 
 // CLI status interface
 interface CLIStatus {
@@ -69,6 +71,7 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
   const [showFileMenu, setShowFileMenu] = useState(false)
   const [showCLIModal, setShowCLIModal] = useState(false)
+  const [showAiModal, setShowAiModal] = useState(false)
   const [cliStatus, setCLIStatus] = useState<CLIStatus | null>(null)
   const [isInstallingCLI, setIsInstallingCLI] = useState(false)
   const [installError, setInstallError] = useState<string | null>(null)
@@ -179,8 +182,20 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         break
       }
       try {
-        // First, try to parse JSON to catch syntax errors
-        const loadedTemplate = JSON.parse(result.content)
+        let loadedTemplate: any
+        const isJrxml =
+          result.isJrxml ||
+          result.path?.toLowerCase().endsWith('.jrxml') ||
+          result.content.trim().startsWith('<?xml') ||
+          result.content.includes('<jasperReport')
+
+        if (isJrxml && !result.content.trim().startsWith('{')) {
+          loadedTemplate = convertJrxmlToTemplate(result.content)
+          result.convertedFromJasper = true
+        } else {
+          loadedTemplate = JSON.parse(result.content)
+        }
+
         // Always do basic structural validation first (CLI may not validate structure properly)
         let structuralError = ''
         if (!loadedTemplate.version) {
@@ -194,15 +209,17 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
           keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${structuralError}\n\n${t.validation.selectAnotherFile}`)
           continue
         }
-        // Validate template using CLI (if available) for deeper validation
-        const validation = await window.electronAPI.validateTemplate(result.path)
-        if (!validation.valid) {
-          // CLI validation failed - show friendly error message
-          if (validation.errorCode !== 'CLI_NOT_INSTALLED' && validation.errorCode !== 'JAVA_NOT_INSTALLED') {
-            keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${t.validation.templateValidationFailed}\n\n${t.validation.selectAnotherFile}`)
-            continue
+        // Validate template using CLI (if available and not jasper) for deeper validation
+        if (!result.convertedFromJasper) {
+          const validation = await window.electronAPI.validateTemplate(result.path)
+          if (!validation.valid) {
+            // CLI validation failed - show friendly error message
+            if (validation.errorCode !== 'CLI_NOT_INSTALLED' && validation.errorCode !== 'JAVA_NOT_INSTALLED') {
+              keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${t.validation.templateValidationFailed}\n\n${t.validation.selectAnotherFile}`)
+              continue
+            }
+            // If CLI not installed, we already did structural validation above, so proceed
           }
-          // If CLI not installed, we already did structural validation above, so proceed
         }
         
         // Valid template - open as new tab
@@ -238,6 +255,43 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         // JSON parse error - show friendly message and ask to try again
         keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${t.validation.invalidJson}\n\n${t.validation.selectAnotherFile}`)
       }
+    }
+  }
+
+  const handleImportJasper = async () => {
+    try {
+      const result = window.electronAPI.openJasperFile
+        ? await window.electronAPI.openJasperFile()
+        : await window.electronAPI.openFile()
+      if (!result) return
+
+      let loadedTemplate: any
+      if (result.content.trim().startsWith('{')) {
+        loadedTemplate = JSON.parse(result.content)
+      } else {
+        loadedTemplate = convertJrxmlToTemplate(result.content)
+      }
+
+      const tabTitle = (result.path.split(/[/\\]/).pop() || 'jasper-template.jrxml').replace(/\.jrxml$/i, '.json')
+      useTabStore.getState().addTab({
+        name: tabTitle,
+        path: null,
+        isDirty: true,
+        stateSnapshot: {
+          template: loadedTemplate,
+          currentFilePath: null,
+          isDirty: true,
+          history: [loadedTemplate],
+          historyIndex: 0,
+          selectedElementIds: [],
+          selectedElementLocation: 'body',
+          selectedGroupId: null,
+          currentSection: 'body',
+        },
+      })
+      alert('Template Jasper (.jrxml) importado com sucesso! Use "Salvar Como" para salvá-lo como JSON.')
+    } catch (err: unknown) {
+      alert(`Falha ao converter JRXML: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 
@@ -418,6 +472,12 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
           <MenuItem shortcut="Ctrl+O" onClick={() => { handleOpen(); setShowFileMenu(false) }}>
             {t.toolbar.open}
           </MenuItem>
+          <MenuItem onClick={() => { handleImportJasper(); setShowFileMenu(false) }}>
+            {t.toolbar.importJasper}
+          </MenuItem>
+          <MenuItem onClick={() => { setShowAiModal(true); setShowFileMenu(false) }}>
+            {t.toolbar.importAI}
+          </MenuItem>
           <div className="border-t border-slate-800 my-1" />
           <MenuItem shortcut="Ctrl+S" onClick={() => { handleSave(); setShowFileMenu(false) }}>
             {t.toolbar.save}
@@ -542,6 +602,9 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         </button>
       </div>
       
+      {/* AI PDF Import Modal */}
+      <AiImportModal isOpen={showAiModal} onClose={() => setShowAiModal(false)} />
+
       {/* CLI Installation Modal */}
       {showCLIModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
