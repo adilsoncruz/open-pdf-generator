@@ -224,20 +224,19 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
     private fun bitMatrixToImage(bitMatrix: BitMatrix): Image {
         val width = bitMatrix.width
         val height = bitMatrix.height
-        val stride = (width + 7) / 8
-        val bytes = ByteArray(stride * height)
+        val bufferedImage = java.awt.image.BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_RGB)
+        val black = 0xFF000000.toInt()
+        val white = 0xFFFFFFFF.toInt()
 
         for (y in 0 until height) {
-            val rowOffset = y * stride
             for (x in 0 until width) {
-                // In PDF DeviceGray 1-bit: 0 is black (module), 1 is white (background)
-                if (!bitMatrix.get(x, y)) {
-                    bytes[rowOffset + (x shr 3)] = (bytes[rowOffset + (x shr 3)].toInt() or (0x80 shr (x and 7))).toByte()
-                }
+                bufferedImage.setRGB(x, y, if (bitMatrix.get(x, y)) black else white)
             }
         }
 
-        return Image.getInstance(width, height, 1, 1, bytes)
+        val baos = java.io.ByteArrayOutputStream()
+        javax.imageio.ImageIO.write(bufferedImage, "png", baos)
+        return Image.getInstance(baos.toByteArray())
     }
 }
 
