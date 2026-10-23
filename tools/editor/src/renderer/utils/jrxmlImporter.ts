@@ -1,4 +1,6 @@
-import type { Template, Element as TemplateElement, PageSettings, WatermarkConfig } from '../store/templateStore'
+import type { Template, Element as TemplateElement, WatermarkConfig } from '../store/templateStore'
+
+type PageSettings = Template['pageSettings']
 
 export interface JrxmlImportOptions {
   author?: string

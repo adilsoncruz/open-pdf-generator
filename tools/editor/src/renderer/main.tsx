@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { useEffect, useState } from 'react'
 import { EditorPage, HomePage, LoadingPage } from './components/pages'
+import { AiImportModal } from './components/AiImportModal'
+import { convertJrxmlToTemplate } from './utils/jrxmlImporter'
 import { useTabStore } from './store/tabStore'
 import { useUIStore } from './store/uiStore'
 import { useRecentFilesStore } from './store/recentFilesStore'
@@ -206,6 +208,7 @@ if (typeof window !== 'undefined' && window.electronAPI?.onMenuSetLanguage) {
 
 function App() {
   const [screen, setScreen] = useState<'loading' | 'home' | 'editor'>('loading')
+  const [showAiModal, setShowAiModal] = useState(false)
   const theme = useUIStore((state) => state.theme)
 
   useEffect(() => {
@@ -219,17 +222,31 @@ function App() {
 
   const openTemplateFromContent = (filePath: string, content: string) => {
     try {
-      const loadedTemplate = JSON.parse(content)
+      let loadedTemplate: any
+      const isJrxml =
+        filePath.toLowerCase().endsWith('.jrxml') ||
+        content.trim().startsWith('<?xml') ||
+        content.includes('<jasperReport')
+
+      if (isJrxml && !content.trim().startsWith('{')) {
+        loadedTemplate = convertJrxmlToTemplate(content)
+      } else {
+        loadedTemplate = JSON.parse(content)
+      }
+
       const fileName = filePath.split(/[/\\]/).pop() || 'Opened Template'
-      useRecentFilesStore.getState().addRecentFile(filePath, fileName)
+      if (!isJrxml) {
+        useRecentFilesStore.getState().addRecentFile(filePath, fileName)
+      }
+
       useTabStore.getState().addTab({
-        name: fileName,
-        path: filePath,
-        isDirty: false,
+        name: isJrxml ? fileName.replace(/\.jrxml$/i, '.json') : fileName,
+        path: isJrxml ? null : filePath,
+        isDirty: isJrxml,
         stateSnapshot: {
           template: loadedTemplate,
-          currentFilePath: filePath,
-          isDirty: false,
+          currentFilePath: isJrxml ? null : filePath,
+          isDirty: isJrxml,
           history: [loadedTemplate],
           historyIndex: 0,
           selectedElementIds: [],
@@ -240,33 +257,79 @@ function App() {
       })
       setScreen('editor')
     } catch {
-      window.alert('Não foi possível abrir este template. Verifique se o arquivo é um JSON válido.')
+      window.alert('Não foi possível abrir este template. Verifique se o arquivo é um JSON ou JRXML válido.')
+    }
+  }
+
+  const handleImportJasper = async () => {
+    try {
+      const result = window.electronAPI.openJasperFile
+        ? await window.electronAPI.openJasperFile()
+        : await window.electronAPI.openFile()
+      if (!result) return
+
+      let loadedTemplate: any
+      if (result.content.trim().startsWith('{')) {
+        loadedTemplate = JSON.parse(result.content)
+      } else {
+        loadedTemplate = convertJrxmlToTemplate(result.content)
+      }
+
+      const tabTitle = (result.path.split(/[/\\]/).pop() || 'jasper-template.jrxml').replace(/\.jrxml$/i, '.json')
+      useTabStore.getState().addTab({
+        name: tabTitle,
+        path: null,
+        isDirty: true,
+        stateSnapshot: {
+          template: loadedTemplate,
+          currentFilePath: null,
+          isDirty: true,
+          history: [loadedTemplate],
+          historyIndex: 0,
+          selectedElementIds: [],
+          selectedElementLocation: 'body',
+          selectedGroupId: null,
+          currentSection: 'body',
+        },
+      })
+      setScreen('editor')
+    } catch (err: unknown) {
+      window.alert(`Falha ao converter JRXML: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 
   if (screen === 'loading') return <LoadingPage />
   if (screen === 'home') {
     return (
-      <HomePage
-        onNewTemplate={() => {
-          useTabStore.getState().createNewTemplateTab()
-          setScreen('editor')
-        }}
-        onOpenFile={async () => {
-          const result = await window.electronAPI.openFile()
-          if (!result) return
-          openTemplateFromContent(result.path, result.content)
-        }}
-        onOpenRecentFile={async (filePath: string) => {
-          const result = await window.electronAPI.readFile(filePath)
-          if (result.success && result.content) {
-            openTemplateFromContent(filePath, result.content)
-          } else {
-            window.alert('Não foi possível abrir o arquivo recente. Ele pode ter sido movido ou excluído.')
-            useRecentFilesStore.getState().removeRecentFile(filePath)
-          }
-        }}
-      />
+      <>
+        <HomePage
+          onNewTemplate={() => {
+            useTabStore.getState().createNewTemplateTab()
+            setScreen('editor')
+          }}
+          onOpenFile={async () => {
+            const result = await window.electronAPI.openFile()
+            if (!result) return
+            openTemplateFromContent(result.path, result.content)
+          }}
+          onImportJasper={handleImportJasper}
+          onImportAI={() => setShowAiModal(true)}
+          onOpenRecentFile={async (filePath: string) => {
+            const result = await window.electronAPI.readFile(filePath)
+            if (result.success && result.content) {
+              openTemplateFromContent(filePath, result.content)
+            } else {
+              window.alert('Não foi possível abrir o arquivo recente. Ele pode ter sido movido ou excluído.')
+              useRecentFilesStore.getState().removeRecentFile(filePath)
+            }
+          }}
+        />
+        <AiImportModal
+          isOpen={showAiModal}
+          onClose={() => setShowAiModal(false)}
+          onSuccess={() => setScreen('editor')}
+        />
+      </>
     )
   }
   return <EditorPage />

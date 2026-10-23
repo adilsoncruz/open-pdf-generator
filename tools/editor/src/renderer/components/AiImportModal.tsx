@@ -6,11 +6,12 @@ import { Icon } from './atoms'
 interface AiImportModalProps {
   isOpen: boolean
   onClose: () => void
+  onSuccess?: () => void
 }
 
 type AiProvider = 'gemini' | 'openai' | 'ollama'
 
-export const AiImportModal = ({ isOpen, onClose }: AiImportModalProps) => {
+export const AiImportModal = ({ isOpen, onClose, onSuccess }: AiImportModalProps) => {
   const [provider, setProvider] = useState<AiProvider>('gemini')
   const [apiKey, setApiKey] = useState('')
   const [model, setModel] = useState('gemini-2.5-flash')
@@ -155,6 +156,7 @@ Retorne APENAS o JSON válido sem blocos markdown ao redor.`
       })
 
       setIsLoading(false)
+      onSuccess?.()
       onClose()
     } catch (err: unknown) {
       setIsLoading(false)

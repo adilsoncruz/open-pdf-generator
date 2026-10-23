@@ -486,6 +486,10 @@ export interface Translations {
     startFromScratch: string
     browseFile: string
     openFromComputer: string
+    importJasper: string
+    importJasperDesc: string
+    importAI: string
+    importAIDesc: string
     recentFiles: string
     noRecentFiles: string
     removeRecent: string
