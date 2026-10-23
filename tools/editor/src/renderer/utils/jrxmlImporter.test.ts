@@ -152,7 +152,7 @@ describe('jrxmlImporter', () => {
       expect(lineElem).toBeDefined()
       expect(lineElem?.width).toBe(523)
 
-      const qrElem = template.page.find(e => e.type === 'qrcode')
+      const qrElem = template.page.find(e => e.type === 'barcode' && (e as any).barcodeType === 'qrcode')
       expect(qrElem).toBeDefined()
       expect(qrElem?.dataBinding).toBe('invoiceNumber')
 
@@ -191,7 +191,7 @@ describe('jrxmlImporter', () => {
         const template = convertJrxmlToTemplate(content)
         expect(template.version).toBe('1.0')
         expect(template.pageSettings.watermark?.text).toBe('ORIGINAL COPY')
-        expect(template.page.some(e => e.type === 'qrcode')).toBe(true)
+        expect(template.page.some(e => e.type === 'barcode' && (e as any).barcodeType === 'qrcode')).toBe(true)
       }
     })
 
@@ -200,11 +200,12 @@ describe('jrxmlImporter', () => {
       expect(fs.existsSync(filePath)).toBe(true)
       const content = fs.readFileSync(filePath, 'utf-8')
       const template = convertJrxmlToTemplate(content)
+      fs.writeFileSync('/tmp/fatura_servico_converted.json', JSON.stringify(template, null, 2))
       expect(template.metadata.name).toBe('fatura_servico')
       expect(template.pageSettings.size).toBe('A4')
       expect(template.pageSettings.footer).toBeDefined()
       expect(template.summaryPage).toBeDefined()
-      expect(template.summaryPage?.elements.some(e => e.type === 'qrcode')).toBe(true)
+      expect(template.summaryPage?.elements.some(e => e.type === 'barcode' && (e as any).barcodeType === 'qrcode')).toBe(true)
     })
 
     it('converts sample relatorio_pedidos.jrxml cleanly', () => {

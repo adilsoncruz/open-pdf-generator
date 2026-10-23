@@ -295,7 +295,8 @@ export function convertJrxmlToTemplate(
             const qrExpr = qrNode.textContent || ''
             const mappedQr = mapJasperExpression(qrExpr)
             elements.push({
-              type: 'qrcode',
+              type: 'barcode',
+              barcodeType: 'qrcode',
               id: generateId('qr'),
               x: bounds.x,
               y: absY,

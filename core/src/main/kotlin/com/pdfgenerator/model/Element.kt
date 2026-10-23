@@ -625,7 +625,7 @@ class ElementDeserializer : JsonDeserializer<Element> {
             "table" -> gson.fromJson(json, TableElement::class.java)
             "rectangle" -> gson.fromJson(json, RectangleElement::class.java)
             "line" -> gson.fromJson(json, LineElement::class.java)
-            "barcode" -> gson.fromJson(json, BarcodeElement::class.java)
+            "barcode", "qrcode" -> gson.fromJson(json, BarcodeElement::class.java)
             "conditional" -> gson.fromJson(json, ConditionalElement::class.java)
             "loop" -> gson.fromJson(json, LoopElement::class.java)
             "container" -> gson.fromJson(json, ContainerElement::class.java)
