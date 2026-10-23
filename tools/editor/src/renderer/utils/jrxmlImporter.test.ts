@@ -204,8 +204,8 @@ describe('jrxmlImporter', () => {
       expect(template.metadata.name).toBe('fatura_servico')
       expect(template.pageSettings.size).toBe('A4')
       expect(template.pageSettings.footer).toBeDefined()
-      expect(template.summaryPage).toBeDefined()
-      expect(template.summaryPage?.elements.some(e => e.type === 'barcode' && (e as any).barcodeType === 'qrcode')).toBe(true)
+      // Summary elements are included in the page body when isSummaryNewPage is not true
+      expect(template.page.some(e => e.type === 'barcode' && (e as any).barcodeType === 'qrcode')).toBe(true)
     })
 
     it('converts sample relatorio_pedidos.jrxml cleanly', () => {

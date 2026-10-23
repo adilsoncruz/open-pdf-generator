@@ -302,7 +302,7 @@ export function convertJrxmlToTemplate(
               y: absY,
               width: bounds.width,
               height: bounds.height,
-              value: mappedQr.value,
+              value: mappedQr.value || 'https://openpdf.dev',
               dataBinding: mappedQr.dataBinding,
             })
             break
@@ -320,7 +320,7 @@ export function convertJrxmlToTemplate(
               y: absY,
               width: bounds.width,
               height: bounds.height,
-              value: mappedCode.value,
+              value: mappedCode.value || '123456789012',
               dataBinding: mappedCode.dataBinding,
             })
             break
@@ -404,11 +404,14 @@ export function convertJrxmlToTemplate(
         }
 
         if (sectionName === 'summary') {
-          const sumElements = parseBand(band, 0)
-          if (sumElements.length > 0) {
-            summaryElements = sumElements
+          const isSummaryNewPage = root.getAttribute('isSummaryNewPage') === 'true'
+          if (isSummaryNewPage) {
+            const sumElements = parseBand(band, 0)
+            if (sumElements.length > 0) {
+              summaryElements = sumElements
+            }
+            continue
           }
-          continue
         }
 
         // Body sections: title, columnHeader, detail, columnFooter
