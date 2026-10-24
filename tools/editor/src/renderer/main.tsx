@@ -192,6 +192,8 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
     }),
     getCurrentVersion: async () => '1.0.0',
     onUpdateStatus: () => {},
+    installSkill: async (target: string) => ({ success: true, path: `~/.gemini/antigravity-cli/skills/ai-pdf-template-importer/SKILL.md (${target})` }),
+    getSkillContent: async () => ({ success: true, content: '# ai-pdf-template-importer skill' }),
   }
 }
 

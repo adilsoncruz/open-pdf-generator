@@ -99,6 +99,10 @@ export interface ElectronAPI {
   // Language APIs
   setLanguage: (lang: string) => Promise<{ success: boolean }>
   getSystemLocale: () => Promise<string>
+
+  // Skill Management
+  installSkill?: (target: string, customPath?: string) => Promise<{ success: boolean; path?: string; error?: string }>
+  getSkillContent?: () => Promise<{ success: boolean; content?: string; error?: string }>
   
   // Auto-Update
   checkForUpdates: () => Promise<{ success: boolean; updateAvailable?: boolean; version?: string; error?: string }>
