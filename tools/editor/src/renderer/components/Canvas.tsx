@@ -12,6 +12,12 @@ interface LoopChildElementProps {
   location: ElementLocation
   loopWidth: number
   loopHeight: number
+  horizontalGuides?: number[]
+  verticalGuides?: number[]
+  loopPageX?: number
+  loopPageY?: number
+  scale?: number
+  onSnapGuide?: (snapped: { h: number | null; v: number | null }) => void
 }
 
 // Component to render Loop child elements
@@ -24,6 +30,12 @@ interface ContainerChildElementProps {
   effectiveY?: number
   effectiveX?: number
   effectiveWidth?: number | string
+  horizontalGuides?: number[]
+  verticalGuides?: number[]
+  containerPageX?: number
+  containerPageY?: number
+  scale?: number
+  onSnapGuide?: (snapped: { h: number | null; v: number | null }) => void
 }
 
 function getHeaderBorderValues(style: Record<string, unknown> | undefined) {
@@ -71,8 +83,24 @@ function getCellBorderValues(style: Record<string, unknown> | undefined) {
   }
 }
 
-function ContainerChildElement({ child, containerId, location, containerWidth, containerHeight, effectiveY, effectiveX, effectiveWidth }: ContainerChildElementProps) {
+function ContainerChildElement({
+  child,
+  containerId,
+  location,
+  containerWidth,
+  containerHeight,
+  effectiveY,
+  effectiveX,
+  effectiveWidth,
+  horizontalGuides = [],
+  verticalGuides = [],
+  containerPageX,
+  containerPageY,
+  scale = 1,
+  onSnapGuide,
+}: ContainerChildElementProps) {
   const { t } = useTranslation()
+  const snapToGuides = useUIStore((state) => state.snapToGuides)
   const {
     selectedContainerChildId,
     selectedContainerParentId,
@@ -229,8 +257,10 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
     if (!isDragging) return
 
     const handleMouseMove = (e: globalThis.MouseEvent) => {
-      const deltaX = e.clientX - dragStart.x
-      const deltaY = e.clientY - dragStart.y
+      const currentScale = scale || 1
+      const deltaX = (e.clientX - dragStart.x) / currentScale
+      const deltaY = (e.clientY - dragStart.y) / currentScale
+
       if (Object.keys(dragStart.initialPositions || {}).length > 1) {
         Object.keys(dragStart.initialPositions).forEach((id) => {
           const initPos = dragStart.initialPositions[id]
@@ -244,6 +274,105 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
         
         let newX = dragStart.initialX + deltaX
         let newY = dragStart.initialY + deltaY
+
+        if (snapToGuides) {
+          const snapTolerance = 8
+          let minDistanceX = snapTolerance + 1
+          let minDistanceY = snapTolerance + 1
+          let activeSnapH: number | null = null
+          let activeSnapV: number | null = null
+
+          // 1. Container boundaries snap
+          if (Math.abs(newX) < minDistanceX) {
+            minDistanceX = Math.abs(newX)
+            newX = 0
+          }
+          if (Math.abs((newX + childWidth) - containerWidth) < minDistanceX) {
+            minDistanceX = Math.abs((newX + childWidth) - containerWidth)
+            newX = containerWidth - childWidth
+          }
+          if (Math.abs((newX + childWidth / 2) - containerWidth / 2) < minDistanceX) {
+            minDistanceX = Math.abs((newX + childWidth / 2) - containerWidth / 2)
+            newX = containerWidth / 2 - childWidth / 2
+          }
+
+          if (Math.abs(newY) < minDistanceY) {
+            minDistanceY = Math.abs(newY)
+            newY = 0
+          }
+          if (Math.abs((newY + childHeight) - containerHeight) < minDistanceY) {
+            minDistanceY = Math.abs((newY + childHeight) - containerHeight)
+            newY = containerHeight - childHeight
+          }
+          if (Math.abs((newY + childHeight / 2) - containerHeight / 2) < minDistanceY) {
+            minDistanceY = Math.abs((newY + childHeight / 2) - containerHeight / 2)
+            newY = containerHeight / 2 - childHeight / 2
+          }
+
+          // 2. Vertical Guides Snap
+          if (containerPageX !== undefined) {
+            verticalGuides.forEach((guidePageX) => {
+              const guideLocalX = guidePageX - containerPageX
+
+              // Left edge
+              const distLeft = Math.abs(newX - guideLocalX)
+              if (distLeft < minDistanceX) {
+                minDistanceX = distLeft
+                newX = guideLocalX
+                activeSnapV = guidePageX
+              }
+
+              // Right edge
+              const distRight = Math.abs((newX + childWidth) - guideLocalX)
+              if (distRight < minDistanceX) {
+                minDistanceX = distRight
+                newX = guideLocalX - childWidth
+                activeSnapV = guidePageX
+              }
+
+              // Center
+              const distCenter = Math.abs((newX + childWidth / 2) - guideLocalX)
+              if (distCenter < minDistanceX) {
+                minDistanceX = distCenter
+                newX = guideLocalX - childWidth / 2
+                activeSnapV = guidePageX
+              }
+            })
+          }
+
+          // 3. Horizontal Guides Snap
+          if (containerPageY !== undefined) {
+            horizontalGuides.forEach((guidePageY) => {
+              const guideLocalY = guidePageY - containerPageY
+
+              // Top edge
+              const distTop = Math.abs(newY - guideLocalY)
+              if (distTop < minDistanceY) {
+                minDistanceY = distTop
+                newY = guideLocalY
+                activeSnapH = guidePageY
+              }
+
+              // Bottom edge
+              const distBottom = Math.abs((newY + childHeight) - guideLocalY)
+              if (distBottom < minDistanceY) {
+                minDistanceY = distBottom
+                newY = guideLocalY - childHeight
+                activeSnapH = guidePageY
+              }
+
+              // Center
+              const distCenter = Math.abs((newY + childHeight / 2) - guideLocalY)
+              if (distCenter < minDistanceY) {
+                minDistanceY = distCenter
+                newY = guideLocalY - childHeight / 2
+                activeSnapH = guidePageY
+              }
+            })
+          }
+
+          onSnapGuide?.({ h: activeSnapH, v: activeSnapV })
+        }
         
         newX = Math.max(0, Math.min(newX, Math.max(0, containerWidth - childWidth)))
         newY = Math.max(0, Math.min(newY, Math.max(0, containerHeight - childHeight)))
@@ -260,6 +389,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
 
     const handleMouseUp = () => {
       setIsDragging(false)
+      onSnapGuide?.({ h: null, v: null })
       saveSnapshot()
     }
 
@@ -270,23 +400,78 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, dragStart, containerId, child.id, location, updateContainerChildElement, updateElement, saveSnapshot])
+  }, [isDragging, dragStart, containerId, child.id, location, updateContainerChildElement, updateElement, saveSnapshot, snapToGuides, horizontalGuides, verticalGuides, containerPageX, containerPageY, scale])
 
   useEffect(() => {
     if (!isResizing) return
 
     const handleMouseMove = (e: globalThis.MouseEvent) => {
-      const deltaX = e.clientX - resizeStart.x
-      const deltaY = e.clientY - resizeStart.y
+      const currentScale = scale || 1
+      const deltaX = (e.clientX - resizeStart.x) / currentScale
+      const deltaY = (e.clientY - resizeStart.y) / currentScale
       
-      const newWidth = Math.max(10, Math.min(containerWidth - (child.x || 0), resizeStart.initialW + deltaX))
-      const newHeight = Math.max(10, Math.min(containerHeight - (child.y || 0), resizeStart.initialH + deltaY))
+      let newWidth = resizeStart.initialW + deltaX
+      let newHeight = resizeStart.initialH + deltaY
+
+      if (snapToGuides) {
+        const snapTolerance = 8
+        let minDistanceX = snapTolerance + 1
+        let minDistanceY = snapTolerance + 1
+        let activeSnapH: number | null = null
+        let activeSnapV: number | null = null
+
+        const currentX = child.x || 0
+        const currentY = child.y || 0
+
+        // Snap to container right edge
+        if (Math.abs((currentX + newWidth) - containerWidth) < minDistanceX) {
+          minDistanceX = Math.abs((currentX + newWidth) - containerWidth)
+          newWidth = containerWidth - currentX
+        }
+        // Snap to container bottom edge
+        if (Math.abs((currentY + newHeight) - containerHeight) < minDistanceY) {
+          minDistanceY = Math.abs((currentY + newHeight) - containerHeight)
+          newHeight = containerHeight - currentY
+        }
+
+        // Snap to vertical guides
+        if (containerPageX !== undefined) {
+          verticalGuides.forEach((guidePageX) => {
+            const guideLocalX = guidePageX - containerPageX
+            const dist = Math.abs((currentX + newWidth) - guideLocalX)
+            if (dist < minDistanceX) {
+              minDistanceX = dist
+              newWidth = guideLocalX - currentX
+              activeSnapV = guidePageX
+            }
+          })
+        }
+
+        // Snap to horizontal guides
+        if (containerPageY !== undefined) {
+          horizontalGuides.forEach((guidePageY) => {
+            const guideLocalY = guidePageY - containerPageY
+            const dist = Math.abs((currentY + newHeight) - guideLocalY)
+            if (dist < minDistanceY) {
+              minDistanceY = dist
+              newHeight = guideLocalY - currentY
+              activeSnapH = guidePageY
+            }
+          })
+        }
+
+        onSnapGuide?.({ h: activeSnapH, v: activeSnapV })
+      }
+
+      newWidth = Math.max(10, Math.min(containerWidth - (child.x || 0), newWidth))
+      newHeight = Math.max(10, Math.min(containerHeight - (child.y || 0), newHeight))
       
       updateContainerChildElement(containerId, child.id, { width: newWidth, height: newHeight }, location)
     }
 
     const handleMouseUp = () => {
       setIsResizing(null)
+      onSnapGuide?.({ h: null, v: null })
       saveSnapshot()
     }
 
@@ -297,7 +482,7 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizing, resizeStart, containerId, child.id, child.x, child.y, containerWidth, containerHeight, location, updateContainerChildElement, saveSnapshot])
+  }, [isResizing, resizeStart, containerId, child.id, child.x, child.y, containerWidth, containerHeight, location, updateContainerChildElement, saveSnapshot, snapToGuides, horizontalGuides, verticalGuides, containerPageX, containerPageY, scale])
 
   // Renderizar baseado no tipo
   const renderContent = () => {
@@ -491,6 +676,16 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
                                location={location}
                                loopWidth={loopWidth}
                                loopHeight={loopHeight}
+                               horizontalGuides={horizontalGuides}
+                               verticalGuides={verticalGuides}
+                               loopPageX={
+                                 (containerPageX !== undefined ? containerPageX : 0) + (child.x || 0)
+                               }
+                               loopPageY={
+                                 (containerPageY !== undefined ? containerPageY : 0) + (child.y || 0)
+                               }
+                               scale={scale}
+                               onSnapGuide={onSnapGuide}
                              />
                            ))}
                          </>
@@ -754,7 +949,19 @@ function ContainerChildElement({ child, containerId, location, containerWidth, c
   )
 }
 
-function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: LoopChildElementProps) {
+function LoopChildElement({
+  child,
+  loopId,
+  location,
+  loopWidth,
+  loopHeight,
+  horizontalGuides = [],
+  verticalGuides = [],
+  loopPageX,
+  loopPageY,
+  scale = 1,
+  onSnapGuide,
+}: LoopChildElementProps) {
   const { 
     selectedLoopChildId, 
     selectedLoopParentId, 
@@ -765,6 +972,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
     saveSnapshot,
     testData
   } = useTemplateStore()
+  const snapToGuides = useUIStore((state) => state.snapToGuides)
   
   const isSelected = selectedElementIds.includes(child.id) || (selectedLoopChildId === child.id && selectedLoopParentId === loopId)
   
@@ -855,7 +1063,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
     return `{${fieldName}}`
   }
   const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialX: 0, initialY: 0 })
   
   // Resolve dimensions (support for "100%")
   const resolveWidth = (value: string | number | undefined): number => {
@@ -881,18 +1089,121 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
       selectLoopChild(loopId, child.id, location)
     }
     setIsDragging(true)
-    setDragStart({ x: e.clientX - child.x, y: e.clientY - child.y })
+    setDragStart({ x: e.clientX, y: e.clientY, initialX: child.x || 0, initialY: child.y || 0 })
   }
   
   useEffect(() => {
     if (!isDragging) return
     
     const handleMouseMove = (e: globalThis.MouseEvent) => {
+      const currentScale = scale || 1
+      const deltaX = (e.clientX - dragStart.x) / currentScale
+      const deltaY = (e.clientY - dragStart.y) / currentScale
+
       const childWidth = resolveWidth(child.width)
       const childHeight = resolveHeight(child.height)
       
-      let newX = e.clientX - dragStart.x
-      let newY = e.clientY - dragStart.y
+      let newX = dragStart.initialX + deltaX
+      let newY = dragStart.initialY + deltaY
+
+      if (snapToGuides) {
+        const snapTolerance = 8
+        let minDistanceX = snapTolerance + 1
+        let minDistanceY = snapTolerance + 1
+        let activeSnapH: number | null = null
+        let activeSnapV: number | null = null
+
+        // 1. Loop boundaries snap
+        if (Math.abs(newX) < minDistanceX) {
+          minDistanceX = Math.abs(newX)
+          newX = 0
+        }
+        if (Math.abs((newX + childWidth) - loopWidth) < minDistanceX) {
+          minDistanceX = Math.abs((newX + childWidth) - loopWidth)
+          newX = loopWidth - childWidth
+        }
+        if (Math.abs((newX + childWidth / 2) - loopWidth / 2) < minDistanceX) {
+          minDistanceX = Math.abs((newX + childWidth / 2) - loopWidth / 2)
+          newX = loopWidth / 2 - childWidth / 2
+        }
+
+        if (Math.abs(newY) < minDistanceY) {
+          minDistanceY = Math.abs(newY)
+          newY = 0
+        }
+        if (Math.abs((newY + childHeight) - loopHeight) < minDistanceY) {
+          minDistanceY = Math.abs((newY + childHeight) - loopHeight)
+          newY = loopHeight - childHeight
+        }
+        if (Math.abs((newY + childHeight / 2) - loopHeight / 2) < minDistanceY) {
+          minDistanceY = Math.abs((newY + childHeight / 2) - loopHeight / 2)
+          newY = loopHeight / 2 - childHeight / 2
+        }
+
+        // 2. Vertical Guides Snap
+        if (loopPageX !== undefined) {
+          verticalGuides.forEach((guidePageX) => {
+            const guideLocalX = guidePageX - loopPageX
+
+            // Left edge
+            const distLeft = Math.abs(newX - guideLocalX)
+            if (distLeft < minDistanceX) {
+              minDistanceX = distLeft
+              newX = guideLocalX
+              activeSnapV = guidePageX
+            }
+
+            // Right edge
+            const distRight = Math.abs((newX + childWidth) - guideLocalX)
+            if (distRight < minDistanceX) {
+              minDistanceX = distRight
+              newX = guideLocalX - childWidth
+              activeSnapV = guidePageX
+            }
+
+            // Center
+            const distCenter = Math.abs((newX + childWidth / 2) - guideLocalX)
+            if (distCenter < minDistanceX) {
+              minDistanceX = distCenter
+              newX = guideLocalX - childWidth / 2
+              activeSnapV = guidePageX
+            }
+          })
+        }
+
+        // 3. Horizontal Guides Snap
+        if (loopPageY !== undefined) {
+          horizontalGuides.forEach((guidePageY) => {
+            const guideLocalY = guidePageY - loopPageY
+
+            // Top edge
+            const distTop = Math.abs(newY - guideLocalY)
+            if (distTop < minDistanceY) {
+              minDistanceY = distTop
+              newY = guideLocalY
+              activeSnapH = guidePageY
+            }
+
+            // Bottom edge
+            const distBottom = Math.abs((newY + childHeight) - guideLocalY)
+            if (distBottom < minDistanceY) {
+              minDistanceY = distBottom
+              newY = guideLocalY - childHeight
+              activeSnapH = guidePageY
+            }
+
+            // Center
+            const distCenter = Math.abs((newY + childHeight / 2) - guideLocalY)
+            if (distCenter < minDistanceY) {
+              minDistanceY = distCenter
+              newY = guideLocalY - childHeight / 2
+              activeSnapH = guidePageY
+            }
+          })
+        }
+
+        onSnapGuide?.({ h: activeSnapH, v: activeSnapV })
+      }
       
       newX = Math.max(0, Math.min(newX, Math.max(0, loopWidth - childWidth)))
       newY = Math.max(0, Math.min(newY, Math.max(0, loopHeight - childHeight)))
@@ -902,6 +1213,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
     
     const handleMouseUp = () => {
       setIsDragging(false)
+      onSnapGuide?.({ h: null, v: null })
       saveSnapshot() 
     }
     
@@ -912,7 +1224,7 @@ function LoopChildElement({ child, loopId, location, loopWidth, loopHeight }: Lo
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, dragStart, loopId, child.id, location, updateLoopChildElement, saveSnapshot])
+  }, [isDragging, dragStart, loopId, child.id, location, updateLoopChildElement, saveSnapshot, snapToGuides, horizontalGuides, verticalGuides, loopPageX, loopPageY, scale])
   
   // Renderizar baseado no tipo
   const renderContent = () => {
@@ -1131,19 +1443,27 @@ export default function Canvas() {
     setCurrentSection, 
     clearSelection,
   } = useTemplateStore()
-  const { zoom, setZoom } = useUIStore()
+  const { zoom, setZoom, snapToGuides } = useUIStore()
   const pageRef = useRef<HTMLDivElement>(null)
 
-  let pageSize;
+  let pageSize = { width: 595, height: 842 }
   switch(template.pageSettings.size) {
-      case "A4" :
-        pageSize = { width: 595, height: 842 };
-      case "PORTRAIT" :
-        pageSize = { width: 612, height: 792 };
-      case "CUSTOM" :
-        pageSize = { width: template.pageSettings.customSize?.width || 595, height: template.pageSettings.customSize?.height || 842 };
+      case "A4":
+        pageSize = { width: 595, height: 842 }
+        break
+      case "LETTER":
+      case "PORTRAIT":
+        pageSize = { width: 612, height: 792 }
+        break
+      case "LEGAL":
+        pageSize = { width: 612, height: 1008 }
+        break
+      case "CUSTOM":
+        pageSize = { width: template.pageSettings.customSize?.width || 595, height: template.pageSettings.customSize?.height || 842 }
+        break
       default:
-        pageSize ={ width: 595, height: 842 };
+        pageSize = { width: 595, height: 842 }
+        break
   }
 
 
@@ -1153,6 +1473,7 @@ export default function Canvas() {
   // Estados para réguas e linhas guias interativas (inicia vazio)
   const [horizontalGuides, setHorizontalGuides] = useState<number[]>([])
   const [verticalGuides, setVerticalGuides] = useState<number[]>([])
+  const [snappedGuides, setSnappedGuides] = useState<{ h: number | null; v: number | null }>({ h: null, v: null })
   const [draggingGuide, setDraggingGuide] = useState<{ type: 'h' | 'v'; index: number; isNew?: boolean } | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
 
@@ -1208,13 +1529,23 @@ export default function Canvas() {
 
       if (draggingGuide.type === 'h') {
         const rawY = (e.clientY - pageRect.top) / scale
-        const clampedY = Math.max(0, Math.min(pageSize.height, Math.round(rawY)))
+        let clampedY = Math.max(0, Math.min(pageSize.height, Math.round(rawY)))
+        if (snapToGuides) {
+          if (Math.abs(clampedY - margins.top) <= 6) clampedY = Math.round(margins.top)
+          else if (Math.abs(clampedY - (pageSize.height - margins.bottom)) <= 6) clampedY = Math.round(pageSize.height - margins.bottom)
+          else if (Math.abs(clampedY - pageSize.height / 2) <= 6) clampedY = Math.round(pageSize.height / 2)
+        }
         setHorizontalGuides((prev) =>
           prev.map((g, i) => (i === draggingGuide.index ? clampedY : g))
         )
       } else {
         const rawX = (e.clientX - pageRect.left) / scale
-        const clampedX = Math.max(0, Math.min(pageSize.width, Math.round(rawX)))
+        let clampedX = Math.max(0, Math.min(pageSize.width, Math.round(rawX)))
+        if (snapToGuides) {
+          if (Math.abs(clampedX - margins.left) <= 6) clampedX = Math.round(margins.left)
+          else if (Math.abs(clampedX - (pageSize.width - margins.right)) <= 6) clampedX = Math.round(pageSize.width - margins.right)
+          else if (Math.abs(clampedX - pageSize.width / 2) <= 6) clampedX = Math.round(pageSize.width / 2)
+        }
         setVerticalGuides((prev) =>
           prev.map((g, i) => (i === draggingGuide.index ? clampedX : g))
         )
@@ -1280,6 +1611,7 @@ export default function Canvas() {
     }
 
     // Only check body elements (not header/footer)
+    const containerWidth = pageSize.width - margins.left - margins.right
     template.page.forEach((element) => {
       const x = element.x
       const y = element.y
@@ -1289,23 +1621,23 @@ export default function Canvas() {
       // Ignore elements without defined position/size
       if (x === undefined || y === undefined) return
 
-      // Check left margin
-      if (Math.abs(x - margins.left) <= snapTolerance) {
+      // Check left margin (x=0 inside body container)
+      if (Math.abs(x) <= snapTolerance) {
         snapped.left = true
       }
 
       // Check right margin (only if width is set and is a number)
-      if (typeof width === 'number' && Math.abs((x + width) - (pageSize.width - margins.right)) <= snapTolerance) {
+      if (typeof width === 'number' && Math.abs((x + width) - containerWidth) <= snapTolerance) {
         snapped.right = true
       }
 
-      // Check top margin
-      if (Math.abs(y - margins.top) <= snapTolerance) {
+      // Check top margin (y=0 inside body container)
+      if (Math.abs(y) <= snapTolerance) {
         snapped.top = true
       }
 
       // Check bottom margin (only if height is set and is a number)
-      if (typeof height === 'number' && Math.abs((y + height) - (pageSize.height - margins.bottom)) <= snapTolerance) {
+      if (typeof height === 'number' && Math.abs((y + height) - bodyUsableHeight) <= snapTolerance) {
         snapped.bottom = true
       }
     })
@@ -1486,6 +1818,11 @@ export default function Canvas() {
                         allElements={flattenElements(template.pageSettings.bodyBackground?.elements ?? [])}
                         onUpdateMultiple={() => {}}
                         updateElement={updateElement}
+                        horizontalGuides={horizontalGuides}
+                        verticalGuides={verticalGuides}
+                        containerOffsetX={margins.left}
+                        containerOffsetY={margins.top}
+                        onSnapGuide={setSnappedGuides}
                       />
                     ))}
                 </div>
@@ -1631,7 +1968,7 @@ export default function Canvas() {
                       isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
                       onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
                       onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
-                        location="summary"
+                      location="summary"
                       margins={margins}
                       pageSize={pageSize}
                       selectedElementIds={selectedElementIds}
@@ -1639,6 +1976,11 @@ export default function Canvas() {
                       allElements={flattenElements(template.summaryPage?.background?.elements ?? [])}
                       onUpdateMultiple={() => {}}
                       updateElement={updateElement}
+                      horizontalGuides={horizontalGuides}
+                      verticalGuides={verticalGuides}
+                      containerOffsetX={margins.left}
+                      containerOffsetY={margins.top}
+                      onSnapGuide={setSnappedGuides}
                     />
                   ))}
 
@@ -1671,6 +2013,11 @@ export default function Canvas() {
                         allElements={flattenElements(template.summaryPage?.elements ?? [])}
                         onUpdateMultiple={() => {}}
                         updateElement={updateElement}
+                        horizontalGuides={horizontalGuides}
+                        verticalGuides={verticalGuides}
+                        containerOffsetX={margins.left}
+                        containerOffsetY={margins.top}
+                        onSnapGuide={setSnappedGuides}
                       />
                     ))}
                 </div>
@@ -1893,7 +2240,7 @@ export default function Canvas() {
                     isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'header'}
                     onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'header') : selectElement(element.id, 'header')}
                     onUpdate={(updates) => updateElement(element.id, updates, 'header')}
-                        location="header"
+                    location="header"
                     margins={margins}
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
@@ -1901,6 +2248,11 @@ export default function Canvas() {
                     allElements={flattenElements(template.pageSettings.header?.elements ?? [])}
                     onUpdateMultiple={() => {}}
                     updateElement={updateElement}
+                    horizontalGuides={horizontalGuides}
+                    verticalGuides={verticalGuides}
+                    containerOffsetX={margins.left}
+                    containerOffsetY={margins.top}
+                    onSnapGuide={setSnappedGuides}
                   />
                 ))}
               
@@ -1941,7 +2293,7 @@ export default function Canvas() {
                     isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'footer'}
                     onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'footer') : selectElement(element.id, 'footer')}
                     onUpdate={(updates) => updateElement(element.id, updates, 'footer')}
-                        location="footer"
+                    location="footer"
                     margins={margins}
                     pageSize={pageSize}
                     selectedElementIds={selectedElementIds}
@@ -1949,6 +2301,11 @@ export default function Canvas() {
                     allElements={flattenElements(template.pageSettings.footer?.elements ?? [])}
                     onUpdateMultiple={() => {}}
                     updateElement={updateElement}
+                    horizontalGuides={horizontalGuides}
+                    verticalGuides={verticalGuides}
+                    containerOffsetX={margins.left}
+                    containerOffsetY={totalCanvasHeight - margins.bottom - (template.pageSettings.footer?.height || 0)}
+                    onSnapGuide={setSnappedGuides}
                   />
                 ))}
               
@@ -2063,6 +2420,11 @@ export default function Canvas() {
                       allElements={flattenElements(template.page)}
                       onUpdateMultiple={() => {}}
                       updateElement={updateElement}
+                      horizontalGuides={horizontalGuides}
+                      verticalGuides={verticalGuides}
+                      containerOffsetX={margins.left}
+                      containerOffsetY={margins.top + (template.pageSettings.header?.height || 0)}
+                      onSnapGuide={setSnappedGuides}
                     />
                   )
                 })
@@ -2458,52 +2820,58 @@ export default function Canvas() {
           {/* LINHAS GUIAS INTERATIVAS (CYAN #06b6d4) COM TOOLTIPS */}
           <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 50, width: pageSize.width, height: pageSize.height }}>
             {/* Guias Horizontais */}
-            {horizontalGuides.map((yPos, idx) => (
-              <div
-                key={`h-guide-${idx}`}
-                className="absolute left-0 right-0 pointer-events-auto cursor-ns-resize group"
-                style={{ top: yPos }}
-                onMouseDown={(e) => {
-                  e.stopPropagation()
-                  setDraggingGuide({ type: 'h', index: idx })
-                }}
-                onDoubleClick={(e) => {
-                  e.stopPropagation()
-                  removeGuide('h', idx)
-                }}
-                title={t.canvas.guideTooltip}
-              >
-                <div className="h-0.5 bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
-                  <div className={`absolute left-2 -top-5 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 transition-opacity ${draggingGuide?.type === 'h' && draggingGuide?.index === idx ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                    Y: {Math.round(yPos)}pt
+            {horizontalGuides.map((yPos, idx) => {
+              const isSnapped = snappedGuides.h !== null && Math.abs(snappedGuides.h - yPos) < 1
+              return (
+                <div
+                  key={`h-guide-${idx}`}
+                  className="absolute left-0 right-0 pointer-events-auto cursor-ns-resize group"
+                  style={{ top: yPos }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation()
+                    setDraggingGuide({ type: 'h', index: idx })
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    removeGuide('h', idx)
+                  }}
+                  title={t.canvas.guideTooltip}
+                >
+                  <div className={`h-0.5 relative transition-colors ${isSnapped ? 'bg-emerald-400 shadow-md shadow-emerald-500/80 ring-1 ring-emerald-400' : 'bg-cyan-400 shadow-sm shadow-cyan-500/50'}`}>
+                    <div className={`absolute left-2 -top-5 px-1.5 py-0.5 rounded bg-slate-900 border text-[10px] font-mono transition-all ${isSnapped ? 'border-emerald-500 text-emerald-300 ring-2 ring-emerald-500/30 opacity-100' : 'border-cyan-500/40 text-cyan-300'} ${isSnapped || (draggingGuide?.type === 'h' && draggingGuide?.index === idx) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                      Y: {Math.round(yPos)}pt{isSnapped ? ' 🧲' : ''}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
 
             {/* Guias Verticais */}
-            {verticalGuides.map((xPos, idx) => (
-              <div
-                key={`v-guide-${idx}`}
-                className="absolute top-0 bottom-0 pointer-events-auto cursor-ew-resize group"
-                style={{ left: xPos }}
-                onMouseDown={(e) => {
-                  e.stopPropagation()
-                  setDraggingGuide({ type: 'v', index: idx })
-                }}
-                onDoubleClick={(e) => {
-                  e.stopPropagation()
-                  removeGuide('v', idx)
-                }}
-                title={t.canvas.guideTooltip}
-              >
-                <div className="w-0.5 h-full bg-cyan-400 shadow-sm shadow-cyan-500/50 relative">
-                  <div className={`absolute -left-6 top-2 px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 transition-opacity whitespace-nowrap ${draggingGuide?.type === 'v' && draggingGuide?.index === idx ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                    X: {Math.round(xPos)}pt
+            {verticalGuides.map((xPos, idx) => {
+              const isSnapped = snappedGuides.v !== null && Math.abs(snappedGuides.v - xPos) < 1
+              return (
+                <div
+                  key={`v-guide-${idx}`}
+                  className="absolute top-0 bottom-0 pointer-events-auto cursor-ew-resize group"
+                  style={{ left: xPos }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation()
+                    setDraggingGuide({ type: 'v', index: idx })
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    removeGuide('v', idx)
+                  }}
+                  title={t.canvas.guideTooltip}
+                >
+                  <div className={`w-0.5 h-full relative transition-colors ${isSnapped ? 'bg-emerald-400 shadow-md shadow-emerald-500/80 ring-1 ring-emerald-400' : 'bg-cyan-400 shadow-sm shadow-cyan-500/50'}`}>
+                    <div className={`absolute -left-6 top-2 px-1.5 py-0.5 rounded bg-slate-900 border text-[10px] font-mono transition-all whitespace-nowrap ${isSnapped ? 'border-emerald-500 text-emerald-300 ring-2 ring-emerald-500/30 opacity-100' : 'border-cyan-500/40 text-cyan-300'} ${isSnapped || (draggingGuide?.type === 'v' && draggingGuide?.index === idx) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                      X: {Math.round(xPos)}pt{isSnapped ? ' 🧲' : ''}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
         {/* Fim do container com scale */}
@@ -2533,6 +2901,11 @@ interface CanvasElementProps {
   onUpdateMultiple: () => void
   updateElement: (id: string, updates: Partial<Element>, location?: ElementLocation) => void
   location: ElementLocation
+  horizontalGuides?: number[]
+  verticalGuides?: number[]
+  containerOffsetX?: number
+  containerOffsetY?: number
+  onSnapGuide?: (snapped: { h: number | null; v: number | null }) => void
 }
 
 // Map PDF fonts to equivalent web fonts
@@ -2551,11 +2924,34 @@ function getFontFamily(pdfFont?: string): string {
   return fontMap[pdfFont] || 'Arial, sans-serif'
 }
 
-function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale = 1, isSelected, onSelect, onUpdate, margins, pageSize, selectedElementIds, selectedElementLocation, allElements, onUpdateMultiple, updateElement, location }: CanvasElementProps) {
+function CanvasElement({
+  element,
+  effectiveY,
+  effectiveX,
+  effectiveWidth,
+  scale = 1,
+  isSelected,
+  onSelect,
+  onUpdate,
+  margins,
+  pageSize,
+  selectedElementIds,
+  selectedElementLocation,
+  allElements,
+  onUpdateMultiple,
+  updateElement,
+  location,
+  horizontalGuides = [],
+  verticalGuides = [],
+  containerOffsetX,
+  containerOffsetY,
+  onSnapGuide,
+}: CanvasElementProps) {
   const { t } = useTranslation()
   const template = useTemplateStore(state => state.template)
   const testData = useTemplateStore(state => state.testData)
   const saveSnapshot = useTemplateStore(state => state.saveSnapshot)
+  const snapToGuides = useUIStore(state => state.snapToGuides)
   const selectedContainerChildId = useTemplateStore(state => state.selectedContainerChildId)
   const selectedLoopChildId = useTemplateStore(state => state.selectedLoopChildId)
   const [isDragging, setIsDragging] = useState(false)
@@ -2631,32 +3027,142 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
   }
 
   
-  const applySnapToMargins = (x: number, y: number, width: number = 0, height: number = 0) => {
-    const snapTolerance = 8 
+  const applySnap = (
+    x: number,
+    y: number,
+    width: number = 0,
+    height: number = 0,
+    options?: { snapX?: boolean; snapY?: boolean }
+  ) => {
+    if (!snapToGuides) {
+      onSnapGuide?.({ h: null, v: null })
+      return { x, y }
+    }
+
+    const snapTolerance = 8
     let snappedX = x
     let snappedY = y
+    let activeSnapH: number | null = null
+    let activeSnapV: number | null = null
 
-    // Snap na margem esquerda
-    if (Math.abs(x - margins.left) <= snapTolerance) {
-      snappedX = margins.left
+    const checkX = options?.snapX !== false
+    const checkY = options?.snapY !== false
+
+    const headerHeight = template.pageSettings.header?.height || 0
+    const footerHeight = template.pageSettings.footer?.height || 0
+    const resolvedOffsetX = containerOffsetX !== undefined ? containerOffsetX : margins.left
+    const resolvedOffsetY = containerOffsetY !== undefined
+      ? containerOffsetY
+      : (margins.top + (location === 'body' ? headerHeight : 0))
+
+    const containerWidth = pageSize.width - margins.left - margins.right
+    const bodyUsableHeight = pageSize.height - margins.top - margins.bottom - headerHeight - footerHeight
+
+    if (checkX) {
+      let minDistanceX = snapTolerance + 1
+
+      // 1. Margins Snap
+      // Left margin (x = 0 no container)
+      if (Math.abs(x) < minDistanceX) {
+        minDistanceX = Math.abs(x)
+        snappedX = 0
+      }
+      // Right margin (x + width = containerWidth)
+      if (width > 0 && Math.abs((x + width) - containerWidth) < minDistanceX) {
+        minDistanceX = Math.abs((x + width) - containerWidth)
+        snappedX = containerWidth - width
+      }
+      // Usable container center
+      if (width > 0 && Math.abs((x + width / 2) - containerWidth / 2) < minDistanceX) {
+        minDistanceX = Math.abs((x + width / 2) - containerWidth / 2)
+        snappedX = containerWidth / 2 - width / 2
+      }
+
+      // 2. Vertical Guides Snap
+      verticalGuides.forEach((guidePageX) => {
+        const guideLocalX = guidePageX - resolvedOffsetX
+
+        // Left edge
+        const distLeft = Math.abs(x - guideLocalX)
+        if (distLeft < minDistanceX) {
+          minDistanceX = distLeft
+          snappedX = guideLocalX
+          activeSnapV = guidePageX
+        }
+
+        if (width > 0) {
+          // Right edge
+          const distRight = Math.abs((x + width) - guideLocalX)
+          if (distRight < minDistanceX) {
+            minDistanceX = distRight
+            snappedX = guideLocalX - width
+            activeSnapV = guidePageX
+          }
+
+          // Center
+          const distCenter = Math.abs((x + width / 2) - guideLocalX)
+          if (distCenter < minDistanceX) {
+            minDistanceX = distCenter
+            snappedX = guideLocalX - width / 2
+            activeSnapV = guidePageX
+          }
+        }
+      })
     }
 
-    // Snap na margem direita (considerando a largura do elemento)
-    if (Math.abs((x + width) - (pageSize.width - margins.right)) <= snapTolerance) {
-      snappedX = pageSize.width - margins.right - width
+    if (checkY) {
+      let minDistanceY = snapTolerance + 1
+
+      // 1. Margins Snap
+      // Top margin (y = 0 no container)
+      if (Math.abs(y) < minDistanceY) {
+        minDistanceY = Math.abs(y)
+        snappedY = 0
+      }
+      // Bottom margin
+      if (location === 'body' && height > 0 && Math.abs((y + height) - bodyUsableHeight) < minDistanceY) {
+        minDistanceY = Math.abs((y + height) - bodyUsableHeight)
+        snappedY = bodyUsableHeight - height
+      }
+
+      // 2. Horizontal Guides Snap
+      horizontalGuides.forEach((guidePageY) => {
+        const guideLocalY = guidePageY - resolvedOffsetY
+
+        // Top edge
+        const distTop = Math.abs(y - guideLocalY)
+        if (distTop < minDistanceY) {
+          minDistanceY = distTop
+          snappedY = guideLocalY
+          activeSnapH = guidePageY
+        }
+
+        if (height > 0) {
+          // Bottom edge
+          const distBottom = Math.abs((y + height) - guideLocalY)
+          if (distBottom < minDistanceY) {
+            minDistanceY = distBottom
+            snappedY = guideLocalY - height
+            activeSnapH = guidePageY
+          }
+
+          // Center
+          const distCenter = Math.abs((y + height / 2) - guideLocalY)
+          if (distCenter < minDistanceY) {
+            minDistanceY = distCenter
+            snappedY = guideLocalY - height / 2
+            activeSnapH = guidePageY
+          }
+        }
+      })
     }
 
-    // Snap na margem superior
-    if (Math.abs(y - margins.top) <= snapTolerance) {
-      snappedY = margins.top
-    }
-
-    // Snap na margem inferior (considerando a altura do elemento)
-    if (Math.abs((y + height) - (pageSize.height - margins.bottom)) <= snapTolerance) {
-      snappedY = pageSize.height - margins.bottom - height
-    }
-
+    onSnapGuide?.({ h: activeSnapH, v: activeSnapV })
     return { x: snappedX, y: snappedY }
+  }
+
+  const applySnapToMargins = (x: number, y: number, width: number = 0, height: number = 0) => {
+    return applySnap(x, y, width, height)
   }
 
   const handleDoubleClick = (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -2761,11 +3267,22 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
       const deltaY = (e.clientY - dragStart.y) / currentScale
       
       if (isMultiSelection && Object.keys(dragStart.initialPositions).length > 1) {
-        // Mover todos os elementos selecionados juntos
+        // Mover todos os elementos selecionados juntos com snap baseado no elemento principal
+        const primaryInit = dragStart.initialPositions[element.id]
+        let moveDeltaX = deltaX
+        let moveDeltaY = deltaY
+        if (primaryInit && snapToGuides) {
+          const rawX = primaryInit.x + deltaX
+          const rawY = primaryInit.y + deltaY
+          const dims = getElementDimensions()
+          const snapped = applySnap(rawX, rawY, dims.width, dims.height)
+          moveDeltaX = snapped.x - primaryInit.x
+          moveDeltaY = snapped.y - primaryInit.y
+        }
         Object.keys(dragStart.initialPositions).forEach(id => {
           const initialPos = dragStart.initialPositions[id]
-          const newX = initialPos.x + deltaX
-          const newY = initialPos.y + deltaY
+          const newX = initialPos.x + moveDeltaX
+          const newY = initialPos.y + moveDeltaY
           updateElement(id, { x: newX, y: newY }, selectedElementLocation ?? undefined)
         })
       } else {
@@ -2783,9 +3300,10 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
         }
         
         if (element.width !== '100%' || element.height !== '100%') {
-          const width = typeof element.width === 'number' ? element.width : 0
-          const height = typeof element.height === 'number' ? element.height : 0
-          const snapped = applySnapToMargins(newX, newY, width, height)
+          const dims = getElementDimensions()
+          const width = typeof element.width === 'number' ? element.width : dims.width
+          const height = typeof element.height === 'number' ? element.height : dims.height
+          const snapped = applySnap(newX, newY, width, height)
           if (element.width !== '100%') newX = snapped.x
           if (element.height !== '100%') newY = snapped.y
         }
@@ -2802,6 +3320,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
 
     const handleMouseUp = () => {
       setIsDragging(false)
+      onSnapGuide?.({ h: null, v: null })
       saveSnapshot() // Save to history after moving
     }
 
@@ -2812,7 +3331,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, dragStart, scale, onUpdate, isMultiSelection, selectedElementLocation, element.id, element.width, element.height, saveSnapshot])
+  }, [isDragging, dragStart, scale, onUpdate, isMultiSelection, selectedElementLocation, element.id, element.width, element.height, saveSnapshot, snapToGuides, horizontalGuides, verticalGuides, containerOffsetX, containerOffsetY])
 
   useEffect(() => {
     if (!isResizing) return
@@ -2826,42 +3345,132 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
 
       switch (isResizing) {
         // Cantos
-        case 'nw': // Northwest (top-left)
-          updates.x = resizeStart.elementX + deltaX
-          updates.y = resizeStart.elementY + deltaY
-          updates.width = Math.max(10, resizeStart.elementWidth - deltaX)
-          updates.height = Math.max(10, resizeStart.elementHeight - deltaY)
+        case 'nw': { // Northwest (top-left)
+          let newX = resizeStart.elementX + deltaX
+          let newY = resizeStart.elementY + deltaY
+          let newWidth = Math.max(10, resizeStart.elementWidth - deltaX)
+          let newHeight = Math.max(10, resizeStart.elementHeight - deltaY)
+
+          if (snapToGuides) {
+            const snapLeft = applySnap(newX, newY, 0, 0, { snapX: true, snapY: false })
+            const diffX = snapLeft.x - newX
+            newX = snapLeft.x
+            newWidth = Math.max(10, newWidth - diffX)
+
+            const snapTop = applySnap(newX, newY, 0, 0, { snapX: false, snapY: true })
+            const diffY = snapTop.y - newY
+            newY = snapTop.y
+            newHeight = Math.max(10, newHeight - diffY)
+          }
+
+          updates.x = newX
+          updates.y = newY
+          updates.width = newWidth
+          updates.height = newHeight
           break
-        case 'ne': // Northeast (top-right)
-          updates.y = resizeStart.elementY + deltaY
-          updates.width = Math.max(10, resizeStart.elementWidth + deltaX)
-          updates.height = Math.max(10, resizeStart.elementHeight - deltaY)
+        }
+        case 'ne': { // Northeast (top-right)
+          let newY = resizeStart.elementY + deltaY
+          let newWidth = Math.max(10, resizeStart.elementWidth + deltaX)
+          let newHeight = Math.max(10, resizeStart.elementHeight - deltaY)
+
+          if (snapToGuides) {
+            const snapRight = applySnap(resizeStart.elementX + newWidth, newY, 0, 0, { snapX: true, snapY: false })
+            newWidth = Math.max(10, snapRight.x - resizeStart.elementX)
+
+            const snapTop = applySnap(resizeStart.elementX, newY, 0, 0, { snapX: false, snapY: true })
+            const diffY = snapTop.y - newY
+            newY = snapTop.y
+            newHeight = Math.max(10, newHeight - diffY)
+          }
+
+          updates.y = newY
+          updates.width = newWidth
+          updates.height = newHeight
           break
-        case 'sw': // Southwest (bottom-left)
-          updates.x = resizeStart.elementX + deltaX
-          updates.width = Math.max(10, resizeStart.elementWidth - deltaX)
-          updates.height = Math.max(10, resizeStart.elementHeight + deltaY)
+        }
+        case 'sw': { // Southwest (bottom-left)
+          let newX = resizeStart.elementX + deltaX
+          let newWidth = Math.max(10, resizeStart.elementWidth - deltaX)
+          let newHeight = Math.max(10, resizeStart.elementHeight + deltaY)
+
+          if (snapToGuides) {
+            const snapLeft = applySnap(newX, resizeStart.elementY, 0, 0, { snapX: true, snapY: false })
+            const diffX = snapLeft.x - newX
+            newX = snapLeft.x
+            newWidth = Math.max(10, newWidth - diffX)
+
+            const snapBottom = applySnap(newX, resizeStart.elementY + newHeight, 0, 0, { snapX: false, snapY: true })
+            newHeight = Math.max(10, snapBottom.y - resizeStart.elementY)
+          }
+
+          updates.x = newX
+          updates.width = newWidth
+          updates.height = newHeight
           break
-        case 'se': // Southeast (bottom-right)
-          updates.width = Math.max(10, resizeStart.elementWidth + deltaX)
-          updates.height = Math.max(10, resizeStart.elementHeight + deltaY)
+        }
+        case 'se': { // Southeast (bottom-right)
+          let newWidth = Math.max(10, resizeStart.elementWidth + deltaX)
+          let newHeight = Math.max(10, resizeStart.elementHeight + deltaY)
+
+          if (snapToGuides) {
+            const snapRight = applySnap(resizeStart.elementX + newWidth, resizeStart.elementY, 0, 0, { snapX: true, snapY: false })
+            newWidth = Math.max(10, snapRight.x - resizeStart.elementX)
+
+            const snapBottom = applySnap(resizeStart.elementX, resizeStart.elementY + newHeight, 0, 0, { snapX: false, snapY: true })
+            newHeight = Math.max(10, snapBottom.y - resizeStart.elementY)
+          }
+
+          updates.width = newWidth
+          updates.height = newHeight
           break
+        }
         
         // Bordas
-        case 'n': // North (top)
-          updates.y = resizeStart.elementY + deltaY
-          updates.height = Math.max(10, resizeStart.elementHeight - deltaY)
+        case 'n': { // North (top)
+          let newY = resizeStart.elementY + deltaY
+          let newHeight = Math.max(10, resizeStart.elementHeight - deltaY)
+          if (snapToGuides) {
+            const snapTop = applySnap(resizeStart.elementX, newY, 0, 0, { snapX: false, snapY: true })
+            const diffY = snapTop.y - newY
+            newY = snapTop.y
+            newHeight = Math.max(10, newHeight - diffY)
+          }
+          updates.y = newY
+          updates.height = newHeight
           break
-        case 's': // South (bottom)
-          updates.height = Math.max(10, resizeStart.elementHeight + deltaY)
+        }
+        case 's': { // South (bottom)
+          let newHeight = Math.max(10, resizeStart.elementHeight + deltaY)
+          if (snapToGuides) {
+            const snapBottom = applySnap(resizeStart.elementX, resizeStart.elementY + newHeight, 0, 0, { snapX: false, snapY: true })
+            newHeight = Math.max(10, snapBottom.y - resizeStart.elementY)
+          }
+          updates.height = newHeight
           break
-        case 'w': // West (left)
-          updates.x = resizeStart.elementX + deltaX
-          updates.width = Math.max(10, resizeStart.elementWidth - deltaX)
+        }
+        case 'w': { // West (left)
+          let newX = resizeStart.elementX + deltaX
+          let newWidth = Math.max(10, resizeStart.elementWidth - deltaX)
+          if (snapToGuides) {
+            const snapLeft = applySnap(newX, resizeStart.elementY, 0, 0, { snapX: true, snapY: false })
+            const diffX = snapLeft.x - newX
+            newX = snapLeft.x
+            newWidth = Math.max(10, newWidth - diffX)
+          }
+          updates.x = newX
+          updates.width = newWidth
           break
-        case 'e': // East (right)
-          updates.width = Math.max(10, resizeStart.elementWidth + deltaX)
+        }
+        case 'e': { // East (right)
+          let newWidth = Math.max(10, resizeStart.elementWidth + deltaX)
+          if (snapToGuides) {
+            const snapRight = applySnap(resizeStart.elementX + newWidth, resizeStart.elementY, 0, 0, { snapX: true, snapY: false })
+            newWidth = Math.max(10, snapRight.x - resizeStart.elementX)
+          }
+          updates.width = newWidth
           break
+        }
       }
 
       onUpdate(updates)
@@ -2869,6 +3478,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
 
     const handleMouseUp = () => {
       setIsResizing(null)
+      onSnapGuide?.({ h: null, v: null })
       saveSnapshot() // Save to history after resizing
     }
 
@@ -2879,7 +3489,7 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizing, resizeStart, scale, onUpdate, saveSnapshot])
+  }, [isResizing, resizeStart, scale, onUpdate, saveSnapshot, snapToGuides, horizontalGuides, verticalGuides, containerOffsetX, containerOffsetY])
 
   const renderElement = () => {
     switch (element.type) {
@@ -3580,6 +4190,12 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                       location={location}
                       loopWidth={innerLoopWidth}
                       loopHeight={innerLoopHeight}
+                      horizontalGuides={horizontalGuides}
+                      verticalGuides={verticalGuides}
+                      loopPageX={(containerOffsetX !== undefined ? containerOffsetX : margins.left) + (element.x || 0)}
+                      loopPageY={(containerOffsetY !== undefined ? containerOffsetY : margins.top) + (effectiveY !== undefined ? effectiveY : (element.y || 0))}
+                      scale={scale}
+                      onSnapGuide={onSnapGuide}
                     />
                   ))}
                 </>
@@ -3747,6 +4363,20 @@ function CanvasElement({ element, effectiveY, effectiveX, effectiveWidth, scale 
                                 location={location}
                                 containerWidth={innerContainerWidth}
                                 containerHeight={innerContainerHeight}
+                                horizontalGuides={horizontalGuides}
+                                verticalGuides={verticalGuides}
+                                containerPageX={
+                                  (containerOffsetX !== undefined ? containerOffsetX : margins.left) +
+                                  (element.width === '100%' ? 0 : (effectiveX !== undefined ? effectiveX : (element.x || 0)))
+                                }
+                                containerPageY={
+                                  (containerOffsetY !== undefined
+                                    ? containerOffsetY
+                                    : (margins.top + (location === 'body' ? (template.pageSettings.header?.height || 0) : 0))) +
+                                  (element.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : (element.y || 0)))
+                                }
+                                scale={scale}
+                                onSnapGuide={onSnapGuide}
                               />
                             )
                           })
