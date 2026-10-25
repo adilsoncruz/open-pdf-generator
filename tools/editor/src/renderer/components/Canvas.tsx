@@ -83,6 +83,54 @@ function getCellBorderValues(style: Record<string, unknown> | undefined) {
   }
 }
 
+// Map PDF fonts to equivalent web fonts
+function getFontFamily(pdfFont?: string): string {
+  if (!pdfFont) return 'Arial, sans-serif'
+  
+  const fontMap: Record<string, string> = {
+    'Helvetica': 'Arial, Helvetica, sans-serif',
+    'Helvetica-Bold': 'Arial, Helvetica, sans-serif',
+    'Times-Roman': '"Times New Roman", Times, serif',
+    'Times-Bold': '"Times New Roman", Times, serif',
+    'Courier': '"Courier New", Courier, monospace',
+    'Courier-Bold': '"Courier New", Courier, monospace',
+  }
+  
+  return fontMap[pdfFont] || 'Arial, sans-serif'
+}
+
+// Mapear verticalAlignment para CSS
+function getVerticalAlign(vAlign: string | undefined): 'flex-start' | 'flex-end' | 'center' {
+  switch (vAlign) {
+    case 'top': return 'flex-start'
+    case 'bottom': return 'flex-end'
+    case 'center':
+    default: return 'center'
+  }
+}
+
+// Mapear alignment horizontal para justifyContent
+function getHorizontalAlign(hAlign: string | undefined): 'flex-start' | 'flex-end' | 'center' | 'space-between' {
+  switch (hAlign) {
+    case 'center': return 'center'
+    case 'right': return 'flex-end'
+    case 'justify': return 'space-between'
+    case 'left':
+    default: return 'flex-start'
+  }
+}
+
+// Mapear alignment horizontal para textAlign
+function getTextAlign(hAlign: string | undefined): 'left' | 'center' | 'right' | 'justify' {
+  switch (hAlign) {
+    case 'center': return 'center'
+    case 'right': return 'right'
+    case 'justify': return 'justify'
+    case 'left':
+    default: return 'left'
+  }
+}
+
 function ContainerChildElement({
   child,
   containerId,
@@ -496,21 +544,58 @@ function ContainerChildElement({
         const textWidth = rawW ? resolveWidth(rawW) : undefined
         const textHeight = child.height ? resolveHeight(child.height) : undefined
         const displayText = resolveChildDisplayText(child, child.type === 'text' ? 'campo' : 'Texto')
+
+        const isMultiline = child.style?.multiline === true
+        const firstLineIndent = child.style?.firstLineIndent || 0
+
+        // Bordas e padding
+        const textBorderWidth = child.style?.borderWidth ?? 0
+        const textBorderColor = child.style?.borderColor || '#000000'
+        const textBorderStyle = child.style?.borderStyle || 'solid'
+        const textBgColor = child.style?.backgroundColor || 'transparent'
+
+        const textStyles: CSSProperties = {
+          width: textWidth || 'auto',
+          height: textHeight || 'auto',
+          fontSize: child.style?.fontSize || 10,
+          fontWeight: child.style?.fontWeight || 'normal',
+          fontStyle: child.style?.fontStyle || 'normal',
+          fontFamily: getFontFamily(child.style?.fontFamily),
+          textDecoration: child.style?.textDecoration || (child.type === 'link' ? 'underline' : 'none'),
+          color: child.style?.color || '#000000',
+          textDecorationColor: child.style?.color || '#000000',
+          backgroundColor: textBgColor,
+          overflow: isMultiline ? 'auto' : 'hidden',
+          textOverflow: isMultiline ? 'clip' : 'ellipsis',
+          whiteSpace: isMultiline ? 'pre-wrap' : 'nowrap',
+          boxSizing: 'border-box',
+          display: isMultiline ? 'block' : 'flex',
+          alignItems: isMultiline ? undefined : getVerticalAlign(child.style?.verticalAlignment),
+          justifyContent: isMultiline ? undefined : getHorizontalAlign(child.style?.alignment),
+          textAlign: getTextAlign(child.style?.alignment),
+          textIndent: isMultiline && firstLineIndent > 0 ? `${firstLineIndent}px` : undefined,
+          lineHeight: child.style?.lineHeight || 'normal',
+          borderTopWidth: `${child.style?.borderTopWidth ?? textBorderWidth}px`,
+          borderTopStyle: textBorderStyle,
+          borderTopColor: textBorderColor,
+          borderRightWidth: `${child.style?.borderRightWidth ?? textBorderWidth}px`,
+          borderRightStyle: textBorderStyle,
+          borderRightColor: textBorderColor,
+          borderBottomWidth: `${child.style?.borderBottomWidth ?? textBorderWidth}px`,
+          borderBottomStyle: textBorderStyle,
+          borderBottomColor: textBorderColor,
+          borderLeftWidth: `${child.style?.borderLeftWidth ?? textBorderWidth}px`,
+          borderLeftStyle: textBorderStyle,
+          borderLeftColor: textBorderColor,
+          borderRadius: `${child.style?.cornerRadius || 0}px`,
+          paddingTop: `${child.style?.paddingTop ?? child.style?.paddingY ?? 0}px`,
+          paddingRight: `${child.style?.paddingRight ?? child.style?.paddingX ?? 0}px`,
+          paddingBottom: `${child.style?.paddingBottom ?? child.style?.paddingY ?? 0}px`,
+          paddingLeft: `${child.style?.paddingLeft ?? child.style?.paddingX ?? 0}px`,
+        }
+
         return (
-          <div
-            style={{
-              fontSize: child.style?.fontSize || 10,
-              fontFamily: child.style?.fontFamily || 'Helvetica',
-              color: child.style?.color || '#000000',
-              fontWeight: child.style?.fontWeight || 'normal',
-              textDecoration: child.type === 'link' ? 'underline' : 'none',
-              width: textWidth || 'auto',
-              height: textHeight || 'auto',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
-            }}
-          >
+          <div style={textStyles}>
             {displayText}
           </div>
         )
@@ -1236,21 +1321,58 @@ function LoopChildElement({
         const textWidth = child.width ? resolveWidth(child.width) : undefined
         const textHeight = child.height ? resolveHeight(child.height) : undefined
         const displayText = resolveChildDisplayText(child, child.type === 'text' ? 'campo' : 'Texto')
+
+        const isMultiline = child.style?.multiline === true
+        const firstLineIndent = child.style?.firstLineIndent || 0
+
+        // Bordas e padding
+        const textBorderWidth = child.style?.borderWidth ?? 0
+        const textBorderColor = child.style?.borderColor || '#000000'
+        const textBorderStyle = child.style?.borderStyle || 'solid'
+        const textBgColor = child.style?.backgroundColor || 'transparent'
+
+        const textStyles: CSSProperties = {
+          width: textWidth || 'auto',
+          height: textHeight || 'auto',
+          fontSize: child.style?.fontSize || 10,
+          fontWeight: child.style?.fontWeight || 'normal',
+          fontStyle: child.style?.fontStyle || 'normal',
+          fontFamily: getFontFamily(child.style?.fontFamily),
+          textDecoration: child.style?.textDecoration || (child.type === 'link' ? 'underline' : 'none'),
+          color: child.style?.color || '#000000',
+          textDecorationColor: child.style?.color || '#000000',
+          backgroundColor: textBgColor,
+          overflow: isMultiline ? 'auto' : 'hidden',
+          textOverflow: isMultiline ? 'clip' : 'ellipsis',
+          whiteSpace: isMultiline ? 'pre-wrap' : 'nowrap',
+          boxSizing: 'border-box',
+          display: isMultiline ? 'block' : 'flex',
+          alignItems: isMultiline ? undefined : getVerticalAlign(child.style?.verticalAlignment),
+          justifyContent: isMultiline ? undefined : getHorizontalAlign(child.style?.alignment),
+          textAlign: getTextAlign(child.style?.alignment),
+          textIndent: isMultiline && firstLineIndent > 0 ? `${firstLineIndent}px` : undefined,
+          lineHeight: child.style?.lineHeight || 'normal',
+          borderTopWidth: `${child.style?.borderTopWidth ?? textBorderWidth}px`,
+          borderTopStyle: textBorderStyle,
+          borderTopColor: textBorderColor,
+          borderRightWidth: `${child.style?.borderRightWidth ?? textBorderWidth}px`,
+          borderRightStyle: textBorderStyle,
+          borderRightColor: textBorderColor,
+          borderBottomWidth: `${child.style?.borderBottomWidth ?? textBorderWidth}px`,
+          borderBottomStyle: textBorderStyle,
+          borderBottomColor: textBorderColor,
+          borderLeftWidth: `${child.style?.borderLeftWidth ?? textBorderWidth}px`,
+          borderLeftStyle: textBorderStyle,
+          borderLeftColor: textBorderColor,
+          borderRadius: `${child.style?.cornerRadius || 0}px`,
+          paddingTop: `${child.style?.paddingTop ?? child.style?.paddingY ?? 0}px`,
+          paddingRight: `${child.style?.paddingRight ?? child.style?.paddingX ?? 0}px`,
+          paddingBottom: `${child.style?.paddingBottom ?? child.style?.paddingY ?? 0}px`,
+          paddingLeft: `${child.style?.paddingLeft ?? child.style?.paddingX ?? 0}px`,
+        }
+
         return (
-          <div
-            style={{
-              fontSize: child.style?.fontSize || 10,
-              fontFamily: child.style?.fontFamily || 'Helvetica',
-              color: child.style?.color || '#000000',
-              fontWeight: child.style?.fontWeight || 'normal',
-              textDecoration: child.type === 'link' ? 'underline' : 'none',
-              width: textWidth || 'auto',
-              height: textHeight || 'auto',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
-            }}
-          >
+          <div style={textStyles}>
             {displayText}
           </div>
         )
@@ -2908,22 +3030,6 @@ interface CanvasElementProps {
   onSnapGuide?: (snapped: { h: number | null; v: number | null }) => void
 }
 
-// Map PDF fonts to equivalent web fonts
-function getFontFamily(pdfFont?: string): string {
-  if (!pdfFont) return 'Arial, sans-serif'
-  
-  const fontMap: Record<string, string> = {
-    'Helvetica': 'Arial, Helvetica, sans-serif',
-    'Helvetica-Bold': 'Arial, Helvetica, sans-serif',
-    'Times-Roman': '"Times New Roman", Times, serif',
-    'Times-Bold': '"Times New Roman", Times, serif',
-    'Courier': '"Courier New", Courier, monospace',
-    'Courier-Bold': '"Courier New", Courier, monospace',
-  }
-  
-  return fontMap[pdfFont] || 'Arial, sans-serif'
-}
-
 function CanvasElement({
   element,
   effectiveY,
@@ -3497,38 +3603,6 @@ function CanvasElement({
       case 'static_text':
       case 'rich_text':
       case 'link': {
-        // Mapear verticalAlignment para CSS
-        const getVerticalAlign = (vAlign: string | undefined) => {
-          switch (vAlign) {
-            case 'top': return 'flex-start'
-            case 'bottom': return 'flex-end'
-            case 'center':
-            default: return 'center'
-          }
-        }
-
-        // Mapear alignment horizontal para justifyContent
-        const getHorizontalAlign = (hAlign: string | undefined) => {
-          switch (hAlign) {
-            case 'center': return 'center'
-            case 'right': return 'flex-end'
-            case 'justify': return 'space-between'
-            case 'left':
-            default: return 'flex-start'
-          }
-        }
-
-        // Mapear alignment horizontal para textAlign (para textos multilinha)
-        const getTextAlign = (hAlign: string | undefined) => {
-          switch (hAlign) {
-            case 'center': return 'center'
-            case 'right': return 'right'
-            case 'justify': return 'justify'
-            case 'left':
-            default: return 'left'
-          }
-        }
-
         const isMultiline = element.style?.multiline === true
         const firstLineIndent = element.style?.firstLineIndent || 0
 
@@ -3559,7 +3633,7 @@ function CanvasElement({
           display: isMultiline ? 'block' : 'flex',
           alignItems: isMultiline ? undefined : getVerticalAlign(element.style?.verticalAlignment),
           justifyContent: isMultiline ? undefined : getHorizontalAlign(element.style?.alignment),
-          textAlign: isMultiline ? getTextAlign(element.style?.alignment) : undefined,
+          textAlign: getTextAlign(element.style?.alignment),
           textIndent: isMultiline && firstLineIndent > 0 ? `${firstLineIndent}px` : undefined,
           lineHeight: element.style?.lineHeight || 'normal',
           borderTopWidth: `${element.style?.borderTopWidth ?? textBorderWidth}px`,

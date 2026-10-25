@@ -2842,9 +2842,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           if (el.id === loopId) {
             return {
               ...el,
-              elements: (el.elements || []).map(child =>
-                child.id === childId ? { ...child, ...updates } : child
-              ),
+              elements: (el.elements || []).map(child => {
+                if (child.id !== childId) return child
+                const mergedStyle = updates.style
+                  ? { ...(child.style || {}), ...updates.style }
+                  : child.style
+                return {
+                  ...child,
+                  ...updates,
+                  ...(updates.style ? { style: mergedStyle } : {}),
+                }
+              }),
             }
           }
           return el
@@ -3159,9 +3167,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           const isFixed = targetEl.heightMode === 'fixed' || targetEl.autoHeight === false
           const currentH = typeof targetEl.height === 'number' ? targetEl.height : 150
           const maxAllowed = Math.max(30, sectionHeight - (targetEl.y || 0))
-          const updatedChildren = (targetEl.elements || []).map(child =>
-            child.id === childId ? { ...child, ...updates } : child
-          )
+          const updatedChildren = (targetEl.elements || []).map(child => {
+            if (child.id !== childId) return child
+            const mergedStyle = updates.style
+              ? { ...(child.style || {}), ...updates.style }
+              : child.style
+            return {
+              ...child,
+              ...updates,
+              ...(updates.style ? { style: mergedStyle } : {}),
+            }
+          })
 
           let newHeight = currentH
           let deltaHeight = 0

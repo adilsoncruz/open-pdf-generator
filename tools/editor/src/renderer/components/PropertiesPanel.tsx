@@ -107,7 +107,7 @@ export default function PropertiesPanel() {
               updateLoopChildElement(
                 selectedLoopParentId,
                 selectedLoopChildId,
-                { style: { ...childElement.style, ...styleUpdates } },
+                { style: styleUpdates },
                 selectedElementLocation
               )
             }}
@@ -162,7 +162,7 @@ export default function PropertiesPanel() {
               updateContainerChildElement(
                 selectedContainerParentId,
                 selectedContainerChildId,
-                { style: { ...childElement.style, ...styleUpdates } },
+                { style: styleUpdates },
                 selectedElementLocation
               )
             }}

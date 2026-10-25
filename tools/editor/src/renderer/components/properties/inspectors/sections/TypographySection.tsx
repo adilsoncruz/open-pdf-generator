@@ -64,14 +64,11 @@ export function TypographySection({ element, onUpdate, onStyleUpdate }: Typograp
                     onChange={(e) => {
                       const val = e.target.value
                       if (val === 'Bold') {
-                        onStyleUpdate('fontWeight', 'bold')
-                        onStyleUpdate('fontStyle', 'normal')
+                        onStyleUpdate({ fontWeight: 'bold', fontStyle: 'normal' })
                       } else if (val === 'Italic') {
-                        onStyleUpdate('fontWeight', 'normal')
-                        onStyleUpdate('fontStyle', 'italic')
+                        onStyleUpdate({ fontWeight: 'normal', fontStyle: 'italic' })
                       } else {
-                        onStyleUpdate('fontWeight', 'normal')
-                        onStyleUpdate('fontStyle', 'normal')
+                        onStyleUpdate({ fontWeight: 'normal', fontStyle: 'normal' })
                       }
                     }}
                     className="w-full appearance-none bg-slate-950/70 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none pr-8 cursor-pointer"
