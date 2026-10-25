@@ -1676,6 +1676,7 @@ export default function Canvas() {
   const { t } = useTranslation()
   const { 
     template, 
+    testData,
     selectedElementIds, 
     selectedElementLocation, 
     selectElement, 
