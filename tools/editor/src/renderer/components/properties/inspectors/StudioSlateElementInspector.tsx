@@ -29,7 +29,7 @@ export function StudioSlateElementInspector(props: ElementInspectorProps) {
   }
 
   useEffect(() => {
-    if (element.type === 'static_text' && element.dataBinding) {
+    if (['static_text', 'rectangle', 'line', 'spacer'].includes(element.type) && element.dataBinding) {
       onUpdate('dataBinding', undefined)
     }
   }, [element.type, element.dataBinding])
@@ -241,14 +241,10 @@ export function StudioSlateElementInspector(props: ElementInspectorProps) {
           <AppearanceSection element={element} onStyleUpdate={onStyleUpdate} />
         )}
 
-        {/* 7. Data Binding Section */}
-        {element.type !== 'static_text' &&
-          element.type !== 'container' &&
-          element.type !== 'line' &&
-          element.type !== 'spacer' &&
-          element.type !== 'page_break' && (
-            <DataBindingSection element={element} onUpdate={onUpdate} />
-          )}
+        {/* 7. Data Binding & Print Condition Section */}
+        {element.type !== 'page_break' && (
+          <DataBindingSection element={element} onUpdate={onUpdate} />
+        )}
 
         {/* 8. Delete Action Button */}
         <div className="pt-2 border-t border-slate-800 space-y-1.5">

@@ -8,10 +8,12 @@ interface DataBindingSectionProps {
 
 export function DataBindingSection({ element, onUpdate }: DataBindingSectionProps) {
   const { t } = useTranslation()
+  const supportsDataBinding = ['text', 'rich_text', 'image', 'barcode', 'link', 'loop'].includes(element.type)
+
   return (
     <>
-        {/* 5. Data Binding Section (Não exibido para static_text, container, line, spacer, page_break) */}
-        {element.type !== 'container' && element.type !== 'static_text' && element.type !== 'line' && element.type !== 'spacer' && element.type !== 'page_break' && (
+        {/* 5. Data Binding Section (Apenas para elementos com suporte a dados dinâmicos) */}
+        {supportsDataBinding && (
           <div>
             <div className="text-xs font-semibold text-slate-200 mb-2">
               {t.properties.dataBinding}
@@ -47,25 +49,25 @@ export function DataBindingSection({ element, onUpdate }: DataBindingSectionProp
         )}
 
         {/* 6. Print Condition Section (Todos os elementos) */}
-        <div>
-          <div className="text-xs font-semibold text-slate-200 mb-2">
-            {t.properties.printCondition}
+        {element.type !== 'page_break' && (
+          <div>
+            <div className="text-xs font-semibold text-slate-200 mb-2">
+              {t.properties.printCondition}
+            </div>
+            <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
+              <input
+                type="text"
+                value={element.printCondition || ''}
+                onChange={(e) => onUpdate('printCondition', e.target.value || null)}
+                placeholder="Ex: invoice.total > 1000"
+                className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+              />
+            </div>
+            <span className="text-[10px] text-slate-500 mt-1 block">
+              {t.properties.printConditionHelp}
+            </span>
           </div>
-          <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-2 focus-within:border-indigo-500 transition">
-            <input
-              type="text"
-              value={element.printCondition || ''}
-              onChange={(e) => onUpdate('printCondition', e.target.value || null)}
-              placeholder="Ex: invoice.total > 1000"
-              className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
-            />
-          </div>
-          <span className="text-[10px] text-slate-500 mt-1 block">
-            {t.properties.printConditionHelp}
-          </span>
-        </div>
-
-
+        )}
     </>
   )
 }
