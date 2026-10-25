@@ -2692,6 +2692,7 @@ export default function Canvas() {
             }}
           >
             {(() => {
+              const bodyAvailableWidth = pageSize.width - margins.left - margins.right
               let currentFlowY = 0
               let lastFlowX: number | undefined = undefined
               let lastFlowWidth: number | string | undefined = undefined
