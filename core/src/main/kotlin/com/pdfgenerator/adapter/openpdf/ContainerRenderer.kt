@@ -268,7 +268,7 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         containerWidth: Float,
     ): Float? {
         return if (value == null) {
-            null
+            containerWidth
         } else if (value.toString().endsWith("%") || value == -1f) {
             containerWidth
         } else {

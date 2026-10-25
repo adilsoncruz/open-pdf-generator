@@ -656,7 +656,7 @@ function ContainerChildElement({
         const displayText = resolveElementDisplayText(child, testData, child.type === 'text' ? 'campo' : 'Texto')
 
         const isMultiline = child.style?.multiline === true
-        const estimatedHeight = getEstimatedElementHeight(child, textWidth, testData)
+        const estimatedHeight = getEstimatedElementHeight(child, textWidth || containerWidth, testData)
         const firstLineIndent = child.style?.firstLineIndent || 0
 
         // Bordas e padding
@@ -668,7 +668,7 @@ function ContainerChildElement({
         const textStyles: CSSProperties = {
           width: textWidth || 'auto',
           height: isMultiline ? Math.max(textHeight || 0, estimatedHeight) : (textHeight || estimatedHeight),
-          fontSize: child.style?.fontSize || 10,
+          fontSize: child.style?.fontSize || 12,
           fontWeight: child.style?.fontWeight || 'normal',
           fontStyle: child.style?.fontStyle || 'normal',
           fontFamily: getFontFamily(child.style?.fontFamily),
@@ -1098,7 +1098,11 @@ function ContainerChildElement({
       style={{
         left: child.width === '100%' ? 0 : (effectiveX !== undefined ? effectiveX : (child.x || 0)),
         top: child.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : (child.y || 0)),
-        ...(child.width === '100%' ? { width: '100%' } : (effectiveWidth !== undefined && !child.width ? { width: effectiveWidth } : {})),
+        ...(child.width === '100%'
+          ? { width: '100%' }
+          : typeof child.width === 'number'
+            ? { width: child.width }
+            : (effectiveWidth !== undefined ? { width: effectiveWidth } : {})),
       }}
       onMouseDown={handleMouseDown}
       onContextMenu={(e) => {
@@ -1434,7 +1438,7 @@ function LoopChildElement({
         const displayText = resolveElementDisplayText(child, undefined, child.type === 'text' ? 'campo' : 'Texto')
 
         const isMultiline = child.style?.multiline === true
-        const estimatedHeight = getEstimatedElementHeight(child, textWidth)
+        const estimatedHeight = getEstimatedElementHeight(child, textWidth || loopWidth)
         const firstLineIndent = child.style?.firstLineIndent || 0
 
         // Bordas e padding
@@ -1446,7 +1450,7 @@ function LoopChildElement({
         const textStyles: CSSProperties = {
           width: textWidth || 'auto',
           height: isMultiline ? Math.max(textHeight || 0, estimatedHeight) : (textHeight || estimatedHeight),
-          fontSize: child.style?.fontSize || 10,
+          fontSize: child.style?.fontSize || 12,
           fontWeight: child.style?.fontWeight || 'normal',
           fontStyle: child.style?.fontStyle || 'normal',
           fontFamily: getFontFamily(child.style?.fontFamily),
@@ -1637,7 +1641,11 @@ function LoopChildElement({
       style={{
         left: child.width === '100%' ? 0 : (child.x || 0),
         top: child.height === '100%' ? 0 : (child.y || 0),
-        ...(child.width === '100%' ? { width: '100%' } : {}),
+        ...(child.width === '100%'
+          ? { width: '100%' }
+          : typeof child.width === 'number'
+            ? { width: child.width }
+            : {}),
       }}
       onMouseDown={handleMouseDown}
       onContextMenu={(e) => {
@@ -4640,7 +4648,12 @@ function CanvasElement({
                               }
                             }
 
-                            const chHeight = getEstimatedElementHeight(child, typeof child.width === 'number' ? child.width : innerContainerWidth, testData)
+                            const childAvailableWidth = typeof child.width === 'number'
+                              ? child.width
+                              : (typeof child.width === 'string' && child.width.endsWith('%')
+                                  ? (innerContainerWidth * (parseFloat(child.width) / 100))
+                                  : (effectiveChildWidth !== undefined && typeof effectiveChildWidth === 'number' ? effectiveChildWidth : innerContainerWidth))
+                            const chHeight = getEstimatedElementHeight(child, childAvailableWidth, testData)
                             if (isRelative && effectiveChildY !== undefined) {
                               containerFlowY = effectiveChildY + chHeight
                               lastChildX = effectiveChildX !== undefined ? effectiveChildX : child.x

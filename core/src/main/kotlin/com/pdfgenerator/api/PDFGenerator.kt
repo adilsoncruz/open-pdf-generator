@@ -65,15 +65,16 @@ class PDFGenerator(
             return when (element) {
                 is TextElement -> {
                     val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-                    if (element.style?.multiline == true && element.width != null) {
+                    val boxWidth = element.width ?: context.containerWidth
+                    if (element.style?.multiline == true && boxWidth != null) {
                         val text = resolveTextForHeight(element.dataBinding, element.value, data)
                         if (text != null) {
-                            TextRenderer
+                            val contentHeight = TextRenderer
                                 .getOrMeasureMultilineLayout(
                                     elementId = element.id,
                                     resolvedText = text,
                                     styleHash = element.style?.hashCode() ?: 0,
-                                    boxWidth = element.width,
+                                    boxWidth = boxWidth,
                                     fontSize = element.style?.fontSize ?: 12f,
                                     lineHeight = element.style?.lineHeight,
                                     paddingTop = element.style?.paddingTop ?: 0f,
@@ -84,6 +85,7 @@ class PDFGenerator(
                                     fontFamily = element.style?.fontFamily ?: "Helvetica",
                                     cache = context.textLayoutCache,
                                 ).contentHeight
+                            kotlin.math.max(definedHeight, contentHeight)
                         } else {
                             definedHeight
                         }
@@ -93,14 +95,15 @@ class PDFGenerator(
                 }
                 is StaticTextElement -> {
                     val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
+                    val boxWidth = element.width ?: context.containerWidth
 
-                    if (element.style?.multiline == true && element.width != null) {
-                        TextRenderer
+                    if (element.style?.multiline == true && boxWidth != null) {
+                        val contentHeight = TextRenderer
                             .getOrMeasureMultilineLayout(
                                 elementId = element.id,
                                 resolvedText = element.value,
                                 styleHash = element.style?.hashCode() ?: 0,
-                                boxWidth = element.width,
+                                boxWidth = boxWidth,
                                 fontSize = element.style?.fontSize ?: 12f,
                                 lineHeight = element.style?.lineHeight,
                                 paddingTop = element.style?.paddingTop ?: 0f,
@@ -111,6 +114,7 @@ class PDFGenerator(
                                 fontFamily = element.style?.fontFamily ?: "Helvetica",
                                 cache = context.textLayoutCache,
                             ).contentHeight
+                        kotlin.math.max(definedHeight, contentHeight)
                     } else {
                         definedHeight
                     }
@@ -197,15 +201,16 @@ class PDFGenerator(
                 is SpacerElement -> element.height
                 is RichTextElement -> {
                     val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-                    if (element.style?.multiline == true && element.width != null) {
+                    val boxWidth = element.width ?: context.containerWidth
+                    if (element.style?.multiline == true && boxWidth != null) {
                         val text = resolveTextForHeight(element.dataBinding, element.value, data)
                         if (text != null) {
-                            TextRenderer
+                            val contentHeight = TextRenderer
                                 .getOrMeasureMultilineLayout(
                                     elementId = element.id,
                                     resolvedText = text,
                                     styleHash = element.style?.hashCode() ?: 0,
-                                    boxWidth = element.width,
+                                    boxWidth = boxWidth,
                                     fontSize = element.style?.fontSize ?: 12f,
                                     lineHeight = element.style?.lineHeight,
                                     paddingTop = element.style?.paddingTop ?: 0f,
@@ -216,6 +221,7 @@ class PDFGenerator(
                                     fontFamily = element.style?.fontFamily ?: "Helvetica",
                                     cache = context.textLayoutCache,
                                 ).contentHeight
+                            kotlin.math.max(definedHeight, contentHeight)
                         } else {
                             definedHeight
                         }
@@ -225,15 +231,16 @@ class PDFGenerator(
                 }
                 is LinkElement -> {
                     val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-                    if (element.style?.multiline == true && element.width != null) {
+                    val boxWidth = element.width ?: context.containerWidth
+                    if (element.style?.multiline == true && boxWidth != null) {
                         val text = resolveTextForHeight(element.dataBinding, element.value, data)
                         if (text != null) {
-                            TextRenderer
+                            val contentHeight = TextRenderer
                                 .getOrMeasureMultilineLayout(
                                     elementId = element.id,
                                     resolvedText = text,
                                     styleHash = element.style?.hashCode() ?: 0,
-                                    boxWidth = element.width,
+                                    boxWidth = boxWidth,
                                     fontSize = element.style?.fontSize ?: 12f,
                                     lineHeight = element.style?.lineHeight,
                                     paddingTop = element.style?.paddingTop ?: 0f,
@@ -244,6 +251,7 @@ class PDFGenerator(
                                     fontFamily = element.style?.fontFamily ?: "Helvetica",
                                     cache = context.textLayoutCache,
                                 ).contentHeight
+                            kotlin.math.max(definedHeight, contentHeight)
                         } else {
                             definedHeight
                         }
