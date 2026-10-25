@@ -11,6 +11,7 @@ import { FooterPropertiesPanel } from './properties/sections/FooterPropertiesPan
 import { BackgroundPropertiesPanel } from './properties/sections/BackgroundPropertiesPanel'
 import { PageSettingsPanel } from './properties/sections/PageSettingsPanel'
 import { StudioSlateElementInspector } from './properties/inspectors/StudioSlateElementInspector'
+import { StudioSlateTableInspector } from './properties/tables/StudioSlateTableInspector'
 
 export default function PropertiesPanel() {
   const store = useTemplateStore()
@@ -89,28 +90,44 @@ export default function PropertiesPanel() {
     if (loopElement && loopElement.elements) {
       const childElement = loopElement.elements.find((c: Element) => c.id === selectedLoopChildId)
       if (childElement) {
+        const handleUpdate = (field: string | Record<string, any>, value?: any) => {
+          const updates = typeof field === 'string' ? { [field]: value } : field
+          updateLoopChildElement(
+            selectedLoopParentId,
+            selectedLoopChildId,
+            updates,
+            selectedElementLocation
+          )
+        }
+        const handleStyleUpdate = (field: string | Record<string, any>, value?: any) => {
+          const styleUpdates = typeof field === 'string' ? { [field]: value } : field
+          updateLoopChildElement(
+            selectedLoopParentId,
+            selectedLoopChildId,
+            { style: styleUpdates },
+            selectedElementLocation
+          )
+        }
+
+        if (childElement.type === 'table') {
+          return (
+            <StudioSlateTableInspector
+              key={childElement.id}
+              element={childElement}
+              parentName="Loop"
+              onUpdate={handleUpdate}
+              onStyleUpdate={handleStyleUpdate}
+            />
+          )
+        }
+
         return (
           <StudioSlateElementInspector
+            key={childElement.id}
             element={childElement}
             parentName="Loop"
-            onUpdate={(field, value) => {
-              const updates = typeof field === 'string' ? { [field]: value } : field
-              updateLoopChildElement(
-                selectedLoopParentId,
-                selectedLoopChildId,
-                updates,
-                selectedElementLocation
-              )
-            }}
-            onStyleUpdate={(field, value) => {
-              const styleUpdates = typeof field === 'string' ? { [field]: value } : field
-              updateLoopChildElement(
-                selectedLoopParentId,
-                selectedLoopChildId,
-                { style: styleUpdates },
-                selectedElementLocation
-              )
-            }}
+            onUpdate={handleUpdate}
+            onStyleUpdate={handleStyleUpdate}
           />
         )
       }
@@ -144,28 +161,45 @@ export default function PropertiesPanel() {
         (c: Element) => c.id === selectedContainerChildId
       )
       if (childElement) {
+        const parentName = (containerElement.name as string) || 'Container'
+        const handleUpdate = (field: string | Record<string, any>, value?: any) => {
+          const updates = typeof field === 'string' ? { [field]: value } : field
+          updateContainerChildElement(
+            selectedContainerParentId,
+            selectedContainerChildId,
+            updates,
+            selectedElementLocation
+          )
+        }
+        const handleStyleUpdate = (field: string | Record<string, any>, value?: any) => {
+          const styleUpdates = typeof field === 'string' ? { [field]: value } : field
+          updateContainerChildElement(
+            selectedContainerParentId,
+            selectedContainerChildId,
+            { style: styleUpdates },
+            selectedElementLocation
+          )
+        }
+
+        if (childElement.type === 'table') {
+          return (
+            <StudioSlateTableInspector
+              key={childElement.id}
+              element={childElement}
+              parentName={parentName}
+              onUpdate={handleUpdate}
+              onStyleUpdate={handleStyleUpdate}
+            />
+          )
+        }
+
         return (
           <StudioSlateElementInspector
+            key={childElement.id}
             element={childElement}
-            parentName={(containerElement.name as string) || 'Container'}
-            onUpdate={(field, value) => {
-              const updates = typeof field === 'string' ? { [field]: value } : field
-              updateContainerChildElement(
-                selectedContainerParentId,
-                selectedContainerChildId,
-                updates,
-                selectedElementLocation
-              )
-            }}
-            onStyleUpdate={(field, value) => {
-              const styleUpdates = typeof field === 'string' ? { [field]: value } : field
-              updateContainerChildElement(
-                selectedContainerParentId,
-                selectedContainerChildId,
-                { style: styleUpdates },
-                selectedElementLocation
-              )
-            }}
+            parentName={parentName}
+            onUpdate={handleUpdate}
+            onStyleUpdate={handleStyleUpdate}
           />
         )
       }
@@ -198,8 +232,32 @@ export default function PropertiesPanel() {
   const selectedElement = selectedElements[0]
 
   if (selectedElement) {
+    if (!isMultiSelection && selectedElement.type === 'table') {
+      return (
+        <StudioSlateTableInspector
+          key={selectedElement.id}
+          element={selectedElement}
+          parentName={selectedElementLocation}
+          onUpdate={(field, value) => {
+            const updates = typeof field === 'string' ? { [field]: value } : field
+            updateElement(selectedElement.id, updates, selectedElementLocation)
+          }}
+          onStyleUpdate={(field, value) => {
+            const styleUpdates = typeof field === 'string' ? { [field]: value } : field
+            const currentStyle = selectedElement.style || {}
+            updateElement(
+              selectedElement.id,
+              { style: { ...currentStyle, ...styleUpdates } },
+              selectedElementLocation
+            )
+          }}
+        />
+      )
+    }
+
     return (
       <StudioSlateElementInspector
+        key={isMultiSelection ? `multi-${selectedElements.map((e) => e.id).join('-')}` : selectedElement.id}
         element={selectedElement}
         isMultiSelection={isMultiSelection}
         selectedCount={selectedElements.length}

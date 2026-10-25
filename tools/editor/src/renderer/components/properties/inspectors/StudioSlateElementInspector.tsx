@@ -3,7 +3,6 @@ import { useTemplateStore, type ElementGroup, flattenElements } from '../../../s
 import { Icon } from '../../atoms'
 import { useTranslation } from '../../../i18n'
 import type { ElementInspectorProps } from '../types'
-import { StudioSlateTableInspector } from '../tables/StudioSlateTableInspector'
 import { TransformSection } from './sections/TransformSection'
 import { TypographySection } from './sections/TypographySection'
 import { MediaPropertiesSection } from './sections/MediaPropertiesSection'
@@ -13,10 +12,6 @@ import { DataBindingSection } from './sections/DataBindingSection'
 
 export function StudioSlateElementInspector(props: ElementInspectorProps) {
   const { t } = useTranslation()
-  if (props.element.type === 'table') {
-    return <StudioSlateTableInspector {...props} />
-  }
-
   const { element, onUpdate, onStyleUpdate, parentName, isMultiSelection, selectedCount } = props
   const [localId, setLocalId] = useState(element.id || '')
 
