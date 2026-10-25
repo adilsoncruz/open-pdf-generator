@@ -860,7 +860,7 @@ function createWindow() {
 
   // Em desenvolvimento, carrega do Vite dev server
   if (isDev) {
-    const devPort = process.env.VITE_PORT || '5175'
+    const devPort = process.env.VITE_PORT || '5173'
     mainWindow.loadURL(`http://localhost:${devPort}`)
     // DevTools starts closed in dev, can be opened via View menu (Cmd+Option+I)
   } else {
