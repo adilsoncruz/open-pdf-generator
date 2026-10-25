@@ -131,6 +131,116 @@ function getTextAlign(hAlign: string | undefined): 'left' | 'center' | 'right' |
   }
 }
 
+function resolveElementDisplayText(
+  el: { value?: string; dataBinding?: string },
+  testData?: Record<string, unknown>,
+  fallback: string = ''
+): string {
+  if (el.value) return el.value
+  if (el.dataBinding) {
+    if (testData && Object.keys(testData).length > 0) {
+      if (hasTransformations(el.dataBinding)) {
+        const result = processExpression(el.dataBinding, testData)
+        if (result) return result
+      } else {
+        const parts = el.dataBinding.split('.')
+        let value: unknown = testData
+        for (const part of parts) {
+          if (value && typeof value === 'object' && part in value) {
+            value = (value as Record<string, unknown>)[part]
+          } else {
+            value = null
+            break
+          }
+        }
+        if (value !== null && value !== undefined) {
+          return String(value)
+        }
+      }
+    }
+    return `{${el.dataBinding}}`
+  }
+  return fallback
+}
+
+function getEstimatedElementHeight(
+  element: Element,
+  availableWidth?: number,
+  testData?: Record<string, unknown>
+): number {
+  if (element.type === 'container') {
+    if (element.heightMode === 'fixed' || element.autoHeight === false) {
+      return typeof element.height === 'number' ? element.height : 150
+    }
+    const children = element.elements || []
+    if (children.length === 0) {
+      return typeof element.height === 'number' ? element.height : 150
+    }
+    const maxBottom = children.reduce((max: number, ch: Element) => {
+      const cy = typeof ch.y === 'number' ? ch.y : 0
+      const chH = getEstimatedElementHeight(ch, undefined, testData)
+      return Math.max(max, cy + chH + 15)
+    }, 0)
+    return Math.max(typeof element.height === 'number' ? element.height : 150, maxBottom)
+  }
+
+  if (['text', 'static_text', 'rich_text', 'link'].includes(element.type)) {
+    const fontSize = typeof element.style?.fontSize === 'number' ? element.style.fontSize : 12
+    const lineHeightMultiplier = typeof element.style?.lineHeight === 'number' ? element.style.lineHeight : 1.2
+    const lineHeight = fontSize * lineHeightMultiplier
+    const padTop = typeof element.style?.paddingTop === 'number' ? element.style.paddingTop : (typeof element.style?.paddingY === 'number' ? element.style.paddingY : 0)
+    const padBottom = typeof element.style?.paddingBottom === 'number' ? element.style.paddingBottom : (typeof element.style?.paddingY === 'number' ? element.style.paddingY : 0)
+    const padLeft = typeof element.style?.paddingLeft === 'number' ? element.style.paddingLeft : (typeof element.style?.paddingX === 'number' ? element.style.paddingX : 0)
+    const padRight = typeof element.style?.paddingRight === 'number' ? element.style.paddingRight : (typeof element.style?.paddingX === 'number' ? element.style.paddingX : 0)
+    const borderTop = typeof element.style?.borderTopWidth === 'number' ? element.style.borderTopWidth : (typeof element.style?.borderWidth === 'number' ? element.style.borderWidth : 0)
+    const borderBottom = typeof element.style?.borderBottomWidth === 'number' ? element.style.borderBottomWidth : (typeof element.style?.borderWidth === 'number' ? element.style.borderWidth : 0)
+
+    const baseSingleLineHeight = Math.ceil(lineHeight + padTop + padBottom + borderTop + borderBottom)
+
+    const isMultiline = element.style?.multiline === true
+    const text = resolveElementDisplayText(element, testData, element.type === 'text' ? 'campo' : 'Texto') || ''
+
+    if (!isMultiline && !text.includes('\n')) {
+      if (typeof element.height === 'number' && element.height > 0) {
+        return Math.max(element.height, baseSingleLineHeight)
+      }
+      return Math.max(20, baseSingleLineHeight)
+    }
+
+    const boxW = typeof availableWidth === 'number' && availableWidth > 0
+      ? availableWidth
+      : (typeof element.width === 'number' && element.width > 0 ? element.width : 200)
+    const usableWidth = Math.max(20, boxW - padLeft - padRight)
+    const avgCharW = Math.max(1, fontSize * 0.55)
+    const charsPerLine = Math.max(1, Math.floor(usableWidth / avgCharW))
+
+    const paragraphs = text.split('\n')
+    let lineCount = 0
+    for (const p of paragraphs) {
+      if (p.length === 0) {
+        lineCount += 1
+      } else {
+        lineCount += Math.max(1, Math.ceil(p.length / charsPerLine))
+      }
+    }
+
+    const calculatedTotalHeight = Math.ceil(lineCount * lineHeight + padTop + padBottom + borderTop + borderBottom)
+    if (typeof element.height === 'number' && element.height > calculatedTotalHeight) {
+      return element.height
+    }
+    return Math.max(20, calculatedTotalHeight)
+  }
+
+  if (element.type === 'page_break') return 20
+  if (element.type === 'spacer') return typeof element.height === 'number' ? element.height : 40
+  if (element.type === 'line') return typeof element.height === 'number' ? Math.max(1, element.height) : (element.style?.strokeWidth || 1)
+
+  if (typeof element.height === 'number') {
+    return element.height
+  }
+  return 25
+}
+
 function ContainerChildElement({
   child,
   containerId,
@@ -543,9 +653,10 @@ function ContainerChildElement({
         const rawW = isChildRelative && effectiveWidth !== undefined ? effectiveWidth : child.width
         const textWidth = rawW ? resolveWidth(rawW) : undefined
         const textHeight = child.height ? resolveHeight(child.height) : undefined
-        const displayText = resolveChildDisplayText(child, child.type === 'text' ? 'campo' : 'Texto')
+        const displayText = resolveElementDisplayText(child, testData, child.type === 'text' ? 'campo' : 'Texto')
 
         const isMultiline = child.style?.multiline === true
+        const estimatedHeight = getEstimatedElementHeight(child, textWidth, testData)
         const firstLineIndent = child.style?.firstLineIndent || 0
 
         // Bordas e padding
@@ -556,7 +667,7 @@ function ContainerChildElement({
 
         const textStyles: CSSProperties = {
           width: textWidth || 'auto',
-          height: textHeight || 'auto',
+          height: isMultiline ? Math.max(textHeight || 0, estimatedHeight) : (textHeight || estimatedHeight),
           fontSize: child.style?.fontSize || 10,
           fontWeight: child.style?.fontWeight || 'normal',
           fontStyle: child.style?.fontStyle || 'normal',
@@ -1320,9 +1431,10 @@ function LoopChildElement({
       case 'link': {
         const textWidth = child.width ? resolveWidth(child.width) : undefined
         const textHeight = child.height ? resolveHeight(child.height) : undefined
-        const displayText = resolveChildDisplayText(child, child.type === 'text' ? 'campo' : 'Texto')
+        const displayText = resolveElementDisplayText(child, undefined, child.type === 'text' ? 'campo' : 'Texto')
 
         const isMultiline = child.style?.multiline === true
+        const estimatedHeight = getEstimatedElementHeight(child, textWidth)
         const firstLineIndent = child.style?.firstLineIndent || 0
 
         // Bordas e padding
@@ -1333,7 +1445,7 @@ function LoopChildElement({
 
         const textStyles: CSSProperties = {
           width: textWidth || 'auto',
-          height: textHeight || 'auto',
+          height: isMultiline ? Math.max(textHeight || 0, estimatedHeight) : (textHeight || estimatedHeight),
           fontSize: child.style?.fontSize || 10,
           fontWeight: child.style?.fontWeight || 'normal',
           fontStyle: child.style?.fontStyle || 'normal',
@@ -2117,31 +2229,69 @@ export default function Canvas() {
                   }}
                 >
                   {/* Elementos da Summary */}
-                  {template.summaryPage.elements
-                    .filter((element) => !element.hidden)
-                    .map((element) => (
-                      <CanvasElement
-                        key={element.id}
-                        element={element}
-                        scale={scale}
-                        isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
-                        onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
-                        onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
-                        location="summary"
-                        margins={margins}
-                        pageSize={pageSize}
-                        selectedElementIds={selectedElementIds}
-                        selectedElementLocation={selectedElementLocation}
-                        allElements={flattenElements(template.summaryPage?.elements ?? [])}
-                        onUpdateMultiple={() => {}}
-                        updateElement={updateElement}
-                        horizontalGuides={horizontalGuides}
-                        verticalGuides={verticalGuides}
-                        containerOffsetX={margins.left}
-                        containerOffsetY={margins.top}
-                        onSnapGuide={setSnappedGuides}
-                      />
-                    ))}
+                  {(() => {
+                    let summaryFlowY = 0
+                    let lastSFlowX: number | undefined = undefined
+                    let lastSFlowWidth: number | string | undefined = undefined
+                    return template.summaryPage.elements
+                      .filter((element) => !element.hidden)
+                      .map((element) => {
+                        const isRelativeFlow = ((element.positionMode || element.position || '') as string).toUpperCase() === 'RELATIVE'
+                        let effectiveY: number | undefined = undefined
+                        let effectiveX: number | undefined = undefined
+                        let effectiveWidth: number | string | undefined = undefined
+
+                        if (isRelativeFlow) {
+                          const isHeightFull = element.height === '100%'
+                          const offsetY = isHeightFull ? 0 : (typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 0)
+                          if (summaryFlowY === 0) {
+                            effectiveY = isHeightFull ? 0 : (typeof element.y === 'number' && element.y > 0 ? element.y : offsetY)
+                          } else {
+                            effectiveY = summaryFlowY + offsetY
+                            if (lastSFlowX !== undefined) effectiveX = lastSFlowX
+                            if (lastSFlowWidth !== undefined) effectiveWidth = lastSFlowWidth
+                          }
+                        }
+
+                        const elHeight = getEstimatedElementHeight(element, typeof element.width === 'number' ? element.width : (pageSize.width - margins.left - margins.right), testData)
+                        if (isRelativeFlow && effectiveY !== undefined) {
+                          summaryFlowY = effectiveY + elHeight
+                          lastSFlowX = effectiveX !== undefined ? effectiveX : element.x
+                          lastSFlowWidth = effectiveWidth !== undefined ? effectiveWidth : element.width
+                        } else {
+                          summaryFlowY = Math.max(summaryFlowY, (element.y || 0) + elHeight)
+                          lastSFlowX = element.x
+                          lastSFlowWidth = element.width
+                        }
+
+                        return (
+                          <CanvasElement
+                            key={element.id}
+                            element={element}
+                            effectiveY={effectiveY}
+                            effectiveX={effectiveX}
+                            effectiveWidth={effectiveWidth}
+                            scale={scale}
+                            isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'summary'}
+                            onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'summary') : selectElement(element.id, 'summary')}
+                            onUpdate={(updates) => updateElement(element.id, updates, 'summary')}
+                            location="summary"
+                            margins={margins}
+                            pageSize={pageSize}
+                            selectedElementIds={selectedElementIds}
+                            selectedElementLocation={selectedElementLocation}
+                            allElements={flattenElements(template.summaryPage?.elements ?? [])}
+                            onUpdateMultiple={() => {}}
+                            updateElement={updateElement}
+                            horizontalGuides={horizontalGuides}
+                            verticalGuides={verticalGuides}
+                            containerOffsetX={margins.left}
+                            containerOffsetY={margins.top}
+                            onSnapGuide={setSnappedGuides}
+                          />
+                        )
+                      })
+                  })()}
                 </div>
 
                 
@@ -2352,31 +2502,69 @@ export default function Canvas() {
                 }
               }}
             >
-              {template.pageSettings.header.elements
-                .filter((element) => !element.hidden)
-                .map((element) => (
-                  <CanvasElement
-                    key={element.id}
-                    element={element}
-                    scale={scale}
-                    isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'header'}
-                    onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'header') : selectElement(element.id, 'header')}
-                    onUpdate={(updates) => updateElement(element.id, updates, 'header')}
-                    location="header"
-                    margins={margins}
-                    pageSize={pageSize}
-                    selectedElementIds={selectedElementIds}
-                    selectedElementLocation={selectedElementLocation}
-                    allElements={flattenElements(template.pageSettings.header?.elements ?? [])}
-                    onUpdateMultiple={() => {}}
-                    updateElement={updateElement}
-                    horizontalGuides={horizontalGuides}
-                    verticalGuides={verticalGuides}
-                    containerOffsetX={margins.left}
-                    containerOffsetY={margins.top}
-                    onSnapGuide={setSnappedGuides}
-                  />
-                ))}
+              {(() => {
+                let headerFlowY = 0
+                let lastHFlowX: number | undefined = undefined
+                let lastHFlowWidth: number | string | undefined = undefined
+                return template.pageSettings.header.elements
+                  .filter((element) => !element.hidden)
+                  .map((element) => {
+                    const isRelativeFlow = ((element.positionMode || element.position || '') as string).toUpperCase() === 'RELATIVE'
+                    let effectiveY: number | undefined = undefined
+                    let effectiveX: number | undefined = undefined
+                    let effectiveWidth: number | string | undefined = undefined
+
+                    if (isRelativeFlow) {
+                      const isHeightFull = element.height === '100%'
+                      const offsetY = isHeightFull ? 0 : (typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 0)
+                      if (headerFlowY === 0) {
+                        effectiveY = isHeightFull ? 0 : (typeof element.y === 'number' && element.y > 0 ? element.y : offsetY)
+                      } else {
+                        effectiveY = headerFlowY + offsetY
+                        if (lastHFlowX !== undefined) effectiveX = lastHFlowX
+                        if (lastHFlowWidth !== undefined) effectiveWidth = lastHFlowWidth
+                      }
+                    }
+
+                    const elHeight = getEstimatedElementHeight(element, typeof element.width === 'number' ? element.width : (pageSize.width - margins.left - margins.right), testData)
+                    if (isRelativeFlow && effectiveY !== undefined) {
+                      headerFlowY = effectiveY + elHeight
+                      lastHFlowX = effectiveX !== undefined ? effectiveX : element.x
+                      lastHFlowWidth = effectiveWidth !== undefined ? effectiveWidth : element.width
+                    } else {
+                      headerFlowY = Math.max(headerFlowY, (element.y || 0) + elHeight)
+                      lastHFlowX = element.x
+                      lastHFlowWidth = element.width
+                    }
+
+                    return (
+                      <CanvasElement
+                        key={element.id}
+                        element={element}
+                        effectiveY={effectiveY}
+                        effectiveX={effectiveX}
+                        effectiveWidth={effectiveWidth}
+                        scale={scale}
+                        isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'header'}
+                        onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'header') : selectElement(element.id, 'header')}
+                        onUpdate={(updates) => updateElement(element.id, updates, 'header')}
+                        location="header"
+                        margins={margins}
+                        pageSize={pageSize}
+                        selectedElementIds={selectedElementIds}
+                        selectedElementLocation={selectedElementLocation}
+                        allElements={flattenElements(template.pageSettings.header?.elements ?? [])}
+                        onUpdateMultiple={() => {}}
+                        updateElement={updateElement}
+                        horizontalGuides={horizontalGuides}
+                        verticalGuides={verticalGuides}
+                        containerOffsetX={margins.left}
+                        containerOffsetY={margins.top}
+                        onSnapGuide={setSnappedGuides}
+                      />
+                    )
+                  })
+              })()}
               
               
               {currentSection !== 'header' && (
@@ -2405,31 +2593,69 @@ export default function Canvas() {
                 }
               }}
             >
-              {template.pageSettings.footer.elements
-                .filter((element) => !element.hidden)
-                .map((element) => (
-                  <CanvasElement
-                    key={element.id}
-                    element={element}
-                    scale={scale}
-                    isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'footer'}
-                    onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'footer') : selectElement(element.id, 'footer')}
-                    onUpdate={(updates) => updateElement(element.id, updates, 'footer')}
-                    location="footer"
-                    margins={margins}
-                    pageSize={pageSize}
-                    selectedElementIds={selectedElementIds}
-                    selectedElementLocation={selectedElementLocation}
-                    allElements={flattenElements(template.pageSettings.footer?.elements ?? [])}
-                    onUpdateMultiple={() => {}}
-                    updateElement={updateElement}
-                    horizontalGuides={horizontalGuides}
-                    verticalGuides={verticalGuides}
-                    containerOffsetX={margins.left}
-                    containerOffsetY={totalCanvasHeight - margins.bottom - (template.pageSettings.footer?.height || 0)}
-                    onSnapGuide={setSnappedGuides}
-                  />
-                ))}
+              {(() => {
+                let footerFlowY = 0
+                let lastFFlowX: number | undefined = undefined
+                let lastFFlowWidth: number | string | undefined = undefined
+                return template.pageSettings.footer.elements
+                  .filter((element) => !element.hidden)
+                  .map((element) => {
+                    const isRelativeFlow = ((element.positionMode || element.position || '') as string).toUpperCase() === 'RELATIVE'
+                    let effectiveY: number | undefined = undefined
+                    let effectiveX: number | undefined = undefined
+                    let effectiveWidth: number | string | undefined = undefined
+
+                    if (isRelativeFlow) {
+                      const isHeightFull = element.height === '100%'
+                      const offsetY = isHeightFull ? 0 : (typeof element.relativeOffsetY === 'number' ? element.relativeOffsetY : 0)
+                      if (footerFlowY === 0) {
+                        effectiveY = isHeightFull ? 0 : (typeof element.y === 'number' && element.y > 0 ? element.y : offsetY)
+                      } else {
+                        effectiveY = footerFlowY + offsetY
+                        if (lastFFlowX !== undefined) effectiveX = lastFFlowX
+                        if (lastFFlowWidth !== undefined) effectiveWidth = lastFFlowWidth
+                      }
+                    }
+
+                    const elHeight = getEstimatedElementHeight(element, typeof element.width === 'number' ? element.width : (pageSize.width - margins.left - margins.right), testData)
+                    if (isRelativeFlow && effectiveY !== undefined) {
+                      footerFlowY = effectiveY + elHeight
+                      lastFFlowX = effectiveX !== undefined ? effectiveX : element.x
+                      lastFFlowWidth = effectiveWidth !== undefined ? effectiveWidth : element.width
+                    } else {
+                      footerFlowY = Math.max(footerFlowY, (element.y || 0) + elHeight)
+                      lastFFlowX = element.x
+                      lastFFlowWidth = element.width
+                    }
+
+                    return (
+                      <CanvasElement
+                        key={element.id}
+                        element={element}
+                        effectiveY={effectiveY}
+                        effectiveX={effectiveX}
+                        effectiveWidth={effectiveWidth}
+                        scale={scale}
+                        isSelected={selectedElementIds.includes(element.id) && selectedElementLocation === 'footer'}
+                        onSelect={(ctrlKey) => ctrlKey ? toggleElementSelection(element.id, 'footer') : selectElement(element.id, 'footer')}
+                        onUpdate={(updates) => updateElement(element.id, updates, 'footer')}
+                        location="footer"
+                        margins={margins}
+                        pageSize={pageSize}
+                        selectedElementIds={selectedElementIds}
+                        selectedElementLocation={selectedElementLocation}
+                        allElements={flattenElements(template.pageSettings.footer?.elements ?? [])}
+                        onUpdateMultiple={() => {}}
+                        updateElement={updateElement}
+                        horizontalGuides={horizontalGuides}
+                        verticalGuides={verticalGuides}
+                        containerOffsetX={margins.left}
+                        containerOffsetY={totalCanvasHeight - margins.bottom - (template.pageSettings.footer?.height || 0)}
+                        onSnapGuide={setSnappedGuides}
+                      />
+                    )
+                  })
+              })()}
               
               
               {currentSection !== 'footer' && (
@@ -2509,9 +2735,7 @@ export default function Canvas() {
                   const elHeight =
                     element.type === 'container'
                       ? containerAutoHeight
-                      : typeof element.height === 'number'
-                      ? element.height
-                      : 25
+                      : getEstimatedElementHeight(element, typeof element.width === 'number' ? element.width : bodyAvailableWidth, testData)
 
                   if (isRelativeFlow && effectiveY !== undefined) {
                     currentFlowY = effectiveY + elHeight
@@ -3614,9 +3838,10 @@ function CanvasElement({
 
         const isElRelative = (element.positionMode || element.position || '').toUpperCase() === 'RELATIVE'
         const resolvedElWidth = (isElRelative && effectiveWidth !== undefined) ? effectiveWidth : (element.width || 'auto')
+        const estimatedHeight = getEstimatedElementHeight(element, typeof resolvedElWidth === 'number' ? resolvedElWidth : undefined, testData)
         const textStyles: CSSProperties = {
           width: resolvedElWidth,
-          height: element.height || 'auto',
+          height: isMultiline ? Math.max(typeof element.height === 'number' ? element.height : 0, estimatedHeight) : (element.height || estimatedHeight),
           fontSize: element.style?.fontSize || 12,
           fontWeight: element.style?.fontWeight || 'normal',
                 textDecoration: element.type === 'link' ? 'underline' : 'none',
@@ -4415,7 +4640,7 @@ function CanvasElement({
                               }
                             }
 
-                            const chHeight = typeof child.height === 'number' ? child.height : 25
+                            const chHeight = getEstimatedElementHeight(child, typeof child.width === 'number' ? child.width : innerContainerWidth, testData)
                             if (isRelative && effectiveChildY !== undefined) {
                               containerFlowY = effectiveChildY + chHeight
                               lastChildX = effectiveChildX !== undefined ? effectiveChildX : child.x
