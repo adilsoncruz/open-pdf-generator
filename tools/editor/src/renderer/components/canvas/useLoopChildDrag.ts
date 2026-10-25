@@ -27,6 +27,7 @@ interface UseLoopChildDragOptions {
   onSnapGuide?: (snapped: SnappedGuides) => void
   resolveWidth: (val: string | number | undefined) => number
   resolveHeight: (val: string | number | undefined) => number
+  effectiveY?: number
 }
 
 export function useLoopChildDrag({
@@ -49,9 +50,16 @@ export function useLoopChildDrag({
   onSnapGuide,
   resolveWidth,
   resolveHeight,
+  effectiveY,
 }: UseLoopChildDragOptions) {
   const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialX: 0, initialY: 0 })
+  const [dragStart, setDragStart] = useState({
+    x: 0,
+    y: 0,
+    initialX: 0,
+    initialY: 0,
+    initialOffsetY: 10,
+  })
 
   const handleMouseDown = (e: ReactMouseEvent) => {
     if (e.button !== 0) return
@@ -64,7 +72,18 @@ export function useLoopChildDrag({
       selectLoopChild(loopId, child.id, location)
     }
     setIsDragging(true)
-    setDragStart({ x: e.clientX, y: e.clientY, initialX: child.x || 0, initialY: child.y || 0 })
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      initialX: child.x || 0,
+      initialY: child.y || 0,
+      initialOffsetY:
+        child.height === '100%'
+          ? 0
+          : typeof child.relativeOffsetY === 'number'
+          ? child.relativeOffsetY
+          : 10,
+    })
   }
 
   useEffect(() => {
@@ -185,7 +204,18 @@ export function useLoopChildDrag({
       const clampedX = isWidth100 ? 0 : Math.max(0, Math.min(newX, loopWidth - childWidth))
       const clampedY = isHeight100 ? 0 : Math.max(0, Math.min(newY, loopHeight - childHeight))
 
-      updateLoopChildElement(loopId, child.id, { x: clampedX, y: clampedY }, location)
+      const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
+      if (isChildRelative && effectiveY !== undefined) {
+        const newOffset = child.height === '100%' ? 0 : Math.max(0, dragStart.initialOffsetY + deltaY)
+        updateLoopChildElement(
+          loopId,
+          child.id,
+          { x: clampedX, y: clampedY, relativeOffsetY: newOffset },
+          location
+        )
+      } else {
+        updateLoopChildElement(loopId, child.id, { x: clampedX, y: clampedY }, location)
+      }
     }
 
     const handleMouseUp = () => {
@@ -208,6 +238,9 @@ export function useLoopChildDrag({
     child.id,
     child.width,
     child.height,
+    child.positionMode,
+    child.position,
+    effectiveY,
     loopId,
     loopWidth,
     loopHeight,

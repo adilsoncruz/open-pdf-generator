@@ -430,6 +430,13 @@ export function findParentLoop(template: Template, elementId: string): Element |
       if (el.type === 'loop' && el.elements?.some(child => child.id === elementId)) {
         return el
       }
+      if (el.type === 'container' && el.elements) {
+        for (const child of el.elements) {
+          if (child.type === 'loop' && child.elements?.some(gc => gc.id === elementId)) {
+            return child
+          }
+        }
+      }
     }
   }
   return null
@@ -598,6 +605,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
       }
       const selectedId = state.selectedElementIds[0]
       const selectedParentId = state.selectedContainerParentId
+      const selectedLoopParentId = state.selectedLoopParentId
 
       const insertIntoElements = (elements: Element[]) => {
         // Se for um container, page_break ou spacer, adiciona na raiz da seção
@@ -606,6 +614,100 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             newElements: [...elements, normalizedElement],
             newSelectedId: normalizedElement.id,
             newSelectedChildId: null,
+            isTargetLoop: false,
+          }
+        }
+
+        // Verificar se há um LOOP selecionado (diretamente ou como pai de um filho selecionado)
+        let targetLoop: Element | null = null
+        if (selectedLoopParentId) {
+          targetLoop = elements.find((el) => el.id === selectedLoopParentId && el.type === 'loop') || null
+          if (!targetLoop) {
+            for (const el of elements) {
+              if (el.elements) {
+                const nested = el.elements.find((c) => c.id === selectedLoopParentId && c.type === 'loop')
+                if (nested) {
+                  targetLoop = nested
+                  break
+                }
+              }
+            }
+          }
+        }
+
+        if (!targetLoop && selectedId) {
+          targetLoop = elements.find((el) => el.id === selectedId && el.type === 'loop') || null
+          if (!targetLoop) {
+            for (const el of elements) {
+              if (el.elements) {
+                const nested = el.elements.find((c) => c.id === selectedId && c.type === 'loop')
+                if (nested) {
+                  targetLoop = nested
+                  break
+                }
+                const loopParent = el.elements.find((c) => c.type === 'loop' && c.elements?.some((gc) => gc.id === selectedId))
+                if (loopParent) {
+                  targetLoop = loopParent
+                  break
+                }
+              }
+            }
+          }
+          if (!targetLoop) {
+            targetLoop = elements.find((el) => el.type === 'loop' && el.elements?.some((c) => c.id === selectedId)) || null
+          }
+        }
+
+        if (targetLoop) {
+          const loopChildren = targetLoop.elements || []
+          let childY = normalizedElement.y ?? 10
+          let childX = normalizedElement.x ?? 10
+          let childWidth = normalizedElement.width
+          if (loopChildren.length > 0) {
+            const lastChild = loopChildren[loopChildren.length - 1]
+            const lastY = typeof lastChild.y === 'number' ? lastChild.y : 0
+            const lastH = typeof lastChild.height === 'number' ? lastChild.height : 20
+            childY = lastY + lastH + 8
+            childX = lastChild.x ?? childX
+            if (childWidth === undefined && typeof lastChild.width === 'number') {
+              childWidth = lastChild.width
+            }
+            if ((lastChild.positionMode || lastChild.position || '').toUpperCase() === 'RELATIVE') {
+              normalizedElement.positionMode = 'RELATIVE'
+              normalizedElement.position = 'relative'
+              normalizedElement.relativeOffsetY = 0
+            }
+          }
+          const adaptedChild = {
+            ...normalizedElement,
+            x: childX,
+            y: childY,
+            ...(childWidth !== undefined ? { width: childWidth } : {}),
+          }
+
+          const addIntoLoop = (list: Element[]): Element[] => {
+            return list.map((el) => {
+              if (el.id === targetLoop!.id && el.type === 'loop') {
+                return {
+                  ...el,
+                  elements: [...loopChildren, adaptedChild],
+                }
+              }
+              if (el.elements && el.elements.length > 0) {
+                return {
+                  ...el,
+                  elements: addIntoLoop(el.elements),
+                }
+              }
+              return el
+            })
+          }
+
+          return {
+            newElements: addIntoLoop(elements),
+            newSelectedId: targetLoop.id,
+            newSelectedChildId: adaptedChild.id,
+            isTargetLoop: true,
           }
         }
 
@@ -657,6 +759,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             newElements: [...elements, autoContainer],
             newSelectedId: autoContainerId,
             newSelectedChildId: adaptedChild.id,
+            isTargetLoop: false,
           }
         }
 
@@ -701,6 +804,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               newElements: elements,
               newSelectedId: targetContainer.id,
               newSelectedChildId: null,
+              isTargetLoop: false,
             }
           }
         } else {
@@ -711,6 +815,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               newElements: elements,
               newSelectedId: targetContainer.id,
               newSelectedChildId: null,
+              isTargetLoop: false,
             }
           }
         }
@@ -741,6 +846,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               newElements: elements,
               newSelectedId: targetContainer.id,
               newSelectedChildId: null,
+              isTargetLoop: false,
             }
           }
         }
@@ -764,12 +870,13 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           }),
           newSelectedId: targetContainer.id,
           newSelectedChildId: adaptedChild.id,
+          isTargetLoop: false,
         }
       }
 
       let newTemplate
       if (location === 'header' && state.template.pageSettings.header) {
-        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.pageSettings.header.elements)
+        const { newElements, newSelectedId, newSelectedChildId, isTargetLoop } = insertIntoElements(state.template.pageSettings.header.elements)
         newTemplate = {
             ...state.template,
             pageSettings: {
@@ -783,14 +890,16 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
-          selectedContainerChildId: newSelectedChildId,
-          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
+          selectedContainerChildId: isTargetLoop ? null : newSelectedChildId,
+          selectedContainerParentId: isTargetLoop ? null : (newSelectedChildId ? newSelectedId : null),
+          selectedLoopChildId: isTargetLoop ? newSelectedChildId : null,
+          selectedLoopParentId: isTargetLoop ? newSelectedId : null,
           selectedElementLocation: 'header',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else if (location === 'footer' && state.template.pageSettings.footer) {
-        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.pageSettings.footer.elements)
+        const { newElements, newSelectedId, newSelectedChildId, isTargetLoop } = insertIntoElements(state.template.pageSettings.footer.elements)
         newTemplate = {
             ...state.template,
             pageSettings: {
@@ -804,14 +913,16 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
-          selectedContainerChildId: newSelectedChildId,
-          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
+          selectedContainerChildId: isTargetLoop ? null : newSelectedChildId,
+          selectedContainerParentId: isTargetLoop ? null : (newSelectedChildId ? newSelectedId : null),
+          selectedLoopChildId: isTargetLoop ? newSelectedChildId : null,
+          selectedLoopParentId: isTargetLoop ? newSelectedId : null,
           selectedElementLocation: 'footer',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else if (location === 'bodyBackground' && state.template.pageSettings.bodyBackground) {
-        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.pageSettings.bodyBackground.elements)
+        const { newElements, newSelectedId, newSelectedChildId, isTargetLoop } = insertIntoElements(state.template.pageSettings.bodyBackground.elements)
         newTemplate = {
             ...state.template,
             pageSettings: {
@@ -825,14 +936,16 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
-          selectedContainerChildId: newSelectedChildId,
-          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
+          selectedContainerChildId: isTargetLoop ? null : newSelectedChildId,
+          selectedContainerParentId: isTargetLoop ? null : (newSelectedChildId ? newSelectedId : null),
+          selectedLoopChildId: isTargetLoop ? newSelectedChildId : null,
+          selectedLoopParentId: isTargetLoop ? newSelectedId : null,
           selectedElementLocation: 'bodyBackground',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else if (location === 'summary' && state.template.summaryPage) {
-        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.summaryPage.elements)
+        const { newElements, newSelectedId, newSelectedChildId, isTargetLoop } = insertIntoElements(state.template.summaryPage.elements)
         newTemplate = {
             ...state.template,
             summaryPage: {
@@ -843,14 +956,16 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
-          selectedContainerChildId: newSelectedChildId,
-          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
+          selectedContainerChildId: isTargetLoop ? null : newSelectedChildId,
+          selectedContainerParentId: isTargetLoop ? null : (newSelectedChildId ? newSelectedId : null),
+          selectedLoopChildId: isTargetLoop ? newSelectedChildId : null,
+          selectedLoopParentId: isTargetLoop ? newSelectedId : null,
           selectedElementLocation: 'summary',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
         }
       } else {
-        const { newElements, newSelectedId, newSelectedChildId } = insertIntoElements(state.template.page)
+        const { newElements, newSelectedId, newSelectedChildId, isTargetLoop } = insertIntoElements(state.template.page)
         newTemplate = {
           ...state.template,
           page: restackBodyContainers(newElements, state.template),
@@ -858,8 +973,10 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         return {
           template: newTemplate,
           selectedElementIds: [newSelectedId],
-          selectedContainerChildId: newSelectedChildId,
-          selectedContainerParentId: newSelectedChildId ? newSelectedId : null,
+          selectedContainerChildId: isTargetLoop ? null : newSelectedChildId,
+          selectedContainerParentId: isTargetLoop ? null : (newSelectedChildId ? newSelectedId : null),
+          selectedLoopChildId: isTargetLoop ? newSelectedChildId : null,
+          selectedLoopParentId: isTargetLoop ? newSelectedId : null,
           selectedElementLocation: 'body',
           isDirty: true,
           ...saveToHistory(state, newTemplate),
@@ -1847,7 +1964,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         }
 
         return elements.map(el => {
-          if (el.type === 'container' && el.elements) {
+          if ((el.type === 'container' || el.type === 'loop') && el.elements) {
             const childIdx = el.elements.findIndex(c => c.id === id)
             if (childIdx >= 0) {
               if (childIdx === newIndex) return el
@@ -1855,6 +1972,10 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               const [movedChild] = newChildren.splice(childIdx, 1)
               newChildren.splice(newIndex, 0, movedChild)
               return { ...el, elements: newChildren }
+            }
+            return {
+              ...el,
+              elements: reorder(el.elements),
             }
           }
           return el
@@ -2770,6 +2891,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               elements: [...(el.elements || []), element],
             }
           }
+          if (el.elements && el.elements.length > 0) {
+            return {
+              ...el,
+              elements: addToLoop(el.elements),
+            }
+          }
           return el
         })
       }
@@ -2842,9 +2969,23 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           if (el.id === loopId) {
             return {
               ...el,
-              elements: (el.elements || []).map(child =>
-                child.id === childId ? { ...child, ...updates } : child
-              ),
+              elements: (el.elements || []).map(child => {
+                if (child.id !== childId) return child
+                const mergedStyle = updates.style
+                  ? { ...(child.style || {}), ...updates.style }
+                  : child.style
+                return {
+                  ...child,
+                  ...updates,
+                  ...(updates.style ? { style: mergedStyle } : {}),
+                }
+              }),
+            }
+          }
+          if (el.elements && el.elements.length > 0) {
+            return {
+              ...el,
+              elements: updateInLoop(el.elements),
             }
           }
           return el
@@ -2920,6 +3061,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             return {
               ...el,
               elements: (el.elements || []).filter(child => child.id !== childId),
+            }
+          }
+          if (el.elements && el.elements.length > 0) {
+            return {
+              ...el,
+              elements: deleteFromLoop(el.elements),
             }
           }
           return el
@@ -3049,6 +3196,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             children.splice(toIndex, 0, removed)
             return { ...el, elements: children }
           }
+          if (el.elements && el.elements.length > 0) {
+            return {
+              ...el,
+              elements: reorderInLoop(el.elements),
+            }
+          }
           return el
         })
       }
@@ -3159,9 +3312,17 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
           const isFixed = targetEl.heightMode === 'fixed' || targetEl.autoHeight === false
           const currentH = typeof targetEl.height === 'number' ? targetEl.height : 150
           const maxAllowed = Math.max(30, sectionHeight - (targetEl.y || 0))
-          const updatedChildren = (targetEl.elements || []).map(child =>
-            child.id === childId ? { ...child, ...updates } : child
-          )
+          const updatedChildren = (targetEl.elements || []).map(child => {
+            if (child.id !== childId) return child
+            const mergedStyle = updates.style
+              ? { ...(child.style || {}), ...updates.style }
+              : child.style
+            return {
+              ...child,
+              ...updates,
+              ...(updates.style ? { style: mergedStyle } : {}),
+            }
+          })
 
           let newHeight = currentH
           let deltaHeight = 0

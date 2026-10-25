@@ -264,6 +264,7 @@ export function CanvasElement({
             containerOffsetX={containerOffsetX}
             containerOffsetY={containerOffsetY}
             effectiveY={effectiveY}
+            effectiveX={effectiveX}
             onSnapGuide={onSnapGuide}
             onMouseDown={handleMouseDown}
           />

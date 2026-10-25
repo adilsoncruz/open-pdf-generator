@@ -11,6 +11,9 @@ export interface LoopChildElementProps {
   location: ElementLocation
   loopWidth: number
   loopHeight: number
+  effectiveY?: number
+  effectiveX?: number
+  effectiveWidth?: number | string
   horizontalGuides?: number[]
   verticalGuides?: number[]
   loopPageX?: number

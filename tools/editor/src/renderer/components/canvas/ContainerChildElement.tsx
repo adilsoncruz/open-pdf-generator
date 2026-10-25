@@ -293,22 +293,66 @@ export function ContainerChildElement({
                   </div>
                 </div>
               ) : (
-                loopElements.map((childLoop: Element) => (
-                  <LoopChildElement
-                    key={childLoop.id}
-                    child={childLoop}
-                    loopId={child.id}
-                    location={location}
-                    loopWidth={loopWidth}
-                    loopHeight={loopHeight}
-                    horizontalGuides={horizontalGuides}
-                    verticalGuides={verticalGuides}
-                    loopPageX={(containerPageX !== undefined ? containerPageX : 0) + (child.x || 0)}
-                    loopPageY={(containerPageY !== undefined ? containerPageY : 0) + (child.y || 0)}
-                    scale={scale}
-                    onSnapGuide={onSnapGuide}
-                  />
-                ))
+                (() => {
+                  let loopFlowY = 0
+                  let lastChildX: number | undefined = undefined
+                  let lastChildWidth: number | string | undefined = undefined
+
+                  return loopElements.map((childLoop: Element) => {
+                    const isRelative =
+                      ((childLoop.positionMode || childLoop.position || '') as string).toUpperCase() === 'RELATIVE'
+                    let effectiveChildY: number | undefined = undefined
+                    let effectiveChildX: number | undefined = undefined
+                    let effectiveChildWidth: number | string | undefined = undefined
+
+                    if (isRelative) {
+                      const isChildHeightFull = childLoop.height === '100%'
+                      const offset = isChildHeightFull ? 0 : (typeof childLoop.relativeOffsetY === 'number' ? childLoop.relativeOffsetY : 0)
+                      if (loopFlowY === 0) {
+                        effectiveChildY = isChildHeightFull ? 0 : (typeof childLoop.y === 'number' && childLoop.y > 0 ? childLoop.y : offset)
+                      } else {
+                        effectiveChildY = loopFlowY + offset
+                        if (lastChildX !== undefined) {
+                          effectiveChildX = lastChildX
+                        }
+                        if (lastChildWidth !== undefined) {
+                          effectiveChildWidth = lastChildWidth
+                        }
+                      }
+                    }
+
+                    const chHeight = typeof childLoop.height === 'number' ? childLoop.height : 25
+                    if (isRelative && effectiveChildY !== undefined) {
+                      loopFlowY = effectiveChildY + chHeight
+                      lastChildX = effectiveChildX !== undefined ? effectiveChildX : childLoop.x
+                      lastChildWidth = effectiveChildWidth !== undefined ? effectiveChildWidth : childLoop.width
+                    } else {
+                      loopFlowY = Math.max(loopFlowY, (childLoop.y || 0) + chHeight)
+                      lastChildX = childLoop.x
+                      lastChildWidth = childLoop.width
+                    }
+
+                    return (
+                      <LoopChildElement
+                        key={childLoop.id}
+                        child={childLoop}
+                        loopId={child.id}
+                        location={location}
+                        effectiveY={effectiveChildY}
+                        effectiveX={effectiveChildX}
+                        effectiveWidth={effectiveChildWidth}
+                        loopWidth={loopWidth}
+                        loopHeight={loopHeight}
+                        horizontalGuides={horizontalGuides}
+                        verticalGuides={verticalGuides}
+                        loopPageX={(containerPageX !== undefined ? containerPageX : 0) + (child.x || 0)}
+                        loopPageY={(containerPageY !== undefined ? containerPageY : 0) + (child.y || 0)}
+                        scale={scale}
+                        onSnapGuide={onSnapGuide}
+                      />
+                    )
+                  })
+                })()
               )}
             </div>
           </div>

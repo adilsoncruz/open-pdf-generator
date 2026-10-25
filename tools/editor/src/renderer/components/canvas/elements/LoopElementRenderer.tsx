@@ -16,6 +16,7 @@ interface LoopElementRendererProps {
   containerOffsetX?: number
   containerOffsetY?: number
   effectiveY?: number
+  effectiveX?: number
   onSnapGuide?: (snapped: SnappedGuides) => void
   onMouseDown: (e: ReactMouseEvent) => void
 }
@@ -32,6 +33,7 @@ export function LoopElementRenderer({
   containerOffsetX,
   containerOffsetY,
   effectiveY,
+  effectiveX,
   onSnapGuide,
   onMouseDown,
 }: LoopElementRendererProps) {
@@ -101,23 +103,72 @@ export function LoopElementRenderer({
                 </div>
               ) : (
                 <>
-                  
-                  {loopElements.map((child: Element) => (
-                    <LoopChildElement 
-                      key={child.id} 
-                      child={child} 
-                      loopId={element.id}
-                      location={location}
-                      loopWidth={innerLoopWidth}
-                      loopHeight={innerLoopHeight}
-                      horizontalGuides={horizontalGuides}
-                      verticalGuides={verticalGuides}
-                      loopPageX={(containerOffsetX !== undefined ? containerOffsetX : margins.left) + (element.x || 0)}
-                      loopPageY={(containerOffsetY !== undefined ? containerOffsetY : margins.top) + (effectiveY !== undefined ? effectiveY : (element.y || 0))}
-                      scale={scale}
-                      onSnapGuide={onSnapGuide}
-                    />
-                  ))}
+                  {(() => {
+                    let loopFlowY = 0
+                    let lastChildX: number | undefined = undefined
+                    let lastChildWidth: number | string | undefined = undefined
+
+                    return loopElements.map((child: Element) => {
+                      const isRelative =
+                        ((child.positionMode || child.position || '') as string).toUpperCase() === 'RELATIVE'
+                      let effectiveChildY: number | undefined = undefined
+                      let effectiveChildX: number | undefined = undefined
+                      let effectiveChildWidth: number | string | undefined = undefined
+
+                      if (isRelative) {
+                        const isChildHeightFull = child.height === '100%'
+                        const offset = isChildHeightFull ? 0 : (typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 0)
+                        if (loopFlowY === 0) {
+                          effectiveChildY = isChildHeightFull ? 0 : (typeof child.y === 'number' && child.y > 0 ? child.y : offset)
+                        } else {
+                          effectiveChildY = loopFlowY + offset
+                          if (lastChildX !== undefined) {
+                            effectiveChildX = lastChildX
+                          }
+                          if (lastChildWidth !== undefined) {
+                            effectiveChildWidth = lastChildWidth
+                          }
+                        }
+                      }
+
+                      const chHeight = typeof child.height === 'number' ? child.height : 25
+                      if (isRelative && effectiveChildY !== undefined) {
+                        loopFlowY = effectiveChildY + chHeight
+                        lastChildX = effectiveChildX !== undefined ? effectiveChildX : child.x
+                        lastChildWidth = effectiveChildWidth !== undefined ? effectiveChildWidth : child.width
+                      } else {
+                        loopFlowY = Math.max(loopFlowY, (child.y || 0) + chHeight)
+                        lastChildX = child.x
+                        lastChildWidth = child.width
+                      }
+
+                      return (
+                        <LoopChildElement 
+                          key={child.id} 
+                          child={child} 
+                          loopId={element.id}
+                          location={location}
+                          effectiveY={effectiveChildY}
+                          effectiveX={effectiveChildX}
+                          effectiveWidth={effectiveChildWidth}
+                          loopWidth={innerLoopWidth}
+                          loopHeight={innerLoopHeight}
+                          horizontalGuides={horizontalGuides}
+                          verticalGuides={verticalGuides}
+                          loopPageX={
+                            (containerOffsetX !== undefined ? containerOffsetX : margins.left) +
+                            (element.width === '100%' ? 0 : (effectiveX !== undefined ? effectiveX : (element.x || 0)))
+                          }
+                          loopPageY={
+                            (containerOffsetY !== undefined ? containerOffsetY : margins.top) +
+                            (element.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : (element.y || 0)))
+                          }
+                          scale={scale}
+                          onSnapGuide={onSnapGuide}
+                        />
+                      )
+                    })
+                  })()}
                 </>
               )}
             </div>

@@ -47,13 +47,20 @@ export default function Sidebar() {
     reorderElement,
     toggleElementVisibility,
     selectContainerChild,
+    deleteContainerChildElement,
+    selectLoopChild,
     deleteLoopChildElement,
-    selectedContainerChildId
+    selectedContainerChildId,
+    selectedLoopChildId,
+    selectedLoopParentId,
+    reorderLoopChildren,
+    reorderContainerChildren
   } = useTemplateStore()
 
   // Somente uma layer aberta por vez (Accordion)
   const [openLayer, setOpenLayer] = useState<string>(currentSection)
   const [expandedContainers, setExpandedContainers] = useState<Record<string, boolean>>({})
+  const [expandedLoops, setExpandedLoops] = useState<Record<string, boolean>>({})
   const [draggedElementId, setDraggedElementId] = useState<string | null>(null)
   const [dragOverElementId, setDragOverElementId] = useState<string | null>(null)
 
@@ -89,9 +96,12 @@ export default function Sidebar() {
     sectionKey: ElementLocation, 
     index: number, 
     totalCount: number, 
-    parentContainerId?: string
+    parentContainerId?: string,
+    parentLoopId?: string
   ) => {
-    const isSelected = selectedElementIds.includes(el.id) || (parentContainerId && selectedContainerChildId === el.id)
+    const isSelected = selectedElementIds.includes(el.id) || 
+      (parentContainerId && selectedContainerChildId === el.id) ||
+      (parentLoopId && selectedLoopChildId === el.id)
     const isDraggingThis = draggedElementId === el.id
     const isDragOverThis = dragOverElementId === el.id
     const elGroup = currentGroups.find(g => g.elementIds.includes(el.id) || g.id === el.groupId)
@@ -99,14 +109,26 @@ export default function Sidebar() {
     const handleMoveUp = (e: React.MouseEvent) => {
       e.stopPropagation()
       if (index > 0) {
-        reorderElement(el.id, index - 1, sectionKey)
+        if (parentLoopId) {
+          reorderLoopChildren(parentLoopId, index, index - 1, sectionKey)
+        } else if (parentContainerId) {
+          reorderContainerChildren(parentContainerId, index, index - 1, sectionKey)
+        } else {
+          reorderElement(el.id, index - 1, sectionKey)
+        }
       }
     }
 
     const handleMoveDown = (e: React.MouseEvent) => {
       e.stopPropagation()
       if (index < totalCount - 1) {
-        reorderElement(el.id, index + 1, sectionKey)
+        if (parentLoopId) {
+          reorderLoopChildren(parentLoopId, index, index + 1, sectionKey)
+        } else if (parentContainerId) {
+          reorderContainerChildren(parentContainerId, index, index + 1, sectionKey)
+        } else {
+          reorderElement(el.id, index + 1, sectionKey)
+        }
       }
     }
 
@@ -190,7 +212,9 @@ export default function Sidebar() {
           e.stopPropagation()
           setCurrentSection(sectionKey)
           if (!selectedElementIds.includes(el.id)) {
-            if (parentContainerId) {
+            if (parentLoopId) {
+              selectLoopChild(parentLoopId, el.id, sectionKey)
+            } else if (parentContainerId) {
               selectContainerChild(parentContainerId, el.id, sectionKey)
             } else {
               selectElement(el.id, sectionKey)
@@ -210,6 +234,8 @@ export default function Sidebar() {
           setCurrentSection(sectionKey)
           if (e.ctrlKey || e.metaKey || e.shiftKey) {
             toggleElementSelection(el.id, sectionKey)
+          } else if (parentLoopId) {
+            selectLoopChild(parentLoopId, el.id, sectionKey)
           } else if (parentContainerId) {
             selectContainerChild(parentContainerId, el.id, sectionKey)
           } else {
@@ -273,8 +299,10 @@ export default function Sidebar() {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              if (parentContainerId) {
-                deleteLoopChildElement(parentContainerId, el.id, sectionKey)
+              if (parentLoopId) {
+                deleteLoopChildElement(parentLoopId, el.id, sectionKey)
+              } else if (parentContainerId) {
+                deleteContainerChildElement(parentContainerId, el.id, sectionKey)
               } else {
                 deleteElement(el.id, sectionKey)
               }
@@ -285,6 +313,194 @@ export default function Sidebar() {
             <Icon name="trash" size="xs" />
           </button>
         </div>
+      </div>
+    )
+  }
+
+  const renderLoopItem = (
+    el: Element,
+    sectionKey: ElementLocation,
+    index: number,
+    totalCount: number,
+    parentContainerId?: string
+  ) => {
+    const isLoopSelected = selectedElementIds.includes(el.id)
+    const isLoopExpanded = expandedLoops[el.id] !== false
+    const childElements = el.elements || []
+
+    const handleMoveUp = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (index > 0) {
+        if (parentContainerId) {
+          reorderContainerChildren(parentContainerId, index, index - 1, sectionKey)
+        } else {
+          reorderElement(el.id, index - 1, sectionKey)
+        }
+      }
+    }
+    const handleMoveDown = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (index < totalCount - 1) {
+        if (parentContainerId) {
+          reorderContainerChildren(parentContainerId, index, index + 1, sectionKey)
+        } else {
+          reorderElement(el.id, index + 1, sectionKey)
+        }
+      }
+    }
+
+    return (
+      <div
+        key={el.id}
+        className="space-y-0.5"
+        draggable
+        onDragStart={(e) => {
+          e.stopPropagation()
+          setDraggedElementId(el.id)
+          e.dataTransfer.setData('text/plain', el.id)
+          e.dataTransfer.effectAllowed = 'move'
+        }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          e.dataTransfer.dropEffect = 'move'
+          if (dragOverElementId !== el.id) setDragOverElementId(el.id)
+        }}
+        onDragLeave={(e) => {
+          e.stopPropagation()
+          if (dragOverElementId === el.id) setDragOverElementId(null)
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (draggedElementId && draggedElementId !== el.id) {
+            reorderElement(draggedElementId, index, sectionKey)
+          }
+          setDraggedElementId(null)
+          setDragOverElementId(null)
+        }}
+        onDragEnd={() => {
+          setDraggedElementId(null)
+          setDragOverElementId(null)
+        }}
+      >
+        <div
+          onContextMenu={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            setCurrentSection(sectionKey)
+            if (!selectedElementIds.includes(el.id)) {
+              if (parentContainerId) {
+                selectContainerChild(parentContainerId, el.id, sectionKey)
+              } else {
+                selectElement(el.id, sectionKey)
+              }
+            }
+            useUIStore.getState().openContextMenu({
+              x: e.clientX,
+              y: e.clientY,
+              targetType: 'element',
+              elementId: el.id,
+              containerId: parentContainerId,
+              location: sectionKey,
+            })
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            setCurrentSection(sectionKey)
+            if (e.ctrlKey || e.metaKey || e.shiftKey) {
+              toggleElementSelection(el.id, sectionKey)
+            } else if (parentContainerId) {
+              selectContainerChild(parentContainerId, el.id, sectionKey)
+            } else {
+              selectElement(el.id, sectionKey)
+            }
+          }}
+          className={`flex items-center justify-between px-2 py-1 rounded text-xs cursor-pointer transition group ${
+            draggedElementId === el.id ? 'opacity-40 bg-slate-800' : ''
+          } ${
+            dragOverElementId === el.id ? 'border-t-2 border-purple-400 bg-purple-950/40' : ''
+          } ${
+            isLoopSelected
+              ? 'bg-purple-600/30 text-purple-200 border border-purple-500/40'
+              : 'hover:bg-slate-800/60 text-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-1.5 truncate flex-1 min-w-0">
+            <span className="text-[10px] text-slate-500 hover:text-slate-300 cursor-grab select-none">⠿</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setExpandedLoops((prev) => ({
+                  ...prev,
+                  [el.id]: !isLoopExpanded,
+                }))
+              }}
+              className="text-[9px] text-slate-400 hover:text-white p-0.5"
+            >
+              {isLoopExpanded ? '▼' : '▶'}
+            </button>
+            <span className="text-[11px] text-purple-400">⟳</span>
+            <span className="truncate font-medium">{el.name || (el.dataBinding ? `Loop (${el.dataBinding})` : 'Loop')}</span>
+            <span className="text-[9px] text-slate-500">({childElements.length})</span>
+          </div>
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 shrink-0">
+            <button
+              onClick={handleMoveUp}
+              disabled={index === 0}
+              className={`p-0.5 rounded ${index === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+              title="Mover para cima"
+            >
+              <span className="text-[9px]">▲</span>
+            </button>
+            <button
+              onClick={handleMoveDown}
+              disabled={index === totalCount - 1}
+              className={`p-0.5 rounded ${index === totalCount - 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+              title="Mover para baixo"
+            >
+              <span className="text-[9px]">▼</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleElementVisibility(el.id, sectionKey)
+              }}
+              className="hover:text-slate-200 p-0.5"
+              title={el.hidden ? 'Mostrar' : 'Ocultar'}
+            >
+              <Icon name={el.hidden ? 'eye-off' : 'eye'} size="xs" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                if (parentContainerId) {
+                  deleteContainerChildElement(parentContainerId, el.id, sectionKey)
+                } else {
+                  deleteElement(el.id, sectionKey)
+                }
+              }}
+              className="hover:text-red-400 p-0.5"
+              title="Excluir"
+            >
+              <Icon name="trash" size="xs" />
+            </button>
+          </div>
+        </div>
+
+        {isLoopExpanded && (
+          <div className="pl-2 border-l border-purple-800/80 ml-1.5 space-y-0.5">
+            {childElements.length === 0 ? (
+              <div className="text-[10px] text-slate-500 py-0.5 italic">
+                Loop vazio
+              </div>
+            ) : (
+              childElements.map((child, cIdx) =>
+                renderElementRow(child, sectionKey, cIdx, childElements.length, parentContainerId, el.id)
+              )
+            )}
+          </div>
+        )}
       </div>
     )
   }
@@ -450,14 +666,21 @@ export default function Sidebar() {
                         Container vazio
                       </div>
                     ) : (
-                      childElements.map((child, cIdx) => 
-                        renderElementRow(child, sectionKey, cIdx, childElements.length, el.id)
-                      )
+                      childElements.map((child, cIdx) => {
+                        if (child.type === 'loop') {
+                          return renderLoopItem(child, sectionKey, cIdx, childElements.length, el.id)
+                        }
+                        return renderElementRow(child, sectionKey, cIdx, childElements.length, el.id)
+                      })
                     )}
                   </div>
                 )}
               </div>
             )
+          }
+
+          if (el.type === 'loop') {
+            return renderLoopItem(el, sectionKey, index, elements.length)
           }
 
           return renderElementRow(el, sectionKey, index, elements.length)
