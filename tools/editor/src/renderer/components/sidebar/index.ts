@@ -1,0 +1,7 @@
+export { SidebarHeader } from './SidebarHeader'
+export { DocumentPropertiesContent } from './DocumentPropertiesContent'
+export { HistoryContent } from './HistoryContent'
+export { ElementsPalette } from './ElementsPalette'
+export { LayersPanel } from './LayersPanel'
+export { LayerElementRow } from './LayerElementRow'
+export { AddSectionDropdown } from './AddSectionDropdown'
