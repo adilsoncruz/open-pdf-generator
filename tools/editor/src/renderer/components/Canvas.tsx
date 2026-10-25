@@ -12,6 +12,9 @@ interface LoopChildElementProps {
   location: ElementLocation
   loopWidth: number
   loopHeight: number
+  effectiveY?: number
+  effectiveX?: number
+  effectiveWidth?: number | string
   horizontalGuides?: number[]
   verticalGuides?: number[]
   loopPageX?: number
@@ -863,27 +866,74 @@ function ContainerChildElement({
                          </div>
                        ) : (
                          <>
+                           {(() => {
+                             let loopFlowY = 0
+                             let lastChildX: number | undefined = undefined
+                             let lastChildWidth: number | string | undefined = undefined
 
-                           {loopElements.map((childLoop: Element) => (
-                             <LoopChildElement
-                               key={childLoop.id}
-                               child={childLoop}
-                               loopId={child.id}
-                               location={location}
-                               loopWidth={loopWidth}
-                               loopHeight={loopHeight}
-                               horizontalGuides={horizontalGuides}
-                               verticalGuides={verticalGuides}
-                               loopPageX={
-                                 (containerPageX !== undefined ? containerPageX : 0) + (child.x || 0)
+                             return loopElements.map((childLoop: Element) => {
+                               const isRelative = ((childLoop.positionMode || childLoop.position || '') as string).toUpperCase() === 'RELATIVE'
+                               let effectiveChildY: number | undefined = undefined
+                               let effectiveChildX: number | undefined = undefined
+                               let effectiveChildWidth: number | string | undefined = undefined
+
+                               if (isRelative) {
+                                 const isChildHeightFull = childLoop.height === '100%'
+                                 const offset = isChildHeightFull ? 0 : (typeof childLoop.relativeOffsetY === 'number' ? childLoop.relativeOffsetY : 0)
+                                 if (loopFlowY === 0) {
+                                   effectiveChildY = isChildHeightFull ? 0 : (typeof childLoop.y === 'number' && childLoop.y > 0 ? childLoop.y : offset)
+                                 } else {
+                                   effectiveChildY = loopFlowY + offset
+                                   if (lastChildX !== undefined) {
+                                     effectiveChildX = lastChildX
+                                   }
+                                   if (lastChildWidth !== undefined) {
+                                     effectiveChildWidth = lastChildWidth
+                                   }
+                                 }
                                }
-                               loopPageY={
-                                 (containerPageY !== undefined ? containerPageY : 0) + (child.y || 0)
+
+                               const childAvailableWidth = typeof childLoop.width === 'number'
+                                 ? childLoop.width
+                                 : (typeof childLoop.width === 'string' && childLoop.width.endsWith('%')
+                                     ? (loopWidth * (parseFloat(childLoop.width) / 100))
+                                     : (effectiveChildWidth !== undefined && typeof effectiveChildWidth === 'number' ? effectiveChildWidth : loopWidth))
+                               const chHeight = getEstimatedElementHeight(childLoop, childAvailableWidth, testData)
+                               if (isRelative && effectiveChildY !== undefined) {
+                                 loopFlowY = effectiveChildY + chHeight
+                                 lastChildX = effectiveChildX !== undefined ? effectiveChildX : childLoop.x
+                                 lastChildWidth = effectiveChildWidth !== undefined ? effectiveChildWidth : childLoop.width
+                               } else {
+                                 loopFlowY = Math.max(loopFlowY, (childLoop.y || 0) + chHeight)
+                                 lastChildX = childLoop.x
+                                 lastChildWidth = childLoop.width
                                }
-                               scale={scale}
-                               onSnapGuide={onSnapGuide}
-                             />
-                           ))}
+
+                               return (
+                                 <LoopChildElement
+                                   key={childLoop.id}
+                                   child={childLoop}
+                                   loopId={child.id}
+                                   location={location}
+                                   effectiveY={effectiveChildY}
+                                   effectiveX={effectiveChildX}
+                                   effectiveWidth={effectiveChildWidth}
+                                   loopWidth={loopWidth}
+                                   loopHeight={loopHeight}
+                                   horizontalGuides={horizontalGuides}
+                                   verticalGuides={verticalGuides}
+                                   loopPageX={
+                                     (containerPageX !== undefined ? containerPageX : 0) + (child.x || 0)
+                                   }
+                                   loopPageY={
+                                     (containerPageY !== undefined ? containerPageY : 0) + (child.y || 0)
+                                   }
+                                   scale={scale}
+                                   onSnapGuide={onSnapGuide}
+                                 />
+                               )
+                             })
+                           })()}
                          </>
                        )}
                      </div>
@@ -1155,6 +1205,9 @@ function LoopChildElement({
   location,
   loopWidth,
   loopHeight,
+  effectiveY,
+  effectiveX,
+  effectiveWidth,
   horizontalGuides = [],
   verticalGuides = [],
   loopPageX,
@@ -1291,7 +1344,13 @@ function LoopChildElement({
       selectLoopChild(loopId, child.id, location)
     }
     setIsDragging(true)
-    setDragStart({ x: e.clientX, y: e.clientY, initialX: child.x || 0, initialY: child.y || 0 })
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      initialX: child.x || 0,
+      initialY: child.y || 0,
+      initialOffsetY: child.height === '100%' ? 0 : (typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 10),
+    })
   }
 
   const handleResizeMouseDown = (e: ReactMouseEvent, direction: string) => {
@@ -1418,7 +1477,13 @@ function LoopChildElement({
       newX = Math.max(0, Math.min(newX, Math.max(0, loopWidth - childWidth)))
       newY = Math.max(0, Math.min(newY, Math.max(0, loopHeight - childHeight)))
       
-      updateLoopChildElement(loopId, child.id, { x: newX, y: newY }, location)
+      const isChildRelative = (child.positionMode || child.position || '').toUpperCase() === 'RELATIVE'
+      if (isChildRelative && effectiveY !== undefined) {
+        const newOffsetY = child.height === '100%' ? 0 : Math.max(0, (dragStart as any).initialOffsetY + deltaY)
+        updateLoopChildElement(loopId, child.id, { x: newX, y: newY, relativeOffsetY: newOffsetY }, location)
+      } else {
+        updateLoopChildElement(loopId, child.id, { x: newX, y: newY }, location)
+      }
     }
     
     const handleMouseUp = () => {
@@ -1731,13 +1796,13 @@ function LoopChildElement({
     <div
       className={`absolute cursor-move ${isSelected ? 'ring-2 ring-purple-500' : ''}`}
       style={{
-        left: child.width === '100%' ? 0 : (child.x || 0),
-        top: child.height === '100%' ? 0 : (child.y || 0),
+        left: child.width === '100%' ? 0 : (effectiveX !== undefined ? effectiveX : (child.x || 0)),
+        top: child.height === '100%' ? 0 : (effectiveY !== undefined ? effectiveY : (child.y || 0)),
         ...(child.width === '100%'
           ? { width: '100%' }
           : typeof child.width === 'number'
             ? { width: child.width }
-            : {}),
+            : (effectiveWidth !== undefined ? { width: effectiveWidth } : {})),
         ...(child.height === '100%'
           ? { height: '100%' }
           : typeof child.height === 'number'
@@ -4604,23 +4669,70 @@ function CanvasElement({
                 </div>
               ) : (
                 <>
-                  
-                  {loopElements.map((child: Element) => (
-                    <LoopChildElement 
-                      key={child.id} 
-                      child={child} 
-                      loopId={element.id}
-                      location={location}
-                      loopWidth={innerLoopWidth}
-                      loopHeight={innerLoopHeight}
-                      horizontalGuides={horizontalGuides}
-                      verticalGuides={verticalGuides}
-                      loopPageX={(containerOffsetX !== undefined ? containerOffsetX : margins.left) + (element.x || 0)}
-                      loopPageY={(containerOffsetY !== undefined ? containerOffsetY : margins.top) + (effectiveY !== undefined ? effectiveY : (element.y || 0))}
-                      scale={scale}
-                      onSnapGuide={onSnapGuide}
-                    />
-                  ))}
+                  {(() => {
+                    let loopFlowY = 0
+                    let lastChildX: number | undefined = undefined
+                    let lastChildWidth: number | string | undefined = undefined
+
+                    return loopElements.map((child: Element) => {
+                      const isRelative = ((child.positionMode || child.position || '') as string).toUpperCase() === 'RELATIVE'
+                      let effectiveChildY: number | undefined = undefined
+                      let effectiveChildX: number | undefined = undefined
+                      let effectiveChildWidth: number | string | undefined = undefined
+
+                      if (isRelative) {
+                        const isChildHeightFull = child.height === '100%'
+                        const offset = isChildHeightFull ? 0 : (typeof child.relativeOffsetY === 'number' ? child.relativeOffsetY : 0)
+                        if (loopFlowY === 0) {
+                          effectiveChildY = isChildHeightFull ? 0 : (typeof child.y === 'number' && child.y > 0 ? child.y : offset)
+                        } else {
+                          effectiveChildY = loopFlowY + offset
+                          if (lastChildX !== undefined) {
+                            effectiveChildX = lastChildX
+                          }
+                          if (lastChildWidth !== undefined) {
+                            effectiveChildWidth = lastChildWidth
+                          }
+                        }
+                      }
+
+                      const childAvailableWidth = typeof child.width === 'number'
+                        ? child.width
+                        : (typeof child.width === 'string' && child.width.endsWith('%')
+                            ? (innerLoopWidth * (parseFloat(child.width) / 100))
+                            : (effectiveChildWidth !== undefined && typeof effectiveChildWidth === 'number' ? effectiveChildWidth : innerLoopWidth))
+                      const chHeight = getEstimatedElementHeight(child, childAvailableWidth, testData)
+                      if (isRelative && effectiveChildY !== undefined) {
+                        loopFlowY = effectiveChildY + chHeight
+                        lastChildX = effectiveChildX !== undefined ? effectiveChildX : child.x
+                        lastChildWidth = effectiveChildWidth !== undefined ? effectiveChildWidth : child.width
+                      } else {
+                        loopFlowY = Math.max(loopFlowY, (child.y || 0) + chHeight)
+                        lastChildX = child.x
+                        lastChildWidth = child.width
+                      }
+
+                      return (
+                        <LoopChildElement 
+                          key={child.id} 
+                          child={child} 
+                          loopId={element.id}
+                          location={location}
+                          effectiveY={effectiveChildY}
+                          effectiveX={effectiveChildX}
+                          effectiveWidth={effectiveChildWidth}
+                          loopWidth={innerLoopWidth}
+                          loopHeight={innerLoopHeight}
+                          horizontalGuides={horizontalGuides}
+                          verticalGuides={verticalGuides}
+                          loopPageX={(containerOffsetX !== undefined ? containerOffsetX : margins.left) + (element.x || 0)}
+                          loopPageY={(containerOffsetY !== undefined ? containerOffsetY : margins.top) + (effectiveY !== undefined ? effectiveY : (element.y || 0))}
+                          scale={scale}
+                          onSnapGuide={onSnapGuide}
+                        />
+                      )
+                    })
+                  })()}
                 </>
               )}
             </div>

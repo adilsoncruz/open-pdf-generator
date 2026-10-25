@@ -1964,7 +1964,7 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         }
 
         return elements.map(el => {
-          if (el.type === 'container' && el.elements) {
+          if ((el.type === 'container' || el.type === 'loop') && el.elements) {
             const childIdx = el.elements.findIndex(c => c.id === id)
             if (childIdx >= 0) {
               if (childIdx === newIndex) return el
@@ -1972,6 +1972,10 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
               const [movedChild] = newChildren.splice(childIdx, 1)
               newChildren.splice(newIndex, 0, movedChild)
               return { ...el, elements: newChildren }
+            }
+            return {
+              ...el,
+              elements: reorder(el.elements),
             }
           }
           return el
@@ -3191,6 +3195,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
             const [removed] = children.splice(fromIndex, 1)
             children.splice(toIndex, 0, removed)
             return { ...el, elements: children }
+          }
+          if (el.elements && el.elements.length > 0) {
+            return {
+              ...el,
+              elements: reorderInLoop(el.elements),
+            }
           }
           return el
         })

@@ -286,8 +286,11 @@ class PDFGenerator(
                 return 0f
             }
 
-            return elements.maxOfOrNull { element ->
-                val y = element.y
+            var flowY = 0f
+            var maxBottom = 0f
+
+            elements.forEach { element ->
+                val isRelative = element.positionMode == com.pdfgenerator.model.PositionMode.RELATIVE
                 val height =
                     when (element) {
                         is LinkElement -> element.height ?: 20f
@@ -323,8 +326,31 @@ class PDFGenerator(
                         is ContainerElement -> element.resolveHeight(loopHeight)
                         else -> 20f
                     }
-                y + height
-            } ?: 20f
+                val isFull = when (element) {
+                    is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                    else -> false
+                }
+                val offset = if (isFull) 0f else (element.relativeOffsetY ?: 0f)
+                val effectiveY = if (isRelative) {
+                    if (flowY == 0f) {
+                        if (isFull) 0f else if (element.y > 0f) element.y else offset
+                    } else {
+                        flowY + offset
+                    }
+                } else {
+                    element.y
+                }
+                if (isRelative) {
+                    flowY = effectiveY + height
+                } else {
+                    flowY = kotlin.math.max(flowY, element.y + height)
+                }
+                val bottom = effectiveY + height
+                if (bottom > maxBottom) {
+                    maxBottom = bottom
+                }
+            }
+            return if (maxBottom > 0f) maxBottom else 20f
         }
     }
 
