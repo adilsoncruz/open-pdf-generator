@@ -3,6 +3,7 @@ import {
   type Element,
   type ElementGroup,
   flattenElements,
+  findParentLoop,
 } from '../store/templateStore'
 import { GroupPropertiesPanel } from './properties/sections/GroupPropertiesPanel'
 import { SummaryPropertiesPanel } from './properties/sections/SummaryPropertiesPanel'
@@ -67,33 +68,36 @@ export default function PropertiesPanel() {
   })()
 
   // Filho de Loop selecionado
-  if (selectedElements.length <= 1 && selectedLoopChildId && selectedLoopParentId) {
-    let loopElement: Element | null = null
+  if (selectedElements.length <= 1 && selectedLoopChildId) {
+    let loopElement: Element | null = findParentLoop(template, selectedLoopChildId)
 
-    if (selectedElementLocation === 'header' && template.pageSettings.header) {
-      loopElement =
-        template.pageSettings.header.elements.find((el) => el.id === selectedLoopParentId) || null
-    } else if (selectedElementLocation === 'footer' && template.pageSettings.footer) {
-      loopElement =
-        template.pageSettings.footer.elements.find((el) => el.id === selectedLoopParentId) || null
-    } else if (selectedElementLocation === 'bodyBackground' && template.pageSettings.bodyBackground) {
-      loopElement =
-        template.pageSettings.bodyBackground.elements.find((el) => el.id === selectedLoopParentId) ||
-        null
-    } else if (selectedElementLocation === 'summary' && template.summaryPage) {
-      loopElement =
-        template.summaryPage.elements.find((el) => el.id === selectedLoopParentId) || null
-    } else {
-      loopElement = template.page.find((el) => el.id === selectedLoopParentId) || null
+    if (!loopElement && selectedLoopParentId) {
+      if (selectedElementLocation === 'header' && template.pageSettings.header) {
+        loopElement =
+          template.pageSettings.header.elements.find((el) => el.id === selectedLoopParentId) || null
+      } else if (selectedElementLocation === 'footer' && template.pageSettings.footer) {
+        loopElement =
+          template.pageSettings.footer.elements.find((el) => el.id === selectedLoopParentId) || null
+      } else if (selectedElementLocation === 'bodyBackground' && template.pageSettings.bodyBackground) {
+        loopElement =
+          template.pageSettings.bodyBackground.elements.find((el) => el.id === selectedLoopParentId) ||
+          null
+      } else if (selectedElementLocation === 'summary' && template.summaryPage) {
+        loopElement =
+          template.summaryPage.elements.find((el) => el.id === selectedLoopParentId) || null
+      } else {
+        loopElement = template.page?.find((el) => el.id === selectedLoopParentId) || null
+      }
     }
 
     if (loopElement && loopElement.elements) {
       const childElement = loopElement.elements.find((c: Element) => c.id === selectedLoopChildId)
       if (childElement) {
+        const loopId = loopElement.id
         const handleUpdate = (field: string | Record<string, any>, value?: any) => {
           const updates = typeof field === 'string' ? { [field]: value } : field
           updateLoopChildElement(
-            selectedLoopParentId,
+            loopId,
             selectedLoopChildId,
             updates,
             selectedElementLocation
@@ -102,7 +106,7 @@ export default function PropertiesPanel() {
         const handleStyleUpdate = (field: string | Record<string, any>, value?: any) => {
           const styleUpdates = typeof field === 'string' ? { [field]: value } : field
           updateLoopChildElement(
-            selectedLoopParentId,
+            loopId,
             selectedLoopChildId,
             { style: styleUpdates },
             selectedElementLocation

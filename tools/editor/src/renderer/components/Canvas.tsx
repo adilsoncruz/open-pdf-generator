@@ -1264,6 +1264,8 @@ function LoopChildElement({
   }
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, initialX: 0, initialY: 0 })
+  const [isResizing, setIsResizing] = useState<string | null>(null)
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, initialW: 100, initialH: 20 })
   
   // Resolve dimensions (support for "100%")
   const resolveWidth = (value: string | number | undefined): number => {
@@ -1290,6 +1292,14 @@ function LoopChildElement({
     }
     setIsDragging(true)
     setDragStart({ x: e.clientX, y: e.clientY, initialX: child.x || 0, initialY: child.y || 0 })
+  }
+
+  const handleResizeMouseDown = (e: ReactMouseEvent, direction: string) => {
+    e.stopPropagation()
+    setIsResizing(direction)
+    const initialW = resolveWidth(child.width)
+    const initialH = resolveHeight(child.height)
+    setResizeStart({ x: e.clientX, y: e.clientY, initialW, initialH })
   }
   
   useEffect(() => {
@@ -1425,6 +1435,88 @@ function LoopChildElement({
       window.removeEventListener('mouseup', handleMouseUp)
     }
   }, [isDragging, dragStart, loopId, child.id, location, updateLoopChildElement, saveSnapshot, snapToGuides, horizontalGuides, verticalGuides, loopPageX, loopPageY, scale])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
+      const currentScale = scale || 1
+      const deltaX = (e.clientX - resizeStart.x) / currentScale
+      const deltaY = (e.clientY - resizeStart.y) / currentScale
+
+      let newWidth = resizeStart.initialW + deltaX
+      let newHeight = resizeStart.initialH + deltaY
+
+      if (snapToGuides) {
+        const snapTolerance = 8
+        let minDistanceX = snapTolerance + 1
+        let minDistanceY = snapTolerance + 1
+        let activeSnapH: number | null = null
+        let activeSnapV: number | null = null
+
+        const currentX = child.x || 0
+        const currentY = child.y || 0
+
+        // Snap to loop right edge
+        if (Math.abs((currentX + newWidth) - loopWidth) < minDistanceX) {
+          minDistanceX = Math.abs((currentX + newWidth) - loopWidth)
+          newWidth = loopWidth - currentX
+        }
+        // Snap to loop bottom edge
+        if (Math.abs((currentY + newHeight) - loopHeight) < minDistanceY) {
+          minDistanceY = Math.abs((currentY + newHeight) - loopHeight)
+          newHeight = loopHeight - currentY
+        }
+
+        // Snap to vertical guides
+        if (loopPageX !== undefined) {
+          verticalGuides.forEach((guidePageX) => {
+            const guideLocalX = guidePageX - loopPageX
+            const dist = Math.abs((currentX + newWidth) - guideLocalX)
+            if (dist < minDistanceX) {
+              minDistanceX = dist
+              newWidth = guideLocalX - currentX
+              activeSnapV = guidePageX
+            }
+          })
+        }
+
+        // Snap to horizontal guides
+        if (loopPageY !== undefined) {
+          horizontalGuides.forEach((guidePageY) => {
+            const guideLocalY = guidePageY - loopPageY
+            const dist = Math.abs((currentY + newHeight) - guideLocalY)
+            if (dist < minDistanceY) {
+              minDistanceY = dist
+              newHeight = guideLocalY - currentY
+              activeSnapH = guidePageY
+            }
+          })
+        }
+
+        onSnapGuide?.({ h: activeSnapH, v: activeSnapV })
+      }
+
+      newWidth = Math.max(10, Math.min(loopWidth - (child.x || 0), newWidth))
+      newHeight = Math.max(10, Math.min(loopHeight - (child.y || 0), newHeight))
+
+      updateLoopChildElement(loopId, child.id, { width: newWidth, height: newHeight }, location)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(null)
+      onSnapGuide?.({ h: null, v: null })
+      saveSnapshot()
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, resizeStart, loopId, child.id, child.x, child.y, loopWidth, loopHeight, location, updateLoopChildElement, saveSnapshot, snapToGuides, horizontalGuides, verticalGuides, loopPageX, loopPageY, scale])
   
   // Renderizar baseado no tipo
   const renderContent = () => {
@@ -1646,6 +1738,11 @@ function LoopChildElement({
           : typeof child.width === 'number'
             ? { width: child.width }
             : {}),
+        ...(child.height === '100%'
+          ? { height: '100%' }
+          : typeof child.height === 'number'
+            ? { height: child.height }
+            : {}),
       }}
       onMouseDown={handleMouseDown}
       onContextMenu={(e) => {
@@ -1662,11 +1759,28 @@ function LoopChildElement({
       }}
     >
       {renderContent()}
-      {/* Label do elemento */}
+      {/* Label do elemento e handles de redimensionamento */}
       {isSelected && (
-        <div className="absolute -top-4 left-0 text-[9px] bg-purple-500 text-white px-1 rounded">
-          {child.type}
-        </div>
+        <>
+          <div className="absolute -top-4 left-0 text-[9px] bg-purple-500 text-white px-1 rounded z-30">
+            {child.type}
+          </div>
+          {/* Resize handle canto inferior direito */}
+          <div
+            className="absolute -right-1 -bottom-1 w-2.5 h-2.5 bg-white border-2 border-purple-500 rounded-full cursor-se-resize z-40"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
+          />
+          {/* Resize handle lateral direita */}
+          <div
+            className="absolute -right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white border-2 border-purple-500 rounded-full cursor-e-resize z-40"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
+          />
+          {/* Resize handle borda inferior */}
+          <div
+            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-2 border-purple-500 rounded-full cursor-s-resize z-40"
+            onMouseDown={(e) => handleResizeMouseDown(e, 's')}
+          />
+        </>
       )}
     </div>
   )
