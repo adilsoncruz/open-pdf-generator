@@ -7,7 +7,7 @@ data class SpacerElement(
     override val y: Float = 0f,
     override val positionMode: PositionMode? = null,
     override val relativeOffsetY: Float? = null,
-    val width: Any = "100%",
+    val width: Any? = "100%",
     val height: Float = 0f,
     val printCondition: String? = null,
 ) : Element {

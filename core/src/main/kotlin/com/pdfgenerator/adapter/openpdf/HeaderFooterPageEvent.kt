@@ -5,13 +5,17 @@ import com.lowagie.text.pdf.BaseFont
 import com.lowagie.text.pdf.PdfGState
 import com.lowagie.text.pdf.PdfPageEventHelper
 import com.lowagie.text.pdf.PdfWriter
+import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.model.BodyBackground
+import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.HeaderFooter
+import com.pdfgenerator.model.PositionMode
+import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.WatermarkConfig
 import com.pdfgenerator.model.WatermarkType
@@ -235,8 +239,36 @@ class HeaderFooterPageEvent(
             val baseContext = headerContext ?: return
             val context = baseContext.copy(data = pageData)
 
+            var flowY = 0f
             elements.forEach { element ->
-                renderEngine.render(element, context)
+                val isRelativeFlow = element.positionMode == PositionMode.RELATIVE || element is ContainerElement
+                val effectiveY = if (isRelativeFlow) {
+                    val isHeightFull = when (element) {
+                        is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                        is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                        else -> false
+                    }
+                    val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
+                    if (flowY == 0f) {
+                        if (isHeightFull) 0f else if (element.y > 0f) element.y else offsetY
+                    } else {
+                        flowY + offsetY
+                    }
+                } else {
+                    element.y
+                }
+                val renderContext = if (isRelativeFlow) {
+                    context.copy(offsetY = context.offsetY + (effectiveY - element.y))
+                } else {
+                    context
+                }
+                renderEngine.render(element, renderContext)
+                val elementHeight = PDFGenerator.getElementHeight(element, pageData, renderContext)
+                if (isRelativeFlow) {
+                    flowY = effectiveY + elementHeight
+                } else {
+                    flowY = kotlin.math.max(flowY, element.y + elementHeight)
+                }
             }
         } finally {
             cb.restoreState()
@@ -257,8 +289,36 @@ class HeaderFooterPageEvent(
             val baseContext = footerContext ?: return
             val context = baseContext.copy(data = pageData)
 
+            var flowY = 0f
             elements.forEach { element ->
-                renderEngine.render(element, context)
+                val isRelativeFlow = element.positionMode == PositionMode.RELATIVE || element is ContainerElement
+                val effectiveY = if (isRelativeFlow) {
+                    val isHeightFull = when (element) {
+                        is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                        is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                        else -> false
+                    }
+                    val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
+                    if (flowY == 0f) {
+                        if (isHeightFull) 0f else if (element.y > 0f) element.y else offsetY
+                    } else {
+                        flowY + offsetY
+                    }
+                } else {
+                    element.y
+                }
+                val renderContext = if (isRelativeFlow) {
+                    context.copy(offsetY = context.offsetY + (effectiveY - element.y))
+                } else {
+                    context
+                }
+                renderEngine.render(element, renderContext)
+                val elementHeight = PDFGenerator.getElementHeight(element, pageData, renderContext)
+                if (isRelativeFlow) {
+                    flowY = effectiveY + elementHeight
+                } else {
+                    flowY = kotlin.math.max(flowY, element.y + elementHeight)
+                }
             }
         } finally {
             cb.restoreState()

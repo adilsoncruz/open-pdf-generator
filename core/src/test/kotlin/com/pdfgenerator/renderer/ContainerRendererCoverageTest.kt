@@ -147,4 +147,58 @@ class ContainerRendererCoverageTest {
         assertTrue(outputFile.exists())
         assertTrue(outputFile.length() > 0)
     }
+
+    @Test
+    fun `should calculate auto height and relative flow for container child elements`(@TempDir tempDir: File) {
+        val templateJson = """
+        {
+          "version": "1.0",
+          "pageSettings": {
+            "size": "A4",
+            "orientation": "portrait",
+            "margins": {"top": 20, "right": 20, "bottom": 20, "left": 20}
+          },
+          "pageElements": [
+            {
+              "type": "container",
+              "id": "rel_c1",
+              "x": 0,
+              "y": 10,
+              "width": 500,
+              "height": "auto",
+              "elements": [
+                {
+                  "type": "text",
+                  "id": "rel_t1",
+                  "x": 10,
+                  "y": 10,
+                  "positionMode": "RELATIVE",
+                  "width": 200,
+                  "value": "Line 1\nLine 2\nLine 3\nLine 4",
+                  "style": {"fontSize": 12, "multiline": true, "lineHeight": 1.5}
+                },
+                {
+                  "type": "text",
+                  "id": "rel_t2",
+                  "x": 10,
+                  "y": 0,
+                  "positionMode": "RELATIVE",
+                  "relativeOffsetY": 5,
+                  "value": "Second Relative Line",
+                  "style": {"fontSize": 12}
+                }
+              ]
+            }
+          ]
+        }
+        """.trimIndent()
+
+        val template = Template.fromString(templateJson)
+        val generator = PDFGenerator()
+        val outputFile = File(tempDir, "relative_container_test.pdf")
+        generator.generate(template, emptyMap(), outputFile)
+
+        assertTrue(outputFile.exists())
+        assertTrue(outputFile.length() > 0)
+    }
 }
