@@ -20,45 +20,48 @@ import com.pdfgenerator.model.TextStyle
 import com.pdfgenerator.util.DataBindingResolver
 
 object ElementHeightCalculator {
-
     fun getElementHeight(
         element: Element,
         data: Map<String, Any?>,
         context: RenderContext,
     ): Float {
         return when (element) {
-            is TextElement -> measureTextHeight(
-                elementId = element.id,
-                text = resolveTextForHeight(element.dataBinding, element.value, data),
-                definedHeight = element.height,
-                width = element.width,
-                style = element.style,
-                context = context,
-            )
-            is StaticTextElement -> measureTextHeight(
-                elementId = element.id,
-                text = element.value,
-                definedHeight = element.height,
-                width = element.width,
-                style = element.style,
-                context = context,
-            )
-            is RichTextElement -> measureTextHeight(
-                elementId = element.id,
-                text = resolveTextForHeight(element.dataBinding, element.value, data),
-                definedHeight = element.height,
-                width = element.width,
-                style = element.style,
-                context = context,
-            )
-            is LinkElement -> measureTextHeight(
-                elementId = element.id,
-                text = resolveTextForHeight(element.dataBinding, element.value, data),
-                definedHeight = element.height,
-                width = element.width,
-                style = element.style,
-                context = context,
-            )
+            is TextElement ->
+                measureTextHeight(
+                    elementId = element.id,
+                    text = resolveTextForHeight(element.dataBinding, element.value, data),
+                    definedHeight = element.height,
+                    width = element.width,
+                    style = element.style,
+                    context = context,
+                )
+            is StaticTextElement ->
+                measureTextHeight(
+                    elementId = element.id,
+                    text = element.value,
+                    definedHeight = element.height,
+                    width = element.width,
+                    style = element.style,
+                    context = context,
+                )
+            is RichTextElement ->
+                measureTextHeight(
+                    elementId = element.id,
+                    text = resolveTextForHeight(element.dataBinding, element.value, data),
+                    definedHeight = element.height,
+                    width = element.width,
+                    style = element.style,
+                    context = context,
+                )
+            is LinkElement ->
+                measureTextHeight(
+                    elementId = element.id,
+                    text = resolveTextForHeight(element.dataBinding, element.value, data),
+                    definedHeight = element.height,
+                    width = element.width,
+                    style = element.style,
+                    context = context,
+                )
             is ImageElement -> element.height
             is RectangleElement -> {
                 when (val h = element.height) {
@@ -95,22 +98,23 @@ object ElementHeightCalculator {
         val fallbackHeight = definedHeight ?: (style?.fontSize ?: 12f)
         val boxWidth = width ?: context.containerWidth
         if (style?.multiline == true && boxWidth != null && text != null) {
-            val contentHeight = TextRenderer
-                .getOrMeasureMultilineLayout(
-                    elementId = elementId,
-                    resolvedText = text,
-                    styleHash = style.hashCode(),
-                    boxWidth = boxWidth,
-                    fontSize = style.fontSize ?: 12f,
-                    lineHeight = style.lineHeight,
-                    paddingTop = style.paddingTop ?: 0f,
-                    paddingBottom = style.paddingBottom ?: 0f,
-                    paddingLeft = style.paddingLeft ?: 0f,
-                    paddingRight = style.paddingRight ?: 0f,
-                    firstLineIndent = style.firstLineIndent ?: 0f,
-                    fontFamily = style.fontFamily ?: "Helvetica",
-                    cache = context.textLayoutCache,
-                ).contentHeight
+            val contentHeight =
+                TextRenderer
+                    .getOrMeasureMultilineLayout(
+                        elementId = elementId,
+                        resolvedText = text,
+                        styleHash = style.hashCode(),
+                        boxWidth = boxWidth,
+                        fontSize = style.fontSize ?: 12f,
+                        lineHeight = style.lineHeight,
+                        paddingTop = style.paddingTop ?: 0f,
+                        paddingBottom = style.paddingBottom ?: 0f,
+                        paddingLeft = style.paddingLeft ?: 0f,
+                        paddingRight = style.paddingRight ?: 0f,
+                        firstLineIndent = style.firstLineIndent ?: 0f,
+                        fontFamily = style.fontFamily ?: "Helvetica",
+                        cache = context.textLayoutCache,
+                    ).contentHeight
             return kotlin.math.max(fallbackHeight, contentHeight)
         }
         return fallbackHeight

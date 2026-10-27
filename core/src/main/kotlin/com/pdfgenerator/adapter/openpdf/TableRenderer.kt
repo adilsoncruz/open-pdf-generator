@@ -10,7 +10,6 @@ class TableRenderer(
     private val cellRenderer: TableCellRenderer = TableCellRenderer(),
     private val layoutCalculator: TableLayoutCalculator = TableLayoutCalculator(),
 ) : Renderer<TableElement> {
-
     override fun render(
         element: TableElement,
         context: RenderContext,

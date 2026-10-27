@@ -18,7 +18,10 @@ import org.slf4j.LoggerFactory
 class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElement> {
     private val logger = LoggerFactory.getLogger(LoopRenderer::class.java)
 
-    override fun render(element: LoopElement, context: RenderContext) {
+    override fun render(
+        element: LoopElement,
+        context: RenderContext,
+    ) {
         val loopData = DataBindingResolver.resolve(element.dataBinding, context.data, context.loopContext)
 
         if (loopData !is List<*>) {
@@ -43,53 +46,65 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
         val itemHeight = if (loopHeight > 0f) loopHeight else calculatedItemHeight
         val itemSpacing = element.itemSpacing.coerceAtLeast(0f)
 
-        val pageBreakHandler = LoopPageBreakHandler(
-            context = context,
-            loopBaseY = loopBaseY,
-            itemHeight = itemHeight,
-            itemSpacing = itemSpacing,
-        )
+        val pageBreakHandler =
+            LoopPageBreakHandler(
+                context = context,
+                loopBaseY = loopBaseY,
+                itemHeight = itemHeight,
+                itemSpacing = itemSpacing,
+            )
 
         loopData.forEachIndexed { index, item ->
             val placement = pageBreakHandler.prepareItemPosition()
             val iterationScope = LoopIterationScope(item = item, index = index)
-            val itemContext = iterationScope.createItemContext(
-                parentContext = context,
-                loopX = loopX,
-                pageOffsetY = placement.pageOffsetY,
-                itemStartY = placement.itemStartY,
-                loopWidth = loopWidth,
-                itemHeight = itemHeight,
-            )
+            val itemContext =
+                iterationScope.createItemContext(
+                    parentContext = context,
+                    loopX = loopX,
+                    pageOffsetY = placement.pageOffsetY,
+                    itemStartY = placement.itemStartY,
+                    loopWidth = loopWidth,
+                    itemHeight = itemHeight,
+                )
 
             var flowY = 0f
-            val childEffectiveYList = element.elements.map { child ->
-                val isChildRelative = child.positionMode == PositionMode.RELATIVE
-                val isChildHeightFull = child is RectangleElement &&
-                    (child.height?.toString() == "100%" || child.height?.toString() == "100.0%")
-                val offset = if (isChildHeightFull) 0f else (child.relativeOffsetY ?: 0f)
-                val effectiveChildY = if (isChildRelative) {
-                    if (flowY == 0f) {
-                        if (isChildHeightFull) 0f else if (child.y > 0f) child.y else offset
-                    } else {
-                        flowY + offset
-                    }
-                } else {
-                    child.y
+            val childEffectiveYList =
+                element.elements.map { child ->
+                    val isChildRelative = child.positionMode == PositionMode.RELATIVE
+                    val isChildHeightFull =
+                        child is RectangleElement &&
+                            (child.height?.toString() == "100%" || child.height?.toString() == "100.0%")
+                    val offset = if (isChildHeightFull) 0f else (child.relativeOffsetY ?: 0f)
+                    val effectiveChildY =
+                        if (isChildRelative) {
+                            if (flowY == 0f) {
+                                if (isChildHeightFull) {
+                                    0f
+                                } else if (child.y > 0f) {
+                                    child.y
+                                } else {
+                                    offset
+                                }
+                            } else {
+                                flowY + offset
+                            }
+                        } else {
+                            child.y
+                        }
+                    val childH = PDFGenerator.getElementHeight(child, context.data, itemContext)
+                    flowY = if (isChildRelative) flowY + childH else kotlin.math.max(flowY, child.y + childH)
+                    effectiveChildY
                 }
-                val childH = PDFGenerator.getElementHeight(child, context.data, itemContext)
-                flowY = if (isChildRelative) flowY + childH else kotlin.math.max(flowY, child.y + childH)
-                effectiveChildY
-            }
 
             element.elements.forEachIndexed { childIndex, childElement ->
                 val childEffectiveY = childEffectiveYList[childIndex]
-                val adjustedElement = iterationScope.adjustElementPosition(
-                    element = childElement,
-                    containerWidth = loopWidth,
-                    containerHeight = itemHeight,
-                    childEffectiveY = childEffectiveY,
-                )
+                val adjustedElement =
+                    iterationScope.adjustElementPosition(
+                        element = childElement,
+                        containerWidth = loopWidth,
+                        containerHeight = itemHeight,
+                        childEffectiveY = childEffectiveY,
+                    )
                 renderEngine.render(adjustedElement, itemContext)
             }
 
@@ -111,35 +126,45 @@ class LoopRenderer(private val renderEngine: RenderEngine) : Renderer<LoopElemen
 
         elements.forEach { element ->
             val isRelative = element.positionMode == PositionMode.RELATIVE
-            val height = when (element) {
-                is TextElement -> element.height ?: 20f
-                is StaticTextElement -> element.height ?: 20f
-                is ImageElement -> {
-                    if (element.height.toString() == "100%" || element.height.toString() == "100.0%") loopHeight else element.height
-                }
-                is RectangleElement -> when (val h = element.height) {
-                    is String -> if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
-                    is Number -> h.toFloat()
+            val height =
+                when (element) {
+                    is TextElement -> element.height ?: 20f
+                    is StaticTextElement -> element.height ?: 20f
+                    is ImageElement -> {
+                        if (element.height.toString() == "100%" || element.height.toString() == "100.0%") loopHeight else element.height
+                    }
+                    is RectangleElement ->
+                        when (val h = element.height) {
+                            is String -> if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
+                            is Number -> h.toFloat()
+                            else -> 20f
+                        }
+                    is LineElement -> {
+                        val lh = element.resolveHeight(loopHeight)
+                        if (lh > 0) kotlin.math.abs(lh) else 1f
+                    }
                     else -> 20f
                 }
-                is LineElement -> {
-                    val lh = element.resolveHeight(loopHeight)
-                    if (lh > 0) kotlin.math.abs(lh) else 1f
-                }
-                else -> 20f
-            }
-            val isFull = element is RectangleElement &&
-                (element.height?.toString() == "100%" || element.height?.toString() == "100.0%")
+            val isFull =
+                element is RectangleElement &&
+                    (element.height?.toString() == "100%" || element.height?.toString() == "100.0%")
             val offset = if (isFull) 0f else (element.relativeOffsetY ?: 0f)
-            val effectiveY = if (isRelative) {
-                if (flowY == 0f) {
-                    if (isFull) 0f else if (element.y > 0f) element.y else offset
+            val effectiveY =
+                if (isRelative) {
+                    if (flowY == 0f) {
+                        if (isFull) {
+                            0f
+                        } else if (element.y > 0f) {
+                            element.y
+                        } else {
+                            offset
+                        }
+                    } else {
+                        flowY + offset
+                    }
                 } else {
-                    flowY + offset
+                    element.y
                 }
-            } else {
-                element.y
-            }
             flowY = if (isRelative) effectiveY + height else kotlin.math.max(flowY, element.y + height)
             val bottom = effectiveY + height
             if (bottom > maxBottom) {

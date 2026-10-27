@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import java.util.Date
 
 class BuiltinFunctionsTest {
-
     @Test
     fun `test string transformations`() {
         assertEquals("HELLO", BuiltinFunctions.toUpperCase("hello"))

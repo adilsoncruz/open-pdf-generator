@@ -7,7 +7,6 @@ import com.pdfgenerator.util.DataBindingResolver
  * Calculates height for table elements, rows, headers, and pagination splits.
  */
 object TableHeightCalculator {
-
     fun calculateTableHeight(
         element: TableElement,
         data: Map<String, Any?>,
@@ -29,7 +28,10 @@ object TableHeightCalculator {
         return fontSize + cellPadding
     }
 
-    fun calculateRowsHeight(element: TableElement, rowCount: Int): Float {
+    fun calculateRowsHeight(
+        element: TableElement,
+        rowCount: Int,
+    ): Float {
         return rowCount * calculateRowHeight(element)
     }
 

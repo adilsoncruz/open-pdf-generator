@@ -37,13 +37,14 @@ class TableCellRenderer {
         val headerBorderType = style?.headerBorderType
         val baseFontName = getBaseFontName(headerFontFamily)
 
-        val headerFont = Font(
-            FontCache.getFont(baseFontName),
-            headerFontSize,
-            if (style?.headerFontWeight == "bold") Font.BOLD else Font.NORMAL,
-        ).apply {
-            color = ColorUtil.hexToColor(style?.getEffectiveHeaderColor() ?: "#000000")
-        }
+        val headerFont =
+            Font(
+                FontCache.getFont(baseFontName),
+                headerFontSize,
+                if (style?.headerFontWeight == "bold") Font.BOLD else Font.NORMAL,
+            ).apply {
+                color = ColorUtil.hexToColor(style?.getEffectiveHeaderColor() ?: "#000000")
+            }
 
         val headerBg = style?.headerBackground?.takeIf { it != "transparent" }?.let { ColorUtil.hexToColor(it) }
         val paddingTop = style?.getEffectiveHeaderPaddingTop() ?: 5f
@@ -55,16 +56,17 @@ class TableCellRenderer {
         val totalCols = element.columns.size
 
         element.columns.forEachIndexed { colIndex, column ->
-            val cell = PdfPCell(Phrase(column.header, headerFont)).apply {
-                if (headerBg != null) backgroundColor = headerBg
-                this.paddingTop = paddingTop
-                this.paddingRight = paddingRight
-                this.paddingBottom = paddingBottom
-                this.paddingLeft = paddingLeft
-                horizontalAlignment = getAlignment(column.headerAlignment ?: column.alignment)
-                verticalAlignment = getVerticalAlignment(column.headerVerticalAlignment ?: "center")
-                borderColor = headerBorderColor
-            }
+            val cell =
+                PdfPCell(Phrase(column.header, headerFont)).apply {
+                    if (headerBg != null) backgroundColor = headerBg
+                    this.paddingTop = paddingTop
+                    this.paddingRight = paddingRight
+                    this.paddingBottom = paddingBottom
+                    this.paddingLeft = paddingLeft
+                    horizontalAlignment = getAlignment(column.headerAlignment ?: column.alignment)
+                    verticalAlignment = getVerticalAlignment(column.headerVerticalAlignment ?: "center")
+                    borderColor = headerBorderColor
+                }
 
             val isFirstColumn = colIndex == 0
             val isLastColumn = colIndex == totalCols - 1
@@ -121,9 +123,10 @@ class TableCellRenderer {
             }
 
         val baseFontName = getBaseFontName(cellFontFamily)
-        val cellFont = Font(FontCache.getFont(baseFontName), cellFontSize, Font.NORMAL).apply {
-            color = ColorUtil.hexToColor(style?.getEffectiveCellColor() ?: "#000000")
-        }
+        val cellFont =
+            Font(FontCache.getFont(baseFontName), cellFontSize, Font.NORMAL).apply {
+                color = ColorUtil.hexToColor(style?.getEffectiveCellColor() ?: "#000000")
+            }
 
         val columnMetas =
             element.columns.mapIndexed { index, col ->
@@ -151,16 +154,17 @@ class TableCellRenderer {
                     }
                 val formattedValue = Formatter.format(value, colMeta.format)
 
-                val cell = PdfPCell(Phrase(formattedValue, cellFont)).apply {
-                    if (rowBgColor != null) backgroundColor = rowBgColor
-                    this.paddingTop = paddingTop
-                    this.paddingRight = paddingRight
-                    this.paddingBottom = paddingBottom
-                    this.paddingLeft = paddingLeft
-                    horizontalAlignment = colMeta.hAlign
-                    verticalAlignment = colMeta.vAlign
-                    this.borderColor = borderColor
-                }
+                val cell =
+                    PdfPCell(Phrase(formattedValue, cellFont)).apply {
+                        if (rowBgColor != null) backgroundColor = rowBgColor
+                        this.paddingTop = paddingTop
+                        this.paddingRight = paddingRight
+                        this.paddingBottom = paddingBottom
+                        this.paddingLeft = paddingLeft
+                        horizontalAlignment = colMeta.hAlign
+                        verticalAlignment = colMeta.vAlign
+                        this.borderColor = borderColor
+                    }
 
                 when (cellBorderType) {
                     "cells" -> {

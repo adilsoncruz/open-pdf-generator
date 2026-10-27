@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
 class PDFSecurityConfiguratorTest {
-
     @Test
     fun `test PDFSecurityConfig defaults and isConfigured`() {
         val defaultConfig = PDFSecurityConfig()
@@ -50,12 +49,13 @@ class PDFSecurityConfiguratorTest {
     fun `test configure handles encryption gracefully when BouncyCastle is absent`() {
         val userPassword = "secretUserPass"
         val ownerPassword = "secretOwnerPass"
-        val config = PDFSecurityConfig(
-            userPassword = userPassword,
-            ownerPassword = ownerPassword,
-            permissions = PdfWriter.ALLOW_PRINTING,
-            encryptionType = PdfWriter.STANDARD_ENCRYPTION_128,
-        )
+        val config =
+            PDFSecurityConfig(
+                userPassword = userPassword,
+                ownerPassword = ownerPassword,
+                permissions = PdfWriter.ALLOW_PRINTING,
+                encryptionType = PdfWriter.STANDARD_ENCRYPTION_128,
+            )
         val configurator = PDFSecurityConfigurator(config)
 
         val doc = Document(PageSize.A4)
@@ -94,29 +94,33 @@ class PDFSecurityConfiguratorTest {
     @Test
     fun `test PDFGenerator with custom securityConfigurator constructor`() {
         val userPassword = "generatorUserPass"
-        val securityConfig = PDFSecurityConfig(
-            userPassword = userPassword,
-            ownerPassword = "generatorOwnerPass",
-        )
+        val securityConfig =
+            PDFSecurityConfig(
+                userPassword = userPassword,
+                ownerPassword = "generatorOwnerPass",
+            )
         val configurator = PDFSecurityConfigurator(securityConfig)
         val generator = PDFGenerator(PDFGeneratorConfig(), configurator)
 
-        val template = Template(
-            version = "1.0",
-            pageSettings = PageSettings(
-                size = "A4",
-                orientation = "portrait",
-                margins = Margins(10f, 10f, 10f, 10f),
-            ),
-            pageElements = listOf(
-                TextElement(
-                    id = "t1",
-                    x = 10f,
-                    y = 10f,
-                    value = "Protected Content",
-                ),
-            ),
-        )
+        val template =
+            Template(
+                version = "1.0",
+                pageSettings =
+                    PageSettings(
+                        size = "A4",
+                        orientation = "portrait",
+                        margins = Margins(10f, 10f, 10f, 10f),
+                    ),
+                pageElements =
+                    listOf(
+                        TextElement(
+                            id = "t1",
+                            x = 10f,
+                            y = 10f,
+                            value = "Protected Content",
+                        ),
+                    ),
+            )
 
         val bytes = generator.generate(template, emptyMap())
         assertTrue(bytes.isNotEmpty())

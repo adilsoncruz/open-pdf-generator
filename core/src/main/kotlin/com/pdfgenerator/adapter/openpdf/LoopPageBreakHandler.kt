@@ -59,8 +59,9 @@ class LoopPageBreakHandler(
 
     fun updateRenderState() {
         context.renderState?.let { state ->
-            val renderedHeight = (totalItemsRendered * itemHeight) +
-                ((totalItemsRendered - 1).coerceAtLeast(0) * itemSpacing)
+            val renderedHeight =
+                (totalItemsRendered * itemHeight) +
+                    ((totalItemsRendered - 1).coerceAtLeast(0) * itemSpacing)
             val finalYAbsolute = context.offsetY + loopBaseY + renderedHeight
             val finalYRelative = finalYAbsolute - context.bodyOffsetY
             state.updateMaxY(finalYRelative)

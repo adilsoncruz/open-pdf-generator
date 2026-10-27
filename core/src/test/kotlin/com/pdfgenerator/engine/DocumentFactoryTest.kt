@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
 class DocumentFactoryTest {
-
     @Test
     fun `test createDocument with margins`() {
         val margins = Margins(top = 10f, right = 20f, bottom = 30f, left = 40f)
@@ -69,53 +68,60 @@ class DocumentFactoryTest {
 
     @Test
     fun `test resolvePageSize with PageSettings`() {
-        val settings = PageSettings(
-            size = "A4",
-            orientation = "portrait",
-            margins = Margins(10f, 10f, 10f, 10f),
-        )
+        val settings =
+            PageSettings(
+                size = "A4",
+                orientation = "portrait",
+                margins = Margins(10f, 10f, 10f, 10f),
+            )
         val rect = DocumentFactory.resolvePageSize(settings)
         assertEquals(PageSize.A4.width, rect.width)
     }
 
     @Test
     fun `test calculateHeaderFooterHeights`() {
-        val template = Template(
-            version = "1.0",
-            pageSettings = PageSettings(
-                size = "A4",
-                orientation = "portrait",
-                margins = Margins(10f, 10f, 10f, 10f),
-                header = HeaderFooter(height = 50f, printCondition = "showHeader == true"),
-                footer = HeaderFooter(height = 30f, printCondition = "showFooter == true"),
-            ),
-        )
+        val template =
+            Template(
+                version = "1.0",
+                pageSettings =
+                    PageSettings(
+                        size = "A4",
+                        orientation = "portrait",
+                        margins = Margins(10f, 10f, 10f, 10f),
+                        header = HeaderFooter(height = 50f, printCondition = "showHeader == true"),
+                        footer = HeaderFooter(height = 30f, printCondition = "showFooter == true"),
+                    ),
+            )
 
         // Conditions met
-        val (h1, f1) = DocumentFactory.calculateHeaderFooterHeights(
-            template,
-            mapOf("showHeader" to true, "showFooter" to true),
-        )
+        val (h1, f1) =
+            DocumentFactory.calculateHeaderFooterHeights(
+                template,
+                mapOf("showHeader" to true, "showFooter" to true),
+            )
         assertEquals(50f, h1)
         assertEquals(30f, f1)
 
         // Conditions false
-        val (h2, f2) = DocumentFactory.calculateHeaderFooterHeights(
-            template,
-            mapOf("showHeader" to false, "showFooter" to false),
-        )
+        val (h2, f2) =
+            DocumentFactory.calculateHeaderFooterHeights(
+                template,
+                mapOf("showHeader" to false, "showFooter" to false),
+            )
         assertEquals(0f, h2)
         assertEquals(0f, f2)
 
         // No header/footer
-        val emptyTemplate = Template(
-            version = "1.0",
-            pageSettings = PageSettings(
-                size = "A4",
-                orientation = "portrait",
-                margins = Margins(10f, 10f, 10f, 10f),
-            ),
-        )
+        val emptyTemplate =
+            Template(
+                version = "1.0",
+                pageSettings =
+                    PageSettings(
+                        size = "A4",
+                        orientation = "portrait",
+                        margins = Margins(10f, 10f, 10f, 10f),
+                    ),
+            )
         val (h3, f3) = DocumentFactory.calculateHeaderFooterHeights(emptyTemplate, emptyMap())
         assertEquals(0f, h3)
         assertEquals(0f, f3)
@@ -123,27 +129,30 @@ class DocumentFactoryTest {
 
     @Test
     fun `test createSession and finalizeBaseLayer and close`() {
-        val template = Template(
-            version = "1.0",
-            pageSettings = PageSettings(
-                size = "A4",
-                orientation = "portrait",
-                margins = Margins(10f, 10f, 10f, 10f),
-                header = HeaderFooter(height = 40f),
-                watermark = WatermarkConfig(text = "DRAFT"),
-                bodyBackground = BodyBackground(),
-            ),
-        )
+        val template =
+            Template(
+                version = "1.0",
+                pageSettings =
+                    PageSettings(
+                        size = "A4",
+                        orientation = "portrait",
+                        margins = Margins(10f, 10f, 10f, 10f),
+                        header = HeaderFooter(height = 40f),
+                        watermark = WatermarkConfig(text = "DRAFT"),
+                        bodyBackground = BodyBackground(),
+                    ),
+            )
 
         val output = ByteArrayOutputStream()
         val config = PDFGeneratorConfig()
-        val session = DocumentFactory.createSession(
-            template = template,
-            data = mapOf("name" to "Test"),
-            output = output,
-            config = config,
-            securityConfigurator = PDFSecurityConfigurator(),
-        )
+        val session =
+            DocumentFactory.createSession(
+                template = template,
+                data = mapOf("name" to "Test"),
+                output = output,
+                config = config,
+                securityConfigurator = PDFSecurityConfigurator(),
+            )
 
         assertNotNull(session.context)
         assertEquals(template, session.context.template)

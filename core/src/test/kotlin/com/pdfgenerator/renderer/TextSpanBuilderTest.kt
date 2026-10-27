@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class TextSpanBuilderTest {
-
     @Test
     fun `test resolveBaseFontName for various combinations`() {
         assertEquals(BaseFont.TIMES_BOLDITALIC, TextSpanBuilder.resolveBaseFontName("times", "bold", "italic"))

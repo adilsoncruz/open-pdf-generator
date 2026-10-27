@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class TextLayoutHelperTest {
-
     @Test
     fun `test resolveAlignment`() {
         assertEquals(Element.ALIGN_CENTER, TextLayoutHelper.resolveAlignment("center"))
@@ -77,38 +76,40 @@ class TextLayoutHelperTest {
         val measurement = TextLayoutMeasurement(listOf("cached text"), 14f, 14f)
         cache[key] = measurement
 
-        val fromCache = TextLayoutHelper.getOrMeasureMultilineLayout(
-            elementId = "id1",
-            resolvedText = "cached text",
-            styleHash = 123,
-            boxWidth = 100f,
-            fontSize = 12f,
-            lineHeight = 1f,
-            paddingTop = 0f,
-            paddingBottom = 0f,
-            paddingLeft = 0f,
-            paddingRight = 0f,
-            firstLineIndent = 0f,
-            fontFamily = "Helvetica",
-            cache = cache,
-        )
+        val fromCache =
+            TextLayoutHelper.getOrMeasureMultilineLayout(
+                elementId = "id1",
+                resolvedText = "cached text",
+                styleHash = 123,
+                boxWidth = 100f,
+                fontSize = 12f,
+                lineHeight = 1f,
+                paddingTop = 0f,
+                paddingBottom = 0f,
+                paddingLeft = 0f,
+                paddingRight = 0f,
+                firstLineIndent = 0f,
+                fontFamily = "Helvetica",
+                cache = cache,
+            )
         assertSame(measurement, fromCache)
 
-        val computed = TextLayoutHelper.getOrMeasureMultilineLayout(
-            elementId = "id2",
-            resolvedText = "new line 1\nnew line 2",
-            styleHash = 456,
-            boxWidth = 100f,
-            fontSize = 12f,
-            lineHeight = 1f,
-            paddingTop = 0f,
-            paddingBottom = 0f,
-            paddingLeft = 0f,
-            paddingRight = 0f,
-            firstLineIndent = 0f,
-            fontFamily = "Helvetica",
-            cache = cache,
-        )
+        val computed =
+            TextLayoutHelper.getOrMeasureMultilineLayout(
+                elementId = "id2",
+                resolvedText = "new line 1\nnew line 2",
+                styleHash = 456,
+                boxWidth = 100f,
+                fontSize = 12f,
+                lineHeight = 1f,
+                paddingTop = 0f,
+                paddingBottom = 0f,
+                paddingLeft = 0f,
+                paddingRight = 0f,
+                firstLineIndent = 0f,
+                fontFamily = "Helvetica",
+                cache = cache,
+            )
         assertEquals(2, computed.lines.size)
         assertTrue(cache.containsKey(TextLayoutCacheKey("id2", "new line 1\nnew line 2", 456)))
     }

@@ -7,11 +7,9 @@ import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
-import com.pdfgenerator.model.BodyBackground
 import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
-import com.pdfgenerator.model.HeaderFooter
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.Template
@@ -120,9 +118,7 @@ class HeaderFooterSectionRenderer(
         renderFlowElements(writer, footerAdjustedElements, footerContext, pageData)
     }
 
-    fun renderBodyBackground(
-        writer: PdfWriter,
-    ) {
+    fun renderBodyBackground(writer: PdfWriter) {
         val elements = bodyBackgroundAdjustedElements ?: return
         val context = bodyBackgroundContext ?: return
 
@@ -148,26 +144,35 @@ class HeaderFooterSectionRenderer(
             var flowY = 0f
             elementList.forEach { element ->
                 val isRelativeFlow = element.positionMode == PositionMode.RELATIVE || element is ContainerElement
-                val effectiveY = if (isRelativeFlow) {
-                    val isHeightFull = when (element) {
-                        is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                        is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                        else -> false
-                    }
-                    val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
-                    if (flowY == 0f) {
-                        if (isHeightFull) 0f else if (element.y > 0f) element.y else offsetY
+                val effectiveY =
+                    if (isRelativeFlow) {
+                        val isHeightFull =
+                            when (element) {
+                                is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                                is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                                else -> false
+                            }
+                        val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
+                        if (flowY == 0f) {
+                            if (isHeightFull) {
+                                0f
+                            } else if (element.y > 0f) {
+                                element.y
+                            } else {
+                                offsetY
+                            }
+                        } else {
+                            flowY + offsetY
+                        }
                     } else {
-                        flowY + offsetY
+                        element.y
                     }
-                } else {
-                    element.y
-                }
-                val renderContext = if (isRelativeFlow) {
-                    context.copy(offsetY = context.offsetY + (effectiveY - element.y))
-                } else {
-                    context
-                }
+                val renderContext =
+                    if (isRelativeFlow) {
+                        context.copy(offsetY = context.offsetY + (effectiveY - element.y))
+                    } else {
+                        context
+                    }
                 renderEngine.render(element, renderContext)
                 val elementHeight = PDFGenerator.getElementHeight(element, pageData, renderContext)
                 if (isRelativeFlow) {
@@ -215,13 +220,25 @@ class HeaderFooterSectionRenderer(
             // Top margin label
             if (margins.top >= 14f) {
                 val topLabel = "Top Margin: ${margins.top.toInt()} pt"
-                cb.showTextAligned(com.lowagie.text.Element.ALIGN_CENTER, topLabel, pageWidth / 2f, pageHeight - (margins.top / 2f) - (fontSize / 2f), 0f)
+                cb.showTextAligned(
+                    com.lowagie.text.Element.ALIGN_CENTER,
+                    topLabel,
+                    pageWidth / 2f,
+                    pageHeight - (margins.top / 2f) - (fontSize / 2f),
+                    0f,
+                )
             }
 
             // Bottom margin label
             if (margins.bottom >= 14f) {
                 val bottomLabel = "Bottom Margin: ${margins.bottom.toInt()} pt"
-                cb.showTextAligned(com.lowagie.text.Element.ALIGN_CENTER, bottomLabel, pageWidth / 2f, (margins.bottom / 2f) - (fontSize / 2f), 0f)
+                cb.showTextAligned(
+                    com.lowagie.text.Element.ALIGN_CENTER,
+                    bottomLabel,
+                    pageWidth / 2f,
+                    (margins.bottom / 2f) - (fontSize / 2f),
+                    0f,
+                )
             }
 
             // Left margin label
@@ -233,11 +250,20 @@ class HeaderFooterSectionRenderer(
             // Right margin label
             if (margins.right >= 14f) {
                 val rightLabel = "Right: ${margins.right.toInt()} pt"
-                cb.showTextAligned(com.lowagie.text.Element.ALIGN_CENTER, rightLabel, pageWidth - (margins.right / 2f), pageHeight / 2f, -90f)
+                cb.showTextAligned(
+                    com.lowagie.text.Element.ALIGN_CENTER,
+                    rightLabel,
+                    pageWidth - (margins.right / 2f),
+                    pageHeight / 2f,
+                    -90f,
+                )
             }
 
             // Info badge at the top-left of the usable box
-            val badge = "Margin Guide [Top: ${margins.top.toInt()}pt, Left: ${margins.left.toInt()}pt, Right: ${margins.right.toInt()}pt, Bottom: ${margins.bottom.toInt()}pt | Usable Area: ${width.toInt()}x${height.toInt()} pt]"
+            val badge =
+                "Margin Guide [Top: ${margins.top.toInt()}pt, Left: ${margins.left.toInt()}pt, " +
+                    "Right: ${margins.right.toInt()}pt, Bottom: ${margins.bottom.toInt()}pt | " +
+                    "Usable Area: ${width.toInt()}x${height.toInt()} pt]"
             cb.showTextAligned(com.lowagie.text.Element.ALIGN_LEFT, badge, x + 2, pageHeight - margins.top + 2, 0f)
 
             cb.endText()

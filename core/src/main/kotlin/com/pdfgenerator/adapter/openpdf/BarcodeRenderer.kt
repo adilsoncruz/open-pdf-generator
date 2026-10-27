@@ -239,4 +239,3 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
         return Image.getInstance(baos.toByteArray())
     }
 }
-

@@ -56,13 +56,14 @@ object ExpressionProcessor {
         loopContext: LoopContext? = null,
     ): String {
         val trimmed = expression.trim()
-        val cleanExpr = when {
-            trimmed.startsWith("\${") && trimmed.endsWith("}") ->
-                trimmed.substring(2, trimmed.length - 1).trim()
-            trimmed.startsWith("{{") && trimmed.endsWith("}}") ->
-                trimmed.substring(2, trimmed.length - 2).trim()
-            else -> trimmed
-        }
+        val cleanExpr =
+            when {
+                trimmed.startsWith("\${") && trimmed.endsWith("}") ->
+                    trimmed.substring(2, trimmed.length - 1).trim()
+                trimmed.startsWith("{{") && trimmed.endsWith("}}") ->
+                    trimmed.substring(2, trimmed.length - 2).trim()
+                else -> trimmed
+            }
 
         val parsedExpression = getOrParseExpression(cleanExpr)
         val rawValue = DataBindingResolver.resolve(parsedExpression.binding, data, loopContext)
@@ -185,7 +186,10 @@ object ExpressionProcessor {
         return ParsedTransformation(funcName, args)
     }
 
-    private fun parseArgs(argsStr: String, regex: Regex): List<String> {
+    private fun parseArgs(
+        argsStr: String,
+        regex: Regex,
+    ): List<String> {
         val args = mutableListOf<String>()
         regex.findAll(argsStr).forEach { match ->
             val single = match.groups[1]

@@ -159,21 +159,22 @@ class WatermarkPainter(
         val rawW = watermark.width?.takeIf { it > 0f }
         val rawH = watermark.height?.takeIf { it > 0f }
 
-        val (targetW, targetH) = when {
-            rawW != null && rawH != null -> rawW to rawH
-            rawW != null -> rawW to (imgH * (rawW / imgW))
-            rawH != null -> (imgW * (rawH / imgH)) to rawH
-            watermark.repeat -> {
-                val defaultSize = (pageWidth * 0.25f).coerceIn(80f, 180f)
-                defaultSize to (imgH * (defaultSize / imgW))
+        val (targetW, targetH) =
+            when {
+                rawW != null && rawH != null -> rawW to rawH
+                rawW != null -> rawW to (imgH * (rawW / imgW))
+                rawH != null -> (imgW * (rawH / imgH)) to rawH
+                watermark.repeat -> {
+                    val defaultSize = (pageWidth * 0.25f).coerceIn(80f, 180f)
+                    defaultSize to (imgH * (defaultSize / imgW))
+                }
+                else -> {
+                    val maxW = pageWidth * 0.7f
+                    val maxH = pageHeight * 0.7f
+                    val scale = minOf(maxW / imgW, maxH / imgH, 1f)
+                    (imgW * scale) to (imgH * scale)
+                }
             }
-            else -> {
-                val maxW = pageWidth * 0.7f
-                val maxH = pageHeight * 0.7f
-                val scale = minOf(maxW / imgW, maxH / imgH, 1f)
-                (imgW * scale) to (imgH * scale)
-            }
-        }
         image.scaleToFit(targetW.coerceAtLeast(1f), targetH.coerceAtLeast(1f))
         image.setRotationDegrees(watermark.rotation)
         val scaledW = image.scaledWidth
@@ -205,7 +206,10 @@ class WatermarkPainter(
         }
     }
 
-    private fun resolveBaseFontName(fontName: String, fontStyle: String): String {
+    private fun resolveBaseFontName(
+        fontName: String,
+        fontStyle: String,
+    ): String {
         val isBold = fontStyle.contains("bold", ignoreCase = true)
         val isItalic = fontStyle.contains("italic", ignoreCase = true)
         val familyLower = fontName.lowercase()

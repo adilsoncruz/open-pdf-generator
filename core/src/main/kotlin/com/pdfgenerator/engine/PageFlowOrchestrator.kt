@@ -39,11 +39,12 @@ class PageFlowOrchestrator(
                     val isRelative = isRelativeFlow(element)
                     val effectiveY = calculateEffectiveY(element, isRelative, renderState.currentY)
 
-                    val renderContext = if (isRelative) {
-                        context.copy(offsetY = context.bodyOffsetY + (effectiveY - element.y))
-                    } else {
-                        context
-                    }
+                    val renderContext =
+                        if (isRelative) {
+                            context.copy(offsetY = context.bodyOffsetY + (effectiveY - element.y))
+                        } else {
+                            context
+                        }
 
                     renderEngine.render(element, renderContext)
 
@@ -105,14 +106,15 @@ class PageFlowOrchestrator(
         val summaryContainerWidth = document.pageSize.width - margins.left - margins.right
         val summaryContainerHeight = document.pageSize.height - margins.top - margins.bottom
 
-        val summaryContext = context.copy(
-            isSummaryPage = true,
-            containerWidth = summaryContainerWidth,
-            containerHeight = summaryContainerHeight,
-            offsetX = summaryOffsetX,
-            offsetY = summaryOffsetY,
-            bodyOffsetY = summaryOffsetY,
-        )
+        val summaryContext =
+            context.copy(
+                isSummaryPage = true,
+                containerWidth = summaryContainerWidth,
+                containerHeight = summaryContainerHeight,
+                offsetX = summaryOffsetX,
+                offsetY = summaryOffsetY,
+                bodyOffsetY = summaryOffsetY,
+            )
 
         summaryPage.background?.let { bg ->
             val summaryBackgroundGroupIndex = buildGroupIndex(bg.groups)
@@ -142,11 +144,12 @@ class PageFlowOrchestrator(
                     val isRelative = isRelativeFlow(element)
                     val effectiveY = calculateSummaryEffectiveY(element, isRelative, summaryFlowY)
 
-                    val renderContext = if (isRelative) {
-                        summaryContext.copy(offsetY = summaryContext.offsetY + (effectiveY - element.y))
-                    } else {
-                        summaryContext
-                    }
+                    val renderContext =
+                        if (isRelative) {
+                            summaryContext.copy(offsetY = summaryContext.offsetY + (effectiveY - element.y))
+                        } else {
+                            summaryContext
+                        }
 
                     renderEngine.render(element, renderContext)
                     val elementHeight = ElementHeightCalculator.getElementHeight(element, data, renderContext)
@@ -172,13 +175,18 @@ class PageFlowOrchestrator(
         return element.positionMode == PositionMode.RELATIVE || element is ContainerElement
     }
 
-    fun calculateEffectiveY(element: Element, isRelativeFlow: Boolean, currentY: Float): Float {
+    fun calculateEffectiveY(
+        element: Element,
+        isRelativeFlow: Boolean,
+        currentY: Float,
+    ): Float {
         return if (isRelativeFlow) {
-            val isHeightFull = when (element) {
-                is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                else -> false
-            }
+            val isHeightFull =
+                when (element) {
+                    is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                    is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                    else -> false
+                }
             val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
             currentY + offsetY
         } else {
@@ -186,16 +194,27 @@ class PageFlowOrchestrator(
         }
     }
 
-    fun calculateSummaryEffectiveY(element: Element, isRelativeFlow: Boolean, summaryFlowY: Float): Float {
+    fun calculateSummaryEffectiveY(
+        element: Element,
+        isRelativeFlow: Boolean,
+        summaryFlowY: Float,
+    ): Float {
         return if (isRelativeFlow) {
-            val isHeightFull = when (element) {
-                is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                else -> false
-            }
+            val isHeightFull =
+                when (element) {
+                    is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                    is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                    else -> false
+                }
             val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
             if (summaryFlowY == 0f) {
-                if (isHeightFull) 0f else if (element.y > 0f) element.y else offsetY
+                if (isHeightFull) {
+                    0f
+                } else if (element.y > 0f) {
+                    element.y
+                } else {
+                    offsetY
+                }
             } else {
                 summaryFlowY + offsetY
             }

@@ -7,8 +7,6 @@ fun withSyntheticPageNumber(
     pageNumber: Int,
 ): Map<String, Any?> = OverlayDataMap(data, mapOf(PAGE_NUMBER_KEY to pageNumber))
 
-
-
 fun withSyntheticBindings(
     data: Map<String, Any?>,
     bindings: Map<String, Any?>,

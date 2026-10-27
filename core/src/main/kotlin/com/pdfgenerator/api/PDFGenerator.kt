@@ -66,56 +66,84 @@ class PDFGenerator(
         ): Float = ElementHeightCalculator.calculateLoopItemHeight(elements, loopWidth, loopHeight)
     }
 
-    fun generate(template: Template, data: Map<String, Any?>, outputFile: File) {
+    fun generate(
+        template: Template,
+        data: Map<String, Any?>,
+        outputFile: File,
+    ) {
         logger.info("Gerando PDF em: ${outputFile.absolutePath}")
         outputFile.parentFile?.mkdirs()
         FileOutputStream(outputFile).use { output -> generateToStream(template, data, output) }
         logger.info("PDF gerado com sucesso: ${outputFile.absolutePath}")
     }
 
-    fun generate(template: Template, data: Map<String, Any?>): ByteArray {
+    fun generate(
+        template: Template,
+        data: Map<String, Any?>,
+    ): ByteArray {
         val output = ByteArrayOutputStream(maxOf(1, (template.pageElements?.size ?: 0) / 10) * 50 * 1024)
         generateToStream(template, data, output)
         return output.toByteArray()
     }
 
-    fun generate(templateJson: String, dataJson: String): ByteArray =
-        runCatchingJson { generate(Template.fromString(templateJson), parseDataJson(dataJson)) }
+    fun generate(
+        templateJson: String,
+        dataJson: String,
+    ): ByteArray = runCatchingJson { generate(Template.fromString(templateJson), parseDataJson(dataJson)) }
 
-    fun generate(templateJson: String, dataJson: String, outputFile: File) =
-        runCatchingJson { generate(Template.fromString(templateJson), parseDataJson(dataJson), outputFile) }
+    fun generate(
+        templateJson: String,
+        dataJson: String,
+        outputFile: File,
+    ) = runCatchingJson { generate(Template.fromString(templateJson), parseDataJson(dataJson), outputFile) }
 
-    fun generateFromPath(templatePath: String, data: Map<String, Any?>): ByteArray =
-        generate(getOrLoadTemplate(templatePath), data)
+    fun generateFromPath(
+        templatePath: String,
+        data: Map<String, Any?>,
+    ): ByteArray = generate(getOrLoadTemplate(templatePath), data)
 
-    fun generateFromPath(templatePath: String, dataJson: String): ByteArray =
-        runCatchingJson(templatePath) { generate(getOrLoadTemplate(templatePath), parseDataJson(dataJson)) }
+    fun generateFromPath(
+        templatePath: String,
+        dataJson: String,
+    ): ByteArray = runCatchingJson(templatePath) { generate(getOrLoadTemplate(templatePath), parseDataJson(dataJson)) }
 
-    fun generateFromPath(templatePath: String, data: Map<String, Any?>, outputFile: File) =
-        generate(getOrLoadTemplate(templatePath), data, outputFile)
+    fun generateFromPath(
+        templatePath: String,
+        data: Map<String, Any?>,
+        outputFile: File,
+    ) = generate(getOrLoadTemplate(templatePath), data, outputFile)
 
-    fun generateFromPath(templatePath: String, dataJson: String, outputFile: File) =
-        generate(getOrLoadTemplate(templatePath), parseDataJson(dataJson), outputFile)
+    fun generateFromPath(
+        templatePath: String,
+        dataJson: String,
+        outputFile: File,
+    ) = generate(getOrLoadTemplate(templatePath), parseDataJson(dataJson), outputFile)
 
-    private inline fun <T> runCatchingJson(templatePath: String? = null, action: () -> T): T = try {
-        action()
-    } catch (e: PDFGenerationException) {
-        throw e
-    } catch (e: JsonSyntaxException) {
-        val msg = if (templatePath != null) {
-            "JSON syntax error processing data: ${e.message}. Verify that the data is valid JSON."
-        } else {
-            "JSON syntax error: ${e.message}. Verify that template and data are valid JSON."
+    private inline fun <T> runCatchingJson(
+        templatePath: String? = null,
+        action: () -> T,
+    ): T =
+        try {
+            action()
+        } catch (e: PDFGenerationException) {
+            throw e
+        } catch (e: JsonSyntaxException) {
+            val msg =
+                if (templatePath != null) {
+                    "JSON syntax error processing data: ${e.message}. Verify that the data is valid JSON."
+                } else {
+                    "JSON syntax error: ${e.message}. Verify that template and data are valid JSON."
+                }
+            throw PDFGenerationException(msg, e)
+        } catch (e: Exception) {
+            val msg =
+                if (templatePath != null) {
+                    "Error generating PDF with template '$templatePath': ${e.message}"
+                } else {
+                    "Error generating PDF: ${e.message}"
+                }
+            throw PDFGenerationException(msg, e)
         }
-        throw PDFGenerationException(msg, e)
-    } catch (e: Exception) {
-        val msg = if (templatePath != null) {
-            "Error generating PDF with template '$templatePath': ${e.message}"
-        } else {
-            "Error generating PDF: ${e.message}"
-        }
-        throw PDFGenerationException(msg, e)
-    }
 
     private fun getOrLoadTemplate(templatePath: String): Template =
         templateCache.getOrPut(templatePath) {
@@ -128,7 +156,10 @@ class PDFGenerator(
             ?: File(path).takeIf { it.isFile }?.let { parseTemplateContent(it.readText(), path) }
             ?: throw PDFGenerationException("Template not found: '$path'. Verify that the file exists in the classpath or specified path.")
 
-    private fun parseTemplateContent(content: String, templatePath: String): Template {
+    private fun parseTemplateContent(
+        content: String,
+        templatePath: String,
+    ): Template {
         val clean = content.trimStart('\uFEFF').trim()
         if (!clean.startsWith("{")) {
             throw PDFGenerationException("Template '$templatePath' is not valid JSON. Expected JSON object starting with '{'.")
@@ -157,32 +188,47 @@ class PDFGenerator(
         }
 
     @Suppress("UNCHECKED_CAST")
-    private fun parseDataJson(dataJson: String): Map<String, Any?> = try {
-        val result = jsonToMap(gson.fromJson(dataJson, JsonElement::class.java))
-        if (result !is Map<*, *>) {
-            throw PDFGenerationException("JSON data must be a JSON object (starting with '{'). Received type: ${result?.javaClass?.simpleName ?: "null"}")
+    private fun parseDataJson(dataJson: String): Map<String, Any?> =
+        try {
+            val result = jsonToMap(gson.fromJson(dataJson, JsonElement::class.java))
+            if (result !is Map<*, *>) {
+                throw PDFGenerationException(
+                    "JSON data must be a JSON object (starting with '{'). Received type: ${result?.javaClass?.simpleName ?: "null"}",
+                )
+            }
+            result as Map<String, Any?>
+        } catch (e: PDFGenerationException) {
+            throw e
+        } catch (e: JsonSyntaxException) {
+            throw PDFGenerationException("JSON data syntax error: ${e.message}. Verify that the data is valid JSON.", e)
+        } catch (e: Exception) {
+            throw PDFGenerationException("Erro ao processar dados JSON: ${e.message}", e)
         }
-        result as Map<String, Any?>
-    } catch (e: PDFGenerationException) {
-        throw e
-    } catch (e: JsonSyntaxException) {
-        throw PDFGenerationException("JSON data syntax error: ${e.message}. Verify that the data is valid JSON.", e)
-    } catch (e: Exception) {
-        throw PDFGenerationException("Erro ao processar dados JSON: ${e.message}", e)
-    }
 
     @Suppress("UNCHECKED_CAST")
-    private fun jsonToMap(el: JsonElement): Any? = when {
-        el.isJsonNull -> null
-        el.isJsonPrimitive -> with(el.asJsonPrimitive) {
-            if (isBoolean) asBoolean else if (isNumber) asNumber else asString
+    private fun jsonToMap(el: JsonElement): Any? =
+        when {
+            el.isJsonNull -> null
+            el.isJsonPrimitive ->
+                with(el.asJsonPrimitive) {
+                    if (isBoolean) {
+                        asBoolean
+                    } else if (isNumber) {
+                        asNumber
+                    } else {
+                        asString
+                    }
+                }
+            el.isJsonArray -> el.asJsonArray.map { jsonToMap(it) }
+            el.isJsonObject -> el.asJsonObject.entrySet().associate { it.key to jsonToMap(it.value) }
+            else -> null
         }
-        el.isJsonArray -> el.asJsonArray.map { jsonToMap(it) }
-        el.isJsonObject -> el.asJsonObject.entrySet().associate { it.key to jsonToMap(it.value) }
-        else -> null
-    }
 
-    fun generateToStream(template: Template, data: Map<String, Any?>, output: OutputStream) {
+    fun generateToStream(
+        template: Template,
+        data: Map<String, Any?>,
+        output: OutputStream,
+    ) {
         try {
             val validationResult = template.validate()
             if (!validationResult.isValid) {

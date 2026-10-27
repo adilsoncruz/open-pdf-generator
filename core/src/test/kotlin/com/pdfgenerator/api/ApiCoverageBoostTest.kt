@@ -1,17 +1,12 @@
 package com.pdfgenerator.api
 
-import com.pdfgenerator.model.ElementGroup
-import com.pdfgenerator.model.Margins
-import com.pdfgenerator.model.PageSettings
 import com.pdfgenerator.model.Template
-import com.pdfgenerator.model.TextElement
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class ApiCoverageBoostTest {
-
     @TempDir
     lateinit var tempDir: File
 
@@ -30,15 +25,16 @@ class ApiCoverageBoostTest {
         assertTrue(schemaEx.message!!.contains("path.to.prop"))
         assertTrue(schemaEx.message!!.contains("Must not be null"))
 
-        val config = PDFGeneratorConfig(
-            fontDirectory = tempDir,
-            defaultFont = "Courier",
-            strictMode = false,
-            enableImageCache = false,
-            imageCacheSize = 50,
-            resourcesDirectory = tempDir,
-            showMargins = true
-        )
+        val config =
+            PDFGeneratorConfig(
+                fontDirectory = tempDir,
+                defaultFont = "Courier",
+                strictMode = false,
+                enableImageCache = false,
+                imageCacheSize = 50,
+                resourcesDirectory = tempDir,
+                showMargins = true,
+            )
         assertTrue(config.showMargins)
         assertFalse(config.strictMode)
         assertEquals("Courier", config.defaultFont)
@@ -61,19 +57,21 @@ class ApiCoverageBoostTest {
         assertEquals(0, sz)
 
         val templateFile = File(tempDir, "test-template.json")
-        templateFile.writeText("""
-        {
-          "version": "1.0",
-          "pageSettings": {
-            "size": "A4",
-            "orientation": "portrait",
-            "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 }
-          },
-          "pageElements": [
-            { "type": "text", "id": "t1", "x": 0, "y": 0, "value": "Cached" }
-          ]
-        }
-        """.trimIndent())
+        templateFile.writeText(
+            """
+            {
+              "version": "1.0",
+              "pageSettings": {
+                "size": "A4",
+                "orientation": "portrait",
+                "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 }
+              },
+              "pageElements": [
+                { "type": "text", "id": "t1", "x": 0, "y": 0, "value": "Cached" }
+              ]
+            }
+            """.trimIndent(),
+        )
 
         val generator = PDFGenerator()
         val template = Template.fromString(templateFile.readText())
@@ -117,17 +115,18 @@ class ApiCoverageBoostTest {
 
         // Invalid JSON data string
         assertThrows(PDFGenerationException::class.java) {
-            val validTemplate = """
-            {
-              "version": "1.0",
-              "pageSettings": {
-                "size": "A4",
-                "orientation": "portrait",
-                "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 }
-              },
-              "pageElements": []
-            }
-            """.trimIndent()
+            val validTemplate =
+                """
+                {
+                  "version": "1.0",
+                  "pageSettings": {
+                    "size": "A4",
+                    "orientation": "portrait",
+                    "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 }
+                  },
+                  "pageElements": []
+                }
+                """.trimIndent()
             generator.generate(validTemplate, "not a valid json")
         }
 
@@ -145,13 +144,15 @@ class ApiCoverageBoostTest {
 
         // generateFromPath with invalid data JSON syntax
         val validTemplateFile = File(tempDir, "valid-temp.json")
-        validTemplateFile.writeText("""
-        {
-          "version": "1.0",
-          "pageSettings": { "size": "A4", "orientation": "portrait", "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 } },
-          "pageElements": []
-        }
-        """.trimIndent())
+        validTemplateFile.writeText(
+            """
+            {
+              "version": "1.0",
+              "pageSettings": { "size": "A4", "orientation": "portrait", "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 } },
+              "pageElements": []
+            }
+            """.trimIndent(),
+        )
         assertThrows(PDFGenerationException::class.java) {
             generator.generateFromPath(validTemplateFile.absolutePath, "invalid data json syntax {")
         }
@@ -163,13 +164,14 @@ class ApiCoverageBoostTest {
         }
 
         // Template with invalid orientation throws IllegalArgumentException in getPageSize -> caught by generate Exception handler
-        val badOrientationTemplate = """
-        {
-          "version": "1.0",
-          "pageSettings": { "size": "A4", "orientation": "diagonal", "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 } },
-          "pageElements": []
-        }
-        """.trimIndent()
+        val badOrientationTemplate =
+            """
+            {
+              "version": "1.0",
+              "pageSettings": { "size": "A4", "orientation": "diagonal", "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 } },
+              "pageElements": []
+            }
+            """.trimIndent()
         assertThrows(PDFGenerationException::class.java) {
             generator.generate(badOrientationTemplate, "{}")
         }
@@ -185,64 +187,65 @@ class ApiCoverageBoostTest {
 
     @Test
     fun `test PDFGenerator element group skipping and element heights`() {
-        val templateJson = """
-        {
-          "version": "1.0",
-          "pageSettings": {
-            "size": "A4",
-            "orientation": "portrait",
-            "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
-          },
-          "groups": [
+        val templateJson =
+            """
             {
-              "id": "inactive-grp",
-              "name": "Inactive Group",
-              "elementIds": ["grp-elem"],
-              "printCondition": "showGroup == true"
-            }
-          ],
-          "pageElements": [
-            {
-              "type": "text",
-              "id": "grp-elem",
-              "x": 0,
-              "y": 0,
-              "value": "Should be skipped"
-            },
-            {
-              "type": "rich_text",
-              "id": "rt-elem",
-              "x": 0,
-              "y": 50,
-              "width": 300,
-              "value": "Rich text content **bold**",
-              "style": { "multiline": true }
-            },
-            {
-              "type": "link",
-              "id": "lk-elem",
-              "x": 0,
-              "y": 100,
-              "width": 200,
-              "value": "Open Link with multiline flow enabled",
-              "url": "https://example.com",
-              "style": { "multiline": true }
-            },
-            {
-              "type": "container",
-              "id": "ct-elem",
-              "x": 0,
-              "y": 150,
-              "width": "100%",
-              "height": "auto",
-              "elements": [
-                { "type": "spacer", "id": "sp-1", "height": 20 },
-                { "type": "pageBreak", "id": "pb-1" }
+              "version": "1.0",
+              "pageSettings": {
+                "size": "A4",
+                "orientation": "portrait",
+                "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
+              },
+              "groups": [
+                {
+                  "id": "inactive-grp",
+                  "name": "Inactive Group",
+                  "elementIds": ["grp-elem"],
+                  "printCondition": "showGroup == true"
+                }
+              ],
+              "pageElements": [
+                {
+                  "type": "text",
+                  "id": "grp-elem",
+                  "x": 0,
+                  "y": 0,
+                  "value": "Should be skipped"
+                },
+                {
+                  "type": "rich_text",
+                  "id": "rt-elem",
+                  "x": 0,
+                  "y": 50,
+                  "width": 300,
+                  "value": "Rich text content **bold**",
+                  "style": { "multiline": true }
+                },
+                {
+                  "type": "link",
+                  "id": "lk-elem",
+                  "x": 0,
+                  "y": 100,
+                  "width": 200,
+                  "value": "Open Link with multiline flow enabled",
+                  "url": "https://example.com",
+                  "style": { "multiline": true }
+                },
+                {
+                  "type": "container",
+                  "id": "ct-elem",
+                  "x": 0,
+                  "y": 150,
+                  "width": "100%",
+                  "height": "auto",
+                  "elements": [
+                    { "type": "spacer", "id": "sp-1", "height": 20 },
+                    { "type": "pageBreak", "id": "pb-1" }
+                  ]
+                }
               ]
             }
-          ]
-        }
-        """.trimIndent()
+            """.trimIndent()
 
         val generator = PDFGenerator()
         val pdfBytes = generator.generate(templateJson, """{"showGroup": false}""")
@@ -251,202 +254,205 @@ class ApiCoverageBoostTest {
 
     @Test
     fun `test PDFGenerator calculateLoopItemHeight and relative flow`() {
-        val templateJson = """
-        {
-          "version": "1.0",
-          "pageSettings": {
-            "size": "A4",
-            "orientation": "portrait",
-            "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
-          },
-          "pageElements": [
+        val templateJson =
+            """
             {
-              "type": "loop",
-              "id": "test-loop",
-              "x": 0,
-              "y": 0,
-              "dataBinding": "items",
-              "direction": "vertical",
-              "elements": [
+              "version": "1.0",
+              "pageSettings": {
+                "size": "A4",
+                "orientation": "portrait",
+                "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
+              },
+              "pageElements": [
                 {
-                  "type": "rectangle",
-                  "id": "lp-rect-pct",
+                  "type": "loop",
+                  "id": "test-loop",
                   "x": 0,
                   "y": 0,
-                  "width": "100%",
-                  "height": "100%"
-                },
-                {
-                  "type": "line",
-                  "id": "lp-line",
-                  "x": 0,
-                  "y": 10,
-                  "width": "100%",
-                  "height": 0
-                },
-                {
-                  "type": "barcode",
-                  "id": "lp-bc",
-                  "x": 0,
-                  "y": 20,
-                  "format": "CODE_128",
-                  "value": "12345",
-                  "height": 25
+                  "dataBinding": "items",
+                  "direction": "vertical",
+                  "elements": [
+                    {
+                      "type": "rectangle",
+                      "id": "lp-rect-pct",
+                      "x": 0,
+                      "y": 0,
+                      "width": "100%",
+                      "height": "100%"
+                    },
+                    {
+                      "type": "line",
+                      "id": "lp-line",
+                      "x": 0,
+                      "y": 10,
+                      "width": "100%",
+                      "height": 0
+                    },
+                    {
+                      "type": "barcode",
+                      "id": "lp-bc",
+                      "x": 0,
+                      "y": 20,
+                      "format": "CODE_128",
+                      "value": "12345",
+                      "height": 25
+                    }
+                  ]
                 }
               ]
             }
-          ]
-        }
-        """.trimIndent()
+            """.trimIndent()
 
         val generator = PDFGenerator()
         val pdfBytes = generator.generate(templateJson, """{"items": [{"id": 1}]}""")
         assertTrue(pdfBytes.isNotEmpty())
 
         // Empty loop and ImageElement 100% inside loop
-        val templateLoopExtra = """
-        {
-          "version": "1.0",
-          "pageSettings": {
-            "size": "A4",
-            "orientation": "portrait",
-            "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
-          },
-          "pageElements": [
+        val templateLoopExtra =
+            """
             {
-              "type": "loop",
-              "id": "empty-loop",
-              "x": 0,
-              "y": 0,
-              "dataBinding": "emptyItems",
-              "elements": []
-            },
-            {
-              "type": "loop",
-              "id": "img-loop",
-              "x": 0,
-              "y": 50,
-              "dataBinding": "items",
-              "elements": [
+              "version": "1.0",
+              "pageSettings": {
+                "size": "A4",
+                "orientation": "portrait",
+                "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
+              },
+              "pageElements": [
                 {
-                  "type": "image",
-                  "id": "lp-img-full",
+                  "type": "loop",
+                  "id": "empty-loop",
                   "x": 0,
                   "y": 0,
-                  "width": 100,
-                  "height": 50,
-                  "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                  "dataBinding": "emptyItems",
+                  "elements": []
                 },
                 {
-                  "type": "container",
-                  "id": "lp-ct",
+                  "type": "loop",
+                  "id": "img-loop",
                   "x": 0,
-                  "y": 20,
-                  "width": 100,
-                  "height": 40,
-                  "elements": []
+                  "y": 50,
+                  "dataBinding": "items",
+                  "elements": [
+                    {
+                      "type": "image",
+                      "id": "lp-img-full",
+                      "x": 0,
+                      "y": 0,
+                      "width": 100,
+                      "height": 50,
+                      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                    },
+                    {
+                      "type": "container",
+                      "id": "lp-ct",
+                      "x": 0,
+                      "y": 20,
+                      "width": 100,
+                      "height": 40,
+                      "elements": []
+                    }
+                  ]
                 }
               ]
             }
-          ]
-        }
-        """.trimIndent()
+            """.trimIndent()
         val bytesExtra = generator.generate(templateLoopExtra, """{"items": [{"id": 1}], "emptyItems": []}""")
         assertTrue(bytesExtra.isNotEmpty())
     }
 
     @Test
     fun `test PDFGenerator getElementHeight and calculateLoopItemHeight exhaustive coverage`() {
-        val templateJson = """
-        {
-          "version": "1.0",
-          "pageSettings": {
-            "size": "A4",
-            "orientation": "portrait",
-            "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
-          },
-          "pageElements": [
+        val templateJson =
+            """
             {
-              "type": "text",
-              "id": "rel-text",
-              "positionMode": "relative",
-              "x": 0,
-              "y": 0,
-              "value": "Relative text testing line 393"
-            },
-            {
-              "type": "image",
-              "id": "img-no-h",
-              "positionMode": "relative",
-              "x": 0,
-              "y": 0,
-              "width": 100,
-              "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-            },
-            {
-              "type": "conditional",
-              "id": "cond-empty",
-              "positionMode": "relative",
-              "condition": "true",
-              "elements": []
-            },
-            {
-              "type": "rich_text",
-              "id": "rt-missing-text",
-              "positionMode": "relative",
-              "width": 200,
-              "dataBinding": "nonExistentField",
-              "style": { "multiline": true }
-            },
-            {
-              "type": "link",
-              "id": "lk-missing-text",
-              "positionMode": "relative",
-              "width": 200,
-              "dataBinding": "nonExistentField",
-              "url": "https://example.com",
-              "style": { "multiline": true }
-            },
-            {
-              "type": "container",
-              "id": "ct-with-loops",
-              "positionMode": "relative",
-              "height": "auto",
-              "elements": [
+              "version": "1.0",
+              "pageSettings": {
+                "size": "A4",
+                "orientation": "portrait",
+                "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
+              },
+              "pageElements": [
                 {
-                  "type": "loop",
-                  "id": "loop-all-types",
-                  "width": 400,
-                  "height": 0,
-                  "dataBinding": "items",
-                  "direction": "vertical",
-                  "elements": [
-                    { "type": "link", "id": "l1", "value": "L", "url": "https://x.com", "height": 18 },
-                    { "type": "rich_text", "id": "r1", "value": "R", "height": 18 },
-                    { "type": "text", "id": "t1", "value": "T", "height": 18 },
-                    { "type": "static_text", "id": "s1", "value": "S", "height": 18 },
-                    { "type": "image", "id": "i1", "width": 50, "height": 30, "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" },
-                    { "type": "rectangle", "id": "rc1", "width": 50, "height": 35 },
-                    { "type": "rectangle", "id": "rc2", "width": 50, "height": "100%" },
-                    { "type": "line", "id": "ln1", "width": 50, "height": 5 },
-                    { "type": "barcode", "id": "b1", "format": "CODE_128", "value": "99", "height": 22 },
-                    { "type": "container", "id": "c1", "width": 50, "height": 40, "elements": [] }
-                  ]
+                  "type": "text",
+                  "id": "rel-text",
+                  "positionMode": "relative",
+                  "x": 0,
+                  "y": 0,
+                  "value": "Relative text testing line 393"
                 },
                 {
-                  "type": "loop",
-                  "id": "loop-empty-calc",
-                  "width": 400,
-                  "height": 0,
-                  "dataBinding": "items",
-                  "direction": "vertical",
+                  "type": "image",
+                  "id": "img-no-h",
+                  "positionMode": "relative",
+                  "x": 0,
+                  "y": 0,
+                  "width": 100,
+                  "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                },
+                {
+                  "type": "conditional",
+                  "id": "cond-empty",
+                  "positionMode": "relative",
+                  "condition": "true",
                   "elements": []
+                },
+                {
+                  "type": "rich_text",
+                  "id": "rt-missing-text",
+                  "positionMode": "relative",
+                  "width": 200,
+                  "dataBinding": "nonExistentField",
+                  "style": { "multiline": true }
+                },
+                {
+                  "type": "link",
+                  "id": "lk-missing-text",
+                  "positionMode": "relative",
+                  "width": 200,
+                  "dataBinding": "nonExistentField",
+                  "url": "https://example.com",
+                  "style": { "multiline": true }
+                },
+                {
+                  "type": "container",
+                  "id": "ct-with-loops",
+                  "positionMode": "relative",
+                  "height": "auto",
+                  "elements": [
+                    {
+                      "type": "loop",
+                      "id": "loop-all-types",
+                      "width": 400,
+                      "height": 0,
+                      "dataBinding": "items",
+                      "direction": "vertical",
+                      "elements": [
+                        { "type": "link", "id": "l1", "value": "L", "url": "https://x.com", "height": 18 },
+                        { "type": "rich_text", "id": "r1", "value": "R", "height": 18 },
+                        { "type": "text", "id": "t1", "value": "T", "height": 18 },
+                        { "type": "static_text", "id": "s1", "value": "S", "height": 18 },
+                        { "type": "image", "id": "i1", "width": 50, "height": 30, "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" },
+                        { "type": "rectangle", "id": "rc1", "width": 50, "height": 35 },
+                        { "type": "rectangle", "id": "rc2", "width": 50, "height": "100%" },
+                        { "type": "line", "id": "ln1", "width": 50, "height": 5 },
+                        { "type": "barcode", "id": "b1", "format": "CODE_128", "value": "99", "height": 22 },
+                        { "type": "container", "id": "c1", "width": 50, "height": 40, "elements": [] }
+                      ]
+                    },
+                    {
+                      "type": "loop",
+                      "id": "loop-empty-calc",
+                      "width": 400,
+                      "height": 0,
+                      "dataBinding": "items",
+                      "direction": "vertical",
+                      "elements": []
+                    }
+                  ]
                 }
               ]
             }
-          ]
-        }
-        """.trimIndent()
+            """.trimIndent()
 
         val generator = PDFGenerator()
         val bytes = generator.generate(templateJson, """{"items": [{"id": 1}]}""")
@@ -457,17 +463,19 @@ class ApiCoverageBoostTest {
     fun `test remaining PDFGenerator generateFromPath and error branches`() {
         val tempTemplate = File.createTempFile("temp-tpl", ".json")
         tempTemplate.deleteOnExit()
-        tempTemplate.writeText("""
-        {
-          "version": "1.0",
-          "pageSettings": {
-            "size": "A4",
-            "orientation": "portrait",
-            "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
-          },
-          "pageElements": [{ "type": "text", "id": "t1", "value": "Hi" }]
-        }
-        """.trimIndent())
+        tempTemplate.writeText(
+            """
+            {
+              "version": "1.0",
+              "pageSettings": {
+                "size": "A4",
+                "orientation": "portrait",
+                "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
+              },
+              "pageElements": [{ "type": "text", "id": "t1", "value": "Hi" }]
+            }
+            """.trimIndent(),
+        )
 
         val generator = PDFGenerator()
 
@@ -480,15 +488,17 @@ class ApiCoverageBoostTest {
         assertEquals("type", copyErr.keyword)
 
         // 1. generateFromPath with invalid data JSON syntax
-        val exSyntax = assertThrows(PDFGenerationException::class.java) {
-            generator.generateFromPath(tempTemplate.absolutePath, "{not-valid-json")
-        }
+        val exSyntax =
+            assertThrows(PDFGenerationException::class.java) {
+                generator.generateFromPath(tempTemplate.absolutePath, "{not-valid-json")
+            }
         assertTrue(exSyntax.message?.contains("JSON data syntax error") == true)
 
         // 2. generateFromPath with missing template
-        val exMissingTpl = assertThrows(PDFGenerationException::class.java) {
-            generator.generateFromPath("/non/existent/path/template.json", "{}")
-        }
+        val exMissingTpl =
+            assertThrows(PDFGenerationException::class.java) {
+                generator.generateFromPath("/non/existent/path/template.json", "{}")
+            }
         assertTrue(exMissingTpl.message?.contains("Template not found") == true)
 
         // 3. generate(templateJson, dataJson, outputFile) with invalid dataJson

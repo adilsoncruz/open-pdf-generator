@@ -25,11 +25,12 @@ class LoopIterationScope(
     val index: Int,
     val normalizedItemMap: Map<String, Any?>? = (item as? Map<*, *>)?.mapKeys { it.key.toString() },
 ) {
-    val loopContext: LoopContext = LoopContext(
-        item = item,
-        index = index,
-        normalizedItemMap = normalizedItemMap,
-    )
+    val loopContext: LoopContext =
+        LoopContext(
+            item = item,
+            index = index,
+            normalizedItemMap = normalizedItemMap,
+        )
 
     fun createItemContext(
         parentContext: RenderContext,

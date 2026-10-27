@@ -5,7 +5,6 @@ import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.ConditionalElement
-import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LinkElement
@@ -28,19 +27,20 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ElementHeightCalculatorTest {
-
     private fun createDummyContext(): RenderContext {
         val doc = Document()
         val writer = PdfWriter.getInstance(doc, ByteArrayOutputStream())
         doc.open()
-        val template = Template(
-            version = "1.0",
-            pageSettings = PageSettings(
-                size = "A4",
-                orientation = "portrait",
-                margins = Margins(0f, 0f, 0f, 0f),
-            ),
-        )
+        val template =
+            Template(
+                version = "1.0",
+                pageSettings =
+                    PageSettings(
+                        size = "A4",
+                        orientation = "portrait",
+                        margins = Margins(0f, 0f, 0f, 0f),
+                    ),
+            )
         return RenderContext(
             document = doc,
             writer = writer,
@@ -72,25 +72,27 @@ class ElementHeightCalculatorTest {
         val textNoH = TextElement(id = "t2", x = 0f, y = 0f, value = "Simple", style = TextStyle(fontSize = 14f))
         assertEquals(14f, ElementHeightCalculator.getElementHeight(textNoH, data, context))
 
-        val multilineText = TextElement(
-            id = "t3",
-            x = 0f,
-            y = 0f,
-            dataBinding = "greeting",
-            width = 100f,
-            style = TextStyle(fontSize = 12f, multiline = true),
-        )
+        val multilineText =
+            TextElement(
+                id = "t3",
+                x = 0f,
+                y = 0f,
+                dataBinding = "greeting",
+                width = 100f,
+                style = TextStyle(fontSize = 12f, multiline = true),
+            )
         val h1 = ElementHeightCalculator.getElementHeight(multilineText, data, context)
         assertTrue(h1 >= 12f)
 
-        val staticText = StaticTextElement(
-            id = "st1",
-            x = 0f,
-            y = 0f,
-            value = "Static multiline content here",
-            width = 100f,
-            style = TextStyle(fontSize = 12f, multiline = true),
-        )
+        val staticText =
+            StaticTextElement(
+                id = "st1",
+                x = 0f,
+                y = 0f,
+                value = "Static multiline content here",
+                width = 100f,
+                style = TextStyle(fontSize = 12f, multiline = true),
+            )
         val h2 = ElementHeightCalculator.getElementHeight(staticText, data, context)
         assertTrue(h2 >= 12f)
     }
@@ -128,31 +130,34 @@ class ElementHeightCalculatorTest {
     @Test
     fun `test getElementHeight for loop and table`() {
         val context = createDummyContext()
-        val data = mapOf(
-            "items" to listOf(mapOf("id" to 1), mapOf("id" to 2), mapOf("id" to 3)),
-        )
+        val data =
+            mapOf(
+                "items" to listOf(mapOf("id" to 1), mapOf("id" to 2), mapOf("id" to 3)),
+            )
 
-        val table = TableElement(
-            id = "tbl",
-            x = 0f,
-            y = 0f,
-            width = 300f,
-            dataBinding = "items",
-            columns = emptyList(),
-        )
+        val table =
+            TableElement(
+                id = "tbl",
+                x = 0f,
+                y = 0f,
+                width = 300f,
+                dataBinding = "items",
+                columns = emptyList(),
+            )
         val tableHeight = ElementHeightCalculator.getElementHeight(table, data, context)
         assertTrue(tableHeight > 0f)
 
-        val loop = LoopElement(
-            id = "lp",
-            x = 0f,
-            y = 0f,
-            width = 300f,
-            height = 40f,
-            dataBinding = "items",
-            itemSpacing = 5f,
-            elements = listOf(TextElement(id = "t", x = 0f, y = 0f, value = "x", height = 20f)),
-        )
+        val loop =
+            LoopElement(
+                id = "lp",
+                x = 0f,
+                y = 0f,
+                width = 300f,
+                height = 40f,
+                dataBinding = "items",
+                itemSpacing = 5f,
+                elements = listOf(TextElement(id = "t", x = 0f, y = 0f, value = "x", height = 20f)),
+            )
         val loopHeight = ElementHeightCalculator.getElementHeight(loop, data, context)
         assertEquals(130f, loopHeight)
     }
@@ -161,11 +166,12 @@ class ElementHeightCalculatorTest {
     fun `test calculateLoopItemHeight`() {
         assertEquals(0f, ElementHeightCalculator.calculateLoopItemHeight(emptyList(), 100f, 50f))
 
-        val elements = listOf(
-            TextElement(id = "t1", x = 0f, y = 0f, value = "Hi", height = 20f, positionMode = PositionMode.RELATIVE),
-            LineElement(id = "l1", x = 0f, y = 0f, width = 100f, height = 5f, positionMode = PositionMode.RELATIVE),
-            RectangleElement(id = "r1", x = 0f, y = 0f, width = 50f, height = "100%", positionMode = PositionMode.RELATIVE),
-        )
+        val elements =
+            listOf(
+                TextElement(id = "t1", x = 0f, y = 0f, value = "Hi", height = 20f, positionMode = PositionMode.RELATIVE),
+                LineElement(id = "l1", x = 0f, y = 0f, width = 100f, height = 5f, positionMode = PositionMode.RELATIVE),
+                RectangleElement(id = "r1", x = 0f, y = 0f, width = 50f, height = "100%", positionMode = PositionMode.RELATIVE),
+            )
         val itemHeight = ElementHeightCalculator.calculateLoopItemHeight(elements, 100f, 50f)
         assertTrue(itemHeight > 0f)
     }
@@ -175,14 +181,16 @@ class ElementHeightCalculatorTest {
         val context = createDummyContext()
         val data = emptyMap<String, Any?>()
 
-        val cond = ConditionalElement(
-            id = "cond1",
-            condition = "true",
-            elements = listOf(
-                TextElement(id = "t1", x = 0f, y = 0f, value = "A", height = 15f),
-                TextElement(id = "t2", x = 0f, y = 0f, value = "B", height = 35f),
-            ),
-        )
+        val cond =
+            ConditionalElement(
+                id = "cond1",
+                condition = "true",
+                elements =
+                    listOf(
+                        TextElement(id = "t1", x = 0f, y = 0f, value = "A", height = 15f),
+                        TextElement(id = "t2", x = 0f, y = 0f, value = "B", height = 35f),
+                    ),
+            )
         assertEquals(35f, ElementHeightCalculator.getElementHeight(cond, data, context))
 
         val richText = RichTextElement(id = "rt1", x = 0f, y = 0f, value = "**Bold**", height = 18f)

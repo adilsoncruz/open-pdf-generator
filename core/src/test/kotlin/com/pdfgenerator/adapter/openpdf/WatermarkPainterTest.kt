@@ -12,10 +12,8 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.assertTrue
 
 class WatermarkPainterTest {
-
     private val transparentPngBase64 =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
 
@@ -32,34 +30,37 @@ class WatermarkPainterTest {
         every { document.pageSize } returns Rectangle(0f, 0f, 200f, 200f)
 
         // 1. Text repeat with spacing
-        val textRepeatWatermark = WatermarkConfig(
-            type = WatermarkType.TEXT,
-            text = "REPEAT ME",
-            repeat = true,
-            spacingX = 50f,
-            spacingY = 50f,
-            opacity = 0.5f,
-            onTop = false,
-        )
+        val textRepeatWatermark =
+            WatermarkConfig(
+                type = WatermarkType.TEXT,
+                text = "REPEAT ME",
+                repeat = true,
+                spacingX = 50f,
+                spacingY = 50f,
+                opacity = 0.5f,
+                onTop = false,
+            )
         painter.renderWatermark(writer, document, textRepeatWatermark, emptyMap())
 
         // 2. DataBinding with transformation
-        val textTransformWatermark = WatermarkConfig(
-            type = WatermarkType.TEXT,
-            dataBinding = "title | uppercase",
-            repeat = false,
-            opacity = 0.5f,
-            onTop = false,
-        )
+        val textTransformWatermark =
+            WatermarkConfig(
+                type = WatermarkType.TEXT,
+                dataBinding = "title | uppercase",
+                repeat = false,
+                opacity = 0.5f,
+                onTop = false,
+            )
         painter.renderWatermark(writer, document, textTransformWatermark, mapOf("title" to "hello"))
 
         // 3. Blank text or null rawText
-        val blankWatermark = WatermarkConfig(
-            type = WatermarkType.TEXT,
-            text = "   ",
-            opacity = 0.5f,
-            onTop = false,
-        )
+        val blankWatermark =
+            WatermarkConfig(
+                type = WatermarkType.TEXT,
+                text = "   ",
+                opacity = 0.5f,
+                onTop = false,
+            )
         painter.renderWatermark(writer, document, blankWatermark, emptyMap())
     }
 
@@ -76,40 +77,44 @@ class WatermarkPainterTest {
         every { document.pageSize } returns Rectangle(0f, 0f, 200f, 200f)
 
         // 1. Image with width only
-        val imgWidthOnly = WatermarkConfig(
-            type = WatermarkType.IMAGE,
-            imageSource = transparentPngBase64,
-            width = 50f,
-            onTop = true,
-        )
+        val imgWidthOnly =
+            WatermarkConfig(
+                type = WatermarkType.IMAGE,
+                imageSource = transparentPngBase64,
+                width = 50f,
+                onTop = true,
+            )
         painter.renderWatermark(writer, document, imgWidthOnly, emptyMap())
 
         // 2. Image with height only
-        val imgHeightOnly = WatermarkConfig(
-            type = WatermarkType.IMAGE,
-            imageSource = transparentPngBase64,
-            height = 50f,
-            onTop = true,
-        )
+        val imgHeightOnly =
+            WatermarkConfig(
+                type = WatermarkType.IMAGE,
+                imageSource = transparentPngBase64,
+                height = 50f,
+                onTop = true,
+            )
         painter.renderWatermark(writer, document, imgHeightOnly, emptyMap())
 
         // 3. Image repeat mode
-        val imgRepeat = WatermarkConfig(
-            type = WatermarkType.IMAGE,
-            imageSource = transparentPngBase64,
-            repeat = true,
-            spacingX = 60f,
-            spacingY = 60f,
-            onTop = true,
-        )
+        val imgRepeat =
+            WatermarkConfig(
+                type = WatermarkType.IMAGE,
+                imageSource = transparentPngBase64,
+                repeat = true,
+                spacingX = 60f,
+                spacingY = 60f,
+                onTop = true,
+            )
         painter.renderWatermark(writer, document, imgRepeat, emptyMap())
 
         // 4. Image with blank source
-        val imgBlank = WatermarkConfig(
-            type = WatermarkType.IMAGE,
-            imageSource = "",
-            onTop = true,
-        )
+        val imgBlank =
+            WatermarkConfig(
+                type = WatermarkType.IMAGE,
+                imageSource = "",
+                onTop = true,
+            )
         painter.renderWatermark(writer, document, imgBlank, emptyMap())
     }
 
@@ -123,11 +128,12 @@ class WatermarkPainterTest {
         val document = mockk<Document>(relaxed = true)
         every { document.pageSize } throws RuntimeException("Page size error")
 
-        val watermark = WatermarkConfig(
-            type = WatermarkType.TEXT,
-            text = "ERR",
-            onTop = false,
-        )
+        val watermark =
+            WatermarkConfig(
+                type = WatermarkType.TEXT,
+                text = "ERR",
+                onTop = false,
+            )
 
         assertThrows<RuntimeException> {
             strictPainter.renderWatermark(writer, document, watermark, emptyMap())

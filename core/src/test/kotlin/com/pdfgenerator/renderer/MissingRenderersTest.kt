@@ -9,7 +9,6 @@ import java.io.File
 import kotlin.test.assertTrue
 
 class MissingRenderersTest {
-
     @Nested
     inner class StaticTextRendererTest {
         @Test

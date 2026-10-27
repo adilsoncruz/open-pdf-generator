@@ -96,15 +96,25 @@ class TextRenderer : Renderer<TextElement> {
         val lineHeightMultiplier = element.style?.lineHeight ?: 1.2f
         val textBoxHeight = fontSize * lineHeightMultiplier
 
-        val textY = TextLayoutHelper.calculateSingleLineY(
-            yTop, boxHeight, verticalAlign, paddingTop, paddingBottom, textBoxHeight,
-        )
+        val textY =
+            TextLayoutHelper.calculateSingleLineY(
+                yTop,
+                boxHeight,
+                verticalAlign,
+                paddingTop,
+                paddingBottom,
+                textBoxHeight,
+            )
 
         val alignment = TextLayoutHelper.resolveAlignment(element.style?.alignment)
         val textWidth = font.baseFont.getWidthPoint(text, fontSize)
-        val textX = TextLayoutHelper.calculateSingleLineX(
-            alignment, x, element.width ?: textWidth, textWidth,
-        )
+        val textX =
+            TextLayoutHelper.calculateSingleLineX(
+                alignment,
+                x,
+                element.width ?: textWidth,
+                textWidth,
+            )
 
         contentByte.beginText()
         contentByte.setFontAndSize(font.baseFont, fontSize)
@@ -140,31 +150,33 @@ class TextRenderer : Renderer<TextElement> {
         val contentByte = if (context.useContentUnder) context.writer.directContentUnder else context.writer.directContent
         renderBackground(contentByte, element.style?.backgroundColor, x, yTop, boxWidth, boxHeight)
 
-        val measuredLayout = TextLayoutHelper.getOrMeasureMultilineLayout(
-            elementId = element.id,
-            resolvedText = text,
-            styleHash = element.style?.hashCode() ?: 0,
-            boxWidth = boxWidth,
-            fontSize = fontSize,
-            lineHeight = element.style?.lineHeight,
-            paddingTop = paddingTop,
-            paddingBottom = paddingBottom,
-            paddingLeft = paddingLeft,
-            paddingRight = paddingRight,
-            firstLineIndent = firstLineIndent,
-            fontFamily = element.style?.fontFamily ?: "Helvetica",
-            cache = context.textLayoutCache,
-            baseFont = font.baseFont,
-        )
+        val measuredLayout =
+            TextLayoutHelper.getOrMeasureMultilineLayout(
+                elementId = element.id,
+                resolvedText = text,
+                styleHash = element.style?.hashCode() ?: 0,
+                boxWidth = boxWidth,
+                fontSize = fontSize,
+                lineHeight = element.style?.lineHeight,
+                paddingTop = paddingTop,
+                paddingBottom = paddingBottom,
+                paddingLeft = paddingLeft,
+                paddingRight = paddingRight,
+                firstLineIndent = firstLineIndent,
+                fontFamily = element.style?.fontFamily ?: "Helvetica",
+                cache = context.textLayoutCache,
+                baseFont = font.baseFont,
+            )
 
-        val linesToRender = TextLayoutHelper.filterLinesForOverflow(
-            lines = measuredLayout.lines,
-            overflow = element.style?.overflow,
-            boxHeight = boxHeight,
-            paddingTop = paddingTop,
-            paddingBottom = paddingBottom,
-            lineSpacing = measuredLayout.lineSpacing,
-        )
+        val linesToRender =
+            TextLayoutHelper.filterLinesForOverflow(
+                lines = measuredLayout.lines,
+                overflow = element.style?.overflow,
+                boxHeight = boxHeight,
+                paddingTop = paddingTop,
+                paddingBottom = paddingBottom,
+                lineSpacing = measuredLayout.lineSpacing,
+            )
 
         contentByte.beginText()
         contentByte.setFontAndSize(font.baseFont, fontSize)
@@ -174,13 +186,26 @@ class TextRenderer : Renderer<TextElement> {
 
         val alignment = element.style?.alignment
         linesToRender.forEachIndexed { lineIndex, line ->
-            val yPos = TextLayoutHelper.calculateMultilineLineY(
-                yTop, paddingTop, fontSize, measuredLayout.lineSpacing, lineIndex,
-            )
+            val yPos =
+                TextLayoutHelper.calculateMultilineLineY(
+                    yTop,
+                    paddingTop,
+                    fontSize,
+                    measuredLayout.lineSpacing,
+                    lineIndex,
+                )
             val lineWidth = font.baseFont.getWidthPoint(line, fontSize)
-            val xPos = TextLayoutHelper.calculateMultilineLineX(
-                alignment, x, boxWidth, paddingLeft, paddingRight, firstLineIndent, lineIndex, lineWidth,
-            )
+            val xPos =
+                TextLayoutHelper.calculateMultilineLineX(
+                    alignment,
+                    x,
+                    boxWidth,
+                    paddingLeft,
+                    paddingRight,
+                    firstLineIndent,
+                    lineIndex,
+                    lineWidth,
+                )
             contentByte.setTextMatrix(xPos, yPos)
             contentByte.showText(line)
         }

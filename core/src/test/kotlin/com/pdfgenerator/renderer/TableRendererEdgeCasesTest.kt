@@ -9,7 +9,6 @@ import java.io.File
 import kotlin.test.assertTrue
 
 class TableRendererEdgeCasesTest {
-
     @Nested
     inner class TableRendererEdgeCases {
         @Test
@@ -54,16 +53,20 @@ class TableRendererEdgeCasesTest {
             val template = Template.fromString(templateJson)
             val generator = PDFGenerator()
             val outputFile = File(tempDir, "table-edge.pdf")
-            
+
             // Missing data should just render empty or handle nulls
             generator.generate(template, emptyMap(), outputFile)
 
             // Or with valid data with missing fields
-            val data = mapOf("items" to listOf(
-                mapOf("f1" to "Val 1", "f2" to "Val 2"),
-                mapOf("f1" to "Val 3") // Missing f2
-            ))
-            
+            val data =
+                mapOf(
+                    "items" to
+                        listOf(
+                            mapOf("f1" to "Val 1", "f2" to "Val 2"),
+                            mapOf("f1" to "Val 3"), // Missing f2
+                        ),
+                )
+
             generator.generate(template, data, outputFile)
 
             assertTrue(outputFile.exists())
@@ -74,26 +77,42 @@ class TableRendererEdgeCasesTest {
         fun `should render table with all border types, fonts and alignments`(
             @TempDir tempDir: File,
         ) {
-            val variations = listOf(
-                // borders
-                mapOf("headerBorderType" to "none", "cellBorderType" to "none"),
-                mapOf("headerBorderType" to "row", "cellBorderType" to "row"),
-                mapOf("headerBorderType" to "columns", "cellBorderType" to "cells"),
-                mapOf("headerBorderType" to "top-bottom", "cellBorderType" to "top-bottom"),
-                mapOf("headerBorderType" to "left-right", "cellBorderType" to "left-right"),
-                mapOf("headerBorderType" to "invalid", "cellBorderType" to "invalid"),
-                
-                // fonts
-                mapOf("headerFontFamily" to "times", "fontFamily" to "times", "headerFontWeight" to "bold"),
-                mapOf("headerFontFamily" to "courier", "fontFamily" to "courier", "headerFontWeight" to "normal"),
-                mapOf("headerFontFamily" to "helvetica-bold", "fontFamily" to "helvetica-bold")
-            )
+            val variations =
+                listOf(
+                    // borders
+                    mapOf("headerBorderType" to "none", "cellBorderType" to "none"),
+                    mapOf("headerBorderType" to "row", "cellBorderType" to "row"),
+                    mapOf("headerBorderType" to "columns", "cellBorderType" to "cells"),
+                    mapOf("headerBorderType" to "top-bottom", "cellBorderType" to "top-bottom"),
+                    mapOf("headerBorderType" to "left-right", "cellBorderType" to "left-right"),
+                    mapOf("headerBorderType" to "invalid", "cellBorderType" to "invalid"),
+                    // fonts
+                    mapOf("headerFontFamily" to "times", "fontFamily" to "times", "headerFontWeight" to "bold"),
+                    mapOf("headerFontFamily" to "courier", "fontFamily" to "courier", "headerFontWeight" to "normal"),
+                    mapOf("headerFontFamily" to "helvetica-bold", "fontFamily" to "helvetica-bold"),
+                )
 
-            val alignments = listOf(
-                mapOf("headerAlignment" to "center", "headerVerticalAlignment" to "top", "alignment" to "center", "verticalAlignment" to "top"),
-                mapOf("headerAlignment" to "right", "headerVerticalAlignment" to "bottom", "alignment" to "right", "verticalAlignment" to "bottom"),
-                mapOf("headerAlignment" to "left", "headerVerticalAlignment" to "middle", "alignment" to "left", "verticalAlignment" to "middle")
-            )
+            val alignments =
+                listOf(
+                    mapOf(
+                        "headerAlignment" to "center",
+                        "headerVerticalAlignment" to "top",
+                        "alignment" to "center",
+                        "verticalAlignment" to "top",
+                    ),
+                    mapOf(
+                        "headerAlignment" to "right",
+                        "headerVerticalAlignment" to "bottom",
+                        "alignment" to "right",
+                        "verticalAlignment" to "bottom",
+                    ),
+                    mapOf(
+                        "headerAlignment" to "left",
+                        "headerVerticalAlignment" to "middle",
+                        "alignment" to "left",
+                        "verticalAlignment" to "middle",
+                    ),
+                )
 
             var i = 0
             for (v in variations) {
@@ -156,12 +175,16 @@ class TableRendererEdgeCasesTest {
                     val template = Template.fromString(templateJson)
                     val generator = PDFGenerator()
                     val outputFile = File(tempDir, "table-full-coverage-${i++}.pdf")
-                    
-                    val data = mapOf("items" to listOf(
-                        mapOf("f1" to "V1", "f2" to "V2"),
-                        mapOf("f1" to "V3", "f2" to "V4")
-                    ))
-                    
+
+                    val data =
+                        mapOf(
+                            "items" to
+                                listOf(
+                                    mapOf("f1" to "V1", "f2" to "V2"),
+                                    mapOf("f1" to "V3", "f2" to "V4"),
+                                ),
+                        )
+
                     generator.generate(template, data, outputFile)
                     assertTrue(outputFile.exists())
                 }

@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
 class LoopPageBreakHandlerTest {
-
     private fun createDummyContext(
         containerHeight: Float? = null,
         offsetY: Float = 50f,
@@ -28,29 +27,32 @@ class LoopPageBreakHandlerTest {
         val os = ByteArrayOutputStream()
         val writer = PdfWriter.getInstance(document, os)
         document.open()
-        val template = Template(
-            version = "1.0",
-            pageSettings = PageSettings(
-                size = "A4",
-                orientation = "portrait",
-                margins = Margins(top = 20f, right = 20f, bottom = 20f, left = 20f),
-                header = HeaderFooter(height = headerHeight),
-                footer = HeaderFooter(height = footerHeight),
-            ),
-            pageElements = emptyList(),
-        )
+        val template =
+            Template(
+                version = "1.0",
+                pageSettings =
+                    PageSettings(
+                        size = "A4",
+                        orientation = "portrait",
+                        margins = Margins(top = 20f, right = 20f, bottom = 20f, left = 20f),
+                        header = HeaderFooter(height = headerHeight),
+                        footer = HeaderFooter(height = footerHeight),
+                    ),
+                pageElements = emptyList(),
+            )
         val config = PDFGeneratorConfig()
-        val context = RenderContext(
-            document = document,
-            writer = writer,
-            template = template,
-            data = emptyMap(),
-            config = config,
-            containerHeight = containerHeight,
-            offsetY = offsetY,
-            bodyOffsetY = bodyOffsetY,
-            renderState = RenderState(),
-        )
+        val context =
+            RenderContext(
+                document = document,
+                writer = writer,
+                template = template,
+                data = emptyMap(),
+                config = config,
+                containerHeight = containerHeight,
+                offsetY = offsetY,
+                bodyOffsetY = bodyOffsetY,
+                renderState = RenderState(),
+            )
         return Pair(document, context)
     }
 
@@ -71,12 +73,13 @@ class LoopPageBreakHandlerTest {
     @Test
     fun `should advance offsets without page break when fitting inside page`() {
         val (_, context) = createDummyContext(containerHeight = 500f)
-        val handler = LoopPageBreakHandler(
-            context = context,
-            loopBaseY = 10f,
-            itemHeight = 40f,
-            itemSpacing = 5f,
-        )
+        val handler =
+            LoopPageBreakHandler(
+                context = context,
+                loopBaseY = 10f,
+                itemHeight = 40f,
+                itemSpacing = 5f,
+            )
 
         val pos0 = handler.prepareItemPosition()
         assertEquals(50f, pos0.pageOffsetY)
@@ -98,17 +101,19 @@ class LoopPageBreakHandlerTest {
 
     @Test
     fun `should trigger page break and reset offset when exceeding page limit`() {
-        val (document, context) = createDummyContext(
-            containerHeight = 100f,
-            offsetY = 70f,
-            bodyOffsetY = 50f, // contextOffsetInBody = 20f > 0
-        )
-        val handler = LoopPageBreakHandler(
-            context = context,
-            loopBaseY = 10f,
-            itemHeight = 45f,
-            itemSpacing = 5f,
-        )
+        val (document, context) =
+            createDummyContext(
+                containerHeight = 100f,
+                offsetY = 70f,
+                bodyOffsetY = 50f, // contextOffsetInBody = 20f > 0
+            )
+        val handler =
+            LoopPageBreakHandler(
+                context = context,
+                loopBaseY = 10f,
+                itemHeight = 45f,
+                itemSpacing = 5f,
+            )
 
         // Item 0: startY = 10, endY = 55. itemEndYInBody = 20 + 55 = 75 <= 100. Fits!
         val pos0 = handler.prepareItemPosition()
@@ -133,12 +138,13 @@ class LoopPageBreakHandlerTest {
     @Test
     fun `should update render state on completion`() {
         val (_, context) = createDummyContext(containerHeight = 500f, offsetY = 60f, bodyOffsetY = 50f)
-        val handler = LoopPageBreakHandler(
-            context = context,
-            loopBaseY = 20f,
-            itemHeight = 30f,
-            itemSpacing = 10f,
-        )
+        val handler =
+            LoopPageBreakHandler(
+                context = context,
+                loopBaseY = 20f,
+                itemHeight = 30f,
+                itemSpacing = 10f,
+            )
 
         handler.prepareItemPosition()
         handler.onItemRendered()

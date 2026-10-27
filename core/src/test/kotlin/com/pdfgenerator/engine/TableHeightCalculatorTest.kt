@@ -7,17 +7,17 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class TableHeightCalculatorTest {
-
     @Test
     fun `test calculateHeaderHeight and calculateRowHeight defaults`() {
-        val table = TableElement(
-            id = "t1",
-            x = 0f,
-            y = 0f,
-            width = 300f,
-            dataBinding = "items",
-            columns = listOf(TableColumn(field = "col1", header = "Col 1")),
-        )
+        val table =
+            TableElement(
+                id = "t1",
+                x = 0f,
+                y = 0f,
+                width = 300f,
+                dataBinding = "items",
+                columns = listOf(TableColumn(field = "col1", header = "Col 1")),
+            )
 
         // Default header: headerFontSize 12 + headerPadding (5 + 5) = 22
         assertEquals(22f, TableHeightCalculator.calculateHeaderHeight(table))
@@ -31,22 +31,24 @@ class TableHeightCalculatorTest {
 
     @Test
     fun `test custom styling for header and rows`() {
-        val table = TableElement(
-            id = "t2",
-            x = 0f,
-            y = 0f,
-            width = 300f,
-            dataBinding = "items",
-            columns = listOf(TableColumn(field = "col1", header = "Col 1")),
-            style = TableStyle(
-                headerFontSize = 14f,
-                headerPaddingTop = 8f,
-                headerPaddingBottom = 8f,
-                fontSize = 11f,
-                cellPaddingTop = 4f,
-                cellPaddingBottom = 6f,
-            ),
-        )
+        val table =
+            TableElement(
+                id = "t2",
+                x = 0f,
+                y = 0f,
+                width = 300f,
+                dataBinding = "items",
+                columns = listOf(TableColumn(field = "col1", header = "Col 1")),
+                style =
+                    TableStyle(
+                        headerFontSize = 14f,
+                        headerPaddingTop = 8f,
+                        headerPaddingBottom = 8f,
+                        fontSize = 11f,
+                        cellPaddingTop = 4f,
+                        cellPaddingBottom = 6f,
+                    ),
+            )
 
         // Header: 14 + 8 + 8 = 30
         assertEquals(30f, TableHeightCalculator.calculateHeaderHeight(table))
@@ -61,14 +63,15 @@ class TableHeightCalculatorTest {
 
     @Test
     fun `test estimateRowsPerPage`() {
-        val table = TableElement(
-            id = "t3",
-            x = 0f,
-            y = 0f,
-            width = 300f,
-            dataBinding = "items",
-            columns = listOf(TableColumn(field = "col1", header = "Col 1")),
-        )
+        val table =
+            TableElement(
+                id = "t3",
+                x = 0f,
+                y = 0f,
+                width = 300f,
+                dataBinding = "items",
+                columns = listOf(TableColumn(field = "col1", header = "Col 1")),
+            )
 
         // Header = 22, Row = 20
         // Available: 222 -> remaining = 200 -> 10 rows

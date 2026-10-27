@@ -59,16 +59,18 @@ object DocumentFactory {
         orientation: String,
         customSize: CustomSize? = null,
     ): Rectangle {
-        val baseSize = when (size.uppercase()) {
-            "A4" -> PageSize.A4
-            "A3" -> PageSize.A3
-            "A5" -> PageSize.A5
-            "LETTER" -> PageSize.LETTER
-            "LEGAL" -> PageSize.LEGAL
-            "CUSTOM" -> customSize?.let { Rectangle(it.width, it.height) }
-                ?: throw IllegalArgumentException("Custom size required when size is CUSTOM")
-            else -> throw IllegalArgumentException("Unknown page size: $size")
-        }
+        val baseSize =
+            when (size.uppercase()) {
+                "A4" -> PageSize.A4
+                "A3" -> PageSize.A3
+                "A5" -> PageSize.A5
+                "LETTER" -> PageSize.LETTER
+                "LEGAL" -> PageSize.LEGAL
+                "CUSTOM" ->
+                    customSize?.let { Rectangle(it.width, it.height) }
+                        ?: throw IllegalArgumentException("Custom size required when size is CUSTOM")
+                else -> throw IllegalArgumentException("Unknown page size: $size")
+            }
 
         return when (orientation.lowercase()) {
             "portrait" -> baseSize
@@ -83,15 +85,17 @@ object DocumentFactory {
     ): Pair<Float, Float> {
         val page1Data = withSyntheticPageNumber(data, 1)
 
-        val headerVisiblePage1 = template.pageSettings.header?.let { header ->
-            val condition = header.printCondition
-            condition == null || ConditionEvaluator.evaluate(condition, page1Data, null)
-        } ?: false
+        val headerVisiblePage1 =
+            template.pageSettings.header?.let { header ->
+                val condition = header.printCondition
+                condition == null || ConditionEvaluator.evaluate(condition, page1Data, null)
+            } ?: false
 
-        val footerVisiblePage1 = template.pageSettings.footer?.let { footer ->
-            val condition = footer.printCondition
-            condition == null || ConditionEvaluator.evaluate(condition, page1Data, null)
-        } ?: false
+        val footerVisiblePage1 =
+            template.pageSettings.footer?.let { footer ->
+                val condition = footer.printCondition
+                condition == null || ConditionEvaluator.evaluate(condition, page1Data, null)
+            } ?: false
 
         val effectiveHeaderHeight = if (headerVisiblePage1) template.pageSettings.header?.height ?: 0f else 0f
         val effectiveFooterHeight = if (footerVisiblePage1) template.pageSettings.footer?.height ?: 0f else 0f
@@ -113,12 +117,13 @@ object DocumentFactory {
         val effectiveMarginTop = margins.top + effectiveHeaderHeightPage1
         val effectiveMarginBottom = margins.bottom + effectiveFooterHeightPage1
 
-        val document = createDocument(
-            pageSize = resolvePageSize(template.pageSettings),
-            margins = margins,
-            marginTop = effectiveMarginTop,
-            marginBottom = effectiveMarginBottom,
-        )
+        val document =
+            createDocument(
+                pageSize = resolvePageSize(template.pageSettings),
+                margins = margins,
+                marginTop = effectiveMarginTop,
+                marginBottom = effectiveMarginBottom,
+            )
 
         val writer = PdfWriter.getInstance(document, output)
         securityConfigurator?.configure(writer)
@@ -162,32 +167,34 @@ object DocumentFactory {
     ): DocumentSession {
         val layout = setupDocument(template, data, output, config, securityConfigurator)
 
-        val enrichedData = withSyntheticBindings(
-            data,
-            mapOf(
-                "_pageNumber" to 1,
-                "_date" to java.time.LocalDate.now().toString(),
-                "_dateTime" to java.time.LocalDateTime.now().toString(),
-            ),
-        )
+        val enrichedData =
+            withSyntheticBindings(
+                data,
+                mapOf(
+                    "_pageNumber" to 1,
+                    "_date" to java.time.LocalDate.now().toString(),
+                    "_dateTime" to java.time.LocalDateTime.now().toString(),
+                ),
+            )
 
-        val context = RenderContext(
-            document = layout.document,
-            writer = layout.writer,
-            template = template,
-            data = enrichedData,
-            config = config,
-            containerWidth = layout.bodyContainerWidth,
-            containerHeight = layout.bodyContainerHeight,
-            renderState = RenderState(),
-            offsetX = layout.bodyOffsetX,
-            offsetY = layout.bodyOffsetY,
-            bodyOffsetY = layout.bodyOffsetY,
-            headerPrintCondition = template.pageSettings.header?.printCondition,
-            footerPrintCondition = template.pageSettings.footer?.printCondition,
-            templateHeaderHeight = template.pageSettings.header?.height ?: 0f,
-            templateFooterHeight = template.pageSettings.footer?.height ?: 0f,
-        )
+        val context =
+            RenderContext(
+                document = layout.document,
+                writer = layout.writer,
+                template = template,
+                data = enrichedData,
+                config = config,
+                containerWidth = layout.bodyContainerWidth,
+                containerHeight = layout.bodyContainerHeight,
+                renderState = RenderState(),
+                offsetX = layout.bodyOffsetX,
+                offsetY = layout.bodyOffsetY,
+                bodyOffsetY = layout.bodyOffsetY,
+                headerPrintCondition = template.pageSettings.header?.printCondition,
+                footerPrintCondition = template.pageSettings.footer?.printCondition,
+                templateHeaderHeight = template.pageSettings.header?.height ?: 0f,
+                templateFooterHeight = template.pageSettings.footer?.height ?: 0f,
+            )
 
         return DocumentSession(layout, context)
     }

@@ -23,21 +23,22 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
 class LoopIterationScopeTest {
-
     private fun createDummyContext(): RenderContext {
         val document = Document(PageSize.A4)
         val os = ByteArrayOutputStream()
         val writer = PdfWriter.getInstance(document, os)
         document.open()
-        val template = Template(
-            version = "1.0",
-            pageSettings = PageSettings(
-                size = "A4",
-                orientation = "portrait",
-                margins = Margins(top = 20f, right = 20f, bottom = 20f, left = 20f),
-            ),
-            pageElements = emptyList(),
-        )
+        val template =
+            Template(
+                version = "1.0",
+                pageSettings =
+                    PageSettings(
+                        size = "A4",
+                        orientation = "portrait",
+                        margins = Margins(top = 20f, right = 20f, bottom = 20f, left = 20f),
+                    ),
+                pageElements = emptyList(),
+            )
         val config = PDFGeneratorConfig()
         return RenderContext(
             document = document,
@@ -95,14 +96,15 @@ class LoopIterationScopeTest {
         val dummyContext = createDummyContext()
         val scope = LoopIterationScope(item = mapOf("id" to 1), index = 0)
 
-        val itemContext = scope.createItemContext(
-            parentContext = dummyContext,
-            loopX = 15f,
-            pageOffsetY = 50f,
-            itemStartY = 25f,
-            loopWidth = 300f,
-            itemHeight = 60f,
-        )
+        val itemContext =
+            scope.createItemContext(
+                parentContext = dummyContext,
+                loopX = 15f,
+                pageOffsetY = 50f,
+                itemStartY = 25f,
+                loopWidth = 300f,
+                itemHeight = 60f,
+            )
 
         assertEquals(25f, itemContext.offsetX) // parent offsetX (10) + loopX (15)
         assertEquals(75f, itemContext.offsetY) // pageOffsetY (50) + itemStartY (25)

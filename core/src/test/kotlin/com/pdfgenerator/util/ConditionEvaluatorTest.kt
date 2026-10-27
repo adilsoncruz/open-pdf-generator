@@ -190,21 +190,23 @@ class ConditionEvaluatorTest {
         assertTrue(ConditionEvaluator.evaluate("invoice.total >= 1500.50", data))
         assertFalse(ConditionEvaluator.evaluate("invoice.total < 1000", data))
     }
+
     @Test
     fun `should evaluate in operator with list literal`() {
         val data = mapOf("status" to "active")
-        
+
         assertTrue(ConditionEvaluator.evaluate("status in ['active', 'pending']", data))
         assertFalse(ConditionEvaluator.evaluate("status in ['inactive', 'deleted']", data))
     }
 
     @Test
     fun `should evaluate in operator with variable list`() {
-        val data = mapOf(
-            "status" to "active",
-            "allowedStatuses" to listOf("active", "pending")
-        )
-        
+        val data =
+            mapOf(
+                "status" to "active",
+                "allowedStatuses" to listOf("active", "pending"),
+            )
+
         assertTrue(ConditionEvaluator.evaluate("status in allowedStatuses", data))
     }
 }

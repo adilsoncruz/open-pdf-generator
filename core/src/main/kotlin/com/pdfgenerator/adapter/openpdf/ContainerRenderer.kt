@@ -41,42 +41,52 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
 
         var flowY = 0f
         var maxContentBottom = 0f
-        val childEffectiveYList = element.elements.map { child ->
-            val isChildRelative = child.positionMode == PositionMode.RELATIVE
-            val isChildHeightFull = when (child) {
-                is RectangleElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
-                is ContainerElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
-                else -> false
-            }
-            val offset = if (isChildHeightFull) 0f else (child.relativeOffsetY ?: 0f)
-            val effectiveChildY = if (isChildRelative) {
-                if (flowY == 0f) {
-                    if (isChildHeightFull) 0f else if (child.y > 0f) child.y else offset
+        val childEffectiveYList =
+            element.elements.map { child ->
+                val isChildRelative = child.positionMode == PositionMode.RELATIVE
+                val isChildHeightFull =
+                    when (child) {
+                        is RectangleElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
+                        is ContainerElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
+                        else -> false
+                    }
+                val offset = if (isChildHeightFull) 0f else (child.relativeOffsetY ?: 0f)
+                val effectiveChildY =
+                    if (isChildRelative) {
+                        if (flowY == 0f) {
+                            if (isChildHeightFull) {
+                                0f
+                            } else if (child.y > 0f) {
+                                child.y
+                            } else {
+                                offset
+                            }
+                        } else {
+                            flowY + offset
+                        }
+                    } else {
+                        child.y
+                    }
+                val childContext = context.copy(containerWidth = containerWidth, containerHeight = baseHeight)
+                val childH = PDFGenerator.getElementHeight(child, context.data, childContext)
+                if (isChildRelative) {
+                    flowY = effectiveChildY + childH
                 } else {
-                    flowY + offset
+                    flowY = kotlin.math.max(flowY, child.y + childH)
                 }
-            } else {
-                child.y
+                val bottom = effectiveChildY + childH
+                if (bottom > maxContentBottom) {
+                    maxContentBottom = bottom
+                }
+                effectiveChildY
             }
-            val childContext = context.copy(containerWidth = containerWidth, containerHeight = baseHeight)
-            val childH = PDFGenerator.getElementHeight(child, context.data, childContext)
-            if (isChildRelative) {
-                flowY = effectiveChildY + childH
-            } else {
-                flowY = kotlin.math.max(flowY, child.y + childH)
-            }
-            val bottom = effectiveChildY + childH
-            if (bottom > maxContentBottom) {
-                maxContentBottom = bottom
-            }
-            effectiveChildY
-        }
 
-        val containerHeight = if (element.isAutoHeight()) {
-            kotlin.math.min(kotlin.math.max(baseHeight, maxContentBottom), maxAvailableHeight)
-        } else {
-            kotlin.math.min(baseHeight, maxAvailableHeight)
-        }
+        val containerHeight =
+            if (element.isAutoHeight()) {
+                kotlin.math.min(kotlin.math.max(baseHeight, maxContentBottom), maxAvailableHeight)
+            } else {
+                kotlin.math.min(baseHeight, maxAvailableHeight)
+            }
 
         element.style?.let { style ->
             val cb =

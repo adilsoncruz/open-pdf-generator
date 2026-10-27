@@ -18,7 +18,6 @@ import com.pdfgenerator.util.DataBindingResolver
  * Height calculator for container elements and loops (including nested flows and auto-height).
  */
 object ContainerHeightCalculator {
-
     fun calculateContainerHeight(
         element: ContainerElement,
         data: Map<String, Any?>,
@@ -32,21 +31,29 @@ object ContainerHeightCalculator {
 
         element.elements.forEach { child ->
             val isChildRelative = child.positionMode == PositionMode.RELATIVE
-            val isChildHeightFull = when (child) {
-                is RectangleElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
-                is ContainerElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
-                else -> false
-            }
-            val offset = if (isChildHeightFull) 0f else (child.relativeOffsetY ?: 0f)
-            val effectiveChildY = if (isChildRelative) {
-                if (flowY == 0f) {
-                    if (isChildHeightFull) 0f else if (child.y > 0f) child.y else offset
-                } else {
-                    flowY + offset
+            val isChildHeightFull =
+                when (child) {
+                    is RectangleElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
+                    is ContainerElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
+                    else -> false
                 }
-            } else {
-                child.y
-            }
+            val offset = if (isChildHeightFull) 0f else (child.relativeOffsetY ?: 0f)
+            val effectiveChildY =
+                if (isChildRelative) {
+                    if (flowY == 0f) {
+                        if (isChildHeightFull) {
+                            0f
+                        } else if (child.y > 0f) {
+                            child.y
+                        } else {
+                            offset
+                        }
+                    } else {
+                        flowY + offset
+                    }
+                } else {
+                    child.y
+                }
             val childH = ElementHeightCalculator.getElementHeight(child, data, childContext)
             if (isChildRelative) {
                 flowY = effectiveChildY + childH
@@ -93,54 +100,63 @@ object ContainerHeightCalculator {
 
         elements.forEach { element ->
             val isRelative = element.positionMode == PositionMode.RELATIVE
-            val height = when (element) {
-                is LinkElement -> element.height ?: 20f
-                is RichTextElement -> element.height ?: 20f
-                is TextElement -> element.height ?: 20f
-                is StaticTextElement -> element.height ?: 20f
-                is ImageElement -> {
-                    if (element.height?.toString() == "100%" || element.height?.toString() == "100.0%") {
-                        loopHeight
-                    } else {
-                        element.height
-                    }
-                }
-
-                is RectangleElement -> {
-                    val h = element.height
-                    when (h) {
-                        is String -> {
-                            if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
+            val height =
+                when (element) {
+                    is LinkElement -> element.height ?: 20f
+                    is RichTextElement -> element.height ?: 20f
+                    is TextElement -> element.height ?: 20f
+                    is StaticTextElement -> element.height ?: 20f
+                    is ImageElement -> {
+                        if (element.height?.toString() == "100%" || element.height?.toString() == "100.0%") {
+                            loopHeight
+                        } else {
+                            element.height
                         }
-
-                        is Number -> h.toFloat()
-                        else -> 20f
                     }
-                }
 
-                is LineElement -> {
-                    val lineHeight = element.resolveHeight(loopHeight)
-                    if (lineHeight > 0) kotlin.math.abs(lineHeight) else 1f
-                }
+                    is RectangleElement -> {
+                        val h = element.height
+                        when (h) {
+                            is String -> {
+                                if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
+                            }
 
-                is BarcodeElement -> element.height
-                is ContainerElement -> element.resolveHeight(loopHeight)
-                else -> 20f
-            }
-            val isFull = when (element) {
-                is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                else -> false
-            }
+                            is Number -> h.toFloat()
+                            else -> 20f
+                        }
+                    }
+
+                    is LineElement -> {
+                        val lineHeight = element.resolveHeight(loopHeight)
+                        if (lineHeight > 0) kotlin.math.abs(lineHeight) else 1f
+                    }
+
+                    is BarcodeElement -> element.height
+                    is ContainerElement -> element.resolveHeight(loopHeight)
+                    else -> 20f
+                }
+            val isFull =
+                when (element) {
+                    is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
+                    else -> false
+                }
             val offset = if (isFull) 0f else (element.relativeOffsetY ?: 0f)
-            val effectiveY = if (isRelative) {
-                if (flowY == 0f) {
-                    if (isFull) 0f else if (element.y > 0f) element.y else offset
+            val effectiveY =
+                if (isRelative) {
+                    if (flowY == 0f) {
+                        if (isFull) {
+                            0f
+                        } else if (element.y > 0f) {
+                            element.y
+                        } else {
+                            offset
+                        }
+                    } else {
+                        flowY + offset
+                    }
                 } else {
-                    flowY + offset
+                    element.y
                 }
-            } else {
-                element.y
-            }
             if (isRelative) {
                 flowY = effectiveY + height
             } else {

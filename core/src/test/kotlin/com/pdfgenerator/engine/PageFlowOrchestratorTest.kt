@@ -22,7 +22,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class PageFlowOrchestratorTest {
-
     private val config = PDFGeneratorConfig()
     private val renderEngine = RenderEngine(config)
     private val orchestrator = PageFlowOrchestrator(renderEngine, config)
@@ -31,14 +30,16 @@ class PageFlowOrchestratorTest {
         val doc = Document()
         val writer = PdfWriter.getInstance(doc, ByteArrayOutputStream())
         doc.open()
-        val template = Template(
-            version = "1.0",
-            pageSettings = PageSettings(
-                size = "A4",
-                orientation = "portrait",
-                margins = Margins(top = 10f, right = 10f, bottom = 10f, left = 10f),
-            ),
-        )
+        val template =
+            Template(
+                version = "1.0",
+                pageSettings =
+                    PageSettings(
+                        size = "A4",
+                        orientation = "portrait",
+                        margins = Margins(top = 10f, right = 10f, bottom = 10f, left = 10f),
+                    ),
+            )
         return RenderContext(
             document = doc,
             writer = writer,
@@ -157,19 +158,21 @@ class PageFlowOrchestratorTest {
         val context = createDummyContext(renderState)
         val data = mapOf("showSummary" to true)
 
-        val elements = listOf(
-            TextElement(id = "t1", x = 0f, y = 0f, value = "First Line", height = 20f, positionMode = PositionMode.RELATIVE),
-            TextElement(id = "t2", x = 0f, y = 0f, value = "Second Line", height = 25f, positionMode = PositionMode.RELATIVE),
-        )
+        val elements =
+            listOf(
+                TextElement(id = "t1", x = 0f, y = 0f, value = "First Line", height = 20f, positionMode = PositionMode.RELATIVE),
+                TextElement(id = "t2", x = 0f, y = 0f, value = "Second Line", height = 25f, positionMode = PositionMode.RELATIVE),
+            )
 
         orchestrator.renderBodyElements(elements, null, context, data)
         assertTrue(renderState.currentY >= 45f)
 
-        val summaryPage = SummaryPage(
-            printCondition = "\${showSummary}",
-            background = BodyBackground(elements = listOf(RectangleElement(id = "s_bg", x = 0f, y = 0f, width = 100f, height = 100f))),
-            elements = listOf(TextElement(id = "st1", x = 0f, y = 0f, value = "Summary Content", height = 20f)),
-        )
+        val summaryPage =
+            SummaryPage(
+                printCondition = "\${showSummary}",
+                background = BodyBackground(elements = listOf(RectangleElement(id = "s_bg", x = 0f, y = 0f, width = 100f, height = 100f))),
+                elements = listOf(TextElement(id = "st1", x = 0f, y = 0f, value = "Summary Content", height = 20f)),
+            )
 
         orchestrator.renderSummaryPage(summaryPage, context, data)
     }

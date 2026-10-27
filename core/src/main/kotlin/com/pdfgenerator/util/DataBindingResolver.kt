@@ -12,13 +12,14 @@ object DataBindingResolver {
         loopContext: LoopContext? = null,
     ): Any? {
         val trimmed = binding.trim()
-        val cleanBinding = when {
-            trimmed.startsWith("\${") && trimmed.endsWith("}") ->
-                trimmed.substring(2, trimmed.length - 1).trim()
-            trimmed.startsWith("{{") && trimmed.endsWith("}}") ->
-                trimmed.substring(2, trimmed.length - 2).trim()
-            else -> trimmed
-        }
+        val cleanBinding =
+            when {
+                trimmed.startsWith("\${") && trimmed.endsWith("}") ->
+                    trimmed.substring(2, trimmed.length - 1).trim()
+                trimmed.startsWith("{{") && trimmed.endsWith("}}") ->
+                    trimmed.substring(2, trimmed.length - 2).trim()
+                else -> trimmed
+            }
 
         if (cleanBinding.startsWith("$")) {
             return resolveLoopVariable(cleanBinding, loopContext)
@@ -46,7 +47,6 @@ object DataBindingResolver {
 
         return null
     }
-
 
     private fun resolveFromLoopItem(
         binding: String,
