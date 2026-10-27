@@ -194,6 +194,51 @@ describe('elements modular slice', () => {
       expect(t1?.width).toBe(180)
       expect(t1?.height).toBe(45)
     })
+
+    it('enforces container constraints on move and resize', () => {
+      const { moveElementPosition, resizeElement } = useTemplateStore.getState()
+
+      // Container x must remain 0, and y must be >= 0
+      moveElementPosition!('c1', 100, -20, 'body')
+      let container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
+      expect(container?.x).toBe(0)
+      expect(container?.y).toBe(0)
+
+      // Container width must remain 100% and height clamped to section limits
+      resizeElement!('c1', 500, 5000, 'body')
+      container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
+      expect(container?.width).toBe('100%')
+      expect(container?.height).toBeLessThan(5000)
+    })
+
+    it('handles boundary conditions when moving elements at extremes', () => {
+      const { moveElementUp, moveElementToTop, moveElementDown, moveElementToBottom, reorderElement } =
+        useTemplateStore.getState()
+
+      // Already at top, moveUp should be a no-op
+      moveElementUp('t1', 'body')
+      let container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
+      expect(container?.elements?.[0].id).toBe('t1')
+
+      // Already at top, moveElementToTop should be a no-op
+      moveElementToTop('t1', 'body')
+      container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
+      expect(container?.elements?.[0].id).toBe('t1')
+
+      // Already at bottom, moveDown and moveElementToBottom on t3 should be no-ops
+      moveElementDown('t3', 'body')
+      container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
+      expect(container?.elements?.[2].id).toBe('t3')
+
+      moveElementToBottom('t3', 'body')
+      container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
+      expect(container?.elements?.[2].id).toBe('t3')
+
+      // Reorder to same index is no-op
+      reorderElement('t1', 0, 'body')
+      container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
+      expect(container?.elements?.map((el) => el.id)).toEqual(['t1', 't2', 't3'])
+    })
   })
 
   describe('elementAlignment', () => {
