@@ -4,30 +4,14 @@ import com.google.gson.Gson
 import com.lowagie.text.Document
 import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.adapter.openpdf.HeaderFooterPageEvent
-import com.pdfgenerator.adapter.openpdf.TextRenderer
+import com.pdfgenerator.engine.ElementHeightCalculator
+import com.pdfgenerator.engine.PageFlowOrchestrator
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.RenderState
-import com.pdfgenerator.model.BarcodeElement
-import com.pdfgenerator.model.ConditionalElement
-import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
-import com.pdfgenerator.model.ElementGroup
-import com.pdfgenerator.model.ImageElement
-import com.pdfgenerator.model.LineElement
-import com.pdfgenerator.model.LinkElement
-import com.pdfgenerator.model.LoopElement
-import com.pdfgenerator.model.PageBreakElement
-import com.pdfgenerator.model.PositionMode
-import com.pdfgenerator.model.RectangleElement
-import com.pdfgenerator.model.RichTextElement
-import com.pdfgenerator.model.SpacerElement
-import com.pdfgenerator.model.StaticTextElement
-import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.Template
-import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ConditionEvaluator
-import com.pdfgenerator.util.DataBindingResolver
 import com.pdfgenerator.util.withSyntheticBindings
 import com.pdfgenerator.util.withSyntheticPageNumber
 import org.slf4j.LoggerFactory
@@ -37,12 +21,12 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.concurrent.ConcurrentHashMap
 
-@Suppress("LargeClass")
 class PDFGenerator(
     private val config: PDFGeneratorConfig = PDFGeneratorConfig(),
 ) {
     private val logger = LoggerFactory.getLogger(PDFGenerator::class.java)
     private val renderEngine = RenderEngine(config)
+    private val pageFlowOrchestrator = PageFlowOrchestrator(renderEngine, config)
     private val gson = Gson()
 
     companion object {
@@ -61,297 +45,19 @@ class PDFGenerator(
             element: Element,
             data: Map<String, Any?>,
             context: RenderContext,
-        ): Float {
-            return when (element) {
-                is TextElement -> {
-                    val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-                    val boxWidth = element.width ?: context.containerWidth
-                    if (element.style?.multiline == true && boxWidth != null) {
-                        val text = resolveTextForHeight(element.dataBinding, element.value, data)
-                        if (text != null) {
-                            val contentHeight = TextRenderer
-                                .getOrMeasureMultilineLayout(
-                                    elementId = element.id,
-                                    resolvedText = text,
-                                    styleHash = element.style?.hashCode() ?: 0,
-                                    boxWidth = boxWidth,
-                                    fontSize = element.style?.fontSize ?: 12f,
-                                    lineHeight = element.style?.lineHeight,
-                                    paddingTop = element.style?.paddingTop ?: 0f,
-                                    paddingBottom = element.style?.paddingBottom ?: 0f,
-                                    paddingLeft = element.style?.paddingLeft ?: 0f,
-                                    paddingRight = element.style?.paddingRight ?: 0f,
-                                    firstLineIndent = element.style?.firstLineIndent ?: 0f,
-                                    fontFamily = element.style?.fontFamily ?: "Helvetica",
-                                    cache = context.textLayoutCache,
-                                ).contentHeight
-                            kotlin.math.max(definedHeight, contentHeight)
-                        } else {
-                            definedHeight
-                        }
-                    } else {
-                        definedHeight
-                    }
-                }
-                is StaticTextElement -> {
-                    val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-                    val boxWidth = element.width ?: context.containerWidth
-
-                    if (element.style?.multiline == true && boxWidth != null) {
-                        val contentHeight = TextRenderer
-                            .getOrMeasureMultilineLayout(
-                                elementId = element.id,
-                                resolvedText = element.value,
-                                styleHash = element.style?.hashCode() ?: 0,
-                                boxWidth = boxWidth,
-                                fontSize = element.style?.fontSize ?: 12f,
-                                lineHeight = element.style?.lineHeight,
-                                paddingTop = element.style?.paddingTop ?: 0f,
-                                paddingBottom = element.style?.paddingBottom ?: 0f,
-                                paddingLeft = element.style?.paddingLeft ?: 0f,
-                                paddingRight = element.style?.paddingRight ?: 0f,
-                                firstLineIndent = element.style?.firstLineIndent ?: 0f,
-                                fontFamily = element.style?.fontFamily ?: "Helvetica",
-                                cache = context.textLayoutCache,
-                            ).contentHeight
-                        kotlin.math.max(definedHeight, contentHeight)
-                    } else {
-                        definedHeight
-                    }
-                }
-                is ImageElement -> element.height
-                is RectangleElement -> {
-                    when (val h = element.height) {
-                        is Number -> h.toFloat()
-                        is String -> if (h == "100%") context.containerHeight ?: 100f else 100f
-                        else -> 100f
-                    }
-                }
-                is BarcodeElement -> element.height
-                is LineElement -> {
-                    val containerHeight = context.containerHeight ?: 100f
-                    kotlin.math.abs(element.resolveHeight(containerHeight)).coerceAtLeast(1f)
-                }
-                is TableElement -> {
-                    val tableData = DataBindingResolver.resolve(element.dataBinding, data, null)
-                    val itemCount = if (tableData is List<*>) tableData.size else 0
-                    val fontSize = element.style?.fontSize ?: 10f
-                    val headerFontSize = element.style?.headerFontSize ?: 12f
-                    val headerPadding = (element.style?.headerPaddingTop ?: 5f) + (element.style?.headerPaddingBottom ?: 5f)
-                    val cellPadding = (element.style?.cellPaddingTop ?: 5f) + (element.style?.cellPaddingBottom ?: 5f)
-                    val headerHeight = headerFontSize + headerPadding
-                    val rowHeight = fontSize + cellPadding
-                    headerHeight + (itemCount * rowHeight)
-                }
-                is LoopElement -> {
-                    val loopData = DataBindingResolver.resolve(element.dataBinding, data, null)
-                    val itemCount = if (loopData is List<*>) loopData.size else 0
-                    val calculatedItemHeight = calculateLoopItemHeight(element.elements, element.width, element.height)
-                    val itemHeight = if (element.height > 0f) element.height else calculatedItemHeight
-                    val spacing = element.itemSpacing.coerceAtLeast(0f)
-                    val totalSpacing = if (itemCount > 1) spacing * (itemCount - 1) else 0f
-                    (itemCount * itemHeight) + totalSpacing
-                }
-                is ConditionalElement -> {
-                    element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: 0f
-                }
-                is ContainerElement -> {
-                    var flowY = 0f
-                    var maxContentBottom = 0f
-                    val defaultWidth = context.containerWidth ?: element.resolveWidth(595.28f)
-                    val defaultHeight = context.containerHeight ?: (context.document.pageSize?.height ?: 842f)
-                    val childContext = context.copy(containerWidth = defaultWidth, containerHeight = defaultHeight)
-
-                    element.elements.forEach { child ->
-                        val isChildRelative = child.positionMode == PositionMode.RELATIVE
-                        val isChildHeightFull = when (child) {
-                            is RectangleElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
-                            is ContainerElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
-                            else -> false
-                        }
-                        val offset = if (isChildHeightFull) 0f else (child.relativeOffsetY ?: 0f)
-                        val effectiveChildY = if (isChildRelative) {
-                            if (flowY == 0f) {
-                                if (isChildHeightFull) 0f else if (child.y > 0f) child.y else offset
-                            } else {
-                                flowY + offset
-                            }
-                        } else {
-                            child.y
-                        }
-                        val childH = getElementHeight(child, data, childContext)
-                        if (isChildRelative) {
-                            flowY = effectiveChildY + childH
-                        } else {
-                            flowY = kotlin.math.max(flowY, child.y + childH)
-                        }
-                        val bottom = effectiveChildY + childH
-                        if (bottom > maxContentBottom) {
-                            maxContentBottom = bottom
-                        }
-                    }
-                    val resolvedH = element.resolveHeight(defaultHeight)
-                    if (element.isAutoHeight()) {
-                        kotlin.math.max(resolvedH, maxContentBottom)
-                    } else {
-                        resolvedH
-                    }
-                }
-                is PageBreakElement -> 0f
-                is SpacerElement -> element.height
-                is RichTextElement -> {
-                    val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-                    val boxWidth = element.width ?: context.containerWidth
-                    if (element.style?.multiline == true && boxWidth != null) {
-                        val text = resolveTextForHeight(element.dataBinding, element.value, data)
-                        if (text != null) {
-                            val contentHeight = TextRenderer
-                                .getOrMeasureMultilineLayout(
-                                    elementId = element.id,
-                                    resolvedText = text,
-                                    styleHash = element.style?.hashCode() ?: 0,
-                                    boxWidth = boxWidth,
-                                    fontSize = element.style?.fontSize ?: 12f,
-                                    lineHeight = element.style?.lineHeight,
-                                    paddingTop = element.style?.paddingTop ?: 0f,
-                                    paddingBottom = element.style?.paddingBottom ?: 0f,
-                                    paddingLeft = element.style?.paddingLeft ?: 0f,
-                                    paddingRight = element.style?.paddingRight ?: 0f,
-                                    firstLineIndent = element.style?.firstLineIndent ?: 0f,
-                                    fontFamily = element.style?.fontFamily ?: "Helvetica",
-                                    cache = context.textLayoutCache,
-                                ).contentHeight
-                            kotlin.math.max(definedHeight, contentHeight)
-                        } else {
-                            definedHeight
-                        }
-                    } else {
-                        definedHeight
-                    }
-                }
-                is LinkElement -> {
-                    val definedHeight = element.height ?: (element.style?.fontSize ?: 12f)
-                    val boxWidth = element.width ?: context.containerWidth
-                    if (element.style?.multiline == true && boxWidth != null) {
-                        val text = resolveTextForHeight(element.dataBinding, element.value, data)
-                        if (text != null) {
-                            val contentHeight = TextRenderer
-                                .getOrMeasureMultilineLayout(
-                                    elementId = element.id,
-                                    resolvedText = text,
-                                    styleHash = element.style?.hashCode() ?: 0,
-                                    boxWidth = boxWidth,
-                                    fontSize = element.style?.fontSize ?: 12f,
-                                    lineHeight = element.style?.lineHeight,
-                                    paddingTop = element.style?.paddingTop ?: 0f,
-                                    paddingBottom = element.style?.paddingBottom ?: 0f,
-                                    paddingLeft = element.style?.paddingLeft ?: 0f,
-                                    paddingRight = element.style?.paddingRight ?: 0f,
-                                    firstLineIndent = element.style?.firstLineIndent ?: 0f,
-                                    fontFamily = element.style?.fontFamily ?: "Helvetica",
-                                    cache = context.textLayoutCache,
-                                ).contentHeight
-                            kotlin.math.max(definedHeight, contentHeight)
-                        } else {
-                            definedHeight
-                        }
-                    } else {
-                        definedHeight
-                    }
-                }
-                else -> 0f
-            }
-        }
+        ): Float = ElementHeightCalculator.getElementHeight(element, data, context)
 
         internal fun resolveTextForHeight(
             dataBinding: String?,
             value: String?,
             data: Map<String, Any?>,
-        ): String? {
-            return when {
-                !dataBinding.isNullOrBlank() -> {
-                    val resolved = DataBindingResolver.resolve(dataBinding, data, null)
-                    resolved?.toString()
-                }
-                else -> value
-            }
-        }
+        ): String? = ElementHeightCalculator.resolveTextForHeight(dataBinding, value, data)
 
         internal fun calculateLoopItemHeight(
             elements: List<Element>,
             loopWidth: Any?,
             loopHeight: Float,
-        ): Float {
-            if (elements.isEmpty()) {
-                return 0f
-            }
-
-            var flowY = 0f
-            var maxBottom = 0f
-
-            elements.forEach { element ->
-                val isRelative = element.positionMode == com.pdfgenerator.model.PositionMode.RELATIVE
-                val height =
-                    when (element) {
-                        is LinkElement -> element.height ?: 20f
-                        is RichTextElement -> element.height ?: 20f
-                        is TextElement -> element.height ?: 20f
-                        is StaticTextElement -> element.height ?: 20f
-                        is ImageElement -> {
-                            if (element.height?.toString() == "100%" || element.height?.toString() == "100.0%") {
-                                loopHeight
-                            } else {
-                                element.height
-                            }
-                        }
-
-                        is RectangleElement -> {
-                            val h = element.height
-                            when (h) {
-                                is String -> {
-                                    if (h == "100%" || h == "100.0%") loopHeight else h.toFloatOrNull() ?: 20f
-                                }
-
-                                is Number -> h.toFloat()
-                                else -> 20f
-                            }
-                        }
-
-                        is LineElement -> {
-                            val lineHeight = element.resolveHeight(loopHeight)
-                            if (lineHeight > 0) kotlin.math.abs(lineHeight) else 1f
-                        }
-
-                        is BarcodeElement -> element.height
-                        is ContainerElement -> element.resolveHeight(loopHeight)
-                        else -> 20f
-                    }
-                val isFull = when (element) {
-                    is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                    else -> false
-                }
-                val offset = if (isFull) 0f else (element.relativeOffsetY ?: 0f)
-                val effectiveY = if (isRelative) {
-                    if (flowY == 0f) {
-                        if (isFull) 0f else if (element.y > 0f) element.y else offset
-                    } else {
-                        flowY + offset
-                    }
-                } else {
-                    element.y
-                }
-                if (isRelative) {
-                    flowY = effectiveY + height
-                } else {
-                    flowY = kotlin.math.max(flowY, element.y + height)
-                }
-                val bottom = effectiveY + height
-                if (bottom > maxBottom) {
-                    maxBottom = bottom
-                }
-            }
-            return if (maxBottom > 0f) maxBottom else 20f
-        }
+        ): Float = ElementHeightCalculator.calculateLoopItemHeight(elements, loopWidth, loopHeight)
     }
 
     fun generate(
@@ -673,47 +379,7 @@ class PDFGenerator(
                     templateFooterHeight = templateFooterHeight,
                 )
 
-            val pageGroupIndex = buildGroupIndex(template.groups)
-
-            template.bodyElements().forEach { element ->
-                try {
-                    if (shouldRenderElement(element, pageGroupIndex, data)) {
-                        val isRelativeFlow =
-                            element.positionMode == PositionMode.RELATIVE || element is ContainerElement
-
-                        val effectiveY =
-                            if (isRelativeFlow) {
-                                val isHeightFull = when (element) {
-                                    is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                                    is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                                    else -> false
-                                }
-                                val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
-                                renderState.currentY + offsetY
-                            } else {
-                                element.y
-                            }
-
-                        val renderContext =
-                            if (isRelativeFlow) {
-                                context.copy(offsetY = bodyOffsetY + (effectiveY - element.y))
-                            } else {
-                                context
-                            }
-                        renderEngine.render(element, renderContext)
-
-                        if (element !is LoopElement && element !is TableElement) {
-                            val elementHeight = getElementHeight(element, data, context)
-                            renderState.updateMaxY(effectiveY + elementHeight)
-                        }
-                    }
-                } catch (e: Exception) {
-                    logger.error("Erro ao renderizar elemento ${element.id}: ${e.message}", e)
-                    if (config.strictMode) {
-                        throw PDFGenerationException("Erro ao renderizar elemento ${element.id}", e)
-                    }
-                }
-            }
+            pageFlowOrchestrator.renderBodyElements(template.bodyElements(), template.groups, context, data)
 
             val cb = writer.directContent
             cb.saveState()
@@ -723,93 +389,7 @@ class PDFGenerator(
             cb.restoreState()
 
             if (template.summaryPage != null && template.summaryPage.elements.isNotEmpty()) {
-                val summaryCondition = template.summaryPage.printCondition
-                if (summaryCondition == null || ConditionEvaluator.evaluate(summaryCondition, data, null)) {
-                    document.newPage()
-                    writer.pageEvent = null
-
-                    val summaryOffsetX = margins.left
-                    val summaryOffsetY = margins.top
-                    val summaryContainerWidth = document.pageSize.width - margins.left - margins.right
-                    val summaryContainerHeight = document.pageSize.height - margins.top - margins.bottom
-
-                    val summaryContext =
-                        context.copy(
-                            isSummaryPage = true,
-                            containerWidth = summaryContainerWidth,
-                            containerHeight = summaryContainerHeight,
-                            offsetX = summaryOffsetX,
-                            offsetY = summaryOffsetY,
-                            bodyOffsetY = summaryOffsetY,
-                        )
-
-                    template.summaryPage.background?.let { bg ->
-                        val summaryBackgroundGroupIndex = buildGroupIndex(bg.groups)
-                        bg.elements.forEach { element ->
-                            try {
-                                if (shouldRenderElement(element, summaryBackgroundGroupIndex, data)) {
-                                    renderEngine.render(
-                                        element,
-                                        summaryContext.copy(useContentUnder = true),
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                logger.error(
-                                    "Erro ao renderizar background da summary ${element.id}: ${e.message}",
-                                    e,
-                                )
-                            }
-                        }
-                    }
-
-                    val summaryGroupIndex = buildGroupIndex(template.summaryPage.groups)
-                    var summaryFlowY = 0f
-                    template.summaryPage.elements.forEach { element ->
-                        try {
-                            if (shouldRenderElement(element, summaryGroupIndex, data)) {
-                                val isRelativeFlow =
-                                    element.positionMode == PositionMode.RELATIVE || element is ContainerElement
-                                val effectiveY =
-                                    if (isRelativeFlow) {
-                                        val isHeightFull = when (element) {
-                                            is RectangleElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                                            is ContainerElement -> element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
-                                            else -> false
-                                        }
-                                        val offsetY = if (isHeightFull) 0f else (element.relativeOffsetY ?: 0f)
-                                        if (summaryFlowY == 0f) {
-                                            if (isHeightFull) 0f else if (element.y > 0f) element.y else offsetY
-                                        } else {
-                                            summaryFlowY + offsetY
-                                        }
-                                    } else {
-                                        element.y
-                                    }
-                                val renderContext =
-                                    if (isRelativeFlow) {
-                                        summaryContext.copy(offsetY = summaryContext.offsetY + (effectiveY - element.y))
-                                    } else {
-                                        summaryContext
-                                    }
-                                renderEngine.render(element, renderContext)
-                                val elementHeight = getElementHeight(element, data, renderContext)
-                                if (isRelativeFlow) {
-                                    summaryFlowY = effectiveY + elementHeight
-                                } else {
-                                    summaryFlowY = kotlin.math.max(summaryFlowY, element.y + elementHeight)
-                                }
-                            }
-                        } catch (e: Exception) {
-                            logger.error("Erro ao renderizar elemento da summary ${element.id}: ${e.message}", e)
-                            if (config.strictMode) {
-                                throw PDFGenerationException(
-                                    "Erro ao renderizar elemento da summary ${element.id}",
-                                    e,
-                                )
-                            }
-                        }
-                    }
-                }
+                pageFlowOrchestrator.renderSummaryPage(template.summaryPage, context, data)
             }
             document.close()
         } catch (e: PDFGenerationException) {
@@ -817,58 +397,5 @@ class PDFGenerator(
         } catch (e: Exception) {
             throw PDFGenerationException("Error generating PDF: ${e.message}", e)
         }
-    }
-
-    private fun buildGroupIndex(groups: List<ElementGroup>?): Map<String, ElementGroup> {
-        if (groups.isNullOrEmpty()) {
-            return emptyMap()
-        }
-
-        val groupIndex = HashMap<String, ElementGroup>()
-        groups.forEach { group ->
-            group.elementIds.forEach { elementId ->
-                groupIndex.putIfAbsent(elementId, group)
-            }
-        }
-
-        return groupIndex
-    }
-
-    private fun shouldRenderElement(
-        element: Element,
-        groupIndex: Map<String, ElementGroup>,
-        data: Map<String, Any?>,
-    ): Boolean {
-        val group = groupIndex[element.id]
-
-        if (group != null && group.printCondition != null) {
-            val shouldRenderGroup = ConditionEvaluator.evaluate(group.printCondition, data)
-            if (!shouldRenderGroup) {
-                logger.debug("Elemento ${element.id} SKIPPED (grupo '${group.name}' printCondition='${group.printCondition}' = false)")
-                return false
-            }
-        }
-
-        val elementCondition =
-            when (element) {
-                is ContainerElement -> element.printCondition
-                is TextElement -> element.printCondition
-                is BarcodeElement -> element.printCondition
-                is LoopElement -> element.printCondition
-                is PageBreakElement -> element.printCondition
-                is RichTextElement -> element.printCondition
-                is LinkElement -> element.printCondition
-                else -> null
-            }
-
-        if (elementCondition != null) {
-            val shouldRenderElement = ConditionEvaluator.evaluate(elementCondition, data)
-            if (!shouldRenderElement) {
-                logger.debug("Elemento ${element.id} SKIPPED (printCondition='$elementCondition' = false)")
-                return false
-            }
-        }
-
-        return true
     }
 }
