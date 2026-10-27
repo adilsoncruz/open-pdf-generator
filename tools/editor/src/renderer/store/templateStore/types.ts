@@ -192,6 +192,11 @@ export interface TemplateStore {
   toggleGroupVisibility: (groupId: string, location?: ElementLocation) => void
   selectGroup: (groupId: string | null, location?: ElementLocation) => void
   reorderGroup: (groupId: string, newIndex: number, location?: ElementLocation) => void
+  addToGroup: (groupId: string, elementIds: string[], location?: ElementLocation) => void
+  removeFromGroup: (groupId: string, elementIds: string[], location?: ElementLocation) => void
+  moveGroup: (groupId: string, deltaX: number, deltaY: number, location?: ElementLocation) => void
+  resizeGroup: (groupId: string, scaleX: number, scaleY: number, location?: ElementLocation) => void
+  duplicateGroup: (groupId: string, location?: ElementLocation) => void
   
   // Loop Element Actions
   addElementToLoop: (loopId: string, element: Element, location?: ElementLocation) => void
