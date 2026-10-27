@@ -122,6 +122,30 @@ describe('elements modular slice', () => {
       const container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
       expect(container?.elements?.length).toBe(4)
     })
+
+    it('deletes selected elements and clears selection', () => {
+      const { selectMultipleElements, deleteSelectedElements } = useTemplateStore.getState()
+
+      selectMultipleElements(['t1', 't2'], 'body')
+      deleteSelectedElements()
+
+      const container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
+      expect(container?.elements?.length).toBe(1)
+      expect(container?.elements?.[0]?.id).toBe('t3')
+      expect(useTemplateStore.getState().selectedElementIds).toEqual([])
+    })
+
+    it('updates selected elements in bulk', () => {
+      const { selectMultipleElements, updateSelectedElements } = useTemplateStore.getState()
+
+      selectMultipleElements(['t1', 't2'], 'body')
+      updateSelectedElements({ height: 40 })
+
+      const container = useTemplateStore.getState().template.page.find((el) => el.id === 'c1')
+      expect(container?.elements?.find((el) => el.id === 't1')?.height).toBe(40)
+      expect(container?.elements?.find((el) => el.id === 't2')?.height).toBe(40)
+      expect(container?.elements?.find((el) => el.id === 't3')?.height).toBe(20)
+    })
   })
 
   describe('elementTransforms', () => {
