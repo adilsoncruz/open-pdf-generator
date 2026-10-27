@@ -1,8 +1,7 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Element
-import com.lowagie.text.Font
 import com.lowagie.text.pdf.BaseFont
+import com.lowagie.text.pdf.PdfContentByte
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.engine.TextLayoutCacheKey
@@ -10,9 +9,6 @@ import com.pdfgenerator.engine.TextLayoutMeasurement
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.ConditionEvaluator
-import com.pdfgenerator.util.DataBindingResolver
-import com.pdfgenerator.util.ExpressionProcessor
-import com.pdfgenerator.util.FontCache
 
 class TextRenderer : Renderer<TextElement> {
     companion object {
@@ -31,28 +27,11 @@ class TextRenderer : Renderer<TextElement> {
             fontFamily: String,
             cache: MutableMap<TextLayoutCacheKey, TextLayoutMeasurement>? = null,
             baseFont: BaseFont? = null,
-        ): TextLayoutMeasurement {
-            val cacheKey = TextLayoutCacheKey(elementId, resolvedText, styleHash)
-            cache?.get(cacheKey)?.let { return it }
-
-            val measuredLayout =
-                measureMultilineLayout(
-                    text = resolvedText,
-                    boxWidth = boxWidth,
-                    fontSize = fontSize,
-                    lineHeight = lineHeight,
-                    paddingTop = paddingTop,
-                    paddingBottom = paddingBottom,
-                    paddingLeft = paddingLeft,
-                    paddingRight = paddingRight,
-                    firstLineIndent = firstLineIndent,
-                    fontFamily = fontFamily,
-                    baseFont = baseFont,
-                )
-
-            cache?.put(cacheKey, measuredLayout)
-            return measuredLayout
-        }
+        ): TextLayoutMeasurement =
+            TextLayoutHelper.getOrMeasureMultilineLayout(
+                elementId, resolvedText, styleHash, boxWidth, fontSize, lineHeight,
+                paddingTop, paddingBottom, paddingLeft, paddingRight, firstLineIndent, fontFamily, cache, baseFont,
+            )
 
         fun calculateContentHeight(
             text: String,
@@ -65,84 +44,11 @@ class TextRenderer : Renderer<TextElement> {
             paddingRight: Float,
             firstLineIndent: Float,
             fontFamily: String,
-        ): Float {
-            return measureMultilineLayout(
-                text = text,
-                boxWidth = boxWidth,
-                fontSize = fontSize,
-                lineHeight = lineHeight,
-                paddingTop = paddingTop,
-                paddingBottom = paddingBottom,
-                paddingLeft = paddingLeft,
-                paddingRight = paddingRight,
-                firstLineIndent = firstLineIndent,
-                fontFamily = fontFamily,
-            ).contentHeight
-        }
-
-        private fun measureMultilineLayout(
-            text: String,
-            boxWidth: Float,
-            fontSize: Float,
-            lineHeight: Float?,
-            paddingTop: Float,
-            paddingBottom: Float,
-            paddingLeft: Float,
-            paddingRight: Float,
-            firstLineIndent: Float,
-            fontFamily: String,
-            baseFont: BaseFont? = null,
-        ): TextLayoutMeasurement {
-            val lineSpacing = fontSize * (lineHeight ?: 1f)
-            val availableBoxWidth = boxWidth - paddingLeft - paddingRight
-
-            val fontForMeasurement =
-                baseFont ?: run {
-                    val baseFontName =
-                        when {
-                            fontFamily.lowercase().contains("times") -> BaseFont.TIMES_ROMAN
-                            fontFamily.lowercase().contains("courier") -> BaseFont.COURIER
-                            else -> BaseFont.HELVETICA
-                        }
-                    FontCache.getFont(baseFontName)
-                }
-
-            val paragraphs = text.split("\n", "\\n")
-            val lines = mutableListOf<String>()
-
-            for (paragraph in paragraphs) {
-                if (paragraph.isEmpty()) {
-                    lines.add("")
-                    continue
-                }
-
-                val words = paragraph.split(" ")
-                var currentLine = ""
-
-                for (word in words) {
-                    val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
-                    val indent = if (lines.isEmpty()) firstLineIndent else 0f
-                    val availableWidth = availableBoxWidth - indent
-                    val lineWidth = fontForMeasurement.getWidthPoint(testLine, fontSize)
-
-                    if (lineWidth > availableWidth && currentLine.isNotEmpty()) {
-                        lines.add(currentLine)
-                        currentLine = word
-                    } else {
-                        currentLine = testLine
-                    }
-                }
-                if (currentLine.isNotEmpty()) {
-                    lines.add(currentLine)
-                }
-            }
-
-            return TextLayoutMeasurement(
-                lines = lines,
-                lineSpacing = lineSpacing,
-                contentHeight = paddingTop + (lines.size * lineSpacing) + paddingBottom,
+        ): Float =
+            TextLayoutHelper.calculateContentHeight(
+                text, boxWidth, fontSize, lineHeight,
+                paddingTop, paddingBottom, paddingLeft, paddingRight, firstLineIndent, fontFamily,
             )
-        }
     }
 
     override fun render(
@@ -153,13 +59,12 @@ class TextRenderer : Renderer<TextElement> {
             return
         }
 
-        val text = resolveText(element, context)
+        val text = TextSpanBuilder.resolveText(element, context)
         if (text.isNullOrBlank()) {
             return
         }
 
         val isMultiline = element.multiline == true || element.style?.multiline == true || text.contains("\n")
-
         if (isMultiline) {
             renderMultiline(element, text, context)
         } else {
@@ -172,90 +77,41 @@ class TextRenderer : Renderer<TextElement> {
         text: String,
         context: RenderContext,
     ) {
-        val font = createFont(element)
-
-        val alignment =
-            when (element.style?.alignment?.lowercase()) {
-                "center" -> Element.ALIGN_CENTER
-                "right" -> Element.ALIGN_RIGHT
-                "justify" -> Element.ALIGN_JUSTIFIED
-                else -> Element.ALIGN_LEFT
-            }
+        val font = TextSpanBuilder.createFont(element.style)
+        val fontSize = element.style?.fontSize ?: 12f
+        val boxHeight = element.height ?: fontSize
+        val boxWidth = element.width ?: 100f
 
         val pageHeight = context.document.pageSize.height
         val x = context.resolveX(element.x)
         val y = context.resolveY(element.y)
         val yTop = CoordinateUtils.topYToPdfTop(pageHeight, y)
 
-        val contentByte =
-            if (context.useContentUnder) {
-                context.writer.directContentUnder
-            } else {
-                context.writer.directContent
-            }
+        val contentByte = if (context.useContentUnder) context.writer.directContentUnder else context.writer.directContent
+        renderBackground(contentByte, element.style?.backgroundColor, x, yTop, boxWidth, boxHeight)
 
-        val backgroundColor = element.style?.backgroundColor
-        if (backgroundColor != null && backgroundColor != "transparent") {
-            val boxHeight = element.height ?: (element.style?.fontSize ?: 12f)
-            val boxWidth = element.width ?: 100f
-            val bgColor = ColorUtil.hexToColor(backgroundColor)
-            contentByte.saveState()
-            contentByte.setColorFill(bgColor)
-            contentByte.rectangle(x, yTop - boxHeight, boxWidth, boxHeight)
-            contentByte.fill()
-            contentByte.restoreState()
-        }
-
-        val fontSize = element.style?.fontSize ?: 12f
-        val boxHeight = element.height ?: fontSize
-        val verticalAlign = element.style?.verticalAlignment?.lowercase() ?: "top"
-
+        val verticalAlign = element.style?.verticalAlignment
         val paddingTop = element.style?.paddingTop ?: 0f
         val paddingBottom = element.style?.paddingBottom ?: 0f
-
         val lineHeightMultiplier = element.style?.lineHeight ?: 1.2f
         val textBoxHeight = fontSize * lineHeightMultiplier
 
-        val availableHeight = boxHeight - paddingTop - paddingBottom
+        val textY = TextLayoutHelper.calculateSingleLineY(
+            yTop, boxHeight, verticalAlign, paddingTop, paddingBottom, textBoxHeight,
+        )
 
-        val textY =
-            when (verticalAlign) {
-                "top" -> yTop - paddingTop - (textBoxHeight * 0.8f)
-                "bottom" -> yTop - boxHeight + paddingBottom + (textBoxHeight * 0.2f)
-                "center" -> {
-                    val spaceAbove = (availableHeight - textBoxHeight) / 2f
-                    yTop - paddingTop - spaceAbove - (textBoxHeight * 0.8f)
-                }
-                else -> {
-                    val spaceAbove = (availableHeight - textBoxHeight) / 2f
-                    yTop - paddingTop - spaceAbove - (textBoxHeight * 0.8f)
-                }
-            }
+        val alignment = TextLayoutHelper.resolveAlignment(element.style?.alignment)
+        val textWidth = font.baseFont.getWidthPoint(text, fontSize)
+        val textX = TextLayoutHelper.calculateSingleLineX(
+            alignment, x, element.width ?: textWidth, textWidth,
+        )
 
         contentByte.beginText()
         contentByte.setFontAndSize(font.baseFont, fontSize)
         if (font.color != null) {
             contentByte.setColorFill(font.color)
         }
-
-        when (alignment) {
-            Element.ALIGN_CENTER -> {
-                val textWidth = font.baseFont.getWidthPoint(text, fontSize)
-                val boxWidth = element.width ?: textWidth
-                val xPos = x + (boxWidth - textWidth) / 2f
-                contentByte.setTextMatrix(xPos, textY)
-            }
-            Element.ALIGN_RIGHT -> {
-                val textWidth = font.baseFont.getWidthPoint(text, fontSize)
-                val boxWidth = element.width ?: textWidth
-                val xPos = x + boxWidth - textWidth
-                contentByte.setTextMatrix(xPos, textY)
-            }
-            else -> {
-                contentByte.setTextMatrix(x, textY)
-            }
-        }
-
+        contentByte.setTextMatrix(textX, textY)
         contentByte.showText(text)
         contentByte.endText()
     }
@@ -265,7 +121,7 @@ class TextRenderer : Renderer<TextElement> {
         text: String,
         context: RenderContext,
     ) {
-        val font = createFont(element)
+        val font = TextSpanBuilder.createFont(element.style)
         val fontSize = element.style?.fontSize ?: 12f
         val pageHeight = context.document.pageSize.height
 
@@ -281,52 +137,34 @@ class TextRenderer : Renderer<TextElement> {
         val paddingRight = element.style?.paddingRight ?: 0f
         val firstLineIndent = element.style?.firstLineIndent ?: 0f
 
-        val contentByte =
-            if (context.useContentUnder) {
-                context.writer.directContentUnder
-            } else {
-                context.writer.directContent
-            }
+        val contentByte = if (context.useContentUnder) context.writer.directContentUnder else context.writer.directContent
+        renderBackground(contentByte, element.style?.backgroundColor, x, yTop, boxWidth, boxHeight)
 
-        val backgroundColor = element.style?.backgroundColor
-        if (backgroundColor != null && backgroundColor != "transparent") {
-            val bgColor = ColorUtil.hexToColor(backgroundColor)
-            contentByte.saveState()
-            contentByte.setColorFill(bgColor)
-            contentByte.rectangle(x, yTop - boxHeight, boxWidth, boxHeight)
-            contentByte.fill()
-            contentByte.restoreState()
-        }
+        val measuredLayout = TextLayoutHelper.getOrMeasureMultilineLayout(
+            elementId = element.id,
+            resolvedText = text,
+            styleHash = element.style?.hashCode() ?: 0,
+            boxWidth = boxWidth,
+            fontSize = fontSize,
+            lineHeight = element.style?.lineHeight,
+            paddingTop = paddingTop,
+            paddingBottom = paddingBottom,
+            paddingLeft = paddingLeft,
+            paddingRight = paddingRight,
+            firstLineIndent = firstLineIndent,
+            fontFamily = element.style?.fontFamily ?: "Helvetica",
+            cache = context.textLayoutCache,
+            baseFont = font.baseFont,
+        )
 
-        val measuredLayout =
-            getOrMeasureMultilineLayout(
-                elementId = element.id,
-                resolvedText = text,
-                styleHash = element.style?.hashCode() ?: 0,
-                boxWidth = boxWidth,
-                fontSize = fontSize,
-                lineHeight = element.style?.lineHeight,
-                paddingTop = paddingTop,
-                paddingBottom = paddingBottom,
-                paddingLeft = paddingLeft,
-                paddingRight = paddingRight,
-                firstLineIndent = firstLineIndent,
-                fontFamily = element.style?.fontFamily ?: "Helvetica",
-                cache = context.textLayoutCache,
-                baseFont = font.baseFont,
-            )
-        val lines = measuredLayout.lines
-        val availableBoxWidth = boxWidth - paddingLeft - paddingRight
-
-        val overflow = element.style?.overflow?.lowercase() ?: "visible"
-        val linesToRender =
-            if (overflow == "hidden") {
-                val availableHeight = boxHeight - paddingTop - paddingBottom
-                val maxLines = (availableHeight / measuredLayout.lineSpacing).toInt().coerceAtLeast(1)
-                lines.take(maxLines)
-            } else {
-                lines
-            }
+        val linesToRender = TextLayoutHelper.filterLinesForOverflow(
+            lines = measuredLayout.lines,
+            overflow = element.style?.overflow,
+            boxHeight = boxHeight,
+            paddingTop = paddingTop,
+            paddingBottom = paddingBottom,
+            lineSpacing = measuredLayout.lineSpacing,
+        )
 
         contentByte.beginText()
         contentByte.setFontAndSize(font.baseFont, fontSize)
@@ -334,28 +172,15 @@ class TextRenderer : Renderer<TextElement> {
             contentByte.setColorFill(font.color)
         }
 
-        val alignment = element.style?.alignment?.lowercase() ?: "left"
-
-        val extraSpace = measuredLayout.lineSpacing - fontSize
-        val spaceAbove = extraSpace / 2f
-
+        val alignment = element.style?.alignment
         linesToRender.forEachIndexed { lineIndex, line ->
-            val baselineFromLineBoxTop = spaceAbove + (fontSize * 0.8f)
-            val baselineOffset = paddingTop + baselineFromLineBoxTop + (lineIndex * measuredLayout.lineSpacing)
-
-            val yPos = yTop - baselineOffset
-
-            val indent = if (lineIndex == 0) firstLineIndent else 0f
-            val xStart = x + paddingLeft + indent
+            val yPos = TextLayoutHelper.calculateMultilineLineY(
+                yTop, paddingTop, fontSize, measuredLayout.lineSpacing, lineIndex,
+            )
             val lineWidth = font.baseFont.getWidthPoint(line, fontSize)
-
-            val xPos =
-                when (alignment) {
-                    "center" -> x + paddingLeft + (availableBoxWidth - indent - lineWidth) / 2f + indent
-                    "right" -> x + boxWidth - paddingRight - lineWidth
-                    else -> xStart
-                }
-
+            val xPos = TextLayoutHelper.calculateMultilineLineX(
+                alignment, x, boxWidth, paddingLeft, paddingRight, firstLineIndent, lineIndex, lineWidth,
+            )
             contentByte.setTextMatrix(xPos, yPos)
             contentByte.showText(line)
         }
@@ -363,96 +188,20 @@ class TextRenderer : Renderer<TextElement> {
         contentByte.endText()
     }
 
-    private fun resolveText(
-        element: TextElement,
-        context: RenderContext,
-    ): String? {
-        val fromBinding =
-            if (!element.dataBinding.isNullOrBlank()) {
-                val binding = element.dataBinding
-                when {
-                    ExpressionProcessor.containsTemplateExpression(binding) ->
-                        ExpressionProcessor.processTemplate(binding, context.data, context.loopContext)
-                    ExpressionProcessor.hasTransformations(binding) ->
-                        ExpressionProcessor.process(binding, context.data, context.loopContext)
-                    else ->
-                        DataBindingResolver.resolve(binding, context.data, context.loopContext)?.toString()
-                }
-            } else {
-                null
-            }
-
-        if (fromBinding != null) {
-            return fromBinding
+    private fun renderBackground(
+        contentByte: PdfContentByte,
+        backgroundColor: String?,
+        x: Float,
+        yTop: Float,
+        boxWidth: Float,
+        boxHeight: Float,
+    ) {
+        if (backgroundColor != null && backgroundColor != "transparent") {
+            contentByte.saveState()
+            contentByte.setColorFill(ColorUtil.hexToColor(backgroundColor))
+            contentByte.rectangle(x, yTop - boxHeight, boxWidth, boxHeight)
+            contentByte.fill()
+            contentByte.restoreState()
         }
-
-        val rawValue = element.value
-        return when {
-            rawValue.isNullOrBlank() -> null
-            ExpressionProcessor.containsTemplateExpression(rawValue) ->
-                ExpressionProcessor.processTemplate(rawValue, context.data, context.loopContext)
-            context.loopContext != null -> {
-                if (ExpressionProcessor.hasTransformations(rawValue)) {
-                    ExpressionProcessor.process(rawValue, context.data, context.loopContext)
-                } else {
-                    val fieldValue = DataBindingResolver.resolve(rawValue, context.data, context.loopContext)
-                    fieldValue?.toString() ?: rawValue
-                }
-            }
-            else -> rawValue
-        }
-    }
-
-    private fun createFont(element: TextElement): Font {
-        val style = element.style
-        val fontSize = style?.fontSize ?: 12f
-
-        val fontFamilyLower = style?.fontFamily?.lowercase() ?: "helvetica"
-        val normalizedFamily =
-            fontFamilyLower
-                .replace("-bold", "")
-                .replace("-roman", "")
-                .replace("-oblique", "")
-                .trim()
-
-        val baseFontName =
-            when {
-                normalizedFamily.contains("times") ->
-                    when {
-                        style?.fontWeight == "bold" && style.fontStyle == "italic" -> BaseFont.TIMES_BOLDITALIC
-                        style?.fontWeight == "bold" -> BaseFont.TIMES_BOLD
-                        style?.fontStyle == "italic" -> BaseFont.TIMES_ITALIC
-                        else -> BaseFont.TIMES_ROMAN
-                    }
-                normalizedFamily.contains("courier") ->
-                    when {
-                        style?.fontWeight == "bold" && style.fontStyle == "italic" -> BaseFont.COURIER_BOLDOBLIQUE
-                        style?.fontWeight == "bold" -> BaseFont.COURIER_BOLD
-                        style?.fontStyle == "italic" -> BaseFont.COURIER_OBLIQUE
-                        else -> BaseFont.COURIER
-                    }
-                else ->
-                    when {
-                        style?.fontWeight == "bold" && style.fontStyle == "italic" -> BaseFont.HELVETICA_BOLDOBLIQUE
-                        style?.fontWeight == "bold" -> BaseFont.HELVETICA_BOLD
-                        style?.fontStyle == "italic" -> BaseFont.HELVETICA_OBLIQUE
-                        else -> BaseFont.HELVETICA
-                    }
-            }
-
-        val cachedBaseFont = FontCache.getFont(baseFontName)
-
-        val font =
-            Font(
-                cachedBaseFont,
-                fontSize,
-                Font.NORMAL,
-            )
-
-        style?.color?.let { colorHex ->
-            font.color = ColorUtil.hexToColor(colorHex)
-        }
-
-        return font
     }
 }
