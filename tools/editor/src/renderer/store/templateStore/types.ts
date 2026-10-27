@@ -206,6 +206,14 @@ export interface TemplateStore {
   clearLoopChildSelection: () => void
   toggleLoopExpanded: (loopId: string) => void
   reorderLoopChildren: (loopId: string, fromIndex: number, toIndex: number, location?: ElementLocation) => void
+  moveLoop: (loopId: string, deltaX: number, deltaY: number, location?: ElementLocation) => void
+  resizeLoop: (
+    loopId: string,
+    width: number | string,
+    height: number | string,
+    location?: ElementLocation
+  ) => void
+  duplicateLoop: (loopId: string, location?: ElementLocation) => void
 
   // Container Element Actions
   addElementToContainer: (containerId: string, element: Element, location?: ElementLocation) => void
