@@ -3,6 +3,7 @@ import { useTabStore } from '../../../store/tabStore'
 import { usePreviewStore } from '../../../store/previewStore'
 import { useRecentFilesStore } from '../../../store/recentFilesStore'
 import { useTranslation } from '../../../i18n'
+import { convertJrxmlToTemplate } from '../../../utils/jrxmlImporter'
 import type { CLIStatus } from '../types'
 
 interface UseFileOperationsOptions {
@@ -41,7 +42,20 @@ export function useFileOperations({
         break
       }
       try {
-        const loadedTemplate = JSON.parse(result.content)
+        let loadedTemplate: any
+        const isJrxml =
+          result.isJrxml ||
+          result.path?.toLowerCase().endsWith('.jrxml') ||
+          result.content.trim().startsWith('<?xml') ||
+          result.content.includes('<jasperReport')
+
+        if (isJrxml && !result.content.trim().startsWith('{')) {
+          loadedTemplate = convertJrxmlToTemplate(result.content)
+          result.convertedFromJasper = true
+        } else {
+          loadedTemplate = JSON.parse(result.content)
+        }
+
         let structuralError = ''
         if (!loadedTemplate.version) {
           structuralError = t.validation.missingVersion
@@ -55,11 +69,13 @@ export function useFileOperations({
           continue
         }
 
-        const validation = await window.electronAPI.validateTemplate(result.path)
-        if (!validation.valid) {
-          if (validation.errorCode !== 'CLI_NOT_INSTALLED' && validation.errorCode !== 'JAVA_NOT_INSTALLED') {
-            keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${t.validation.templateValidationFailed}\n\n${t.validation.selectAnotherFile}`)
-            continue
+        if (!result.convertedFromJasper) {
+          const validation = await window.electronAPI.validateTemplate(result.path)
+          if (!validation.valid) {
+            if (validation.errorCode !== 'CLI_NOT_INSTALLED' && validation.errorCode !== 'JAVA_NOT_INSTALLED') {
+              keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${t.validation.templateValidationFailed}\n\n${t.validation.selectAnotherFile}`)
+              continue
+            }
           }
         }
 
@@ -94,6 +110,43 @@ export function useFileOperations({
       } catch {
         keepTrying = confirm(`${t.validation.invalidTemplate}\n\n${t.validation.invalidJson}\n\n${t.validation.selectAnotherFile}`)
       }
+    }
+  }
+
+  const handleImportJasper = async () => {
+    try {
+      const result = window.electronAPI.openJasperFile
+        ? await window.electronAPI.openJasperFile()
+        : await window.electronAPI.openFile()
+      if (!result) return
+
+      let loadedTemplate: any
+      if (result.content.trim().startsWith('{')) {
+        loadedTemplate = JSON.parse(result.content)
+      } else {
+        loadedTemplate = convertJrxmlToTemplate(result.content)
+      }
+
+      const tabTitle = (result.path.split(/[/\\]/).pop() || 'jasper-template.jrxml').replace(/\.jrxml$/i, '.json')
+      useTabStore.getState().addTab({
+        name: tabTitle,
+        path: null,
+        isDirty: true,
+        stateSnapshot: {
+          template: loadedTemplate,
+          currentFilePath: null,
+          isDirty: true,
+          history: [loadedTemplate],
+          historyIndex: 0,
+          selectedElementIds: [],
+          selectedElementLocation: 'body',
+          selectedGroupId: null,
+          currentSection: 'body',
+        },
+      })
+      alert('Template Jasper (.jrxml) importado com sucesso! Use "Salvar Como" para salvá-lo como JSON.')
+    } catch (err: unknown) {
+      alert(`Falha ao converter JRXML: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 
@@ -225,6 +278,7 @@ export function useFileOperations({
   return {
     handleNew,
     handleOpen,
+    handleImportJasper,
     handleSave,
     handleSaveAs,
     handleExport,

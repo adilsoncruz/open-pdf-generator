@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="fatura_servico" pageWidth="595" pageHeight="842" columnWidth="523"
+              leftMargin="36" rightMargin="36" topMargin="36" bottomMargin="36" uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
+    <parameter name="numeroFatura" class="java.lang.String"/>
+    <parameter name="dataEmissao" class="java.lang.String"/>
+    <parameter name="vencimento" class="java.lang.String"/>
+    <parameter name="nomeCliente" class="java.lang.String"/>
+    <parameter name="documentoCliente" class="java.lang.String"/>
+    <parameter name="enderecoCliente" class="java.lang.String"/>
+    <parameter name="valorTotal" class="java.lang.Double"/>
+    <parameter name="chavePix" class="java.lang.String"/>
+
+    <field name="item" class="java.lang.Integer"/>
+    <field name="descricao" class="java.lang.String"/>
+    <field name="quantidade" class="java.lang.Integer"/>
+    <field name="precoUnitario" class="java.lang.Double"/>
+    <field name="totalItem" class="java.lang.Double"/>
+
+    <title>
+        <band height="150">
+            <!-- Barra decorativa superior -->
+            <rectangle>
+                <reportElement x="0" y="0" width="523" height="4" backcolor="#4F46E5" forecolor="#4F46E5"/>
+            </rectangle>
+
+            <!-- Cabeçalho da Empresa -->
+            <staticText>
+                <reportElement x="0" y="15" width="300" height="22" forecolor="#0F172A"/>
+                <textElement>
+                    <font size="16" isBold="true"/>
+                </textElement>
+                <text><![CDATA[TECH CORP CLOUD SERVICES]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="38" width="300" height="14" forecolor="#64748B"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <text><![CDATA[CNPJ: 12.345.678/0001-99 • São Paulo, SP]]></text>
+            </staticText>
+
+            <!-- Título e Número da Fatura -->
+            <staticText>
+                <reportElement x="323" y="15" width="200" height="24" forecolor="#4F46E5"/>
+                <textElement textAlignment="Right">
+                    <font size="18" isBold="true"/>
+                </textElement>
+                <text><![CDATA[FATURA DE SERVIÇOS]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="323" y="40" width="200" height="14" forecolor="#475569"/>
+                <textElement textAlignment="Right">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Nº: " + $P{numeroFatura}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="323" y="55" width="200" height="13" forecolor="#64748B"/>
+                <textElement textAlignment="Right">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Emissão: " + $P{dataEmissao}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="323" y="69" width="200" height="13" forecolor="#E11D48"/>
+                <textElement textAlignment="Right">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Vencimento: " + $P{vencimento}]]></textFieldExpression>
+            </textField>
+
+            <!-- Divisor -->
+            <line>
+                <reportElement x="0" y="90" width="523" height="1" forecolor="#E2E8F0"/>
+            </line>
+
+            <!-- Dados do Cliente -->
+            <staticText>
+                <reportElement x="0" y="100" width="150" height="13" forecolor="#94A3B8"/>
+                <textElement>
+                    <font size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[TOMADOR DO SERVIÇO]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="114" width="320" height="15" forecolor="#1E293B"/>
+                <textElement>
+                    <font size="11" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{nomeCliente}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="130" width="320" height="13" forecolor="#64748B"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{documentoCliente}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <columnHeader>
+        <band height="24">
+            <!-- Barra de Cabeçalho da Tabela -->
+            <rectangle>
+                <reportElement x="0" y="0" width="523" height="24" backcolor="#F8FAFC" forecolor="#E2E8F0"/>
+            </rectangle>
+            <staticText>
+                <reportElement x="10" y="5" width="30" height="14" forecolor="#475569"/>
+                <textElement>
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[#]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="45" y="5" width="250" height="14" forecolor="#475569"/>
+                <textElement>
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Descrição do Serviço]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="305" y="5" width="50" height="14" forecolor="#475569"/>
+                <textElement textAlignment="Center">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Qtd]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="360" y="5" width="75" height="14" forecolor="#475569"/>
+                <textElement textAlignment="Right">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Unitário]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="440" y="5" width="75" height="14" forecolor="#475569"/>
+                <textElement textAlignment="Right">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Total (R$)]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="20">
+            <textField>
+                <reportElement x="10" y="2" width="30" height="14" forecolor="#64748B"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{item}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="45" y="2" width="250" height="14" forecolor="#1E293B"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{descricao}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="305" y="2" width="50" height="14" forecolor="#64748B"/>
+                <textElement textAlignment="Center">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{quantidade}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="360" y="2" width="75" height="14" forecolor="#64748B"/>
+                <textElement textAlignment="Right">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{precoUnitario}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="440" y="2" width="75" height="14" forecolor="#0F172A"/>
+                <textElement textAlignment="Right">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{totalItem}]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="0" y="18" width="523" height="1" forecolor="#F1F5F9"/>
+            </line>
+        </band>
+    </detail>
+
+    <summary>
+        <band height="120">
+            <!-- Box de Pagamento PIX e QR Code -->
+            <rectangle>
+                <reportElement x="0" y="15" width="280" height="90" backcolor="#F8FAFC" forecolor="#E2E8F0"/>
+            </rectangle>
+            <staticText>
+                <reportElement x="15" y="25" width="160" height="14" forecolor="#1E293B"/>
+                <textElement>
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Pague com PIX Instantâneo]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="15" y="42" width="160" height="24" forecolor="#64748B"/>
+                <textElement>
+                    <font size="8"/>
+                </textElement>
+                <text><![CDATA[Aponte a câmera do seu app de banco para o QR code]]></text>
+            </staticText>
+            <componentElement>
+                <reportElement x="200" y="25" width="70" height="70"/>
+                <jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components">
+                    <![CDATA[$P{chavePix}]]>
+                </jr:QRCode>
+            </componentElement>
+
+            <!-- Totalização -->
+            <staticText>
+                <reportElement x="320" y="20" width="100" height="16" forecolor="#64748B"/>
+                <textElement textAlignment="Right">
+                    <font size="10"/>
+                </textElement>
+                <text><![CDATA[Total da Fatura:]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="425" y="18" width="98" height="20" forecolor="#4F46E5"/>
+                <textElement textAlignment="Right">
+                    <font size="14" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{valorTotal}]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+
+    <pageFooter>
+        <band height="30">
+            <line>
+                <reportElement x="0" y="5" width="523" height="1" forecolor="#E2E8F0"/>
+            </line>
+            <staticText>
+                <reportElement x="0" y="10" width="300" height="14" forecolor="#94A3B8"/>
+                <textElement>
+                    <font size="8"/>
+                </textElement>
+                <text><![CDATA[Dúvidas e suporte financeiro: financeiro@techcorp.com]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="373" y="10" width="150" height="14" forecolor="#94A3B8"/>
+                <textElement textAlignment="Right">
+                    <font size="8"/>
+                </textElement>
+                <text><![CDATA[Página 1 de 1]]></text>
+            </staticText>
+        </band>
+    </pageFooter>
+</jasperReport>

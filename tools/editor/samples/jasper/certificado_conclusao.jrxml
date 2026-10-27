@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="certificado_conclusao" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="782"
+              leftMargin="30" rightMargin="30" topMargin="30" bottomMargin="30" uuid="c3d4e5f6-a7b8-9012-cdef-ab3456789012">
+    <parameter name="nomeAluno" class="java.lang.String"/>
+    <parameter name="nomeCurso" class="java.lang.String"/>
+    <parameter name="cargaHoraria" class="java.lang.String"/>
+    <parameter name="dataConclusao" class="java.lang.String"/>
+    <parameter name="codigoValidacao" class="java.lang.String"/>
+
+    <background>
+        <band height="535">
+            <staticText>
+                <reportElement x="60" y="200" width="662" height="120" forecolor="#EEF2FF"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="60" isBold="true"/>
+                </textElement>
+                <text><![CDATA[CERTIFICADO]]></text>
+            </staticText>
+        </band>
+    </background>
+
+    <title>
+        <band height="490">
+            <!-- Moldura Externa Decorativa -->
+            <rectangle>
+                <reportElement x="0" y="0" width="782" height="490" backcolor="#FFFFFF" forecolor="#4F46E5"/>
+            </rectangle>
+            <rectangle>
+                <reportElement x="8" y="8" width="766" height="474" backcolor="#FFFFFF" forecolor="#CBD5E1"/>
+            </rectangle>
+
+            <!-- Cabeçalho -->
+            <staticText>
+                <reportElement x="40" y="45" width="702" height="24" forecolor="#64748B"/>
+                <textElement textAlignment="Center">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[INSTITUTO DE FORMAÇÃO EM TECNOLOGIA E ENGENHARIA]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="40" y="80" width="702" height="44" forecolor="#4F46E5"/>
+                <textElement textAlignment="Center">
+                    <font size="32" isBold="true"/>
+                </textElement>
+                <text><![CDATA[CERTIFICADO DE CONCLUSÃO]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="40" y="145" width="702" height="18" forecolor="#475569"/>
+                <textElement textAlignment="Center">
+                    <font size="11"/>
+                </textElement>
+                <text><![CDATA[Certificamos que para todos os devidos fins de direito e comprovação]]></text>
+            </staticText>
+
+            <!-- Nome do Aluno Destacado -->
+            <textField>
+                <reportElement x="40" y="180" width="702" height="35" forecolor="#0F172A"/>
+                <textElement textAlignment="Center">
+                    <font size="24" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{nomeAluno}.toUpperCase()]]></textFieldExpression>
+            </textField>
+
+            <!-- Linha sob o nome -->
+            <line>
+                <reportElement x="191" y="225" width="400" height="1" forecolor="#4F46E5"/>
+            </line>
+
+            <!-- Texto do Curso -->
+            <staticText>
+                <reportElement x="80" y="245" width="622" height="20" forecolor="#475569"/>
+                <textElement textAlignment="Center">
+                    <font size="12"/>
+                </textElement>
+                <text><![CDATA[concluiu com êxito e total aproveitamento o programa de treinamento avançado em]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="40" y="275" width="702" height="26" forecolor="#1E293B"/>
+                <textElement textAlignment="Center">
+                    <font size="16" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{nomeCurso}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="40" y="310" width="702" height="16" forecolor="#64748B"/>
+                <textElement textAlignment="Center">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Carga Horária: " + $P{cargaHoraria} + " • Concluído em: " + $P{dataConclusao}]]></textFieldExpression>
+            </textField>
+
+            <!-- Código de Validação e Código de Barras -->
+            <textField>
+                <reportElement x="40" y="430" width="300" height="14" forecolor="#94A3B8"/>
+                <textElement>
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Código de Autenticidade: " + $P{codigoValidacao}]]></textFieldExpression>
+            </textField>
+
+            <componentElement>
+                <reportElement x="542" y="420" width="200" height="35"/>
+                <jr:Code128 xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components">
+                    <![CDATA[$P{codigoValidacao}]]>
+                </jr:Code128>
+            </componentElement>
+        </band>
+    </title>
+</jasperReport>

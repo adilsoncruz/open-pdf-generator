@@ -49,6 +49,58 @@ export function registerDialogIpc(): void {
     } as OpenFileResult
   })
 
+  ipcMain.handle('dialog:openJasperFile', async () => {
+    const mainWindow = getMainWindow()
+    if (!mainWindow) return null
+
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile'],
+      filters: [
+        { name: 'JasperReports Templates (*.jrxml)', extensions: ['jrxml'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+      title: 'Importar Template Jasper (.jrxml)',
+    })
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null
+    }
+
+    const filePath = result.filePaths[0]
+    const content = await fs.readFile(filePath, 'utf-8')
+    return {
+      path: filePath,
+      content,
+      isJrxml: true,
+    }
+  })
+
+  ipcMain.handle('dialog:openPdfFile', async () => {
+    const mainWindow = getMainWindow()
+    if (!mainWindow) return null
+
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile'],
+      filters: [
+        { name: 'Documentos PDF (*.pdf)', extensions: ['pdf'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+      title: 'Selecionar PDF para Análise com IA',
+    })
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null
+    }
+
+    const filePath = result.filePaths[0]
+    const buffer = await fs.readFile(filePath)
+    return {
+      path: filePath,
+      name: path.basename(filePath),
+      base64: buffer.toString('base64'),
+    }
+  })
+
   ipcMain.handle('dialog:openDataFile', async () => {
     const mainWindow = getMainWindow()
     if (!mainWindow) return null

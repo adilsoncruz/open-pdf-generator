@@ -4,6 +4,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('electronAPI', {
   // Dialog APIs
   openFile: () => ipcRenderer.invoke('dialog:openFile'),
+  openJasperFile: () => ipcRenderer.invoke('dialog:openJasperFile'),
+  openPdfFile: () => ipcRenderer.invoke('dialog:openPdfFile'),
   openDataFile: () => ipcRenderer.invoke('dialog:openDataFile'),
   saveFile: (content: string, defaultPath?: string) =>
     ipcRenderer.invoke('dialog:saveFile', content, defaultPath),
@@ -81,6 +83,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Language APIs
   setLanguage: (lang: string) => ipcRenderer.invoke('app:setLanguage', lang),
   getSystemLocale: () => ipcRenderer.invoke('app:getSystemLocale'),
+
+  // Skill Management APIs
+  installSkill: (target: string, customPath?: string) =>
+    ipcRenderer.invoke('skill:install', target, customPath),
+  getSkillContent: () =>
+    ipcRenderer.invoke('skill:getContent'),
   
   // Auto-Update APIs
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
@@ -117,7 +125,9 @@ export interface UpdateStatus {
 }
 
 export interface ElectronAPI {
-  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean } | null>
+  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean; isJrxml?: boolean } | null>
+  openJasperFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean; isJrxml?: boolean } | null>
+  openPdfFile: () => Promise<{ path: string; base64: string; name: string } | null>
   openDataFile: () => Promise<{ path: string; content: string } | null>
   saveFile: (content: string, defaultPath?: string) => Promise<string | null>
   readFile: (filePath: string) => Promise<{ success: boolean; content?: string; error?: string }>
@@ -187,6 +197,10 @@ export interface ElectronAPI {
   // Language APIs
   setLanguage: (lang: string) => Promise<{ success: boolean }>
   getSystemLocale: () => Promise<string>
+
+  // Skill Management
+  installSkill?: (target: string, customPath?: string) => Promise<{ success: boolean; path?: string; error?: string }>
+  getSkillContent?: () => Promise<{ success: boolean; content?: string; error?: string }>
   
   // Auto-Update
   checkForUpdates: () => Promise<{ success: boolean; updateAvailable?: boolean; version?: string; error?: string }>

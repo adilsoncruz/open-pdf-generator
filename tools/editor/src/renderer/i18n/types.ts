@@ -40,6 +40,8 @@ export interface Translations {
     save: string
     saveAs: string
     export: string
+    importJasper: string
+    importAI: string
     preview: string
     testData: string
     settings: string
@@ -484,6 +486,10 @@ export interface Translations {
     startFromScratch: string
     browseFile: string
     openFromComputer: string
+    importJasper: string
+    importJasperDesc: string
+    importAI: string
+    importAIDesc: string
     recentFiles: string
     noRecentFiles: string
     removeRecent: string

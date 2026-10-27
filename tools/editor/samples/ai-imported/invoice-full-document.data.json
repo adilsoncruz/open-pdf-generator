@@ -1,0 +1,38 @@
+{
+  "empresa": {
+    "razaoSocial": "ACME ENTERPRISE SOLUTIONS"
+  },
+  "fatura": {
+    "numero": "INV-2026-001",
+    "total": "390.00",
+    "codigoBarras": "INV-2026-001-PAY",
+    "linkPagamento": "https://pay.acme.com/inv/2026001"
+  },
+  "cliente": {
+    "nome": "Global Tech Logistics Inc.",
+    "taxId": "US-987654321"
+  },
+  "items": [
+    {
+      "name": "Enterprise Engine License",
+      "category": "Software",
+      "qty": 1,
+      "price": "$250.00",
+      "amount": "$250.00"
+    },
+    {
+      "name": "Continuous PDF Validation SLA",
+      "category": "Support",
+      "qty": 1,
+      "price": "$100.00",
+      "amount": "$100.00"
+    },
+    {
+      "name": "Fast-Track Cloud Container Addon",
+      "category": "Hosting",
+      "qty": 1,
+      "price": "$40.00",
+      "amount": "$40.00"
+    }
+  ]
+}
