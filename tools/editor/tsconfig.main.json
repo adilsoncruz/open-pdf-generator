@@ -8,6 +8,7 @@
     "noEmit": false,
     "lib": ["ES2020"]
   },
-  "include": ["src/main"]
+  "include": ["src/main"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"]
 }
 
