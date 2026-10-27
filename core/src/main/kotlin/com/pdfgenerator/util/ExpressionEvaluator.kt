@@ -42,6 +42,50 @@ object ExpressionEvaluator {
         }
     }
 
+    fun resolveValue(
+        value: String,
+        data: Map<String, Any?>,
+        loopContext: LoopContext? = null,
+    ): Any? {
+        return when {
+            value.startsWith("'") && value.endsWith("'") -> value.substring(1, value.length - 1)
+            value.startsWith("\"") && value.endsWith("\"") -> value.substring(1, value.length - 1)
+            value.toDoubleOrNull() != null -> value.toDouble()
+            value == "true" -> true
+            value == "false" -> false
+            value == "null" -> null
+            else -> DataBindingResolver.resolve(value, data, loopContext)
+        }
+    }
+
+    fun resolvePropPath(
+        path: String,
+        obj: Map<String, Any?>,
+    ): Any? {
+        val parts = path.split(".")
+        var current: Any? = obj
+
+        for (part in parts) {
+            current =
+                when (val curr = current) {
+                    is Map<*, *> -> curr[part]
+                    is List<*> -> {
+                        when (part) {
+                            "length", "size" -> curr.size
+                            else ->
+                                part.toIntOrNull()?.let { idx ->
+                                    if (idx >= 0 && idx < curr.size) curr[idx] else null
+                                }
+                        }
+                    }
+                    else -> return null
+                }
+            if (current == null) return null
+        }
+
+        return current
+    }
+
     private fun evaluateComparison(
         expression: String,
         data: Map<String, Any?>,
@@ -58,22 +102,6 @@ object ExpressionEvaluator {
         val rightValue = resolveValue(right, data, loopContext)
 
         return compare(leftValue, rightValue, operator)
-    }
-
-    private fun resolveValue(
-        value: String,
-        data: Map<String, Any?>,
-        loopContext: LoopContext?,
-    ): Any? {
-        return when {
-            value.startsWith("'") && value.endsWith("'") -> value.substring(1, value.length - 1)
-            value.startsWith("\"") && value.endsWith("\"") -> value.substring(1, value.length - 1)
-            value.toDoubleOrNull() != null -> value.toDouble()
-            value == "true" -> true
-            value == "false" -> false
-            value == "null" -> null
-            else -> DataBindingResolver.resolve(value, data, loopContext)
-        }
     }
 
     private fun compare(
