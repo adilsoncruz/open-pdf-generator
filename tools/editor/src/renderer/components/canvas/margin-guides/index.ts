@@ -1,0 +1,6 @@
+export * from './types'
+export { PageSeparators } from './PageSeparators'
+export { MarginLinesOverlay } from './MarginLinesOverlay'
+export { CanvasGridOverlay } from './CanvasGridOverlay'
+export { MarginLabelsOverlay } from './MarginLabelsOverlay'
+export { CanvasMarginGuides } from './CanvasMarginGuides'
