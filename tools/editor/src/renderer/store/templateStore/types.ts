@@ -169,6 +169,13 @@ export interface TemplateStore {
   toggleElementVisibility: (id: string, location?: ElementLocation) => void
   copyElement: () => void
   pasteElement: () => void
+  duplicateElement?: (id: string, location?: ElementLocation) => void
+  moveElementPosition?: (id: string, x: number, y: number, location?: ElementLocation) => void
+  resizeElement?: (id: string, width: number | string, height: number | string, location?: ElementLocation) => void
+  alignSelectedElements?: (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => void
+  distributeSelectedElements?: (direction: 'horizontal' | 'vertical') => void
+  alignElements?: (alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom', location?: ElementLocation) => void
+  distributeElements?: (direction: 'horizontal' | 'vertical', location?: ElementLocation) => void
   undo: () => void
   redo: () => void
   canUndo: () => boolean
