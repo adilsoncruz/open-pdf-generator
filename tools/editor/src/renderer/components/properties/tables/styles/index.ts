@@ -1,0 +1,8 @@
+export { TableStylesTab } from './TableStylesTab'
+export type { TableStylesTabProps } from './TableStylesTab'
+export { TableHeaderStyleSection } from './TableHeaderStyleSection'
+export type { TableHeaderStyleSectionProps } from './TableHeaderStyleSection'
+export { TableDataRowStyleSection } from './TableDataRowStyleSection'
+export type { TableDataRowStyleSectionProps } from './TableDataRowStyleSection'
+export { TableBorderStyleSection } from './TableBorderStyleSection'
+export type { TableBorderStyleSectionProps } from './TableBorderStyleSection'
