@@ -35,6 +35,24 @@ describe('jrxmlImporter', () => {
       })
     })
 
+    it('maps lowercase method call', () => {
+      expect(mapJasperExpression('$P{companyName}.toLowerCase()')).toEqual({
+        dataBinding: 'companyName | lowercase',
+      })
+    })
+
+    it('maps SimpleDateFormat formatting', () => {
+      expect(mapJasperExpression('new java.text.SimpleDateFormat("dd/MM/yyyy").format($F{issueDate})')).toEqual({
+        dataBinding: "issueDate | date:'dd/MM/yyyy'",
+      })
+    })
+
+    it('maps DecimalFormat formatting', () => {
+      expect(mapJasperExpression('new java.text.DecimalFormat("#,##0.00").format($F{totalAmount})')).toEqual({
+        dataBinding: "totalAmount | number:'#,##0.00'",
+      })
+    })
+
     it('maps quoted literal string as value', () => {
       expect(mapJasperExpression('"INVOICE"')).toEqual({
         value: 'INVOICE',
