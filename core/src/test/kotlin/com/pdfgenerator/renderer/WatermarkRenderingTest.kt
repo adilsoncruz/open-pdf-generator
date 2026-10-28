@@ -1,9 +1,5 @@
 package com.pdfgenerator.renderer
 
-import com.lowagie.text.Document
-import com.lowagie.text.Rectangle
-import com.lowagie.text.pdf.PdfContentByte
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.adapter.openpdf.HeaderFooterPageEvent
 import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.api.PDFGeneratorConfig
@@ -17,6 +13,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.openpdf.text.Document
+import org.openpdf.text.Rectangle
+import org.openpdf.text.pdf.PdfContentByte
+import org.openpdf.text.pdf.PdfWriter
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -50,16 +50,16 @@ class WatermarkRenderingTest {
         assertNotNull(pdfBytes)
         assertTrue(pdfBytes.isNotEmpty())
 
-        val reader = com.lowagie.text.pdf.PdfReader(pdfBytes)
+        val reader = org.openpdf.text.pdf.PdfReader(pdfBytes)
         val page = reader.getPageN(1)
-        val resources = page.getAsDict(com.lowagie.text.pdf.PdfName.RESOURCES)
-        val extGState = resources?.getAsDict(com.lowagie.text.pdf.PdfName.EXTGSTATE)
+        val resources = page.getAsDict(org.openpdf.text.pdf.PdfName.RESOURCES)
+        val extGState = resources?.getAsDict(org.openpdf.text.pdf.PdfName.EXTGSTATE)
         assertNotNull(extGState)
         val hasOpacity =
             extGState.keys.any { key ->
-                val gs = extGState.getAsDict(key as com.lowagie.text.pdf.PdfName)
-                val fillCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("ca"))?.floatValue()
-                val strokeCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("CA"))?.floatValue()
+                val gs = extGState.getAsDict(key as org.openpdf.text.pdf.PdfName)
+                val fillCa = gs?.getAsNumber(org.openpdf.text.pdf.PdfName("ca"))?.floatValue()
+                val strokeCa = gs?.getAsNumber(org.openpdf.text.pdf.PdfName("CA"))?.floatValue()
                 fillCa == 0.25f || strokeCa == 0.25f
             }
         assertTrue(hasOpacity, "ExtGState should contain 0.25 opacity")
@@ -155,16 +155,16 @@ class WatermarkRenderingTest {
         assertNotNull(pdfBytes)
         assertTrue(pdfBytes.isNotEmpty())
 
-        val reader = com.lowagie.text.pdf.PdfReader(pdfBytes)
+        val reader = org.openpdf.text.pdf.PdfReader(pdfBytes)
         val page = reader.getPageN(1)
-        val resources = page.getAsDict(com.lowagie.text.pdf.PdfName.RESOURCES)
-        val extGState = resources?.getAsDict(com.lowagie.text.pdf.PdfName.EXTGSTATE)
+        val resources = page.getAsDict(org.openpdf.text.pdf.PdfName.RESOURCES)
+        val extGState = resources?.getAsDict(org.openpdf.text.pdf.PdfName.EXTGSTATE)
         assertNotNull(extGState)
         val hasOpacity =
             extGState.keys.any { key ->
-                val gs = extGState.getAsDict(key as com.lowagie.text.pdf.PdfName)
-                val fillCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("ca"))?.floatValue()
-                val strokeCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("CA"))?.floatValue()
+                val gs = extGState.getAsDict(key as org.openpdf.text.pdf.PdfName)
+                val fillCa = gs?.getAsNumber(org.openpdf.text.pdf.PdfName("ca"))?.floatValue()
+                val strokeCa = gs?.getAsNumber(org.openpdf.text.pdf.PdfName("CA"))?.floatValue()
                 fillCa == 0.5f || strokeCa == 0.5f
             }
         assertTrue(hasOpacity, "ExtGState should contain 0.5 opacity")

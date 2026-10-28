@@ -1,9 +1,5 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Document
-import com.lowagie.text.Rectangle
-import com.lowagie.text.pdf.PdfContentByte
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.model.BodyBackground
@@ -19,6 +15,10 @@ import com.pdfgenerator.model.TextElement
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.openpdf.text.Document
+import org.openpdf.text.Rectangle
+import org.openpdf.text.pdf.PdfContentByte
+import org.openpdf.text.pdf.PdfWriter
 import kotlin.test.assertNotNull
 
 class HeaderFooterSectionRendererTest {

@@ -1,12 +1,12 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Image
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
+import org.openpdf.text.Image
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.Base64

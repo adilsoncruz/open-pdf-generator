@@ -5,17 +5,17 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
-import com.lowagie.text.Image
-import com.lowagie.text.pdf.Barcode
-import com.lowagie.text.pdf.Barcode128
-import com.lowagie.text.pdf.Barcode39
-import com.lowagie.text.pdf.BarcodeEAN
-import com.lowagie.text.pdf.BarcodePDF417
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
+import org.openpdf.text.Image
+import org.openpdf.text.pdf.Barcode
+import org.openpdf.text.pdf.Barcode128
+import org.openpdf.text.pdf.Barcode39
+import org.openpdf.text.pdf.BarcodeEAN
+import org.openpdf.text.pdf.BarcodePDF417
 import org.slf4j.LoggerFactory
 
 class BarcodeRenderer : Renderer<BarcodeElement> {

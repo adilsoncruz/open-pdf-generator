@@ -1,13 +1,13 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Element
-import com.lowagie.text.Font
-import com.lowagie.text.pdf.BaseFont
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.FontCache
+import org.openpdf.text.Element
+import org.openpdf.text.Font
+import org.openpdf.text.pdf.BaseFont
 import org.slf4j.LoggerFactory
 
 class StaticTextRenderer : Renderer<StaticTextElement> {

@@ -1,9 +1,5 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Document
-import com.lowagie.text.Rectangle
-import com.lowagie.text.pdf.PdfContentByte
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.model.WatermarkConfig
@@ -12,6 +8,10 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.openpdf.text.Document
+import org.openpdf.text.Rectangle
+import org.openpdf.text.pdf.PdfContentByte
+import org.openpdf.text.pdf.PdfWriter
 
 class WatermarkPainterTest {
     private val transparentPngBase64 =

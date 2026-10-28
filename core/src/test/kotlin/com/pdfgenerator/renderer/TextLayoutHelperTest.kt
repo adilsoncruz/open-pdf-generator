@@ -1,11 +1,11 @@
 package com.pdfgenerator.renderer
 
-import com.lowagie.text.Element
 import com.pdfgenerator.adapter.openpdf.TextLayoutHelper
 import com.pdfgenerator.engine.TextLayoutCacheKey
 import com.pdfgenerator.engine.TextLayoutMeasurement
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.openpdf.text.Element
 
 class TextLayoutHelperTest {
     @Test

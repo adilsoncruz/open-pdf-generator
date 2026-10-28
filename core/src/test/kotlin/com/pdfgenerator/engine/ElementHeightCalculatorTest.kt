@@ -1,7 +1,5 @@
 package com.pdfgenerator.engine
 
-import com.lowagie.text.Document
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.ConditionalElement
@@ -22,6 +20,8 @@ import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.model.TextStyle
 import org.junit.jupiter.api.Test
+import org.openpdf.text.Document
+import org.openpdf.text.pdf.PdfWriter
 import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

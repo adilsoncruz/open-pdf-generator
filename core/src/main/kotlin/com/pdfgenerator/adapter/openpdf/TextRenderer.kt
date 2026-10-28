@@ -1,7 +1,5 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.pdf.BaseFont
-import com.lowagie.text.pdf.PdfContentByte
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.engine.TextLayoutCacheKey
@@ -9,6 +7,8 @@ import com.pdfgenerator.engine.TextLayoutMeasurement
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.ConditionEvaluator
+import org.openpdf.text.pdf.BaseFont
+import org.openpdf.text.pdf.PdfContentByte
 
 class TextRenderer : Renderer<TextElement> {
     companion object {

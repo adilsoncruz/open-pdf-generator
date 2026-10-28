@@ -1,12 +1,12 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Rectangle
-import com.lowagie.text.pdf.PdfAction
-import com.lowagie.text.pdf.PdfAnnotation
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.Renderer
 import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.TextElement
+import org.openpdf.text.Rectangle
+import org.openpdf.text.pdf.PdfAction
+import org.openpdf.text.pdf.PdfAnnotation
 
 class LinkRenderer : Renderer<LinkElement> {
     private val textRenderer = TextRenderer()
