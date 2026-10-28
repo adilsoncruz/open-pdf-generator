@@ -119,7 +119,7 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.snapshot.outputs.skip == 'false' && steps.tagcheck.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: engine-v${{ steps.version.outputs.version }}
           name: Open PDF Generator Core v${{ steps.version.outputs.version }}
@@ -206,7 +206,7 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.snapshot.outputs.skip == 'false' && steps.tagcheck.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: cli-v${{ steps.version.outputs.version }}
           name: Open PDF Generator CLI v${{ steps.version.outputs.version }}
@@ -361,7 +361,7 @@ jobs:
 
       - name: Create / Update GitHub Release
         if: steps.releasetype.outputs.skip == 'false'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: editor-v${{ steps.version.outputs.version }}
           name: PDF Template Editor v${{ steps.version.outputs.version }}
