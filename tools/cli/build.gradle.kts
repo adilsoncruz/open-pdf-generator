@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.0.21"
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("io.gitlab.arturbosch.detekt") version "1.23.5"
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
 
@@ -34,11 +34,11 @@ dependencies {
     // Core's transitive dependencies (needed since we're using a JAR)
     implementation("com.github.librepdf:openpdf:2.0.3")
     implementation("com.google.code.gson:gson:2.11.0")
-    implementation("com.networknt:json-schema-validator:1.5.6")
+    implementation("com.networknt:json-schema-validator:3.0.8")
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.google.zxing:javase:3.5.3")
     implementation("org.slf4j:slf4j-api:2.0.16")
-    implementation("ch.qos.logback:logback-classic:1.5.12")
+    implementation("ch.qos.logback:logback-classic:1.6.6")
 
     // CLI Framework
     implementation("com.github.ajalt.clikt:clikt:4.2.1")

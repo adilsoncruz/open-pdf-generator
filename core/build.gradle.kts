@@ -31,10 +31,10 @@ dependencies {
     implementation(kotlin("stdlib"))
 
     implementation("org.slf4j:slf4j-api:2.0.16")
-    runtimeOnly("ch.qos.logback:logback-classic:1.5.12")
+    runtimeOnly("ch.qos.logback:logback-classic:1.6.6")
 
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testImplementation("io.mockk:mockk:1.13.17")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("org.apache.pdfbox:pdfbox:2.0.32")
