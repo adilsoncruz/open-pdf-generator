@@ -137,6 +137,46 @@ Validating template: broken.json
 ✗ Template validation failed: Unknown element type "textt" at line 15
 ```
 
+## convert
+
+Convert JasperReports JRXML template to Open PDF Generator JSON format.
+
+```bash
+pdf-generator convert <input.jrxml> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `input` | Path to the input `.jrxml` file (required) |
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--output` | Path to destination JSON template file | - |
+| `--stdout` | Print converted JSON to standard output | `false` |
+| `--fail-on-unsupported` | Fail conversion if an unsupported Jasper element is found | `false` |
+
+### Examples
+
+```bash
+# Convert JRXML to template file
+pdf-generator convert report.jrxml --output template.json
+
+# Convert and output directly to stdout or pipe
+pdf-generator convert report.jrxml --stdout > template.json
+
+# Strict conversion failing on unknown tags
+pdf-generator convert report.jrxml --output template.json --fail-on-unsupported
+```
+
+Output:
+```
+✓ Template converted successfully: /path/to/template.json
+```
+
 ## cache
 
 Manage template and image caches.
