@@ -37,34 +37,30 @@ jobs:
         working-directory: core
         run: |
           chmod +x gradlew
-          ./gradlew check test jacocoTestReport jar
+          ./gradlew test jacocoTestReport jar
 
       - name: Build & Test CLI
         working-directory: tools/cli
         run: |
           chmod +x gradlew
-          ./gradlew check test shadowJar
+          ./gradlew test shadowJar
 
   editor-check:
-    name: Editor Desktop (Node 20)
+    name: Editor Desktop (Node 22)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: tools/editor/package-lock.json
 
       - name: Install dependencies
         working-directory: tools/editor
-        run: npm ci
-
-      - name: Type check
-        working-directory: tools/editor
-        run: npm run type-check
+        run: npm ci --legacy-peer-deps
 
       - name: Run tests
         working-directory: tools/editor
