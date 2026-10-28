@@ -9,7 +9,6 @@ import java.io.File
 import java.nio.file.Files
 
 class PDFGeneratorTest {
-
     private lateinit var pdfGenerator: PDFGenerator
 
     @BeforeEach
@@ -28,9 +27,10 @@ class PDFGeneratorTest {
         val invalidJsonTemplate = "{"
         val dataJson = "{}"
 
-        val exception = assertThrows(PDFGenerationException::class.java) {
-            pdfGenerator.generate(invalidJsonTemplate, dataJson)
-        }
+        val exception =
+            assertThrows(PDFGenerationException::class.java) {
+                pdfGenerator.generate(invalidJsonTemplate, dataJson)
+            }
         assertTrue(exception.message!!.contains("Erro de sintaxe JSON") || exception.message!!.contains("JSON syntax error"))
     }
 
@@ -39,9 +39,10 @@ class PDFGeneratorTest {
         val validTemplate = "{ \"version\": \"1.0\", \"pageSettings\": { \"size\": \"A4\", \"orientation\": \"portrait\", \"margins\": { \"top\": 10, \"right\": 10, \"bottom\": 10, \"left\": 10 } }, \"pageElements\": [] }"
         val invalidData = "[]"
 
-        val exception = assertThrows(PDFGenerationException::class.java) {
-            pdfGenerator.generate(validTemplate, invalidData)
-        }
+        val exception =
+            assertThrows(PDFGenerationException::class.java) {
+                pdfGenerator.generate(validTemplate, invalidData)
+            }
         assertTrue(exception.message!!.contains("JSON data must be a JSON object"))
     }
 
@@ -88,16 +89,17 @@ class PDFGeneratorTest {
     fun `test generate with custom page size and landscape`() {
         val validTemplate = "{ \"version\": \"1.0\", \"pageSettings\": { \"size\": \"CUSTOM\", \"customSize\": {\"width\": 800, \"height\": 600}, \"orientation\": \"landscape\", \"margins\": { \"top\": 10, \"right\": 10, \"bottom\": 10, \"left\": 10 } }, \"pageElements\": [] }"
         val template = Template.fromString(validTemplate)
-        
+
         val pdfBytes = pdfGenerator.generate(template, emptyMap())
         assertTrue(pdfBytes.isNotEmpty())
     }
 
     @Test
     fun `test generate from path exception handling`() {
-        val exception = assertThrows(PDFGenerationException::class.java) {
-            pdfGenerator.generateFromPath("non-existent-template.json", "{}")
-        }
+        val exception =
+            assertThrows(PDFGenerationException::class.java) {
+                pdfGenerator.generateFromPath("non-existent-template.json", "{}")
+            }
         assertTrue(exception.message!!.contains("Template not found") || exception.message!!.contains("Error generating PDF with template"))
     }
 

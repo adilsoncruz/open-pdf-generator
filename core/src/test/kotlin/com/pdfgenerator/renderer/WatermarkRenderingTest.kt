@@ -55,12 +55,13 @@ class WatermarkRenderingTest {
         val resources = page.getAsDict(com.lowagie.text.pdf.PdfName.RESOURCES)
         val extGState = resources?.getAsDict(com.lowagie.text.pdf.PdfName.EXTGSTATE)
         assertNotNull(extGState)
-        val hasOpacity = extGState.keys.any { key ->
-            val gs = extGState.getAsDict(key as com.lowagie.text.pdf.PdfName)
-            val fillCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("ca"))?.floatValue()
-            val strokeCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("CA"))?.floatValue()
-            fillCa == 0.25f || strokeCa == 0.25f
-        }
+        val hasOpacity =
+            extGState.keys.any { key ->
+                val gs = extGState.getAsDict(key as com.lowagie.text.pdf.PdfName)
+                val fillCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("ca"))?.floatValue()
+                val strokeCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("CA"))?.floatValue()
+                fillCa == 0.25f || strokeCa == 0.25f
+            }
         assertTrue(hasOpacity, "ExtGState should contain 0.25 opacity")
     }
 
@@ -159,12 +160,13 @@ class WatermarkRenderingTest {
         val resources = page.getAsDict(com.lowagie.text.pdf.PdfName.RESOURCES)
         val extGState = resources?.getAsDict(com.lowagie.text.pdf.PdfName.EXTGSTATE)
         assertNotNull(extGState)
-        val hasOpacity = extGState.keys.any { key ->
-            val gs = extGState.getAsDict(key as com.lowagie.text.pdf.PdfName)
-            val fillCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("ca"))?.floatValue()
-            val strokeCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("CA"))?.floatValue()
-            fillCa == 0.5f || strokeCa == 0.5f
-        }
+        val hasOpacity =
+            extGState.keys.any { key ->
+                val gs = extGState.getAsDict(key as com.lowagie.text.pdf.PdfName)
+                val fillCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("ca"))?.floatValue()
+                val strokeCa = gs?.getAsNumber(com.lowagie.text.pdf.PdfName("CA"))?.floatValue()
+                fillCa == 0.5f || strokeCa == 0.5f
+            }
         assertTrue(hasOpacity, "ExtGState should contain 0.5 opacity")
     }
 

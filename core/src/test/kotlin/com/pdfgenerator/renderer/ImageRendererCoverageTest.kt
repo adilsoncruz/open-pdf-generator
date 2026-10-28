@@ -1,23 +1,22 @@
 package com.pdfgenerator.renderer
 
+import com.lowagie.text.Document
+import com.lowagie.text.PageSize
 import com.pdfgenerator.adapter.openpdf.ImageRenderer
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.model.ImageElement
-import com.lowagie.text.Document
-import com.lowagie.text.PageSize
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.util.Base64
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
 
 class ImageRendererCoverageTest {
-
     private lateinit var document: Document
     private lateinit var context: RenderContext
 
@@ -55,10 +54,10 @@ class ImageRendererCoverageTest {
     fun `test cache companion methods`() {
         val tempFile = File.createTempFile("testimg", ".gif")
         tempFile.writeBytes(getGifBytes())
-        
+
         ImageRenderer.preloadFromFiles(tempFile.absolutePath, "non-existent.png")
         assertEquals(1, ImageRenderer.cacheSize())
-        
+
         ImageRenderer.preloadFromClasspath("does-not-exist.png")
         assertEquals(1, ImageRenderer.cacheSize())
 
@@ -73,7 +72,7 @@ class ImageRendererCoverageTest {
     fun `test empty source and print condition`() {
         val config = PDFGeneratorConfig()
         val renderer = ImageRenderer(config)
-        
+
         val el1 = ImageElement(id = "img1", x = 0f, y = 0f, width = 100f, height = 100f, printCondition = "1 == 2", source = "abc")
         renderer.render(el1, context) // Should return early
 
@@ -85,10 +84,11 @@ class ImageRendererCoverageTest {
     fun `test base64 and data binding`() {
         val config = PDFGeneratorConfig()
         val renderer = ImageRenderer(config)
-        
+
         every { context.data } returns mapOf("myImage" to createBase64Gif())
-        
-        val el = ImageElement(id = "img3", x = 0f, y = 0f, width = 100f, height = 100f, dataBinding = "myImage", source = "will-be-overridden")
+
+        val el =
+            ImageElement(id = "img3", x = 0f, y = 0f, width = 100f, height = 100f, dataBinding = "myImage", source = "will-be-overridden")
         renderer.render(el, context)
         verify(exactly = 1) { document.add(any()) }
     }
@@ -98,7 +98,15 @@ class ImageRendererCoverageTest {
         // Instead of making real http call, let it fail with strictMode = false to cover exception handling
         val config = PDFGeneratorConfig(strictMode = false)
         val renderer = ImageRenderer(config)
-        val el = ImageElement(id = "img4", x = 0f, y = 0f, width = 100f, height = 100f, source = "http://invalid-url-that-does-not-exist.com/img.png")
+        val el =
+            ImageElement(
+                id = "img4",
+                x = 0f,
+                y = 0f,
+                width = 100f,
+                height = 100f,
+                source = "http://invalid-url-that-does-not-exist.com/img.png",
+            )
         renderer.render(el, context) // Should catch exception and not throw
     }
 
@@ -116,9 +124,9 @@ class ImageRendererCoverageTest {
     fun `test file loading cache max size`() {
         val config = PDFGeneratorConfig(enableImageCache = true)
         val renderer = ImageRenderer(config)
-        
+
         ImageRenderer.setMaxCacheSize(1) // Force eviction
-        
+
         val temp1 = File.createTempFile("testimg1", ".gif")
         temp1.writeBytes(getGifBytes())
         val temp2 = File.createTempFile("testimg2", ".gif")
@@ -126,7 +134,10 @@ class ImageRendererCoverageTest {
 
         try {
             renderer.render(ImageElement(id = "t1", x = 0f, y = 0f, width = 10f, height = 10f, source = temp1.absolutePath), context)
-            renderer.render(ImageElement(id = "t2", x = 0f, y = 0f, width = 10f, height = 10f, source = temp2.absolutePath), context) // should evict t1
+            renderer.render(
+                ImageElement(id = "t2", x = 0f, y = 0f, width = 10f, height = 10f, source = temp2.absolutePath),
+                context,
+            ) // should evict t1
             assertEquals(1, ImageRenderer.cacheSize())
         } finally {
             temp1.delete()
@@ -138,17 +149,35 @@ class ImageRendererCoverageTest {
     fun `test scale modes`() {
         val config = PDFGeneratorConfig(enableImageCache = false)
         val renderer = ImageRenderer(config)
-        
+
         val temp = File.createTempFile("testimg1", ".gif")
         temp.writeBytes(getGifBytes())
 
         try {
-            renderer.render(ImageElement(id = "c1", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "contain"), context)
-            renderer.render(ImageElement(id = "c2", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "cover"), context)
-            renderer.render(ImageElement(id = "c3", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "fill"), context)
-            renderer.render(ImageElement(id = "c4", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "scale-down"), context)
-            renderer.render(ImageElement(id = "c5", x = 0f, y = 0f, width = 0f, height = 0f, source = temp.absolutePath, fit = "scale-down"), context)
-            renderer.render(ImageElement(id = "c6", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "unknown"), context)
+            renderer.render(
+                ImageElement(id = "c1", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "contain"),
+                context,
+            )
+            renderer.render(
+                ImageElement(id = "c2", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "cover"),
+                context,
+            )
+            renderer.render(
+                ImageElement(id = "c3", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "fill"),
+                context,
+            )
+            renderer.render(
+                ImageElement(id = "c4", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "scale-down"),
+                context,
+            )
+            renderer.render(
+                ImageElement(id = "c5", x = 0f, y = 0f, width = 0f, height = 0f, source = temp.absolutePath, fit = "scale-down"),
+                context,
+            )
+            renderer.render(
+                ImageElement(id = "c6", x = 0f, y = 0f, width = 100f, height = 100f, source = temp.absolutePath, fit = "unknown"),
+                context,
+            )
         } finally {
             temp.delete()
         }

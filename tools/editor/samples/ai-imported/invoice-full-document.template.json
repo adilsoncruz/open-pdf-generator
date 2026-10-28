@@ -1,0 +1,126 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "Invoice Full Document",
+    "description": "Template inferido e estruturado via Skill de IA Multimodal a partir de invoice-full-document.pdf"
+  },
+  "pageSettings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 36,
+      "right": 36,
+      "bottom": 36,
+      "left": 36
+    }
+  },
+  "page": [
+    {
+      "type": "text",
+      "id": "company-title",
+      "x": 36,
+      "y": 36,
+      "value": "${empresa.razaoSocial}",
+      "dataBinding": "empresa.razaoSocial",
+      "style": {
+        "fontSize": 18,
+        "fontWeight": "bold",
+        "color": "#1e293b"
+      }
+    },
+    {
+      "type": "text",
+      "id": "invoice-title",
+      "x": 380,
+      "y": 36,
+      "value": "INVOICE #${fatura.numero}",
+      "dataBinding": "fatura.numero",
+      "style": {
+        "fontSize": 12,
+        "fontWeight": "bold",
+        "color": "#4f46e5"
+      }
+    },
+    {
+      "type": "text",
+      "id": "customer-label",
+      "x": 36,
+      "y": 66,
+      "value": "Billed to: ",
+      "style": {
+        "fontSize": 10,
+        "fontWeight": "bold",
+        "color": "#475569"
+      }
+    },
+    {
+      "type": "text",
+      "id": "customer-name",
+      "x": 86,
+      "y": 66,
+      "value": "${cliente.nome} - Tax ID: ${cliente.taxId}",
+      "dataBinding": "cliente.nome",
+      "style": {
+        "fontSize": 10,
+        "color": "#475569"
+      }
+    },
+    {
+      "type": "table",
+      "id": "invoice-table",
+      "x": 36,
+      "y": 96,
+      "dataBinding": "items",
+      "columns": [
+        { "header": "Item", "field": "name", "width": 200, "alignment": "left" },
+        { "header": "Category", "field": "category", "width": 100, "alignment": "left" },
+        { "header": "Qty", "field": "qty", "width": 50, "alignment": "center" },
+        { "header": "Price", "field": "price", "width": 80, "alignment": "right" },
+        { "header": "Amount", "field": "amount", "width": 93, "alignment": "right" }
+      ],
+      "style": {
+        "headerBackground": "#0f172a",
+        "headerTextColor": "#ffffff",
+        "borderColor": "#e2e8f0",
+        "borderWidth": 0.5,
+        "fontSize": 9,
+        "padding": 5
+      }
+    },
+    {
+      "type": "text",
+      "id": "total-amount",
+      "x": 380,
+      "y": 210,
+      "value": "Total Due: $${fatura.total}",
+      "dataBinding": "fatura.total",
+      "style": {
+        "fontSize": 13,
+        "fontWeight": "bold",
+        "color": "#047857"
+      }
+    },
+    {
+      "type": "barcode",
+      "id": "inv-barcode",
+      "barcodeType": "code128",
+      "x": 36,
+      "y": 240,
+      "value": "${fatura.codigoBarras}",
+      "dataBinding": "fatura.codigoBarras",
+      "width": 200,
+      "height": 40
+    },
+    {
+      "type": "barcode",
+      "id": "inv-qr",
+      "barcodeType": "qrcode",
+      "x": 423,
+      "y": 235,
+      "value": "${fatura.linkPagamento}",
+      "dataBinding": "fatura.linkPagamento",
+      "width": 55,
+      "height": 55
+    }
+  ]
+}

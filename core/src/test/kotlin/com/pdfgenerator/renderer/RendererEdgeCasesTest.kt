@@ -9,7 +9,6 @@ import java.io.File
 import kotlin.test.assertTrue
 
 class RendererEdgeCasesTest {
-
     @Nested
     inner class ImageRendererEdgeCases {
         @Test
@@ -146,7 +145,7 @@ class RendererEdgeCasesTest {
             val template = Template.fromString(templateJson)
             val generator = PDFGenerator()
             val outputFile = File(tempDir, "loop-edge.pdf")
-            
+
             // Empty map means 'items' is null
             generator.generate(template, emptyMap(), outputFile)
 
@@ -187,7 +186,7 @@ class RendererEdgeCasesTest {
             val template = Template.fromString(templateJson)
             val generator = PDFGenerator()
             val outputFile = File(tempDir, "loop-pagination.pdf")
-            
+
             val items = (1..20).map { mapOf("name" to "Item ${'$'}it") }
             generator.generate(template, mapOf("items" to items), outputFile)
 
@@ -196,4 +195,3 @@ class RendererEdgeCasesTest {
         }
     }
 }
-

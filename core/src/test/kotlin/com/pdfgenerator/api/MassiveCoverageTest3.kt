@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class MassiveCoverageTest3 {
-
     @Test
     fun `test text and static_text edge cases`() {
         val generator = PDFGenerator()
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { 
@@ -56,12 +56,13 @@ class MassiveCoverageTest3 {
                     }
                 ]
             }
-        """.trimIndent()
-        
+            """.trimIndent()
+
         val template = Template.fromString(templateJson)
-        val data = mapOf(
-            "multiline" to "Line 1\n\nLine 3"
-        )
+        val data =
+            mapOf(
+                "multiline" to "Line 1\n\nLine 3",
+            )
         val bytes = generator.generate(template, data)
         assertTrue(bytes.isNotEmpty())
     }

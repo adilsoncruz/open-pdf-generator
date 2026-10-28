@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class MassiveCoverageTest2 {
-
     @Test
     fun `test table fixed layout without autoflow`() {
         val generator = PDFGenerator()
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { 
@@ -30,15 +30,17 @@ class MassiveCoverageTest2 {
                     }
                 ]
             }
-        """.trimIndent()
-        
+            """.trimIndent()
+
         val template = Template.fromString(templateJson)
-        val data = mapOf(
-            "items" to listOf(
-                mapOf("name" to "Item 1"),
-                mapOf("name" to "Item 2")
+        val data =
+            mapOf(
+                "items" to
+                    listOf(
+                        mapOf("name" to "Item 1"),
+                        mapOf("name" to "Item 2"),
+                    ),
             )
-        )
         val bytes = generator.generate(template, data)
         assertTrue(bytes.isNotEmpty())
     }

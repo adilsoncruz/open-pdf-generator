@@ -30,13 +30,13 @@ class ExtraElementsTest {
           ]
         }
         """
-        
+
         val listItems = (1..200).joinToString(", ") { """{"a": "$it"}""" }
         val data = """
         {
           "textData": "some text",
           "bc": "12345678",
-          "list": [ ${listItems} ]
+          "list": [ $listItems ]
         }
         """
 
@@ -46,7 +46,7 @@ class ExtraElementsTest {
 
     @Test
     fun `test condition evaluator and expression processor`() {
-         val template = """
+        val template = """
          {
           "version": "1.0",
           "pageSettings": { "size": "A4", "orientation": "portrait", "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 } },
@@ -65,11 +65,10 @@ class ExtraElementsTest {
           ]
          }
          """
-         val data = """ { "val1": "test" } """
-         val pdfBytes = pdfGenerator.generate(template, data)
-         assertTrue(pdfBytes.isNotEmpty())
+        val data = """ { "val1": "test" } """
+        val pdfBytes = pdfGenerator.generate(template, data)
+        assertTrue(pdfBytes.isNotEmpty())
     }
-
 
     @Test
     fun `test image invalid src`() {
@@ -88,10 +87,9 @@ class ExtraElementsTest {
         }
         """
         assertThrows(Exception::class.java) {
-             pdfGenerator.generate(template, "{}")
+            pdfGenerator.generate(template, "{}")
         }
     }
-
 
     @Test
     fun `test image renderer cache`() {

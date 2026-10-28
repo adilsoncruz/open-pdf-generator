@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class ExpressionProcessorCoverageTest {
-
     @Test
     fun `test cache eviction`() {
         // Line 23: MAX_EXPRESSION_CACHE_SIZE is 1024
@@ -35,13 +34,13 @@ class ExpressionProcessorCoverageTest {
         // Line 142-154
         // Not a map or list
         assertEquals("", ExpressionProcessor.process("obj.nested.name", mapOf("obj" to "string")))
-        
+
         // List size and out of bounds
         val listData = mapOf("list" to listOf("a", "b"))
         assertEquals("2", ExpressionProcessor.process("list.size", listData))
         assertEquals("", ExpressionProcessor.process("list.5", listData)) // returns null, so empty string
         assertEquals("", ExpressionProcessor.process("list.-1", listData)) // out of bounds
-        assertEquals("a", ExpressionProcessor.process("list.0", listData)) 
+        assertEquals("a", ExpressionProcessor.process("list.0", listData))
     }
 
     @Test
@@ -107,18 +106,18 @@ class ExpressionProcessorCoverageTest {
         assertEquals("notanumber", ExpressionProcessor.process("val | currency", mapOf("val" to "notanumber")))
         assertEquals("notanumber", ExpressionProcessor.process("val | numfmt", mapOf("val" to "notanumber")))
     }
-    
+
     @Test
     fun `test length on array`() {
-        assertEquals("3", ExpressionProcessor.process("arr | length", mapOf("arr" to arrayOf(1,2,3))))
+        assertEquals("3", ExpressionProcessor.process("arr | length", mapOf("arr" to arrayOf(1, 2, 3))))
     }
-    
+
     @Test
     fun `test abs fallbacks`() {
         assertEquals("42.0", ExpressionProcessor.process("val | abs", mapOf("val" to "-42.0")))
         assertEquals("0.0", ExpressionProcessor.process("val | abs", mapOf("val" to "notanumber")))
     }
-    
+
     @Test
     fun `test round fallbacks`() {
         assertEquals("0.0", ExpressionProcessor.process("val | round", mapOf("val" to "notanumber")))

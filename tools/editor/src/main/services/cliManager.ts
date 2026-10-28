@@ -1,0 +1,41 @@
+import cliManager, {
+  CliManager,
+  findLatestLocalCliJar,
+  checkCLIStatus,
+  downloadCLI,
+  installCLI,
+  ensureCLIReady,
+  installCLIFromFile,
+  readGradleProjectVersion,
+  readJarVersionFromBuildLibs,
+  getAppVersions,
+  convertJrxmlToJson,
+  isDevEnvironment,
+  resolveFallbackJarPath,
+  executeProcess,
+  executeCliCommand,
+  type EnsureCLIReadyResult,
+  type ProcessExecutionOptions,
+  type ProcessExecutionResult,
+} from './cli'
+
+export default cliManager
+export {
+  CliManager,
+  cliManager,
+  findLatestLocalCliJar,
+  checkCLIStatus,
+  downloadCLI,
+  installCLI,
+  ensureCLIReady,
+  installCLIFromFile,
+  readGradleProjectVersion,
+  readJarVersionFromBuildLibs,
+  getAppVersions,
+  convertJrxmlToJson,
+  isDevEnvironment,
+  resolveFallbackJarPath,
+  executeProcess,
+  executeCliCommand,
+}
+export type { EnsureCLIReadyResult, ProcessExecutionOptions, ProcessExecutionResult }

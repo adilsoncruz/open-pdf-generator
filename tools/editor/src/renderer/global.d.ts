@@ -28,7 +28,9 @@ export interface UpdateStatus {
 
 export interface ElectronAPI {
   // Dialog APIs
-  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean } | null>
+  openFile: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean; isJrxml?: boolean } | null>
+  openJasperFile?: () => Promise<{ path: string; content: string; convertedFromJasper?: boolean; isJrxml?: boolean } | null>
+  openPdfFile?: () => Promise<{ path: string; base64: string; name: string } | null>
   openDataFile: () => Promise<{ path: string; content: string } | null>
   saveFile: (content: string, defaultPath?: string) => Promise<string | null>
   
@@ -97,6 +99,10 @@ export interface ElectronAPI {
   // Language APIs
   setLanguage: (lang: string) => Promise<{ success: boolean }>
   getSystemLocale: () => Promise<string>
+
+  // Skill Management
+  installSkill?: (target: string, customPath?: string) => Promise<{ success: boolean; path?: string; error?: string }>
+  getSkillContent?: () => Promise<{ success: boolean; content?: string; error?: string }>
   
   // Auto-Update
   checkForUpdates: () => Promise<{ success: boolean; updateAvailable?: boolean; version?: string; error?: string }>

@@ -6,13 +6,12 @@ import org.junit.jupiter.api.Test
 import java.io.File
 
 class PDFGeneratorCoverageTest {
-
     @Test
     fun `test file not json`() {
         val generator = PDFGenerator()
         val tempFile = File.createTempFile("invalid", ".txt")
         tempFile.writeText("Not a json file")
-        
+
         assertThrows(PDFGenerationException::class.java) {
             generator.generateFromPath(tempFile.absolutePath, "{}")
         }
@@ -22,7 +21,8 @@ class PDFGeneratorCoverageTest {
     @Test
     fun `test invalid element strict mode throws exception`() {
         val generator = PDFGenerator(PDFGeneratorConfig(strictMode = true))
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { "size": "A4", "orientation": "portrait", "margins": {"top":0,"bottom":0,"left":0,"right":0} },
@@ -30,7 +30,7 @@ class PDFGeneratorCoverageTest {
                     { "type": "image", "id": "img1", "x": 0, "y": 0, "width": 100, "height": 100, "source": "hxxp://invalid" }
                 ]
             }
-        """.trimIndent()
+            """.trimIndent()
 
         assertThrows(PDFGenerationException::class.java) {
             generator.generate(templateJson, "{}")
@@ -40,7 +40,8 @@ class PDFGeneratorCoverageTest {
     @Test
     fun `test groups and adjustElementForBody in summary page`() {
         val generator = PDFGenerator()
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { "size": "A4", "orientation": "portrait", "margins": {"top":0,"bottom":0,"left":0,"right":0} },
@@ -77,8 +78,8 @@ class PDFGeneratorCoverageTest {
                     ]
                 }
             }
-        """.trimIndent()
-        
+            """.trimIndent()
+
         val dataJson = """{"show": true, "items": [{"a": "1"}]}"""
         val result = generator.generate(templateJson, dataJson)
         assertTrue(result.isNotEmpty())
@@ -87,7 +88,8 @@ class PDFGeneratorCoverageTest {
     @Test
     fun `test getElementHeight and calculateLoopItemHeight fully missed branches`() {
         val generator = PDFGenerator()
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { "size": "A4", "orientation": "portrait", "margins": {"top":0,"bottom":0,"left":0,"right":0} },
@@ -108,7 +110,7 @@ class PDFGeneratorCoverageTest {
                     ]}
                 ]
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val dataJson = """{"items": [1]}"""
         val result = generator.generate(templateJson, dataJson)
@@ -118,7 +120,8 @@ class PDFGeneratorCoverageTest {
     @Test
     fun `test invalid element strict mode throws exception in summary`() {
         val generator = PDFGenerator(PDFGeneratorConfig(strictMode = true))
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { "size": "A4", "orientation": "portrait", "margins": {"top":0,"bottom":0,"left":0,"right":0} },
@@ -129,17 +132,18 @@ class PDFGeneratorCoverageTest {
                     ]
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         assertThrows(PDFGenerationException::class.java) {
             generator.generate(templateJson, "{}")
         }
     }
-    
+
     @Test
     fun `test invalid background strict mode throws exception in summary`() {
         val generator = PDFGenerator()
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { "size": "A4", "orientation": "portrait", "margins": {"top":0,"bottom":0,"left":0,"right":0} },
@@ -153,7 +157,7 @@ class PDFGeneratorCoverageTest {
                     "elements": []
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
         // It catches exception inside and logs error, but doesn't throw if strictMode is false
         // Let's call it to hit the catch block for summaryPage.background
         generator.generate(templateJson, "{}")
@@ -170,21 +174,23 @@ class PDFGeneratorCoverageTest {
     @Test
     fun `test file output exception`() {
         val generator = PDFGenerator()
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { "size": "A4", "orientation": "portrait", "margins": {"top":0,"bottom":0,"left":0,"right":0} },
                 "pageElements": []
             }
-        """.trimIndent()
-        
+            """.trimIndent()
+
         val invalidFile = File(System.getProperty("java.io.tmpdir")) // It's a directory, should fail to open FileOutputStream
-        
-        val ex1 = assertThrows(PDFGenerationException::class.java) {
-            generator.generate(templateJson, "{}", invalidFile)
-        }
+
+        val ex1 =
+            assertThrows(PDFGenerationException::class.java) {
+                generator.generate(templateJson, "{}", invalidFile)
+            }
         assertTrue(ex1.message!!.contains("Error generating PDF"))
-        
+
         assertThrows(PDFGenerationException::class.java) {
             generator.generateFromPath("test_dummy", "{}", invalidFile) // will fail in loadTemplate though
         }
@@ -193,22 +199,27 @@ class PDFGeneratorCoverageTest {
     @Test
     fun `test output stream exception`() {
         val generator = PDFGenerator()
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { "size": "A4", "orientation": "portrait", "margins": {"top":0,"bottom":0,"left":0,"right":0} },
                 "pageElements": []
             }
-        """.trimIndent()
+            """.trimIndent()
         val template = Template.fromString(templateJson)
-        
-        val badStream = object : java.io.OutputStream() {
-            override fun write(b: Int) { throw java.io.IOException("Bad stream") }
-        }
-        
-        val ex = assertThrows(PDFGenerationException::class.java) {
-            generator.generateToStream(template, emptyMap(), badStream)
-        }
+
+        val badStream =
+            object : java.io.OutputStream() {
+                override fun write(b: Int) {
+                    throw java.io.IOException("Bad stream")
+                }
+            }
+
+        val ex =
+            assertThrows(PDFGenerationException::class.java) {
+                generator.generateToStream(template, emptyMap(), badStream)
+            }
         assertTrue(ex.message!!.contains("Error generating PDF"))
     }
 }

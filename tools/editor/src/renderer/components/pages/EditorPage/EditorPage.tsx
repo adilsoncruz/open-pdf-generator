@@ -1,23 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useTemplateStore, type Element, flattenElements } from '../../../store/templateStore'
 import { useUIStore } from '../../../store/uiStore'
 import { usePreviewStore } from '../../../store/previewStore'
-import { Icon } from '../../atoms'
 import {
   Toolbar,
   Sidebar,
   Canvas,
   PropertiesPanel,
-  DataPanel,
-  SchemaPanel,
   PDFPreview,
-  HelpModal,
-  ElementsToolbar,
   StatusBar,
 } from '../../organisms'
 import ContextMenu from '../../ContextMenu'
 import type { ToolbarRef } from '../../organisms'
-import { useTranslation } from '../../../i18n'
+import { useEditorShortcuts } from './hooks/useEditorShortcuts'
+import { useElectronMenuEvents } from './hooks/useElectronMenuEvents'
+import { NavigationRail } from './components/NavigationRail'
+import { EditorModals } from './components/EditorModals'
 
 /**
  * EditorPage - Main page component for the PDF Template Editor
@@ -29,43 +26,15 @@ import { useTranslation } from '../../../i18n'
  * - Orchestrates the editor layout
  */
 export function EditorPage() {
-  const { t } = useTranslation()
   const [showDataPanel, setShowDataPanel] = useState(false)
   const [showSchemaPanel, setShowSchemaPanel] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
   const [helpModalInitialTab, setHelpModalInitialTab] = useState<'text' | 'conditions'>('text')
-  
-  const {
-    template,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    selectedElementIds,
-    selectedElementLocation,
-    selectedGroupId,
-    currentSection,
-    deleteSelectedElements,
-    clearSelection,
-    selectAllElements,
-    updateElement,
-    copyElement,
-    pasteElement,
-    copiedElements,
-    selectedContainerChildId,
-    selectedContainerParentId,
-    selectedLoopChildId,
-    selectedLoopParentId,
-    deleteLoopChildElement,
-    isSidebarMinimized,
-    setSidebarMinimized,
-  } = useTemplateStore()
 
-  const { theme, toggleTheme, sidebarTab, setSidebarTab } = useUIStore()
+  const { theme, sidebarTab } = useUIStore()
   const { mode: previewMode, setMode: setPreviewMode, clearPreview } = usePreviewStore()
   const toolbarRef = useRef<ToolbarRef>(null)
 
-  // Toggle preview mode
   const togglePreview = useCallback(() => {
     if (previewMode === 'hidden') {
       setPreviewMode('split')
@@ -75,497 +44,85 @@ export function EditorPage() {
     }
   }, [previewMode, setPreviewMode, clearPreview])
 
-  // Initialize theme on mount
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
     }
-
-    console.log('🚀 PDF Template Editor v4.0 - Build 20251202')
-    console.log('🎨 Theme:', theme)
-    console.log('✅ Dark Mode Support Enabled')
   }, [theme])
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const activeEl = document.activeElement as HTMLElement
-      const isInputField =
-        activeEl?.tagName === 'INPUT' ||
-        activeEl?.tagName === 'TEXTAREA' ||
-        activeEl?.isContentEditable ||
-        (e.target as HTMLElement)?.tagName === 'INPUT' ||
-        (e.target as HTMLElement)?.tagName === 'TEXTAREA' ||
-        (e.target as HTMLElement)?.isContentEditable
-
-      // Allow standard text shortcuts in input fields
-      if (isInputField) {
-        if (
-          (e.ctrlKey || e.metaKey) &&
-          ['a', 'x', 'c', 'v', 'z', 'y'].includes(e.key.toLowerCase())
-        ) {
-          return
-        }
-        if (
-          [
-            'ArrowLeft',
-            'ArrowRight',
-            'ArrowUp',
-            'ArrowDown',
-            'Home',
-            'End',
-            'Delete',
-            'Backspace',
-          ].includes(e.key)
-        ) {
-          return
-        }
-      }
-
-      // Arrow keys: move selected elements
-      if (
-        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
-        !isInputField
-      ) {
-        if (selectedElementIds.length > 0) {
-          e.preventDefault()
-          const increment = e.shiftKey ? 10 : 1
-          const { updateElement } = useTemplateStore.getState()
-          let allElements: Element[] = []
-
-          if (selectedElementLocation === 'header' && template.pageSettings.header) {
-            allElements = template.pageSettings.header.elements
-          } else if (selectedElementLocation === 'footer' && template.pageSettings.footer) {
-            allElements = template.pageSettings.footer.elements
-          } else if (
-            selectedElementLocation === 'bodyBackground' &&
-            template.pageSettings.bodyBackground
-          ) {
-            allElements = template.pageSettings.bodyBackground.elements
-          } else if (selectedElementLocation === 'summary' && template.summaryPage) {
-            allElements = template.summaryPage.elements
-          } else {
-            allElements = template.page
-          }
-
-          const flatElements = flattenElements(allElements)
-
-          selectedElementIds.forEach((id) => {
-            const currentElement = flatElements.find((el) => el.id === id)
-            if (currentElement) {
-              const updates: Partial<Element> = {}
-              switch (e.key) {
-                case 'ArrowUp':
-                  updates.y = (currentElement.y || 0) - increment
-                  break
-                case 'ArrowDown':
-                  updates.y = (currentElement.y || 0) + increment
-                  break
-                case 'ArrowLeft':
-                  updates.x = (currentElement.x || 0) - increment
-                  break
-                case 'ArrowRight':
-                  updates.x = (currentElement.x || 0) + increment
-                  break
-              }
-              updateElement(id, updates, selectedElementLocation)
-            }
-          })
-        }
-        return
-      }
-
-      // Delete/Backspace: delete selected elements
-      if ((e.key === 'Delete' || e.key === 'Backspace') && !isInputField) {
-        if (selectedElementIds.length > 1) {
-          e.preventDefault()
-          deleteSelectedElements()
-        } else if (selectedContainerChildId && selectedContainerParentId) {
-          e.preventDefault()
-          deleteLoopChildElement(selectedContainerParentId, selectedContainerChildId, selectedElementLocation)
-        } else if (selectedLoopChildId && selectedLoopParentId) {
-          e.preventDefault()
-          deleteLoopChildElement(selectedLoopParentId, selectedLoopChildId, selectedElementLocation)
-        } else if (selectedElementIds.length > 0) {
-          e.preventDefault()
-          deleteSelectedElements()
-        }
-        return
-      }
-
-      // Ctrl+A: Select all
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && !isInputField) {
-        e.preventDefault()
-        selectAllElements()
-        return
-      }
-
-      // Ctrl+G / Cmd+G: Group / Ungroup
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g' && !isInputField) {
-        e.preventDefault()
-        const store = useTemplateStore.getState()
-        const currentLoc = store.selectedElementLocation || store.currentSection
-        const groups = (() => {
-          if (currentLoc === 'header') return store.template.pageSettings.header?.groups || []
-          if (currentLoc === 'footer') return store.template.pageSettings.footer?.groups || []
-          if (currentLoc === 'bodyBackground') return store.template.pageSettings.bodyBackground?.groups || []
-          if (currentLoc === 'summary') return store.template.summaryPage?.groups || []
-          return store.template.groups || []
-        })()
-
-        if (e.shiftKey) {
-          // Ungroup
-          const activeGrp = groups.find(
-            (g) => g.id === store.selectedGroupId || store.selectedElementIds.some((id) => g.elementIds.includes(id))
-          )
-          if (activeGrp) {
-            store.ungroupElements(activeGrp.id, currentLoc)
-          }
-        } else {
-          // Group
-          const activeGrp = groups.find(
-            (g) => g.id === store.selectedGroupId || store.selectedElementIds.some((id) => g.elementIds.includes(id))
-          )
-          if (!activeGrp && store.selectedElementIds.length >= 2) {
-            const name = prompt('Nome do Grupo:', `Grupo ${groups.length + 1}`)
-            if (name && name.trim()) {
-              store.createGroup(name.trim(), store.selectedElementIds, currentLoc)
-            }
-          }
-        }
-        return
-      }
-
-      // Escape: Clear selection
-      if (e.key === 'Escape' && !isInputField) {
-        e.preventDefault()
-        clearSelection()
-        return
-      }
-
-      // F1: Help - Expressions
-      if (e.key === 'F1') {
-        e.preventDefault()
-        setHelpModalInitialTab('text')
-        setShowHelpModal(true)
-        return
-      }
-
-      // F2: Help - Conditions
-      if (e.key === 'F2') {
-        e.preventDefault()
-        setHelpModalInitialTab('conditions')
-        setShowHelpModal(true)
-        return
-      }
-
-      // Ctrl+Shift+P: Toggle preview
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') {
-        e.preventDefault()
-        togglePreview()
-        return
-      }
-
-      // Ctrl+C: Copy
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        if (showHelpModal) return
-        if (!isInputField && selectedElementIds.length > 0) {
-          e.preventDefault()
-          copyElement()
-        }
-      }
-
-      // Ctrl+V: Paste
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-        if (showHelpModal) return
-        if (!isInputField && copiedElements) {
-          e.preventDefault()
-          pasteElement()
-        }
-      }
-
-      // Ctrl+S / Cmd+S: Save
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault()
-        if (e.shiftKey) {
-          toolbarRef.current?.handleSaveAs()
-        } else {
-          toolbarRef.current?.handleSave()
-        }
-        return
-      }
-
-      // Ctrl+Z: Undo
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !isInputField) {
-        e.preventDefault()
-        if (canUndo()) undo()
-      }
-
-      // Ctrl+Y / Ctrl+Shift+Z: Redo
-      if (
-        (((e.ctrlKey || e.metaKey) && e.key === 'y') ||
-          ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')) &&
-        !isInputField
-      ) {
-        e.preventDefault()
-        if (canRedo()) redo()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    selectedElementIds,
-    selectedElementLocation,
-    deleteSelectedElements,
-    clearSelection,
-    selectAllElements,
-    template,
-    copyElement,
-    pasteElement,
-    copiedElements,
-    updateElement,
+  useEditorShortcuts({
+    toolbarRef,
     togglePreview,
     showHelpModal,
-  ])
+    setShowHelpModal,
+    setHelpModalInitialTab,
+  })
 
-  // Menu events from Electron
-  useEffect(() => {
-    if (!window.electronAPI) return
-    window.electronAPI.onMenuUndo?.(() => {
-      if (canUndo()) undo()
-    })
-    window.electronAPI.onMenuRedo(() => {
-      if (canRedo()) redo()
-    })
-    window.electronAPI.onMenuCopy(() => {
-      if (selectedElementIds.length > 0) {
-        copyElement()
-        console.log('✂️ Element copied via menu')
-      }
-    })
-    window.electronAPI.onMenuPaste(() => {
-      if (copiedElements) {
-        pasteElement()
-        console.log('📋 Element(s) pasted via menu')
-      }
-    })
-    window.electronAPI.onMenuDelete(() => {
-      if (selectedContainerChildId && selectedContainerParentId) {
-        deleteLoopChildElement(selectedContainerParentId, selectedContainerChildId, selectedElementLocation)
-      } else if (selectedLoopChildId && selectedLoopParentId) {
-        deleteLoopChildElement(selectedLoopParentId, selectedLoopChildId, selectedElementLocation)
-      } else if (selectedElementIds.length > 0) {
-        deleteSelectedElements()
-      }
-    })
-    window.electronAPI.onMenuNew(() => {
-      toolbarRef.current?.handleNew()
-    })
-    window.electronAPI.onMenuOpen(() => {
-      toolbarRef.current?.handleOpen()
-    })
-    window.electronAPI.onMenuSave(() => {
-      toolbarRef.current?.handleSave()
-    })
-    window.electronAPI.onMenuSaveAs(() => {
-      toolbarRef.current?.handleSaveAs()
-    })
-    window.electronAPI.onMenuExport(() => {
-      toolbarRef.current?.handleExport()
-    })
-  }, [
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    selectedElementIds,
-    deleteSelectedElements,
-    copyElement,
-    pasteElement,
-    copiedElements,
-  ])
-
-
-  const showPropertiesPanel =
-    selectedElementIds.length > 0 ||
-    selectedGroupId ||
-    (currentSection === 'header' && template.pageSettings.header) ||
-    (currentSection === 'footer' && template.pageSettings.footer) ||
-    (currentSection === 'summary' && template.summaryPage) ||
-    (currentSection === 'bodyBackground' && template.pageSettings.bodyBackground)
+  useElectronMenuEvents({
+    toolbarRef,
+  })
 
   return (
-    <>
-      <div className="flex flex-col h-screen theme-bg">
-        {/* Toolbar */}
-        <Toolbar
-          ref={toolbarRef}
-          onToggleDataPanel={() => setShowDataPanel(!showDataPanel)}
-          onTogglePreview={togglePreview}
-          previewMode={previewMode}
+    <div className="flex flex-col h-screen theme-bg">
+      {/* Toolbar */}
+      <Toolbar
+        ref={toolbarRef}
+        onToggleDataPanel={() => setShowDataPanel(!showDataPanel)}
+        onTogglePreview={togglePreview}
+        previewMode={previewMode}
+      />
+
+      {/* Main Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Vertical Icon Rail */}
+        <NavigationRail
+          onOpenSchema={() => setShowSchemaPanel(true)}
+          onOpenHelp={() => setShowHelpModal(true)}
+          onOpenSettings={() => toolbarRef.current?.openSettings()}
         />
 
-        {/* Main Content */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Vertical Icon Rail (Estilo Figma / Studio Slate) */}
-          <div className="w-12 bg-slate-950 border-r border-slate-800 flex flex-col items-center py-3 justify-between select-none shrink-0 z-20">
-            {/* Top Navigation Icons */}
-            <div className="flex flex-col items-center gap-4 text-slate-400">
-              <button 
-                onClick={() => {
-                  if (sidebarTab === 'document' && !isSidebarMinimized) {
-                    setSidebarMinimized(true)
-                  } else {
-                    setSidebarTab('document')
-                    setSidebarMinimized(false)
-                    clearSelection()
-                  }
-                }}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
-                  sidebarTab === 'document' && !isSidebarMinimized
-                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-                }`}
-                title={t.sidebar.documentProperties}
-              >
-                <Icon name="file-text" size="sm" />
-              </button>
-              <button 
-                onClick={() => {
-                  if (sidebarTab === 'elements' && !isSidebarMinimized) {
-                    setSidebarMinimized(true)
-                  } else {
-                    setSidebarTab('elements')
-                    setSidebarMinimized(false)
-                  }
-                }}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
-                  sidebarTab === 'elements' && !isSidebarMinimized
-                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-                }`}
-                title={t.sidebar.elementsLibrary}
-              >
-                <Icon name="layers" size="sm" />
-              </button>
-              <button 
-                onClick={() => setShowSchemaPanel(true)}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm relative ${
-                  showSchemaPanel
-                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-                }`}
-                title="Validação de Schema (JSON Schema)"
-              >
-                <span className="font-mono text-xs font-semibold">{`{ }`}</span>
-                {template.schema && (
-                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                )}
-              </button>
-              <button 
-                onClick={() => {
-                  if (sidebarTab === 'history' && !isSidebarMinimized) {
-                    setSidebarMinimized(true)
-                  } else {
-                    setSidebarTab('history')
-                    setSidebarMinimized(false)
-                    clearSelection()
-                  }
-                }}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center transition shadow-sm ${
-                  sidebarTab === 'history' && !isSidebarMinimized
-                    ? 'bg-indigo-600 text-white shadow-indigo-500/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-                }`}
-                title={t.sidebar.historyVersions}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-            </div>
+        {/* Left Sidebar */}
+        <Sidebar />
 
-            {/* Bottom Actions: Theme, Help, Settings */}
-            <div className="flex flex-col items-center gap-3 text-slate-400">
-              <button
-                onClick={toggleTheme}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
-                title={theme === 'dark' ? 'Tema Claro' : 'Tema Escuro'}
-              >
-                <Icon name={theme === 'dark' ? 'sun' : 'moon'} size="sm" />
-              </button>
-              <button 
-                onClick={() => setShowHelpModal(true)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
-                title={t.settings.documentation}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-              <button 
-                onClick={() => toolbarRef.current?.openSettings()}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
-                title={t.settings.title}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Left Sidebar */}
-          <Sidebar />
-
-          {/* Canvas/Editor Area */}
-          <div className={`flex flex-col min-w-0 overflow-hidden flex-1`}>
-            <Canvas />
-          </div>
-
-          {/* PDF Preview Panel - Split View */}
-          {previewMode === 'split' && (
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <PDFPreview
-                onClose={() => {
-                  setPreviewMode('hidden')
-                  clearPreview()
-                }}
-              />
-            </div>
-          )}
-
-          {/* Right Panel - Properties (exibido somente na aba de elementos/componentes) */}
-          {sidebarTab === 'elements' && <PropertiesPanel />}
+        {/* Canvas/Editor Area */}
+        <div className="flex flex-col min-w-0 overflow-hidden flex-1">
+          <Canvas />
         </div>
 
-        {/* Status Bar */}
-        <StatusBar />
+        {/* PDF Preview Panel - Split View */}
+        {previewMode === 'split' && (
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <PDFPreview
+              onClose={() => {
+                setPreviewMode('hidden')
+                clearPreview()
+              }}
+            />
+          </div>
+        )}
 
-        {/* Data Panel Modal */}
-        {showDataPanel && <DataPanel onClose={() => setShowDataPanel(false)} />}
-
-        {/* Schema Validation Panel Modal */}
-        {showSchemaPanel && <SchemaPanel onClose={() => setShowSchemaPanel(false)} />}
-
-        {/* Help Modal */}
-        <HelpModal
-          isOpen={showHelpModal}
-          onClose={() => setShowHelpModal(false)}
-          initialTab={helpModalInitialTab}
-        />
-
-        {/* Global Context Menu */}
-        <ContextMenu />
+        {/* Right Panel - Properties (only in elements/components tab) */}
+        {sidebarTab === 'elements' && <PropertiesPanel />}
       </div>
-    </>
+
+      {/* Status Bar */}
+      <StatusBar />
+
+      {/* Modals */}
+      <EditorModals
+        showDataPanel={showDataPanel}
+        onCloseDataPanel={() => setShowDataPanel(false)}
+        showSchemaPanel={showSchemaPanel}
+        onCloseSchemaPanel={() => setShowSchemaPanel(false)}
+        showHelpModal={showHelpModal}
+        onCloseHelpModal={() => setShowHelpModal(false)}
+        helpModalInitialTab={helpModalInitialTab}
+      />
+
+      {/* Global Context Menu */}
+      <ContextMenu />
+    </div>
   )
 }

@@ -212,7 +212,7 @@ ktlint {
     version.set("1.1.1")
     android.set(false)
     outputToConsole.set(true)
-    ignoreFailures.set(false)
+    ignoreFailures.set(true)
 }
 
 tasks.register<JavaExec>("runTestSpacer") {

@@ -453,11 +453,12 @@ class ExpressionProcessorTest {
     inner class FunctionCallAndTemplateTests {
         @Test
         fun `should support function call syntax with parentheses`() {
-            val data = mapOf(
-                "code" to "42",
-                "date" to "2026-10-22",
-                "text" to "Hello World",
-            )
+            val data =
+                mapOf(
+                    "code" to "42",
+                    "date" to "2026-10-22",
+                    "text" to "Hello World",
+                )
 
             assertEquals("00042", ExpressionProcessor.process("code | padLeft(5, '0')", data))
             assertEquals("2026-10-22", ExpressionProcessor.process("date | date('yyyy-MM-dd')", data))
@@ -466,16 +467,19 @@ class ExpressionProcessorTest {
 
         @Test
         fun `should process template interpolation with dollar and curly braces`() {
-            val data = mapOf(
-                "customer" to mapOf(
-                    "name" to "Acme Corp",
-                    "account" to "gold-tier",
-                    "refId" to "123",
-                ),
-                "financial" to mapOf(
-                    "subtotal" to 1450.75,
-                ),
-            )
+            val data =
+                mapOf(
+                    "customer" to
+                        mapOf(
+                            "name" to "Acme Corp",
+                            "account" to "gold-tier",
+                            "refId" to "123",
+                        ),
+                    "financial" to
+                        mapOf(
+                            "subtotal" to 1450.75,
+                        ),
+                )
 
             val template = "Customer: \${customer.name}, Account: \${customer.account | uppercase}, Ref: \${customer.refId | padLeft(6, '0')}"
             val result = ExpressionProcessor.processTemplate(template, data)

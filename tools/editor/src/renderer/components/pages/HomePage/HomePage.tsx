@@ -7,21 +7,15 @@ import { useTranslation, LanguageCode } from '../../../i18n'
 interface HomePageProps {
   onNewTemplate: () => void
   onOpenFile: () => void
+  onImportJasper?: () => void
+  onImportAI?: () => void
   onOpenRecentFile?: (filePath: string) => void
 }
 
-export function HomePage({ onNewTemplate, onOpenFile, onOpenRecentFile }: HomePageProps) {
+export function HomePage({ onNewTemplate, onOpenFile, onImportJasper, onImportAI, onOpenRecentFile }: HomePageProps) {
   const { theme, toggleTheme } = useUIStore()
   const { recentFiles, removeRecentFile } = useRecentFilesStore()
   const { t, language, setLanguage, availableLanguages } = useTranslation()
-
-  const handleOpenMostRecent = () => {
-    if (recentFiles.length > 0 && onOpenRecentFile) {
-      onOpenRecentFile(recentFiles[0].path)
-    } else {
-      onOpenFile()
-    }
-  }
 
   const handleItemClick = (file: RecentFileItem) => {
     if (onOpenRecentFile) {
@@ -59,7 +53,11 @@ export function HomePage({ onNewTemplate, onOpenFile, onOpenRecentFile }: HomePa
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-300">
-              <Icon name="globe" size="sm" className="text-slate-400" />
+              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.6 9h16.8M3.6 15h16.8" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3a15 15 0 010 18 15 15 0 010-18z" />
+              </svg>
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as LanguageCode)}
@@ -91,35 +89,57 @@ export function HomePage({ onNewTemplate, onOpenFile, onOpenRecentFile }: HomePa
             <p className="mt-4 text-lg text-slate-400">{t.home.chooseOption}</p>
           </div>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            <button
-              onClick={handleOpenMostRecent}
-              className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-indigo-400 hover:bg-slate-800"
-            >
-              <Icon name="file-text" size="xl" className="text-indigo-400" />
-              <span className="mt-5 block text-xl font-semibold">{t.home.openRecent}</span>
-              <span className="mt-2 block text-sm text-slate-400">
-                {recentFiles.length > 0 ? recentFiles[0].name : t.home.continueWhereLeftOff}
-              </span>
-              <span className="mt-5 block text-right text-2xl text-slate-500 transition group-hover:text-indigo-400">→</span>
-            </button>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {/* 1. Novo Template */}
             <button
               onClick={onNewTemplate}
-              className="group rounded-xl border border-indigo-500/80 bg-indigo-600/15 p-6 text-left shadow-[0_0_28px_rgba(99,102,241,0.12)] transition hover:bg-indigo-600/25"
+              className="group rounded-xl border border-indigo-500/80 bg-indigo-600/15 p-6 text-left shadow-[0_0_28px_rgba(99,102,241,0.12)] transition hover:bg-indigo-600/25 flex flex-col justify-between"
             >
-              <Icon name="plus" size="xl" className="text-indigo-300" />
-              <span className="mt-5 block text-xl font-semibold">{t.home.newTemplate}</span>
-              <span className="mt-2 block text-sm text-slate-400">{t.home.startFromScratch}</span>
-              <span className="mt-5 block text-right text-2xl text-indigo-300">→</span>
+              <div>
+                <Icon name="plus" size="xl" className="text-indigo-300" />
+                <span className="mt-5 block text-lg font-semibold">{t.home.newTemplate}</span>
+                <span className="mt-2 block text-xs text-slate-400">{t.home.startFromScratch}</span>
+              </div>
+              <span className="mt-5 block text-right text-xl text-indigo-300">→</span>
             </button>
+
+            {/* 2. Abrir JSON */}
             <button
               onClick={onOpenFile}
-              className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-indigo-400 hover:bg-slate-800"
+              className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-indigo-400 hover:bg-slate-800 flex flex-col justify-between"
             >
-              <Icon name="folder-open" size="xl" className="text-indigo-400" />
-              <span className="mt-5 block text-xl font-semibold">{t.home.browseFile}</span>
-              <span className="mt-2 block text-sm text-slate-400">{t.home.openFromComputer}</span>
-              <span className="mt-5 block text-right text-2xl text-slate-500 transition group-hover:text-indigo-400">→</span>
+              <div>
+                <Icon name="folder-open" size="xl" className="text-indigo-400" />
+                <span className="mt-5 block text-lg font-semibold">{t.home.browseFile}</span>
+                <span className="mt-2 block text-xs text-slate-400">{t.home.openFromComputer}</span>
+              </div>
+              <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-indigo-400">→</span>
+            </button>
+
+            {/* 3. Importar Jasper (.jrxml) */}
+            <button
+              onClick={onImportJasper || onOpenFile}
+              className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-emerald-400 hover:bg-slate-800 flex flex-col justify-between"
+            >
+              <div>
+                <Icon name="file-text" size="xl" className="text-emerald-400" />
+                <span className="mt-5 block text-lg font-semibold">{t.home.importJasper}</span>
+                <span className="mt-2 block text-xs text-slate-400">{t.home.importJasperDesc}</span>
+              </div>
+              <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-emerald-400">→</span>
+            </button>
+
+            {/* 4. Importar PDF com IA */}
+            <button
+              onClick={onImportAI}
+              className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-purple-400 hover:bg-slate-800 flex flex-col justify-between"
+            >
+              <div>
+                <Icon name="preview" size="xl" className="text-purple-400" />
+                <span className="mt-5 block text-lg font-semibold">{t.home.importAI}</span>
+                <span className="mt-2 block text-xs text-slate-400">{t.home.importAIDesc}</span>
+              </div>
+              <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-purple-400">→</span>
             </button>
           </div>
 

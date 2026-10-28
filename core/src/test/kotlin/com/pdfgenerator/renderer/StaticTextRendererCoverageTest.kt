@@ -1,21 +1,20 @@
 package com.pdfgenerator.renderer
 
-import com.pdfgenerator.adapter.openpdf.StaticTextRenderer
-import com.pdfgenerator.engine.RenderContext
-import com.pdfgenerator.model.StaticTextElement
-import com.pdfgenerator.model.TextStyle
 import com.lowagie.text.Document
 import com.lowagie.text.PageSize
 import com.lowagie.text.pdf.PdfContentByte
 import com.lowagie.text.pdf.PdfWriter
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import com.pdfgenerator.adapter.openpdf.StaticTextRenderer
+import com.pdfgenerator.engine.RenderContext
+import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.TextStyle
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class StaticTextRendererCoverageTest {
-
     private lateinit var document: Document
     private lateinit var context: RenderContext
     private lateinit var writer: PdfWriter
@@ -50,41 +49,45 @@ class StaticTextRendererCoverageTest {
         // Test useContentUnder
         every { context.useContentUnder } returns true
 
-        val element = StaticTextElement(
-            id = "t1",
-            value = "Hello Center",
-            x = 10f,
-            y = 20f,
-            width = 100f,
-            height = 20f,
-            style = TextStyle(
-                alignment = "center",
-                fontFamily = "times",
-                fontWeight = "bold",
-                fontStyle = "italic",
-                color = "#FF0000",
-                backgroundColor = "#00FF00",
-                verticalAlignment = "center"
+        val element =
+            StaticTextElement(
+                id = "t1",
+                value = "Hello Center",
+                x = 10f,
+                y = 20f,
+                width = 100f,
+                height = 20f,
+                style =
+                    TextStyle(
+                        alignment = "center",
+                        fontFamily = "times",
+                        fontWeight = "bold",
+                        fontStyle = "italic",
+                        color = "#FF0000",
+                        backgroundColor = "#00FF00",
+                        verticalAlignment = "center",
+                    ),
             )
-        )
         renderer.render(element, context)
         verify { writer.directContentUnder }
 
         // Test right alignment and courier font
-        val elementRight = StaticTextElement(
-            id = "t2",
-            value = "Hello Right",
-            x = 10f,
-            y = 20f,
-            width = 100f,
-            style = TextStyle(
-                alignment = "right",
-                fontFamily = "courier",
-                fontWeight = "bold",
-                fontStyle = "normal",
-                verticalAlignment = "bottom"
+        val elementRight =
+            StaticTextElement(
+                id = "t2",
+                value = "Hello Right",
+                x = 10f,
+                y = 20f,
+                width = 100f,
+                style =
+                    TextStyle(
+                        alignment = "right",
+                        fontFamily = "courier",
+                        fontWeight = "bold",
+                        fontStyle = "normal",
+                        verticalAlignment = "bottom",
+                    ),
             )
-        )
         every { context.useContentUnder } returns false
         renderer.render(elementRight, context)
     }
@@ -93,65 +96,71 @@ class StaticTextRendererCoverageTest {
     fun `test multiline with center and right alignment, empty paragraph, and useContentUnder`() {
         every { context.useContentUnder } returns true
 
-        val element = StaticTextElement(
-            id = "t1",
-            value = "Line 1\n\nLine 3",
-            x = 10f,
-            y = 20f,
-            width = 100f,
-            height = 50f,
-            style = TextStyle(
-                multiline = true,
-                alignment = "center",
-                fontFamily = "helvetica",
-                fontWeight = "bold",
-                fontStyle = "italic",
-                color = "#0000FF",
-                backgroundColor = "#FF0000"
+        val element =
+            StaticTextElement(
+                id = "t1",
+                value = "Line 1\n\nLine 3",
+                x = 10f,
+                y = 20f,
+                width = 100f,
+                height = 50f,
+                style =
+                    TextStyle(
+                        multiline = true,
+                        alignment = "center",
+                        fontFamily = "helvetica",
+                        fontWeight = "bold",
+                        fontStyle = "italic",
+                        color = "#0000FF",
+                        backgroundColor = "#FF0000",
+                    ),
             )
-        )
         renderer.render(element, context)
         verify { writer.directContentUnder }
 
-        val elementRight = StaticTextElement(
-            id = "t2",
-            value = "Multiline\nRight",
-            x = 10f,
-            y = 20f,
-            width = 100f,
-            style = TextStyle(
-                multiline = true,
-                alignment = "right",
-                fontFamily = "times-roman",
-                fontWeight = "normal",
-                fontStyle = "italic"
+        val elementRight =
+            StaticTextElement(
+                id = "t2",
+                value = "Multiline\nRight",
+                x = 10f,
+                y = 20f,
+                width = 100f,
+                style =
+                    TextStyle(
+                        multiline = true,
+                        alignment = "right",
+                        fontFamily = "times-roman",
+                        fontWeight = "normal",
+                        fontStyle = "italic",
+                    ),
             )
-        )
         every { context.useContentUnder } returns false
         renderer.render(elementRight, context)
     }
 
     @Test
     fun `test other font variations`() {
-        val variations = listOf(
-            TextStyle(fontFamily = "times", fontWeight = "normal", fontStyle = "normal"),
-            TextStyle(fontFamily = "times", fontWeight = "bold", fontStyle = "normal"),
-            TextStyle(fontFamily = "times", fontWeight = "normal", fontStyle = "italic"),
-            TextStyle(fontFamily = "courier", fontWeight = "normal", fontStyle = "normal"),
-            TextStyle(fontFamily = "courier", fontWeight = "normal", fontStyle = "italic"),
-            TextStyle(fontFamily = "courier", fontWeight = "bold", fontStyle = "italic"),
-            TextStyle(fontFamily = "helvetica", fontWeight = "normal", fontStyle = "italic"),
-            TextStyle(fontFamily = "helvetica", fontWeight = "bold", fontStyle = "normal")
-        )
+        val variations =
+            listOf(
+                TextStyle(fontFamily = "times", fontWeight = "normal", fontStyle = "normal"),
+                TextStyle(fontFamily = "times", fontWeight = "bold", fontStyle = "normal"),
+                TextStyle(fontFamily = "times", fontWeight = "normal", fontStyle = "italic"),
+                TextStyle(fontFamily = "courier", fontWeight = "normal", fontStyle = "normal"),
+                TextStyle(fontFamily = "courier", fontWeight = "normal", fontStyle = "italic"),
+                TextStyle(fontFamily = "courier", fontWeight = "bold", fontStyle = "italic"),
+                TextStyle(fontFamily = "helvetica", fontWeight = "normal", fontStyle = "italic"),
+                TextStyle(fontFamily = "helvetica", fontWeight = "bold", fontStyle = "normal"),
+            )
 
         for (style in variations) {
-            val element = StaticTextElement(
-                id = "t1",
-                value = "Test",
-                x = 10f,
-                y = 20f,
-                style = style
-            )
+            val element =
+                StaticTextElement(
+                    id = "t1",
+                    value = "Test",
+                    x = 10f,
+                    y = 20f,
+                    style = style,
+                )
             renderer.render(element, context)
         }
     }

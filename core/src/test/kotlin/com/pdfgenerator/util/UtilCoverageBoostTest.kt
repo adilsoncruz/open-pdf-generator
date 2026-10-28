@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class UtilCoverageBoostTest {
-
     @Test
     fun `test SyntheticDataResolver OverlayDataMap complete coverage`() {
         val baseData = mapOf<String, Any?>("name" to "Alice", "city" to "London")
@@ -62,11 +61,12 @@ class UtilCoverageBoostTest {
         DataBindingResolver.clearCache()
         assertTrue(DataBindingResolver.cacheSize() >= 0)
 
-        val data = mapOf(
-            "title" to "Report",
-            "arr" to arrayOf("First", "Second", "Third"),
-            "user" to mapOf("alias" to "JD")
-        )
+        val data =
+            mapOf(
+                "title" to "Report",
+                "arr" to arrayOf("First", "Second", "Third"),
+                "user" to mapOf("alias" to "JD"),
+            )
 
         // Binding bracket formats
         assertEquals("Report", DataBindingResolver.resolve("\${title}", data))
@@ -97,13 +97,14 @@ class UtilCoverageBoostTest {
 
     @Test
     fun `test ConditionEvaluator edge cases and comparators`() {
-        val data = mapOf(
-            "strA" to "Apple",
-            "strB" to "Banana",
-            "arr" to arrayOf("A", "B", "C"),
-            "nonList" to 42,
-            "truthyObj" to Any()
-        )
+        val data =
+            mapOf(
+                "strA" to "Apple",
+                "strB" to "Banana",
+                "arr" to arrayOf("A", "B", "C"),
+                "nonList" to 42,
+                "truthyObj" to Any(),
+            )
 
         // String comparison with > and <
         assertTrue(ConditionEvaluator.evaluate("strB > strA", data))
@@ -122,33 +123,36 @@ class UtilCoverageBoostTest {
         assertTrue(ConditionEvaluator.evaluate("", data))
 
         // Reflection for unexposed comparator branches (lines 99, 135)
-        val compValuesMethod = ConditionEvaluator::class.java.getDeclaredMethod(
-            "compareValues",
-            Any::class.java,
-            Any::class.java,
-            String::class.java
-        ).apply { isAccessible = true }
+        val compValuesMethod =
+            ConditionEvaluator::class.java.getDeclaredMethod(
+                "compareValues",
+                Any::class.java,
+                Any::class.java,
+                String::class.java,
+            ).apply { isAccessible = true }
         val invalidOpResult = compValuesMethod.invoke(ConditionEvaluator, 1, 2, "??") as Boolean
         assertFalse(invalidOpResult)
 
-        val compareMethod = ConditionEvaluator::class.java.getDeclaredMethod(
-            "compare",
-            Any::class.java,
-            Any::class.java
-        ).apply { isAccessible = true }
+        val compareMethod =
+            ConditionEvaluator::class.java.getDeclaredMethod(
+                "compare",
+                Any::class.java,
+                Any::class.java,
+            ).apply { isAccessible = true }
         val nonComparableResult = compareMethod.invoke(ConditionEvaluator, Any(), Any()) as Int
         assertEquals(0, nonComparableResult)
     }
 
     @Test
     fun `test ExpressionProcessor array operations and formatting`() {
-        val data = mapOf(
-            "tags" to arrayOf("tech", "open-source", "pdf"),
-            "emptyArr" to emptyArray<String>(),
-            "amount" to 1234.56,
-            "rawStr" to "Hello World",
-            "plainNum" to 99
-        )
+        val data =
+            mapOf(
+                "tags" to arrayOf("tech", "open-source", "pdf"),
+                "emptyArr" to emptyArray<String>(),
+                "amount" to 1234.56,
+                "rawStr" to "Hello World",
+                "plainNum" to 99,
+            )
 
         // Template without expressions
         assertEquals("Static text", ExpressionProcessor.processTemplate("Static text", data))
@@ -204,7 +208,10 @@ class UtilCoverageBoostTest {
         assertTrue(curEsMx.isNotEmpty())
         assertTrue(curDeDe.isNotEmpty())
 
-        val objFallback = object { override fun toString() = "SpecialObj" }
+        val objFallback =
+            object {
+                override fun toString() = "SpecialObj"
+            }
         val fallbackData = mapOf("customObj" to objFallback)
         assertEquals("SpecialObj", ExpressionProcessor.process("customObj | currency('USD', 'en-US')", fallbackData))
         assertEquals("SpecialObj", ExpressionProcessor.process("customObj | number('en-US')", fallbackData))
@@ -222,9 +229,10 @@ class UtilCoverageBoostTest {
         assertEquals("", Formatter.format(null, "number"))
 
         // Non-number, non-date object fallbacks
-        val obj = object {
-            override fun toString() = "CustomObject"
-        }
+        val obj =
+            object {
+                override fun toString() = "CustomObject"
+            }
         assertEquals("CustomObject", Formatter.format(obj, "currency"))
         assertEquals("CustomObject", Formatter.format(obj, "number"))
         assertEquals("CustomObject", Formatter.format(obj, "date"))

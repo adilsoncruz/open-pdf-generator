@@ -1,5 +1,6 @@
 package com.pdfgenerator.adapter.openpdf
 
+import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.engine.Renderer
@@ -8,8 +9,12 @@ import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.LoopElement
+import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.RichTextElement
+import com.pdfgenerator.model.SpacerElement
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TextElement
@@ -33,24 +38,55 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         val baseHeight = if (resolvedHeight > 0f) resolvedHeight else (context.containerHeight ?: 0f)
         val maxAvailableHeight =
             (context.document.pageSize.height - context.resolveY(containerY) - context.document.bottomMargin()).coerceAtLeast(10f)
-        val containerHeight = if (element.isAutoHeight()) {
-            val contentHeight = element.elements.maxOfOrNull { child ->
-                val chH = when (child) {
-                    is com.pdfgenerator.model.TextElement -> child.height ?: (child.style?.fontSize ?: 12f)
-                    is com.pdfgenerator.model.StaticTextElement -> child.height ?: (child.style?.fontSize ?: 12f)
-                    is com.pdfgenerator.model.RichTextElement -> child.height ?: (child.style?.fontSize ?: 12f)
-                    is com.pdfgenerator.model.ImageElement -> child.height
-                    is com.pdfgenerator.model.RectangleElement -> if (child.height is Number) (child.height as Number).toFloat() else 25f
-                    is com.pdfgenerator.model.LineElement -> 1f
-                    is com.pdfgenerator.model.BarcodeElement -> child.height
-                    else -> 25f
+
+        var flowY = 0f
+        var maxContentBottom = 0f
+        val childEffectiveYList =
+            element.elements.map { child ->
+                val isChildRelative = child.positionMode == PositionMode.RELATIVE
+                val isChildHeightFull =
+                    when (child) {
+                        is RectangleElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
+                        is ContainerElement -> child.height?.toString() == "100%" || child.height?.toString() == "100.0%"
+                        else -> false
+                    }
+                val offset = if (isChildHeightFull) 0f else (child.relativeOffsetY ?: 0f)
+                val effectiveChildY =
+                    if (isChildRelative) {
+                        if (flowY == 0f) {
+                            if (isChildHeightFull) {
+                                0f
+                            } else if (child.y > 0f) {
+                                child.y
+                            } else {
+                                offset
+                            }
+                        } else {
+                            flowY + offset
+                        }
+                    } else {
+                        child.y
+                    }
+                val childContext = context.copy(containerWidth = containerWidth, containerHeight = baseHeight)
+                val childH = PDFGenerator.getElementHeight(child, context.data, childContext)
+                if (isChildRelative) {
+                    flowY = effectiveChildY + childH
+                } else {
+                    flowY = kotlin.math.max(flowY, child.y + childH)
                 }
-                child.y + chH
-            } ?: 0f
-            kotlin.math.min(kotlin.math.max(baseHeight, contentHeight), maxAvailableHeight)
-        } else {
-            kotlin.math.min(baseHeight, maxAvailableHeight)
-        }
+                val bottom = effectiveChildY + childH
+                if (bottom > maxContentBottom) {
+                    maxContentBottom = bottom
+                }
+                effectiveChildY
+            }
+
+        val containerHeight =
+            if (element.isAutoHeight()) {
+                kotlin.math.min(kotlin.math.max(baseHeight, maxContentBottom), maxAvailableHeight)
+            } else {
+                kotlin.math.min(baseHeight, maxAvailableHeight)
+            }
 
         element.style?.let { style ->
             val cb =
@@ -103,7 +139,8 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
             cb.restoreState()
         }
 
-        element.elements.forEach { childElement ->
+        element.elements.forEachIndexed { index, childElement ->
+            val childEffectiveY = childEffectiveYList[index]
             val adjustedElement =
                 adjustElementPosition(
                     element = childElement,
@@ -111,6 +148,7 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
                     containerY = containerY,
                     containerWidth = containerWidth,
                     containerHeight = containerHeight,
+                    childEffectiveY = childEffectiveY,
                 )
 
             val childContext =
@@ -130,34 +168,36 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         containerY: Float,
         containerWidth: Float,
         containerHeight: Float,
+        childEffectiveY: Float,
     ): Element {
+        val targetY = containerY + childEffectiveY
         return when (element) {
             is TextElement ->
                 element.copy(
                     x = containerX + element.x,
-                    y = containerY + element.y,
+                    y = targetY,
                     width = resolveWidth(element.width, containerWidth),
                 )
             is StaticTextElement ->
                 element.copy(
                     x = containerX + element.x,
-                    y = containerY + element.y,
+                    y = targetY,
                     width = resolveWidth(element.width, containerWidth),
                 )
             is ImageElement ->
                 element.copy(
                     x = containerX + element.x,
-                    y = containerY + element.y,
+                    y = targetY,
                     width = resolveFloatDimension(element.width, containerWidth),
                     height = resolveFloatDimension(element.height, containerHeight),
                 )
-            is TableElement -> element.copy(x = containerX + element.x, y = containerY + element.y)
+            is TableElement -> element.copy(x = containerX + element.x, y = targetY)
             is RectangleElement -> {
                 val isFullWidth = element.width?.toString() == "100%" || element.width?.toString() == "100.0%"
                 val isFullHeight = element.height?.toString() == "100%" || element.height?.toString() == "100.0%"
                 element.copy(
                     x = if (isFullWidth) containerX else containerX + element.x,
-                    y = if (isFullHeight) containerY else containerY + element.y,
+                    y = if (isFullHeight) containerY else targetY,
                     width = resolveDimension(element.width, containerWidth),
                     height = resolveDimension(element.height, containerHeight),
                 )
@@ -165,24 +205,42 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
             is LineElement ->
                 element.copy(
                     x = containerX + element.x,
-                    y = containerY + element.y,
+                    y = targetY,
                     width = element.resolveWidth(containerWidth),
                     height = element.resolveHeight(containerHeight),
                 )
             is BarcodeElement ->
                 element.copy(
                     x = containerX + element.x,
-                    y = containerY + element.y,
+                    y = targetY,
                 )
             is LoopElement ->
                 element.copy(
                     x = containerX + element.x,
-                    y = containerY + element.y,
+                    y = targetY,
                 )
             is ContainerElement ->
                 element.copy(
                     x = containerX + element.x,
-                    y = containerY + element.y,
+                    y = targetY,
+                )
+            is RichTextElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = targetY,
+                    width = resolveWidth(element.width, containerWidth),
+                )
+            is LinkElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = targetY,
+                    width = resolveWidth(element.width, containerWidth),
+                )
+            is SpacerElement ->
+                element.copy(
+                    x = containerX + element.x,
+                    y = targetY,
+                    width = element.width ?: "100%",
                 )
             else -> element
         }
@@ -220,7 +278,7 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         containerWidth: Float,
     ): Float? {
         return if (value == null) {
-            null
+            containerWidth
         } else if (value.toString().endsWith("%") || value == -1f) {
             containerWidth
         } else {

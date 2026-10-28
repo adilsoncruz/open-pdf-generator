@@ -8,7 +8,8 @@ class MassiveCoverageTest {
     @Test
     fun `test summaryPage and getElementHeight with loops and tables`() {
         val generator = PDFGenerator()
-        val templateJson = """
+        val templateJson =
+            """
             {
                 "version": "1.0",
                 "pageSettings": { 
@@ -70,16 +71,18 @@ class MassiveCoverageTest {
                     ]
                 }
             }
-        """.trimIndent()
-        
+            """.trimIndent()
+
         val template = Template.fromString(templateJson)
-        val data = mapOf(
-            "items" to listOf(
-                mapOf("name" to "Item 1"),
-                mapOf("name" to "Item 2")
-            ),
-            "show" to "true"
-        )
+        val data =
+            mapOf(
+                "items" to
+                    listOf(
+                        mapOf("name" to "Item 1"),
+                        mapOf("name" to "Item 2"),
+                    ),
+                "show" to "true",
+            )
         generator.generate(template, data)
     }
 }
