@@ -49,9 +49,12 @@ export default defineConfig({
           text: 'Elements',
           items: [
             { text: 'Text', link: '/lib/guide/elements/text' },
+            { text: 'Rich Text', link: '/lib/guide/elements/rich-text' },
+            { text: 'Link', link: '/lib/guide/elements/link' },
             { text: 'Image', link: '/lib/guide/elements/image' },
             { text: 'Table', link: '/lib/guide/elements/table' },
             { text: 'Container', link: '/lib/guide/elements/container' },
+            { text: 'Spacer', link: '/lib/guide/elements/spacer' },
             { text: 'Page Break', link: '/lib/guide/elements/page-break' },
             { text: 'Rectangle', link: '/lib/guide/elements/rectangle' },
             { text: 'Line', link: '/lib/guide/elements/line' },

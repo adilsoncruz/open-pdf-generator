@@ -59,8 +59,9 @@ open-pdf-generator/
 │       └── package.json
 │
 ├── docs/                       # VitePress Documentation
-│   ├── engine/                 # Engine documentation
-│   ├── editor/                 # Editor documentation
+│   ├── lib/                    # Core library guide & API reference
+│   ├── cli/                    # CLI commands & documentation
+│   ├── editor/                 # Editor guide & downloads
 │   └── .vitepress/
 │
 ├── Makefile                    # Build automation
@@ -115,6 +116,9 @@ pdf-generator generate template.json -d data.json -o output.pdf
 
 # Validate a template
 pdf-generator validate template.json
+
+# Convert a JasperReports JRXML template to JSON
+pdf-generator convert report.jrxml --output template.json
 ```
 
 ### Using the Editor
@@ -166,28 +170,36 @@ Templates are JSON files with page settings, header/footer, and body elements:
 ## ✨ Features
 
 ### Core Engine
-- 📄 Generate PDFs from JSON templates
-- 🔗 Data binding with mustache syntax (`{{variable}}`)
-- 🔄 Loops and conditional elements
-- 📊 Tables with dynamic data
-- 📷 Images (PNG, JPG, SVG, Base64)
-- 📏 Barcodes and QR codes
-- 📑 Headers, footers, and pagination
-- 🎨 Styling (fonts, colors, borders)
-- ⚡ High performance
+- 📄 Generate PDFs from declarative JSON templates
+- 🔗 Data binding with expressions (`${variable}`) and pipe transformations
+- 🔄 Loops and conditional rendering
+- 📦 Containers for nested modular layouts with auto-height
+- 📝 Rich Text with Markdown formatting (`**bold**`, `*italic*`) and clickable Links
+- 📊 Tables with dynamic paging and auto column widths
+- 📷 Images (PNG, JPG, SVG, Base64) with caching
+- 📏 Barcodes and 2D QR codes
+- 📑 Headers, footers, watermarks, and auto-pagination
+- 🎨 Complete styling (fonts, colors, borders, margins)
+- ⚡ High performance (up to 8,650 docs/sec in containers)
 
 ### Template Editor
-- 🖱️ Drag-and-drop interface
-- 👁️ Real-time preview
-- 📝 Test data configuration
-- 💾 Save/load templates
-- ⌨️ Keyboard shortcuts
-- 🎨 Dark/light themes
+- 🎨 **Studio Slate Design System**: Modern dark & light modes with high contrast
+- 🔄 **JasperReports Importer**: Convert `.jrxml` templates directly into JSON
+- 🤖 **AI-Powered PDF Importer**: Generate JSON templates from existing PDFs with AI
+- 💻 **Cross-Platform Support**: Installers for macOS (`.dmg`), Windows (`.exe`), and Linux (`.AppImage`, `.deb`)
+- 📑 **Multi-Tab Workspace**: Edit and compare multiple templates concurrently
+- 🖱️ **Visual Canvas**: Drag-and-drop, rulers, draggable guidelines, and snapping
+- 👁️ **Live PDF Preview**: Real-time rendering with hot-reload and page navigation
+- 📝 **Schema & Mock Generator**: JSON Schema editor with one-click test data generation
+- 🌐 **Multi-Language Support**: English, Portuguese (pt-BR), and Spanish (es)
+- 🔒 **100% Offline**: No cloud dependency for local compilation and editing
 
 ### CLI
-- 🖥️ Generate PDFs from command line
-- ✅ Template validation
-- 📦 CI/CD integration ready
+- 🖥️ Generate PDFs directly from the terminal or scripts
+- 🔄 Convert JasperReports (`.jrxml`) templates to JSON (`convert`)
+- ✅ Validate JSON template structure and required properties (`validate`)
+- 🧹 Template and image cache management (`cache clear`, `cache stats`)
+- 📦 CI/CD and container-ready automation
 
 ## ⚡ Performance Benchmark (vs JasperReports)
 

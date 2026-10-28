@@ -9,10 +9,15 @@ Complete reference of all available elements for templates.
 | Element | Description | Data Binding |
 |---------|-------------|--------------|
 | [TextElement](#textelement) | Static or dynamic text | ✅ |
+| [RichTextElement](#richtextelement) | Markdown formatted inline text | ✅ |
+| [LinkElement](#linkelement) | Clickable hyperlink annotations | ✅ |
 | [ImageElement](#imageelement) | Images (URL, base64) | ✅ |
 | [TableElement](#tableelement) | Tables with automatic pagination | ✅ |
+| [ContainerElement](#containerelement) | Bounding box for nested child elements | ❌ |
 | [RectangleElement](#rectangleelement) | Rectangles and backgrounds | ❌ |
 | [LineElement](#lineelement) | Lines and dividers | ❌ |
+| [SpacerElement](#spacerelement) | Vertical/horizontal layout spacing | ❌ |
+| [PageBreakElement](#pagebreakelement) | Explicit document page break | ❌ |
 | [BarcodeElement](#barcodeelement) | QR Code and barcodes | ✅ |
 | [ConditionalElement](#conditionalelement) | Conditional rendering | ✅ |
 | [LoopElement](#loopelement) | Element repetition | ✅ |
@@ -405,6 +410,137 @@ Repeats elements for each item in a list.
 
 - `$item` - Current iteration item
 - `$index` - Index (0-based)
+
+---
+
+## ContainerElement
+
+Acts as a layout container grouping child elements with background and border styling.
+
+### Properties
+
+```json
+{
+  "type": "container",
+  "id": "card-box",
+  "x": 50,
+  "y": 100,
+  "width": "100%",
+  "autoHeight": true,
+  "style": {
+    "backgroundColor": "#F8FAFC",
+    "borderColor": "#CBD5E1",
+    "borderWidth": 1,
+    "borderRadius": 6
+  },
+  "elements": []
+}
+```
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `elements` | array | `[]` | List of nested child elements |
+| `autoHeight` | boolean | `true` | Automatically adjust container height to contents |
+| `heightMode` | string | `auto` | Height sizing mode (`auto` or `fixed`) |
+| `style` | object | - | Styling (`backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`) |
+
+---
+
+## RichTextElement
+
+Renders formatted inline text with Markdown support (`**bold**`, `*italic*`).
+
+### Properties
+
+```json
+{
+  "type": "rich_text",
+  "id": "notice",
+  "x": 50,
+  "y": 200,
+  "width": 500,
+  "value": "Total amount due is **${order.total}**. Please pay before *${order.dueDate}*.",
+  "style": {
+    "fontSize": 12,
+    "fontFamily": "Helvetica",
+    "color": "#1E293B",
+    "alignment": "left"
+  }
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `value` | string | Markdown-formatted string with optional `${expression}` |
+| `dataBinding` | string | Dynamic source containing Markdown text |
+| `style` | object | Typography and alignment configuration |
+
+---
+
+## LinkElement
+
+Renders a clickable PDF hyperlink annotation.
+
+### Properties
+
+```json
+{
+  "type": "link",
+  "id": "website-link",
+  "x": 50,
+  "y": 300,
+  "url": "https://example.com",
+  "value": "Visit our website",
+  "style": {
+    "fontSize": 12,
+    "color": "#2563EB"
+  }
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `url` | string | Destination hyperlink URL |
+| `value` | string | Static text label |
+| `dataBinding` | string | Dynamic text label |
+| `style` | object | Font and color styles |
+
+---
+
+## SpacerElement
+
+Inserts empty vertical or horizontal space in relative flow layouts.
+
+### Properties
+
+```json
+{
+  "type": "spacer",
+  "id": "spacer-1",
+  "height": 20,
+  "width": "100%"
+}
+```
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `height` | number | `0` | Spacing height in points |
+| `width` | number \| string | `"100%"` | Spacing width in points or percentage |
+
+---
+
+## PageBreakElement
+
+Forces an explicit page break.
+
+### Properties
+
+```json
+{
+  "type": "page_break",
+  "id": "break-1"
+}
+```
 
 ---
 
