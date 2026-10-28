@@ -185,6 +185,7 @@ Templates are JSON files with page settings, header/footer, and body elements:
 - 🎨 **Studio Slate Design System**: Modern dark & light modes with high contrast
 - 🔄 **JasperReports Importer**: Convert `.jrxml` templates directly into JSON
 - 🤖 **AI-Powered PDF Importer**: Generate JSON templates from existing PDFs with AI
+- 💻 **Cross-Platform Support**: Installers for macOS (`.dmg`), Windows (`.exe`), and Linux (`.AppImage`, `.deb`)
 - 📑 **Multi-Tab Workspace**: Edit and compare multiple templates concurrently
 - 🖱️ **Visual Canvas**: Drag-and-drop, rulers, draggable guidelines, and snapping
 - 👁️ **Live PDF Preview**: Real-time rendering with hot-reload and page navigation
