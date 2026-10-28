@@ -40,7 +40,7 @@ NPM := npm
         hooks-install \
         core core-build core-test core-jar core-clean \
         cli cli-build cli-clean cli-install \
-        editor editor-install editor-dev editor-build editor-package editor-clean \
+        editor editor-install editor-dev editor-build editor-package editor-package-mac editor-package-win editor-package-linux editor-package-all editor-clean \
         docs docs-install docs-dev docs-build docs-preview docs-clean \
         check version info
 
@@ -225,11 +225,39 @@ editor-build: editor-install ## Build editor for production
 	@cd $(EDITOR_DIR) && $(NPM) run build
 	@echo "$(GREEN)✓ Editor built$(NC)"
 
-editor-package: editor-build ## Package editor as desktop app
+editor-package: editor-build ## Package editor as desktop app (current OS)
 	@echo ""
-	@echo "$(BOLD)$(BLUE)Packaging Editor...$(NC)"
+	@echo "$(BOLD)$(BLUE)Packaging Editor (Current OS)...$(NC)"
 	@cd $(EDITOR_DIR) && $(NPM) run package
 	@echo "$(GREEN)✓ Editor packaged$(NC)"
+	@echo "  Output: $(EDITOR_DIR)/release/"
+
+editor-package-mac: editor-build ## Package editor for macOS (DMG + ZIP)
+	@echo ""
+	@echo "$(BOLD)$(BLUE)Packaging Editor (macOS)...$(NC)"
+	@cd $(EDITOR_DIR) && $(NPM) run package:mac
+	@echo "$(GREEN)✓ macOS app packaged$(NC)"
+	@echo "  Output: $(EDITOR_DIR)/release/"
+
+editor-package-win: editor-build ## Package editor for Windows (NSIS + ZIP)
+	@echo ""
+	@echo "$(BOLD)$(BLUE)Packaging Editor (Windows)...$(NC)"
+	@cd $(EDITOR_DIR) && $(NPM) run package:win
+	@echo "$(GREEN)✓ Windows app packaged$(NC)"
+	@echo "  Output: $(EDITOR_DIR)/release/"
+
+editor-package-linux: editor-build ## Package editor for Linux (AppImage + DEB)
+	@echo ""
+	@echo "$(BOLD)$(BLUE)Packaging Editor (Linux)...$(NC)"
+	@cd $(EDITOR_DIR) && $(NPM) run package:linux
+	@echo "$(GREEN)✓ Linux app packaged$(NC)"
+	@echo "  Output: $(EDITOR_DIR)/release/"
+
+editor-package-all: editor-build ## Package editor for all platforms (macOS, Windows, Linux)
+	@echo ""
+	@echo "$(BOLD)$(BLUE)Packaging Editor (All Platforms)...$(NC)"
+	@cd $(EDITOR_DIR) && $(NPM) run package:all
+	@echo "$(GREEN)✓ All platforms packaged$(NC)"
 	@echo "  Output: $(EDITOR_DIR)/release/"
 
 editor-clean: ## Clean editor build artifacts
