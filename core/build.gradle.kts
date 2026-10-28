@@ -35,7 +35,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testImplementation("io.mockk:mockk:1.13.17")
+    testImplementation("io.mockk:mockk:1.14.11")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("org.apache.pdfbox:pdfbox:2.0.32")
     testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.1.0")
