@@ -1,6 +1,4 @@
 package io.pdfgenerator.cli.converter.jasper
-
-import com.lowagie.text.pdf.PdfName.F
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.StaticTextElement
@@ -69,7 +67,7 @@ class JasperTemplateConverterTest {
                     </reportElement>
                     <jr:list xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" printOrder="Vertical">
                         <datasetRun subDataset="Data" uuid="a2041552-12ea-4e6b-a713-8622e5fc9393">
-                            <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{document})]]></dataSourceExpression>
+                            <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(${'$'}F{document})]]></dataSourceExpression>
                         </datasetRun>
                         <jr:listContents height="19" width="555">
                             <textField>
@@ -85,7 +83,7 @@ class JasperTemplateConverterTest {
                                     <font size="10"/>
                                     <paragraph firstLineIndent="3"/>
                                 </textElement>
-                                <textFieldExpression><![CDATA[$F{type}]]></textFieldExpression>
+                                <textFieldExpression><![CDATA[${'$'}F{type}]]></textFieldExpression>
                             </textField>
                             <textField>
                                 <reportElement x="120" y="0" width="80" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
@@ -100,7 +98,7 @@ class JasperTemplateConverterTest {
                                     <font size="10"/>
                                     <paragraph firstLineIndent="3"/>
                                 </textElement>
-                                <textFieldExpression><![CDATA[$F{period}]]></textFieldExpression>
+                                <textFieldExpression><![CDATA[${'$'}F{period}]]></textFieldExpression>
                             </textField>
                             <textField>
                                 <reportElement x="200" y="0" width="60" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
@@ -115,7 +113,7 @@ class JasperTemplateConverterTest {
                                     <font size="10"/>
                                     <paragraph firstLineIndent="3"/>
                                 </textElement>
-                                <textFieldExpression><![CDATA[$F{quantity}]]></textFieldExpression>
+                                <textFieldExpression><![CDATA[${'$'}F{quantity}]]></textFieldExpression>
                             </textField>
                             <textField>
                                 <reportElement x="260" y="0" width="40" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
@@ -130,7 +128,7 @@ class JasperTemplateConverterTest {
                                     <font size="10"/>
                                     <paragraph firstLineIndent="3"/>
                                 </textElement>
-                                <textFieldExpression><![CDATA[$F{percentage}]]></textFieldExpression>
+                                <textFieldExpression><![CDATA[${'$'}F{percentage}]]></textFieldExpression>
                             </textField>
                             <textField>
                                 <reportElement x="300" y="0" width="90" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
@@ -145,7 +143,7 @@ class JasperTemplateConverterTest {
                                     <font size="10"/>
                                     <paragraph firstLineIndent="3"/>
                                 </textElement>
-                                <textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+                                <textFieldExpression><![CDATA[${'$'}F{total}]]></textFieldExpression>
                             </textField>
                             <textField>
                                 <reportElement x="390" y="0" width="80" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
@@ -160,7 +158,7 @@ class JasperTemplateConverterTest {
                                     <font size="10"/>
                                     <paragraph firstLineIndent="3"/>
                                 </textElement>
-                                <textFieldExpression><![CDATA[$F{netValue}]]></textFieldExpression>
+                                <textFieldExpression><![CDATA[${'$'}F{netValue}]]></textFieldExpression>
                             </textField>
                             <textField>
                                 <reportElement x="470" y="0" width="80" height="19" uuid="dadcf954-fc41-4954-ac45-6087c62e223b"/>
@@ -175,7 +173,7 @@ class JasperTemplateConverterTest {
                                     <font size="10"/>
                                     <paragraph firstLineIndent="3"/>
                                 </textElement>
-                                <textFieldExpression><![CDATA[$F{taxValue}]]></textFieldExpression>
+                                <textFieldExpression><![CDATA[${'$'}F{taxValue}]]></textFieldExpression>
                             </textField>
                         </jr:listContents>
                     </jr:list>
@@ -195,7 +193,7 @@ class JasperTemplateConverterTest {
                 </textField>
                       <textField>
                         <reportElement isPrintRepeatedValues="false" x="60" y="223" width="102" height="17" isPrintInFirstWholeBand="true" backcolor="#0D0C0C" uuid="a8e46346-4183-47fd-8a35-b4385db645d2">
-                          <printWhenExpression><![CDATA[$F{warranty} != null]]></printWhenExpression>
+                          <printWhenExpression><![CDATA[${'$'}F{warranty} != null]]></printWhenExpression>
                         </reportElement>
                         <textFieldExpression><![CDATA[${'$'}F{customer.name}]]></textFieldExpression>
                       </textField>

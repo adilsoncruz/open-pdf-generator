@@ -1,10 +1,10 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Element
-import com.lowagie.text.pdf.BaseFont
 import com.pdfgenerator.engine.TextLayoutCacheKey
 import com.pdfgenerator.engine.TextLayoutMeasurement
 import com.pdfgenerator.util.FontCache
+import org.openpdf.text.Element
+import org.openpdf.text.pdf.BaseFont
 
 object TextLayoutHelper {
     fun getOrMeasureMultilineLayout(

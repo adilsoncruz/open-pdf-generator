@@ -1,8 +1,5 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Document
-import com.lowagie.text.pdf.BaseFont
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
@@ -16,6 +13,9 @@ import com.pdfgenerator.model.Template
 import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.FontCache
+import org.openpdf.text.Document
+import org.openpdf.text.pdf.BaseFont
+import org.openpdf.text.pdf.PdfWriter
 
 class HeaderFooterSectionRenderer(
     private val template: Template,
@@ -221,7 +221,7 @@ class HeaderFooterSectionRenderer(
             if (margins.top >= 14f) {
                 val topLabel = "Top Margin: ${margins.top.toInt()} pt"
                 cb.showTextAligned(
-                    com.lowagie.text.Element.ALIGN_CENTER,
+                    org.openpdf.text.Element.ALIGN_CENTER,
                     topLabel,
                     pageWidth / 2f,
                     pageHeight - (margins.top / 2f) - (fontSize / 2f),
@@ -233,7 +233,7 @@ class HeaderFooterSectionRenderer(
             if (margins.bottom >= 14f) {
                 val bottomLabel = "Bottom Margin: ${margins.bottom.toInt()} pt"
                 cb.showTextAligned(
-                    com.lowagie.text.Element.ALIGN_CENTER,
+                    org.openpdf.text.Element.ALIGN_CENTER,
                     bottomLabel,
                     pageWidth / 2f,
                     (margins.bottom / 2f) - (fontSize / 2f),
@@ -244,14 +244,14 @@ class HeaderFooterSectionRenderer(
             // Left margin label
             if (margins.left >= 14f) {
                 val leftLabel = "Left: ${margins.left.toInt()} pt"
-                cb.showTextAligned(com.lowagie.text.Element.ALIGN_CENTER, leftLabel, (margins.left / 2f), pageHeight / 2f, 90f)
+                cb.showTextAligned(org.openpdf.text.Element.ALIGN_CENTER, leftLabel, (margins.left / 2f), pageHeight / 2f, 90f)
             }
 
             // Right margin label
             if (margins.right >= 14f) {
                 val rightLabel = "Right: ${margins.right.toInt()} pt"
                 cb.showTextAligned(
-                    com.lowagie.text.Element.ALIGN_CENTER,
+                    org.openpdf.text.Element.ALIGN_CENTER,
                     rightLabel,
                     pageWidth - (margins.right / 2f),
                     pageHeight / 2f,
@@ -264,7 +264,7 @@ class HeaderFooterSectionRenderer(
                 "Margin Guide [Top: ${margins.top.toInt()}pt, Left: ${margins.left.toInt()}pt, " +
                     "Right: ${margins.right.toInt()}pt, Bottom: ${margins.bottom.toInt()}pt | " +
                     "Usable Area: ${width.toInt()}x${height.toInt()} pt]"
-            cb.showTextAligned(com.lowagie.text.Element.ALIGN_LEFT, badge, x + 2, pageHeight - margins.top + 2, 0f)
+            cb.showTextAligned(org.openpdf.text.Element.ALIGN_LEFT, badge, x + 2, pageHeight - margins.top + 2, 0f)
 
             cb.endText()
         } finally {

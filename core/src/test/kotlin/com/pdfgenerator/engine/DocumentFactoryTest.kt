@@ -1,6 +1,5 @@
 package com.pdfgenerator.engine
 
-import com.lowagie.text.PageSize
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.model.BodyBackground
 import com.pdfgenerator.model.CustomSize
@@ -14,6 +13,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.openpdf.text.PageSize
 import java.io.ByteArrayOutputStream
 
 class DocumentFactoryTest {

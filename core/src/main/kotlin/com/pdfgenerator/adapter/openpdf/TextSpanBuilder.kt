@@ -1,8 +1,5 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Chunk
-import com.lowagie.text.Font
-import com.lowagie.text.pdf.BaseFont
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.model.TextStyle
@@ -10,6 +7,9 @@ import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.DataBindingResolver
 import com.pdfgenerator.util.ExpressionProcessor
 import com.pdfgenerator.util.FontCache
+import org.openpdf.text.Chunk
+import org.openpdf.text.Font
+import org.openpdf.text.pdf.BaseFont
 
 object TextSpanBuilder {
     fun resolveBaseFontName(

@@ -1,8 +1,5 @@
 package com.pdfgenerator.renderer
 
-import com.lowagie.text.Document
-import com.lowagie.text.Rectangle
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.adapter.openpdf.HeaderFooterPageEvent
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.model.*
@@ -10,6 +7,9 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.openpdf.text.Document
+import org.openpdf.text.Rectangle
+import org.openpdf.text.pdf.PdfWriter
 
 class HeaderFooterPageEventCoverageTest {
     @Test

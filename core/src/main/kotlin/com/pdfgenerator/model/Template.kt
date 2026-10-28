@@ -2,8 +2,8 @@ package com.pdfgenerator.model
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.lowagie.text.PageSize
-import com.lowagie.text.Rectangle
+import org.openpdf.text.PageSize
+import org.openpdf.text.Rectangle
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader

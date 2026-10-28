@@ -1,6 +1,6 @@
 package com.pdfgenerator.engine
 
-import com.lowagie.text.pdf.PdfWriter
+import org.openpdf.text.pdf.PdfWriter
 import org.slf4j.LoggerFactory
 
 data class PDFSecurityConfig(

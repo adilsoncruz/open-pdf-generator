@@ -1,9 +1,5 @@
 package com.pdfgenerator.engine
 
-import com.lowagie.text.Document
-import com.lowagie.text.PageSize
-import com.lowagie.text.Rectangle
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.adapter.openpdf.HeaderFooterPageEvent
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.model.CustomSize
@@ -13,6 +9,10 @@ import com.pdfgenerator.model.Template
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.withSyntheticBindings
 import com.pdfgenerator.util.withSyntheticPageNumber
+import org.openpdf.text.Document
+import org.openpdf.text.PageSize
+import org.openpdf.text.Rectangle
+import org.openpdf.text.pdf.PdfWriter
 import java.io.OutputStream
 
 data class DocumentLayout(
