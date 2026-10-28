@@ -1,6 +1,5 @@
 package com.pdfgenerator.renderer
 
-import com.lowagie.text.pdf.BaseFont
 import com.pdfgenerator.adapter.openpdf.TextSpanBuilder
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.model.TextElement
@@ -9,6 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.openpdf.text.pdf.BaseFont
 
 class TextSpanBuilderTest {
     @Test

@@ -1,7 +1,5 @@
 package com.pdfgenerator.renderer
 
-import com.lowagie.text.Document
-import com.lowagie.text.PageSize
 import com.pdfgenerator.adapter.openpdf.ImageRenderer
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
@@ -13,6 +11,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.openpdf.text.Document
+import org.openpdf.text.PageSize
 import java.io.File
 import java.util.Base64
 

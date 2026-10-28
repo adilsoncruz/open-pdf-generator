@@ -1,12 +1,5 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Document
-import com.lowagie.text.Element
-import com.lowagie.text.Image
-import com.lowagie.text.pdf.BaseFont
-import com.lowagie.text.pdf.PdfContentByte
-import com.lowagie.text.pdf.PdfGState
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.model.WatermarkConfig
@@ -15,6 +8,13 @@ import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.DataBindingResolver
 import com.pdfgenerator.util.ExpressionProcessor
 import com.pdfgenerator.util.FontCache
+import org.openpdf.text.Document
+import org.openpdf.text.Element
+import org.openpdf.text.Image
+import org.openpdf.text.pdf.BaseFont
+import org.openpdf.text.pdf.PdfContentByte
+import org.openpdf.text.pdf.PdfGState
+import org.openpdf.text.pdf.PdfWriter
 import org.slf4j.LoggerFactory
 import java.awt.Color
 

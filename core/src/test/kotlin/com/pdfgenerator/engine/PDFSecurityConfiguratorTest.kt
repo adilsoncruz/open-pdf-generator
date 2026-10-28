@@ -1,8 +1,5 @@
 package com.pdfgenerator.engine
 
-import com.lowagie.text.Document
-import com.lowagie.text.PageSize
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.model.Margins
@@ -12,6 +9,9 @@ import com.pdfgenerator.model.TextElement
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.openpdf.text.Document
+import org.openpdf.text.PageSize
+import org.openpdf.text.pdf.PdfWriter
 import java.io.ByteArrayOutputStream
 
 class PDFSecurityConfiguratorTest {
@@ -65,7 +65,7 @@ class PDFSecurityConfiguratorTest {
         // Should not throw NoClassDefFoundError
         configurator.configure(writer)
         doc.open()
-        doc.add(com.lowagie.text.Paragraph("Document with security settings"))
+        doc.add(org.openpdf.text.Paragraph("Document with security settings"))
         doc.close()
 
         val pdfBytes = output.toByteArray()
@@ -84,7 +84,7 @@ class PDFSecurityConfiguratorTest {
         // Apply with password - handles missing BouncyCastle gracefully
         PDFSecurityConfigurator.applySecurity(writer, "pass1", "pass2")
         doc.open()
-        doc.add(com.lowagie.text.Paragraph("Secure"))
+        doc.add(org.openpdf.text.Paragraph("Secure"))
         doc.close()
 
         val pdfBytes = output.toByteArray()

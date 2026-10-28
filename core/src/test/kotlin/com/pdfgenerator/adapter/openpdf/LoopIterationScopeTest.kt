@@ -1,8 +1,5 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Document
-import com.lowagie.text.PageSize
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.model.BarcodeElement
@@ -20,6 +17,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.openpdf.text.Document
+import org.openpdf.text.PageSize
+import org.openpdf.text.pdf.PdfWriter
 import java.io.ByteArrayOutputStream
 
 class LoopIterationScopeTest {

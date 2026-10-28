@@ -1,17 +1,17 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Element
-import com.lowagie.text.Font
-import com.lowagie.text.Phrase
-import com.lowagie.text.pdf.BaseFont
-import com.lowagie.text.pdf.PdfPCell
-import com.lowagie.text.pdf.PdfPTable
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TableStyle
 import com.pdfgenerator.util.ColorUtil
 import com.pdfgenerator.util.ExpressionProcessor
 import com.pdfgenerator.util.FontCache
 import com.pdfgenerator.util.Formatter
+import org.openpdf.text.Element
+import org.openpdf.text.Font
+import org.openpdf.text.Phrase
+import org.openpdf.text.pdf.BaseFont
+import org.openpdf.text.pdf.PdfPCell
+import org.openpdf.text.pdf.PdfPTable
 
 class TableCellRenderer {
     private data class BorderValues(val top: Float, val right: Float, val bottom: Float, val left: Float)

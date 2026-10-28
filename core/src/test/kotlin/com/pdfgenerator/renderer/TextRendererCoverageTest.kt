@@ -1,9 +1,5 @@
 package com.pdfgenerator.renderer
 
-import com.lowagie.text.Document
-import com.lowagie.text.PageSize
-import com.lowagie.text.pdf.PdfContentByte
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.adapter.openpdf.TextRenderer
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.TextLayoutCacheKey
@@ -15,6 +11,10 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.openpdf.text.Document
+import org.openpdf.text.PageSize
+import org.openpdf.text.pdf.PdfContentByte
+import org.openpdf.text.pdf.PdfWriter
 
 class TextRendererCoverageTest {
     private lateinit var document: Document

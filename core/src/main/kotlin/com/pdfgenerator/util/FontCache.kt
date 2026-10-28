@@ -1,6 +1,6 @@
 package com.pdfgenerator.util
 
-import com.lowagie.text.pdf.BaseFont
+import org.openpdf.text.pdf.BaseFont
 import java.util.concurrent.ConcurrentHashMap
 
 object FontCache {

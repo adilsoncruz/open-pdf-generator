@@ -1,9 +1,9 @@
 package com.pdfgenerator.util
 
-import com.lowagie.text.pdf.BaseFont
 import com.pdfgenerator.engine.LoopContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.openpdf.text.pdf.BaseFont
 
 class UtilCoverageBoostTest {
     @Test

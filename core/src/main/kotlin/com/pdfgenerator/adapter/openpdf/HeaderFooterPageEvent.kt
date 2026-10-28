@@ -1,13 +1,13 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.Document
-import com.lowagie.text.pdf.PdfPageEventHelper
-import com.lowagie.text.pdf.PdfWriter
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.withSyntheticBindings
+import org.openpdf.text.Document
+import org.openpdf.text.pdf.PdfPageEventHelper
+import org.openpdf.text.pdf.PdfWriter
 import org.slf4j.LoggerFactory
 
 class HeaderFooterPageEvent(

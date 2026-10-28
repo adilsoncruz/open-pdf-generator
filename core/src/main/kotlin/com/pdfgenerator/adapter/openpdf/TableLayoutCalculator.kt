@@ -1,10 +1,10 @@
 package com.pdfgenerator.adapter.openpdf
 
-import com.lowagie.text.pdf.PdfPTable
 import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.withSyntheticPageNumber
+import org.openpdf.text.pdf.PdfPTable
 import org.slf4j.LoggerFactory
 import kotlin.math.abs
 
