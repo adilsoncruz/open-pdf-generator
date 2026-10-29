@@ -12,9 +12,9 @@ import com.pdfgenerator.adapter.openpdf.ImageRenderer
 import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.api.Version
+import com.pdfgenerator.model.Template
 import io.pdfgenerator.cli.converter.jasper.JasperConversionOptions
 import io.pdfgenerator.cli.converter.jasper.JasperTemplateConverter
-import com.pdfgenerator.model.Template
 import java.io.File
 
 class PdfGeneratorCli : CliktCommand(
@@ -244,11 +244,11 @@ class ConvertCommand : CliktCommand(
     ).flag(default = false)
 
     override fun run() {
-        if (!input.extension.equals("jrxml", ignoreCase = true)) {
-            throw IllegalArgumentException("Input file must have .jrxml extension")
+        require(input.extension.equals("jrxml", ignoreCase = true)) {
+            "Input file must have .jrxml extension"
         }
-        if (!stdout && output == null) {
-            throw IllegalArgumentException("Use --output <file> or --stdout")
+        require(stdout || output != null) {
+            "Use --output <file> or --stdout"
         }
         val template =
             JasperTemplateConverter.fromFile(

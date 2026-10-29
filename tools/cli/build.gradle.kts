@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.0.21"
     application
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.6"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
@@ -32,7 +32,7 @@ dependencies {
     implementation(files(coreJarPath))
 
     // Core's transitive dependencies (needed since we're using a JAR)
-    implementation("com.github.librepdf:openpdf:2.0.3")
+    implementation("com.github.librepdf:openpdf:3.0.5")
     implementation("com.google.code.gson:gson:2.11.0")
     implementation("com.networknt:json-schema-validator:3.0.8")
     implementation("com.google.zxing:core:3.5.3")
