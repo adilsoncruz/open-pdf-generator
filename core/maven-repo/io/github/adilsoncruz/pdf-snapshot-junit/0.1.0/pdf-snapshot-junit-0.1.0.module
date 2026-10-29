@@ -38,11 +38,11 @@
         {
           "name": "pdf-snapshot-junit-0.1.0.jar",
           "url": "pdf-snapshot-junit-0.1.0.jar",
-          "size": 77381,
-          "sha512": "6129cd95200dd1af2782b03f6831c29c0b396713ada39cdcaed06d363960a1068aee89a5352d05ab00a3de9347b62994796ba58f798505ae39c74b6fa0654197",
-          "sha256": "db6622ebdbcd8fadeaacdcf34cf5e93df637085f9e9407e2347ae76ebeee1ff4",
-          "sha1": "5d1a4bd9e7c147a5e61065663b8ce182f61c3df1",
-          "md5": "4eb31fffb3becc1e32cd38380ad5dbc3"
+          "size": 78362,
+          "sha512": "af0e72db45c6d46cd4c76cfba28e842a6a0f57fbdb514fd7781bf919b5bffa55008141d9788de1b188b1e5cf00701e4d8aed7eae8e95da5eb8cd3d759470793a",
+          "sha256": "5cb37487cc432cb3d92c0aa544b078a9684999f27f6984956d4855d2a1bc6933",
+          "sha1": "21b30c6fa30921f8ca33ba0848ff5c478cee8694",
+          "md5": "c30911c0ccdb5e9d96d7269247981497"
         }
       ]
     },
@@ -62,7 +62,7 @@
           "group": "com.fasterxml.jackson.module",
           "module": "jackson-module-kotlin",
           "version": {
-            "requires": "2.18.2"
+            "requires": "2.22.4"
           }
         },
         {
@@ -77,11 +77,11 @@
         {
           "name": "pdf-snapshot-junit-0.1.0.jar",
           "url": "pdf-snapshot-junit-0.1.0.jar",
-          "size": 77381,
-          "sha512": "6129cd95200dd1af2782b03f6831c29c0b396713ada39cdcaed06d363960a1068aee89a5352d05ab00a3de9347b62994796ba58f798505ae39c74b6fa0654197",
-          "sha256": "db6622ebdbcd8fadeaacdcf34cf5e93df637085f9e9407e2347ae76ebeee1ff4",
-          "sha1": "5d1a4bd9e7c147a5e61065663b8ce182f61c3df1",
-          "md5": "4eb31fffb3becc1e32cd38380ad5dbc3"
+          "size": 78362,
+          "sha512": "af0e72db45c6d46cd4c76cfba28e842a6a0f57fbdb514fd7781bf919b5bffa55008141d9788de1b188b1e5cf00701e4d8aed7eae8e95da5eb8cd3d759470793a",
+          "sha256": "5cb37487cc432cb3d92c0aa544b078a9684999f27f6984956d4855d2a1bc6933",
+          "sha1": "21b30c6fa30921f8ca33ba0848ff5c478cee8694",
+          "md5": "c30911c0ccdb5e9d96d7269247981497"
         }
       ]
     },
