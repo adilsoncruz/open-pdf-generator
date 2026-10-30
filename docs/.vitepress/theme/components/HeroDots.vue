@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { withBase } from 'vitepress'
-import { currentSlide, heroSlideTexts, setSlide, prevSlide, nextSlide, isPaused } from '../composables/useHeroSlider'
+import { currentSlide, useHeroSlides, withLocaleBase, prevSlide, nextSlide, setSlide, isPaused } from '../composables/useHeroSlider'
+
+const { slides, ctas, lang } = useHeroSlides()
 </script>
 
 <template>
@@ -12,11 +13,11 @@ import { currentSlide, heroSlideTexts, setSlide, prevSlide, nextSlide, isPaused 
     <!-- Slide Navigation Dots (Centered) -->
     <div class="hero-dots-bar">
       <!-- Previous Slide Button -->
-      <button 
-        class="nav-arrow-btn" 
-        @click.stop="prevSlide" 
-        aria-label="Previous benchmark slide"
-        title="Previous slide"
+      <button
+        class="nav-arrow-btn"
+        @click.stop="prevSlide"
+        :aria-label="ctas.prevSlideTitle"
+        :title="ctas.prevSlideTitle"
       >
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
           <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
@@ -26,7 +27,7 @@ import { currentSlide, heroSlideTexts, setSlide, prevSlide, nextSlide, isPaused 
       <!-- Dots Track -->
       <div class="dots-pill-track">
         <button
-          v-for="(slide, idx) in heroSlideTexts"
+          v-for="(slide, idx) in slides"
           :key="slide.id"
           class="dot-btn"
           :class="{ active: currentSlide === idx }"
@@ -39,11 +40,11 @@ import { currentSlide, heroSlideTexts, setSlide, prevSlide, nextSlide, isPaused 
       </div>
 
       <!-- Next Slide Button -->
-      <button 
-        class="nav-arrow-btn" 
-        @click.stop="nextSlide" 
-        aria-label="Next benchmark slide"
-        title="Next slide"
+      <button
+        class="nav-arrow-btn"
+        @click.stop="nextSlide"
+        :aria-label="ctas.nextSlideTitle"
+        :title="ctas.nextSlideTitle"
       >
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
           <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
@@ -53,11 +54,11 @@ import { currentSlide, heroSlideTexts, setSlide, prevSlide, nextSlide, isPaused 
 
     <!-- Action CTA Buttons (Centered Below Slides) -->
     <div class="hero-actions-row">
-      <a :href="withBase('/lib/guide/getting-started')" class="hero-btn btn-brand">
-        Get Started
+      <a :href="withLocaleBase(lang, '/lib/guide/getting-started')" class="hero-btn btn-brand">
+        {{ ctas.getStarted }}
       </a>
-      <a :href="withBase('/lib/benchmark')" class="hero-btn btn-alt">
-        <span class="bolt-icon">⚡</span> 2.5x vs Jasper Benchmark
+      <a :href="withLocaleBase(lang, '/lib/benchmark')" class="hero-btn btn-alt">
+        <span class="bolt-icon">⚡</span> {{ ctas.benchmark }}
       </a>
       <a 
         href="https://github.com/adilsoncruz/open-pdf-generator" 
