@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { currentSlide, heroSlideTexts } from '../composables/useHeroSlider'
+import { currentSlide, useHeroSlides } from '../composables/useHeroSlider'
 
-const activeSlide = computed(() => heroSlideTexts[currentSlide.value])
+const { slides } = useHeroSlides()
+const activeSlide = computed(() => slides.value[currentSlide.value])
 </script>
 
 <template>
