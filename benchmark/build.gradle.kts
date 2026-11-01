@@ -12,5 +12,6 @@ allprojects {
     repositories {
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts/") }
     }
 }
