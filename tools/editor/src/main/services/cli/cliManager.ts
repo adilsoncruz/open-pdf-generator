@@ -6,6 +6,7 @@ import {
   CLI_JAR_PATH,
   CLI_VERSION_FILE,
   CLI_VERSION,
+  resolveBundledNativeBinary,
 } from '../../config/paths'
 import { CLIStatus, VersionInfo, ErrorCodes } from '../../types'
 import {
@@ -34,9 +35,26 @@ export type EnsureCLIReadyResult =
 
 export class CliManager {
   async checkCLIStatus(): Promise<CLIStatus> {
+    const nativePath = resolveBundledNativeBinary()
+    if (nativePath) {
+      return {
+        installed: true,
+        version: CLI_VERSION,
+        jarPath: CLI_JAR_PATH,
+        nativePath,
+        isNative: true,
+        needsUpdate: false,
+        javaInstalled: true,
+        javaVersion: 'Native (No Java required)',
+        javaPath: nativePath,
+      }
+    }
+
     const javaCheck = await checkJavaInstalled()
     const base = {
       jarPath: CLI_JAR_PATH,
+      nativePath: null,
+      isNative: false,
       javaInstalled: javaCheck.installed,
       javaVersion: javaCheck.version,
       javaPath: javaCheck.javaPath,
@@ -90,6 +108,10 @@ export class CliManager {
 
   async ensureCLIReady(): Promise<EnsureCLIReadyResult> {
     let cliStatus = await this.checkCLIStatus()
+
+    if (cliStatus.isNative && cliStatus.nativePath) {
+      return { ok: true, status: cliStatus }
+    }
 
     if (!cliStatus.javaInstalled) {
       return {

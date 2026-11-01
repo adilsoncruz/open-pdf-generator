@@ -107,6 +107,8 @@ export interface CLIStatus {
   installed: boolean
   version: string | null
   jarPath: string
+  nativePath?: string | null
+  isNative?: boolean
   needsUpdate: boolean
   javaInstalled: boolean
   javaVersion: string | null

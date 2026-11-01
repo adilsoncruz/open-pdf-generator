@@ -11,6 +11,7 @@ import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.util.ConditionEvaluator
 import com.pdfgenerator.util.DataBindingResolver
 import org.openpdf.text.Image
+import org.openpdf.text.ImgRaw
 import org.openpdf.text.pdf.Barcode
 import org.openpdf.text.pdf.Barcode128
 import org.openpdf.text.pdf.Barcode39
@@ -224,18 +225,23 @@ class BarcodeRenderer : Renderer<BarcodeElement> {
     private fun bitMatrixToImage(bitMatrix: BitMatrix): Image {
         val width = bitMatrix.width
         val height = bitMatrix.height
-        val bufferedImage = java.awt.image.BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_RGB)
-        val black = 0xFF000000.toInt()
-        val white = 0xFFFFFFFF.toInt()
 
+        // 1-bit DeviceGray raw image (MSB first, rows byte-aligned).
+        // In PDF DeviceGray, 1 = white and 0 = black; start fully white and
+        // clear the bits for black modules. This avoids java.awt/ImageIO,
+        // which is required for GraalVM native-image builds.
+        val rowBytes = (width + 7) / 8
+        val data = ByteArray(rowBytes * height) { 0xFF.toByte() }
         for (y in 0 until height) {
             for (x in 0 until width) {
-                bufferedImage.setRGB(x, y, if (bitMatrix.get(x, y)) black else white)
+                if (bitMatrix.get(x, y)) {
+                    val index = y * rowBytes + x / 8
+                    val mask = 0x80 shr (x % 8)
+                    data[index] = (data[index].toInt() and mask.inv()).toByte()
+                }
             }
         }
 
-        val baos = java.io.ByteArrayOutputStream()
-        javax.imageio.ImageIO.write(bufferedImage, "png", baos)
-        return Image.getInstance(baos.toByteArray())
+        return ImgRaw(width, height, 1, 1, data)
     }
 }

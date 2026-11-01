@@ -18,8 +18,8 @@ pdf-generator generate <template> [options]
 
 | Option | Short | Description |
 |--------|-------|-------------|
-| `--data` | `-d` | Path to JSON data file |
-| `--output` | `-o` | Output PDF path (default: `output.pdf`) |
+| `--data` | `-d` | Path to JSON data file, or `-` to read from stdin |
+| `--output` | `-o` | Output PDF path (default: `output.pdf`), or `-` to stream to stdout |
 
 ### Configuration Options
 
@@ -57,6 +57,9 @@ pdf-generator generate invoice.json -d customer-data.json
 # Specify output file
 pdf-generator generate invoice.json -d data.json -o invoices/invoice-001.pdf
 
+# Pipe JSON in and PDF out (any host language / Docker)
+cat data.json | pdf-generator generate invoice.json -d - -o - > invoice.pdf
+
 # With custom fonts and verbose output
 pdf-generator generate invoice.json \
   --font-dir ./fonts \
@@ -79,6 +82,88 @@ pdf-generator generate template.json \
   --no-strict \
   -v
 ```
+
+## serve
+
+Generate PDFs over a warm NDJSON loop on stdin/stdout. One line in, one line out — a
+request is still a single PDF, but the process stays alive, so there is no start-up,
+template parsing or font initialisation per document.
+
+```bash
+pdf-generator serve [options]
+```
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--font-dir` | Directory containing custom fonts | - |
+| `--default-font` | Default font to use | `Helvetica` |
+| `--resources-dir` | Base directory for resources (images, fonts) | - |
+| `--image-cache-size` | Maximum number of images to cache | `100` |
+| `--no-image-cache` | Disable image caching | `false` |
+| `--strict` / `--no-strict` | Fail or continue on errors | `true` |
+| `--preload` | Template to parse before serving (repeatable) | - |
+| `--max-request-bytes` | Reject request lines larger than this | `16777216` |
+| `--verbose` | Log each request and its timing to stderr | `false` |
+
+### Protocol
+
+Requests are processed sequentially; a failing request returns an error line and never
+stops the server. `serve: ready` is written to **stderr**, so stdout carries only responses.
+
+**Request**
+
+```json
+{"id":1,"template":"/templates/invoice.json","data":{"invoiceNumber":"INV-001"},"outputPath":"/tmp/inv.pdf"}
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | no | Echoed back in the response (any JSON scalar) |
+| `template` | yes | Path to the JSON template |
+| `data` | no | JSON object with the bindings (default: `{}`) |
+| `outputPath` | no | Write the PDF to this file and omit `pdf` from the response |
+
+**Response**
+
+```json
+{"id":1,"ok":true,"bytes":2537,"ms":0.41,"pdf":"JVBERi0xLjQK..."}
+{"id":1,"ok":false,"error":"Template not found: '/templates/nope.json'"}
+```
+
+Templates are cached per path and reloaded automatically when the file changes, so a
+long-lived server picks up edited templates without a restart.
+
+### Examples
+
+```bash
+# Interactive: one request per line
+printf '%s\n' '{"id":1,"template":"invoice.json","data":{}}' | pdf-generator serve
+
+# Docker sidecar (started once, called per request)
+docker run --rm -i -v "$PWD/templates:/templates:ro" \
+  open-pdf-generator:native serve --preload /templates/invoice.json
+```
+
+```go
+// Go: see complete runnable example in docs/cli/examples.md
+reqBytes, _ := json.Marshal(map[string]any{"id": 1, "template": "/templates/invoice.json", "data": data})
+stdin.Write(append(reqBytes, '\n'))
+scanner.Scan()
+var resp struct { OK bool; PDF string }
+json.Unmarshal(scanner.Bytes(), &resp)
+pdfBytes, _ := base64.StdEncoding.DecodeString(resp.PDF)
+```
+
+```javascript
+// Node.js: see complete runnable example in docs/cli/examples.md
+child.stdin.write(JSON.stringify({ id: 1, template: "/templates/invoice.json", data }) + "\n");
+const response = JSON.parse(await nextLine(child.stdout));
+const pdfBuffer = Buffer.from(response.pdf, "base64");
+```
+
+> 💡 For full copy-and-paste runnable scripts with connection management and error handling, see [Examples](./examples.md#go-integration).
 
 ## validate
 

@@ -18,7 +18,7 @@ export interface HeroCTAData {
 
 export const currentSlide = ref(0)
 export const isPaused = ref(false)
-export const totalSlides = 5
+export const totalSlides = 6
 
 const slidesByLang: Record<string, HeroSlideData[]> = {
   en: [
@@ -35,6 +35,13 @@ const slidesByLang: Record<string, HeroSlideData[]> = {
       shortLabel: 'Throughput',
       title: '8,650 Docs/Sec Container Concurrency',
       tagline: 'Zero GC lockups and 100% lock-free parallel execution under 100,000 document stress.'
+    },
+    {
+      id: 'polyglot',
+      badge: '🌐 Polyglot & Zero Java',
+      shortLabel: 'Polyglot',
+      title: 'Run from Go, Node.js, Python & Docker',
+      tagline: 'Standalone GraalVM native binary with 0.6ms latency. Integrate with any tech stack without installing Java.'
     },
     {
       id: 'barcodes',
@@ -74,6 +81,13 @@ const slidesByLang: Record<string, HeroSlideData[]> = {
       tagline: 'Zero travamentos no GC e execução paralela 100% lock-free sob estresse de 100.000 documentos.'
     },
     {
+      id: 'polyglot',
+      badge: '🌐 Poliglota & Zero Java',
+      shortLabel: 'Poliglota',
+      title: 'Rode em Go, Node.js, Python e Docker',
+      tagline: 'Binário nativo autônomo com latência de 0.6ms. Integre com qualquer stack sem precisar instalar Java.'
+    },
+    {
       id: 'barcodes',
       badge: '🏷️ 9.8x Barcodes Mais Rápidos',
       shortLabel: 'Barcodes',
@@ -109,6 +123,13 @@ const slidesByLang: Record<string, HeroSlideData[]> = {
       shortLabel: 'Throughput',
       title: '8,650 Docs/Seg de Concurrencia en Contenedores',
       tagline: 'Cero bloqueos de GC y ejecución paralela 100% lock-free bajo estrés de 100,000 documentos.'
+    },
+    {
+      id: 'polyglot',
+      badge: '🌐 Políglota y Cero Java',
+      shortLabel: 'Políglota',
+      title: 'Ejecuta en Go, Node.js, Python y Docker',
+      tagline: 'Binario nativo autónomo con latencia de 0.6ms. Integra con cualquier stack sin necesidad de instalar Java.'
     },
     {
       id: 'barcodes',

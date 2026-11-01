@@ -15,6 +15,7 @@ import com.pdfgenerator.api.Version
 import com.pdfgenerator.model.Template
 import io.pdfgenerator.cli.converter.jasper.JasperConversionOptions
 import io.pdfgenerator.cli.converter.jasper.JasperTemplateConverter
+import io.pdfgenerator.cli.serve.ServeCommand
 import java.io.File
 
 class PdfGeneratorCli : CliktCommand(
@@ -22,6 +23,20 @@ class PdfGeneratorCli : CliktCommand(
     help = "Generate PDFs from JSON templates",
 ) {
     override fun run() = Unit
+}
+
+/**
+ * Keeps stderr quiet for command-line usage: the core logs one DEBUG line per rendered
+ * element, which is useful in the editor but wasteful when generating from a pipe.
+ */
+internal fun applyCliLogLevel(verbose: Boolean) {
+    val level =
+        if (verbose) {
+            ch.qos.logback.classic.Level.DEBUG
+        } else {
+            ch.qos.logback.classic.Level.WARN
+        }
+    (org.slf4j.LoggerFactory.getLogger("com.pdfgenerator") as? ch.qos.logback.classic.Logger)?.level = level
 }
 
 class GenerateCommand : CliktCommand(
@@ -37,13 +52,13 @@ class GenerateCommand : CliktCommand(
     private val data by option(
         "-d",
         "--data",
-        help = "Path to the JSON data file",
-    ).file(mustExist = true)
+        help = "Path to the JSON data file, or '-' to read data from stdin",
+    ).file()
 
     private val output by option(
         "-o",
         "--output",
-        help = "Output PDF file path",
+        help = "Output PDF file path, or '-' to stream the PDF to stdout",
     ).default("output.pdf")
 
     // Configuration options
@@ -91,14 +106,28 @@ class GenerateCommand : CliktCommand(
     ).flag(default = false)
 
     override fun run() {
+        applyCliLogLevel(verbose)
+
+        val stdoutPdf = output == "-"
+
+        // Suppress all informational messages when the PDF is streamed to stdout,
+        // so the binary stream stays clean for piping (e.g. `> invoice.pdf`).
+        fun say(
+            message: String = "",
+            error: Boolean = false,
+        ) {
+            if (stdoutPdf && !error) return
+            echo(message, err = error)
+        }
+
         if (verbose) {
-            echo("PDF Generator CLI v1.0.0")
-            echo("========================")
+            say("PDF Generator CLI v1.0.0")
+            say("========================")
         }
 
         // Clear caches if requested
         if (clearCache) {
-            if (verbose) echo("Clearing caches...")
+            if (verbose) say("Clearing caches...")
             PDFGenerator.clearCache()
             ImageRenderer.clearCache()
         }
@@ -118,37 +147,53 @@ class GenerateCommand : CliktCommand(
             )
 
         if (verbose) {
-            echo("Configuration:")
-            echo("  Font directory: ${fontDir?.absolutePath ?: "default"}")
-            echo("  Default font: $defaultFont")
-            echo("  Resources directory: ${resourcesDir?.absolutePath ?: "default"}")
-            echo("  Image cache: ${if (!noImageCache) "enabled (max $imageCacheSize)" else "disabled"}")
-            echo("  Strict mode: $strictMode")
-            echo()
+            say("Configuration:")
+            say("  Font directory: ${fontDir?.absolutePath ?: "default"}")
+            say("  Default font: $defaultFont")
+            say("  Resources directory: ${resourcesDir?.absolutePath ?: "default"}")
+            say("  Image cache: ${if (!noImageCache) "enabled (max $imageCacheSize)" else "disabled"}")
+            say("  Strict mode: $strictMode")
+            say()
         }
 
-        echo("Generating PDF...")
+        say("Generating PDF...")
         if (verbose) {
-            echo("  Template: ${template.absolutePath}")
-            data?.let { echo("  Data: ${it.absolutePath}") }
-            echo("  Output: $output")
+            say("  Template: ${template.absolutePath}")
+            data?.let { say("  Data: ${it.absolutePath}") }
+            say("  Output: $output")
         }
 
         try {
             val generator = PDFGenerator(config)
             val templateObj = Template.fromFile(template)
-            val dataJson = data?.readText() ?: "{}"
+
+            val dataFile = data
+            val dataJson =
+                when {
+                    dataFile == null -> "{}"
+                    dataFile.path == "-" -> System.`in`.readBytes().decodeToString()
+                    else -> {
+                        require(dataFile.exists()) { "Data file does not exist: $dataFile" }
+                        dataFile.readText()
+                    }
+                }
             val dataMap = parseJson(dataJson)
 
-            generator.generate(templateObj, dataMap, File(output))
+            if (stdoutPdf) {
+                System.out.buffered().use { pdfStream ->
+                    generator.generateToStream(templateObj, dataMap, pdfStream)
+                }
+            } else {
+                generator.generate(templateObj, dataMap, File(output))
+            }
 
-            echo("✓ PDF generated successfully: $output")
+            say("✓ PDF generated successfully: $output")
 
             if (verbose) {
-                echo()
-                echo("Cache stats:")
-                echo("  Templates cached: ${PDFGenerator.cacheSize()}")
-                echo("  Images cached: ${ImageRenderer.cacheSize()}")
+                say()
+                say("Cache stats:")
+                say("  Templates cached: ${PDFGenerator.cacheSize()}")
+                say("  Images cached: ${ImageRenderer.cacheSize()}")
             }
         } catch (e: Exception) {
             echo("✗ Error generating PDF: ${e.message}", err = true)
@@ -339,6 +384,10 @@ class VersionCommand : CliktCommand(
 }
 
 fun main(args: Array<String>) {
+    // Keep AWT headless: PDF rendering never needs a display, and the GraalVM
+    // native image has no libawt to load.
+    System.setProperty("java.awt.headless", "true")
+
     val cacheCmd =
         CacheCommand().subcommands(
             CacheClearCommand(),
@@ -349,6 +398,7 @@ fun main(args: Array<String>) {
         .subcommands(
             GenerateCommand(),
             ValidateCommand(),
+            ServeCommand(),
             ConvertCommand(),
             cacheCmd,
             VersionCommand(),

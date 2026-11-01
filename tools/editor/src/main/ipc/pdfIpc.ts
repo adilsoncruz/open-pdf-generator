@@ -31,37 +31,33 @@ export function registerPdfIpc(): void {
       await fs.writeFile(templateFile, templateJson)
       await fs.writeFile(dataFile, dataJson)
 
-      const javaPath = cliStatus.javaPath || 'java'
-      console.log('📄 [Preview] Executing:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '--output', pdfFile)
+      const isNative = Boolean(cliStatus.isNative && cliStatus.nativePath)
+      const command = isNative ? cliStatus.nativePath! : (cliStatus.javaPath || 'java')
+      const args = isNative
+        ? ['generate', templateFile, '-d', dataFile, '--output', pdfFile]
+        : ['-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '--output', pdfFile]
+
+      console.log('📄 [Preview] Executing:', command, ...args)
 
       return new Promise((resolve) => {
-        const java = spawn(javaPath, [
-          '-jar',
-          CLI_JAR_PATH,
-          'generate',
-          templateFile,
-          '-d',
-          dataFile,
-          '--output',
-          pdfFile,
-        ])
+        const proc = spawn(command, args)
 
         let stdout = ''
         let stderr = ''
 
-        java.stdout.on('data', (data) => {
+        proc.stdout.on('data', (data) => {
           const text = data.toString()
           stdout += text
           console.log('[CLI STDOUT]', text.trim())
         })
 
-        java.stderr.on('data', (data) => {
+        proc.stderr.on('data', (data) => {
           const text = data.toString()
           stderr += text
           console.error('[CLI STDERR]', text.trim())
         })
 
-        java.on('close', async (code) => {
+        proc.on('close', async (code) => {
           console.log('📄 [Preview] CLI exited with code:', code)
 
           await fs.unlink(templateFile).catch(() => {})
@@ -145,38 +141,33 @@ export function registerPdfIpc(): void {
       await fs.writeFile(templateFile, templateJson)
       await fs.writeFile(dataFile, dataJson)
 
-      const javaPath = cliStatus.javaPath || 'java'
-      console.log('  Java Path:', javaPath)
-      console.log('  Command:', javaPath, '-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '--output', pdfFile)
+      const isNative = Boolean(cliStatus.isNative && cliStatus.nativePath)
+      const command = isNative ? cliStatus.nativePath! : (cliStatus.javaPath || 'java')
+      const args = isNative
+        ? ['generate', templateFile, '-d', dataFile, '--output', pdfFile]
+        : ['-jar', CLI_JAR_PATH, 'generate', templateFile, '-d', dataFile, '--output', pdfFile]
+
+      console.log('  Executing:', command, ...args)
 
       return new Promise((resolve) => {
-        const java = spawn(javaPath, [
-          '-jar',
-          CLI_JAR_PATH,
-          'generate',
-          templateFile,
-          '-d',
-          dataFile,
-          '--output',
-          pdfFile,
-        ])
+        const proc = spawn(command, args)
 
         let stdout = ''
         let stderr = ''
 
-        java.stdout.on('data', (data) => {
+        proc.stdout.on('data', (data) => {
           const text = data.toString()
           stdout += text
-          console.log('[JAR STDOUT]', text)
+          console.log('[CLI STDOUT]', text)
         })
 
-        java.stderr.on('data', (data) => {
+        proc.stderr.on('data', (data) => {
           const text = data.toString()
           stderr += text
-          console.error('[JAR STDERR]', text)
+          console.error('[CLI STDERR]', text)
         })
 
-        java.on('close', async (code) => {
+        proc.on('close', async (code) => {
           await fs.unlink(templateFile).catch(() => {})
           await fs.unlink(dataFile).catch(() => {})
 

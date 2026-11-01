@@ -1,0 +1,10 @@
+{
+  "name": "open-pdf-multilang-bench-node",
+  "version": "1.0.0",
+  "private": true,
+  "description": "pdfmake runner for the Open PDF Generator multi-language benchmark",
+  "dependencies": {
+    "pdfmake": "^0.2.20",
+    "roboto-font": "^0.1.0"
+  }
+}

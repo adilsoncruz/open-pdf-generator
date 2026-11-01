@@ -1,0 +1,68 @@
+# Docker build context: repositories root
+#   docker build -f tools/cli/Dockerfile.native -t open-pdf-generator:native .
+#
+# Produces a single self-contained executable (no JVM) with a much lower
+# per-invocation start-up cost than `java -jar` — the fix for the
+# "one JVM boot per document" cost of the CLI container model.
+#
+# Stage 1 — build the fat JAR
+FROM eclipse-temurin:21-jdk AS jar
+
+WORKDIR /src
+COPY core ./core
+COPY tools/cli ./tools/cli
+COPY config ./config
+
+RUN chmod +x core/gradlew tools/cli/gradlew \
+    && core/gradlew -p core jar -q \
+    && tools/cli/gradlew -p tools/cli shadowJar -q
+
+# Stage 2 — trace runtime reflection/resources, then build the native image
+FROM ghcr.io/graalvm/native-image-community:21 AS native
+
+WORKDIR /build
+COPY --from=jar /src/tools/cli/build/libs/pdf-generator-cli-*.jar cli.jar
+COPY tools/cli/native-image/train ./train
+COPY tools/cli/native-image/generate-reflect-config.sh ./generate-reflect-config.sh
+
+RUN mkdir -p /build/meta \
+    && sh ./generate-reflect-config.sh cli.jar /build/meta \
+    && java -agentlib:native-image-agent=config-merge-dir=/build/meta -jar cli.jar \
+        generate train/invoice.json -d train/data_invoice.json -o out1.pdf \
+    && java -agentlib:native-image-agent=config-merge-dir=/build/meta -jar cli.jar \
+        generate train/listing.json -d train/data_listing.json -o out2.pdf \
+    && java -agentlib:native-image-agent=config-merge-dir=/build/meta -jar cli.jar \
+        generate train/complex.json -d train/data_complex.json -o out3.pdf \
+    && java -agentlib:native-image-agent=config-merge-dir=/build/meta -jar cli.jar \
+        validate train/invoice.json \
+    && java -agentlib:native-image-agent=config-merge-dir=/build/meta -jar cli.jar version
+
+RUN native-image \
+        --no-fallback \
+        -Djava.awt.headless=true \
+        -jar cli.jar \
+        -o /build/pdf-generator \
+        -H:ConfigurationFileDirectories=/build/meta \
+        -H:+ReportExceptionStackTraces \
+        --initialize-at-run-time=org.slf4j.LoggerFactory,org.slf4j.helpers.Reporter,ch.qos.logback \
+        --initialize-at-build-time=java.awt.Color,java.awt.Toolkit,java.awt.image,java.awt.color \
+        -H:IncludeResources='logback.xml' \
+    && /build/pdf-generator version
+
+# Stage 3 — minimal runtime with only the executable
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /work /templates \
+    && chmod 1777 /work /templates \
+    && adduser --system --group --home /work pdf
+
+COPY --from=native /build/pdf-generator /usr/local/bin/pdf-generator
+
+WORKDIR /work
+USER pdf
+
+ENTRYPOINT ["pdf-generator"]
+CMD ["--help"]
