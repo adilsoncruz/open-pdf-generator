@@ -28,9 +28,22 @@ export function ListElementRenderer({
   const paddingTop = typeof style.paddingTop === 'number' ? style.paddingTop : 0
   const paddingBottom = typeof style.paddingBottom === 'number' ? style.paddingBottom : 0
 
+  const elementWidth = effectiveWidth || element.width
+  const isWidthFull = elementWidth === '100%'
+  const widthCss = isWidthFull
+    ? '100%'
+    : typeof elementWidth === 'number'
+    ? `${elementWidth}px`
+    : (elementWidth || '300px')
+
+  const heightCss = typeof element.height === 'number'
+    ? `${element.height}px`
+    : (element.height || 'auto')
+
   const containerStyle: CSSProperties = {
-    width: effectiveWidth || element.width || 300,
-    minHeight: element.height || 60,
+    width: widthCss,
+    height: heightCss,
+    minHeight: typeof element.height === 'number' ? `${element.height}px` : 'auto',
     backgroundColor,
     paddingTop,
     paddingRight,
@@ -41,6 +54,7 @@ export function ListElementRenderer({
     color,
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'hidden',
     userSelect: 'none',
   }
 

@@ -8,7 +8,7 @@ interface DataBindingSectionProps {
 
 export function DataBindingSection({ element, onUpdate }: DataBindingSectionProps) {
   const { t } = useTranslation()
-  const supportsDataBinding = ['text', 'rich_text', 'image', 'barcode', 'link', 'loop'].includes(element.type)
+  const supportsDataBinding = ['text', 'rich_text', 'image', 'barcode', 'link', 'loop', 'list', 'check_list'].includes(element.type)
 
   return (
     <>

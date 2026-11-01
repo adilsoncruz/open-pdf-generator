@@ -76,7 +76,7 @@ export function TransformSection({ element, onUpdate }: TransformSectionProps) {
           </div>
 
           {/* Checkboxes de 100% Width e 100% Height */}
-          {['rectangle', 'container', 'loop', 'line', 'image', 'spacer'].includes(element.type) && (
+          {['rectangle', 'container', 'loop', 'line', 'image', 'spacer', 'list', 'check_list'].includes(element.type) && (
             <div className="grid grid-cols-2 gap-2 mt-2">
               <label className="flex items-center justify-between bg-slate-950/50 border border-slate-800 rounded-lg px-2.5 py-1.5 cursor-pointer hover:border-slate-700 transition select-none">
                 <span className="text-[11px] text-slate-300 font-medium">Width 100%</span>
