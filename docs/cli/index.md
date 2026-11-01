@@ -28,21 +28,23 @@ pdf-generator version
 
 | Feature | Description |
 |---------|-------------|
-| **Generate** | Create PDFs from templates and data |
+| **Generate** | Create PDFs from templates and data (supports stdin/stdout piping) |
+| **Serve** | Resident NDJSON daemon for instant generation (<1ms per PDF) |
 | **Validate** | Check templates for errors |
 | **Batch** | Process multiple files |
-| **Formats** | Support for JSON templates |
+| **Native & Docker** | Run via GraalVM native binary without JVM or in Docker |
 
 ## Requirements
 
-- **Java 17+** - The CLI runs on the JVM
-- **~6 MB** - Standalone JAR file
+- **Standalone Native Binary / Docker** - No JVM required, instant start-up (~10 ms)
+- **Or Java 17+** - If running the standalone JAR (`pdf-generator.jar`)
 
 ## Next Steps
 
-- [Installation](./installation.md) - How to install the CLI
-- [Commands](./commands.md) - Available commands and options
-- [Examples](./examples.md) - Real-world usage examples
+- [Installation](./installation.md) - How to install the CLI (JAR, native binary or Docker)
+- [Commands](./commands.md) - Available commands (`generate`, `serve`, `validate`)
+- [Examples](./examples.md) - Real-world usage examples (Bash, Go, Node.js)
+- [⚡ Benchmark](/lib/benchmark-multilang) - Performance comparison against Go (Maroto) and Node.js (pdfmake)
 
 
 

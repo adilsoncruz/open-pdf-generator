@@ -11,6 +11,7 @@ dependencies {
 
     // JasperReports 7.0.3 (Modern Modularized)
     implementation("net.sf.jasperreports:jasperreports:7.0.3")
+    implementation(files("../libs/openpdf-1.3.43.jar"))
     implementation("net.sf.jasperreports:jasperreports-pdf:7.0.3")
     implementation("net.sf.jasperreports:jasperreports-jdt:7.0.3")
     implementation("net.sf.jasperreports:jasperreports-barcode4j:7.0.3")

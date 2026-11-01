@@ -1,0 +1,9 @@
+.git
+**/node_modules
+**/.gradle
+**/dist
+**/__pycache__
+docs/.vitepress/cache
+docs/.vitepress/dist
+tools/editor
+*.pdf

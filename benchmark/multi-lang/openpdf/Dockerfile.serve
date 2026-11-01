@@ -1,0 +1,26 @@
+# Benchmark runner for the resident (`serve`) native binary — build context: repository root.
+# Requires the native image built first:
+#   docker build -f tools/cli/Dockerfile.native -t open-pdf-generator:native .
+#   docker build \
+#     -f benchmark/multi-lang/openpdf/Dockerfile.serve \
+#     -t open-pdf-bench:openpdf-serve .
+FROM open-pdf-generator:native
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /app \
+    && cp /usr/local/bin/pdf-generator /app/pdf-generator
+
+COPY benchmark/common/src/main/resources/templates/openpdf/ /app/templates/
+COPY benchmark/multi-lang/openpdf/driver.py /app/driver.py
+
+ENV CLI_BIN=/app/pdf-generator \
+    SERVE=1 \
+    ENGINE=openpdf-serve \
+    ENGINE_LANGUAGE="GraalVM native-image (Kotlin)" \
+    ENGINE_MODEL="resident NDJSON process"
+
+ENTRYPOINT ["python3", "/app/driver.py"]

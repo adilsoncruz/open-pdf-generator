@@ -104,8 +104,42 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <!-- 2. Complex Documents with Native Barcodes -->
+        <!-- 2. Polyglot & Zero Java (Go, Node, Python, Docker) -->
         <div v-else-if="currentSlide === 2" key="slide-2" class="graphic-pane metric-pane">
+          <div class="slide-badge">🌐 Polyglot & Zero Java</div>
+
+          <div class="stat-center-block">
+            <!-- Giant Stat -->
+            <div class="giant-stat text-brand">
+              0.60
+              <span class="giant-unit">ms</span>
+            </div>
+
+            <div class="speed-delta-badge">
+              <span class="delta-arrow">⚡</span>
+              <span>12.2x vs pdfmake · 9.6x vs Maroto</span>
+            </div>
+          </div>
+
+          <div class="metrics-pill-row">
+            <div class="mini-chip highlight-chip">
+              <span>🐹 Go (0.60 ms)</span>
+            </div>
+            <div class="mini-chip highlight-chip">
+              <span>🟢 Node.js (0.57 ms)</span>
+            </div>
+            <div class="mini-chip muted-chip">
+              <span>🐍 Python / Docker</span>
+            </div>
+          </div>
+
+          <p class="slide-caption">
+            <strong>Zero Java required</strong>. Pre-compiled standalone binaries for Linux, macOS & Windows.
+          </p>
+        </div>
+
+        <!-- 3. Complex Documents with Native Barcodes -->
+        <div v-else-if="currentSlide === 3" key="slide-3" class="graphic-pane metric-pane">
           <div class="slide-badge">🏷️ Native Barcodes & QR</div>
 
           <div class="stat-center-block">
@@ -146,8 +180,8 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <!-- 3. Cold Start & Serverless Readiness -->
-        <div v-else-if="currentSlide === 3" key="slide-3" class="graphic-pane metric-pane">
+        <!-- 4. Cold Start & Serverless Readiness -->
+        <div v-else-if="currentSlide === 4" key="slide-4" class="graphic-pane metric-pane">
           <div class="slide-badge">⏱️ Cold Start & Serverless</div>
 
           <div class="stat-center-block">
@@ -208,8 +242,8 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <!-- 4. Memory Allocation & Dependency Footprint -->
-        <div v-else-if="currentSlide === 4" key="slide-4" class="graphic-pane metric-pane">
+        <!-- 5. Memory Allocation & Dependency Footprint -->
+        <div v-else-if="currentSlide === 5" key="slide-5" class="graphic-pane metric-pane">
           <div class="slide-badge">💾 Cloud FinOps & Footprint</div>
 
           <div class="stat-center-block">
@@ -294,14 +328,18 @@ onUnmounted(() => {
 }
 
 .glow-slide-2 {
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.45) 0%, rgba(99, 102, 241, 0.25) 60%, transparent 80%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(245, 158, 11, 0.25) 60%, transparent 80%);
 }
 
 .glow-slide-3 {
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(59, 130, 246, 0.25) 60%, transparent 80%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.45) 0%, rgba(99, 102, 241, 0.25) 60%, transparent 80%);
 }
 
 .glow-slide-4 {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(59, 130, 246, 0.25) 60%, transparent 80%);
+}
+
+.glow-slide-5 {
   background: radial-gradient(circle, rgba(16, 185, 129, 0.5) 0%, rgba(139, 92, 246, 0.25) 60%, transparent 80%);
 }
 

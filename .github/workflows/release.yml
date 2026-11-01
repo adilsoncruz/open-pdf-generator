@@ -144,6 +144,10 @@ jobs:
     needs: changes
     if: needs.changes.outputs.cli == 'true' || inputs.release_cli == true
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      skip: ${{ steps.snapshot.outputs.skip }}
+      exists: ${{ steps.tagcheck.outputs.exists }}
 
     steps:
       - uses: actions/checkout@v7
@@ -204,31 +208,170 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
+      - name: Upload CLI JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-jar
+          path: tools/cli/build/libs/*.jar
+
+  # =======================================================
+  # Build Native CLI Binaries (Linux, macOS, Windows)
+  # =======================================================
+  build-native-cli:
+    name: Build Native CLI (${{ matrix.target }})
+    needs: [changes, release-cli]
+    if: needs.changes.outputs.cli == 'true' || inputs.release_cli == true || needs.changes.outputs.editor == 'true' || inputs.release_editor == true
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-amd64
+            bin_name: pdf-generator
+            output_name: pdf-generator-linux-amd64
+            use_docker: true
+          - os: macos-latest
+            target: darwin-arm64
+            bin_name: pdf-generator
+            output_name: pdf-generator-darwin-arm64
+            use_docker: false
+          - os: windows-latest
+            target: windows-amd64
+            bin_name: pdf-generator.exe
+            output_name: pdf-generator-windows-amd64.exe
+            use_docker: false
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build via Docker (Linux x86_64)
+        if: matrix.use_docker == true
+        shell: bash
+        run: |
+          docker build -f tools/cli/Dockerfile.native -t open-pdf-generator:native .
+          CONTAINER_ID=$(docker create open-pdf-generator:native)
+          mkdir -p dist
+          docker cp "$CONTAINER_ID":/usr/local/bin/pdf-generator dist/${{ matrix.output_name }}
+          docker rm -v "$CONTAINER_ID"
+          chmod +x dist/${{ matrix.output_name }}
+
+      - name: Setup GraalVM (macOS / Windows)
+        if: matrix.use_docker == false
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Core and CLI Fat JAR
+        if: matrix.use_docker == false
+        shell: bash
+        run: |
+          ./core/gradlew -p core jar -q
+          ./tools/cli/gradlew -p tools/cli shadowJar -q
+
+      - name: Compile Native Image (macOS / Windows)
+        if: matrix.use_docker == false
+        shell: bash
+        run: |
+          mkdir -p meta dist
+          JAR_PATH=$(ls tools/cli/build/libs/pdf-generator-cli-*.jar | head -n 1)
+          sh tools/cli/native-image/generate-reflect-config.sh "$JAR_PATH" meta
+          java -agentlib:native-image-agent=config-merge-dir=meta -jar "$JAR_PATH" \
+            generate tools/cli/native-image/train/invoice.json -d tools/cli/native-image/train/data_invoice.json -o out1.pdf
+          java -agentlib:native-image-agent=config-merge-dir=meta -jar "$JAR_PATH" \
+            generate tools/cli/native-image/train/listing.json -d tools/cli/native-image/train/data_listing.json -o out2.pdf
+          java -agentlib:native-image-agent=config-merge-dir=meta -jar "$JAR_PATH" \
+            generate tools/cli/native-image/train/complex.json -d tools/cli/native-image/train/data_complex.json -o out3.pdf
+          native-image \
+            --no-fallback \
+            -Djava.awt.headless=true \
+            -jar "$JAR_PATH" \
+            -o dist/${{ matrix.output_name }} \
+            -H:ConfigurationFileDirectories=meta \
+            -H:+ReportExceptionStackTraces \
+            --initialize-at-run-time=org.slf4j.LoggerFactory,org.slf4j.helpers.Reporter,ch.qos.logback \
+            --initialize-at-build-time=java.awt.Color,java.awt.Toolkit,java.awt.image,java.awt.color \
+            -H:IncludeResources='logback.xml'
+
+      - name: Generate Checksum
+        shell: bash
+        working-directory: dist
+        run: |
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum ${{ matrix.output_name }} > ${{ matrix.output_name }}.sha256
+          else
+            shasum -a 256 ${{ matrix.output_name }} > ${{ matrix.output_name }}.sha256
+          fi
+
+      - name: Upload Native Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-native-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  # =======================================================
+  # Publish CLI GitHub Release with all platform binaries
+  # =======================================================
+  publish-cli-release:
+    name: Publish CLI Release
+    needs: [release-cli, build-native-cli]
+    if: needs.release-cli.outputs.skip == 'false' && needs.release-cli.outputs.exists == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download all CLI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-cli-artifacts
+
+      - name: Prepare Release Files
+        run: |
+          mkdir -p release-files
+          find all-cli-artifacts -type f -exec cp {} release-files/ \;
+          ls -la release-files/
+
       - name: Create GitHub Release
-        if: steps.snapshot.outputs.skip == 'false' && steps.tagcheck.outputs.exists == 'false'
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: cli-v${{ steps.version.outputs.version }}
-          name: Open PDF Generator CLI v${{ steps.version.outputs.version }}
+          tag_name: cli-v${{ needs.release-cli.outputs.version }}
+          name: Open PDF Generator CLI v${{ needs.release-cli.outputs.version }}
           body: |
             ## Open PDF Generator - Command Line Interface
-            
+
             CLI tool for generating PDFs from JSON templates.
-            
-            ### Usage
-            
+
+            ### Standalone Native Binaries (No Java required)
+
+            - **Linux (x86_64)**: `pdf-generator-linux-amd64`
+            - **macOS (Apple Silicon)**: `pdf-generator-darwin-arm64`
+            - **Windows (x86_64)**: `pdf-generator-windows-amd64.exe`
+
             ```bash
-            java -jar pdf-generator-cli-${{ steps.version.outputs.version }}.jar generate template.json -d data.json -o output.pdf
+            # Linux example
+            curl -L https://github.com/adilsoncruz/open-pdf-generator/releases/download/cli-v${{ needs.release-cli.outputs.version }}/pdf-generator-linux-amd64 -o pdf-generator
+            chmod +x pdf-generator
+            ./pdf-generator generate template.json -d data.json -o output.pdf
             ```
-          files: tools/cli/build/libs/*.jar
+
+            ### Java Standalone JAR (Any OS with Java 17+)
+
+            ```bash
+            java -jar pdf-generator-cli-${{ needs.release-cli.outputs.version }}.jar generate template.json -d data.json -o output.pdf
+            ```
+          files: release-files/*
 
   # =========================
   # Build: Electron App (Matrix)
   # =========================
   build-editor:
     name: Build Editor (${{ matrix.os }})
-    needs: changes
-    if: needs.changes.outputs.editor == 'true' || inputs.release_editor == true
+    needs: [changes, build-native-cli]
+    if: always() && (needs.changes.outputs.editor == 'true' || inputs.release_editor == true)
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -237,6 +380,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+
+      - name: Download native CLI artifacts if built
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: cli-native-*
+          path: native-binaries
 
       - uses: actions/setup-node@v7
         with:
@@ -251,6 +401,33 @@ jobs:
           npm install
           echo "Installed vite version:"
           node node_modules/vite/bin/vite.js --version || echo "vite not found"
+
+      - name: Setup native CLI binary in editor resources
+        shell: bash
+        run: |
+          mkdir -p tools/editor/resources/bin
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            BIN_NAME="pdf-generator.exe"
+            TARGET="windows-amd64"
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            BIN_NAME="pdf-generator"
+            TARGET="darwin-arm64"
+          else
+            BIN_NAME="pdf-generator"
+            TARGET="linux-amd64"
+          fi
+
+          ARTIFACT_FILE=$(find native-binaries -type f ! -name "*.sha256" -name "*$TARGET*" 2>/dev/null | head -n 1)
+          if [ -n "$ARTIFACT_FILE" ] && [ -f "$ARTIFACT_FILE" ]; then
+            echo "Using native binary from build-native-cli: $ARTIFACT_FILE"
+            cp "$ARTIFACT_FILE" "tools/editor/resources/bin/$BIN_NAME"
+          else
+            echo "Downloading released native binary for $TARGET..."
+            curl -fsSL "https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-$TARGET" \
+              -o "tools/editor/resources/bin/$BIN_NAME" || echo "Warning: Could not download native binary"
+          fi
+          chmod +x "tools/editor/resources/bin/$BIN_NAME" 2>/dev/null || true
+          ls -la tools/editor/resources/bin/
 
       - name: Build Electron app
         working-directory: tools/editor

@@ -1,20 +1,35 @@
 # Instalação
 
-## Download
+## Binário Nativo Standalone (Recomendado — Sem necessidade de Java)
 
-### A partir das Releases do GitHub
+Baixe o executável pré-compilado GraalVM para inicialização instantânea (~10 ms), sem precisar de Java ou Docker:
 
-Baixe a versão mais recente do GitHub:
+```bash
+# Linux x86_64
+curl -L https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-linux-amd64 \
+  -o /usr/local/bin/pdf-generator
+chmod +x /usr/local/bin/pdf-generator
+
+# Verificar instalação
+pdf-generator version
+```
+
+No `Dockerfile` da sua aplicação (Go, Node.js, Python):
+
+```dockerfile
+# Download direto dentro do container — sem Java
+RUN curl -L https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-linux-amd64 \
+    -o /usr/local/bin/pdf-generator && chmod +x /usr/local/bin/pdf-generator
+```
+
+---
+
+## JAR Standalone (Requer Java 17+)
+
+Se preferir rodar sobre a JVM:
 
 ```bash
 curl -L https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-cli.jar \
-  -o pdf-generator-cli.jar
-```
-
-### A partir do JitPack
-
-```bash
-curl -L https://jitpack.io/com/github/user/open-pdf-generator/cli/1.0.0/cli-1.0.0.jar \
   -o pdf-generator-cli.jar
 ```
 

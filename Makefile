@@ -39,7 +39,8 @@ NPM := npm
 .PHONY: help all build clean test install dev \
         hooks-install \
         core core-build core-test core-jar core-clean \
-        cli cli-build cli-clean cli-install \
+        cli cli-build cli-clean cli-install cli-docker cli-native \
+        benchmark-multilang \
         editor editor-install editor-dev editor-build editor-package editor-package-mac editor-package-win editor-package-linux editor-package-all editor-clean \
         docs docs-install docs-dev docs-build docs-preview docs-clean \
         check version info
@@ -64,6 +65,9 @@ help: ## Show this help message
 	@echo ""
 	@echo "$(BOLD)$(GREEN)── CLI (Command Line Interface) ────────────────────────────────$(NC)"
 	@grep -E '^cli[a-z-]*:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-20s$(NC) %s\n", $$1, $$2}'
+	@echo ""
+	@echo "$(BOLD)$(GREEN)── Benchmark (Multi-language) ──────────────────────────────────$(NC)"
+	@grep -E '^benchmark[a-z-]*:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-20s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(BOLD)$(GREEN)── Editor (Desktop App) ────────────────────────────────────────$(NC)"
 	@grep -E '^editor[a-z-]*:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-20s$(NC) %s\n", $$1, $$2}'
@@ -199,6 +203,30 @@ cli-install: cli-build ## Install CLI locally for Editor development
 	@cp $$(ls -t $(CLI_DIR)/build/libs/pdf-generator-cli-*.jar | head -1) ~/.pdf-generator/pdf-generator.jar
 	@echo "$(VERSION)" > ~/.pdf-generator/version.txt
 	@echo "$(GREEN)✓ CLI installed to ~/.pdf-generator/pdf-generator.jar$(NC)"
+
+cli-docker: cli-build ## Build the CLI Docker image (open-pdf-generator:cli)
+	@echo ""
+	@echo "$(BOLD)$(BLUE)Building CLI Docker image...$(NC)"
+	@docker build -t open-pdf-generator:cli $(CLI_DIR)
+	@echo "$(GREEN)✓ Image open-pdf-generator:cli built$(NC)"
+
+cli-native: ## Build the GraalVM native CLI image (open-pdf-generator:native, no JVM)
+	@echo ""
+	@echo "$(BOLD)$(BLUE)Building native CLI image (GraalVM native-image)...$(NC)"
+	@echo "$(YELLOW)This compiles the binary and takes several minutes.$(NC)"
+	@docker build -f $(CLI_DIR)/Dockerfile.native -t open-pdf-generator:native $(ROOT_DIR)
+	@echo "$(GREEN)✓ Image open-pdf-generator:native built$(NC)"
+	@echo "  Usage: docker run --rm -i -v \"\$$PWD/templates:/templates:ro\" open-pdf-generator:native \\"
+	@echo "           generate /templates/invoice.json -d - -o - > invoice.pdf"
+
+# ============================================================================
+# BENCHMARK (multi-language: CLI vs Maroto/Go vs pdfmake/Node)
+# ============================================================================
+
+benchmark-multilang: ## Run multi-language benchmark (CLI Docker vs Maroto vs pdfmake)
+	@echo ""
+	@echo "$(BOLD)$(BLUE)Running multi-language benchmark...$(NC)"
+	@bash benchmark/multi-lang/scripts/run-multi-lang-benchmark.sh
 
 # ============================================================================
 # EDITOR (Desktop App - Electron + React)
