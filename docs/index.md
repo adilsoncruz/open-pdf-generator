@@ -16,6 +16,9 @@ hero:
       text: ⚡ 2.5x vs Jasper Benchmark
       link: /lib/benchmark
     - theme: alt
+      text: 🚀 Go & Node Guide
+      link: /cli/examples
+    - theme: alt
       text: GitHub
       link: https://github.com/adilsoncruz/open-pdf-generator
 
@@ -36,10 +39,10 @@ features:
 
   - icon:
       src: /icons/terminal.svg
-    title: Command Line Interface
-    details: Generate PDFs from the command line for automation, CI/CD pipelines, and scripting workflows.
-    link: /cli/
-    linkText: Learn CLI
+    title: Polyglot CLI (Zero Java Required)
+    details: Standalone GraalVM native binary for Linux, macOS and Windows. Seamlessly integrate with Go, Node.js, Python, or Docker at sub-millisecond speeds.
+    link: /cli/examples
+    linkText: Go & Node Guide
 
   - icon:
       src: /icons/speed.svg
@@ -109,13 +112,58 @@ byte[] pdf = new PDFGenerator().generate(template, data);
 Files.write(Path.of("invoice.pdf"), pdf);
 ```
 
+```go [Go (Native Serve)]
+// No Java needed! Uses standalone binary with ~0.60ms latency (9.6x faster than Maroto)
+package main
+
+import (
+    "os/exec"
+    "log"
+)
+
+func main() {
+    cmd := exec.Command("pdf-generator", "generate", "invoice.json", "-d", "data.json", "-o", "invoice.pdf")
+    if err := cmd.Run(); err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
+```javascript [Node.js (Native Serve)]
+// No Java needed! Uses standalone binary with ~0.57ms latency (12.2x faster than pdfmake)
+import { execFileSync } from 'node:child_process';
+
+execFileSync('pdf-generator', [
+  'generate', 'invoice.json',
+  '-d', 'data.json',
+  '-o', 'invoice.pdf'
+]);
+```
+
 :::
+
+## Performance Across Ecosystems
+
+Compare Open PDF Generator against the standard reporting and PDF tools across **Java**, **Go**, and **Node.js**:
+
+<UnifiedBenchmarkChart />
 
 ## Installation
 
-Add to your project with Gradle or Maven:
+Add to your project with Gradle, Maven, or download the standalone native binary directly:
 
 ::: code-group
+
+```bash [Native CLI (Go / Node / Python)]
+# Linux (amd64) — No Java required
+curl -sSL -o /usr/local/bin/pdf-generator https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-linux-amd64 && chmod +x /usr/local/bin/pdf-generator
+
+# macOS (Apple Silicon arm64) — No Java required
+curl -sSL -o /usr/local/bin/pdf-generator https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-darwin-arm64 && chmod +x /usr/local/bin/pdf-generator
+
+# Docker (Single command execution)
+docker run --rm -v $(pwd):/work -w /work open-pdf-generator:native generate template.json -d data.json -o out.pdf
+```
 
 ```kotlin [Gradle (Kotlin)]
 repositories {
@@ -161,6 +209,8 @@ dependencies {
 | Path | Description |
 |------|-------------|
 | [⚡ Benchmark (vs JasperReports)](/lib/benchmark) | 100k invoices stress test, latency, throughput, memory & FinOps savings |
+| [⚡ Benchmark (vs Go & Node.js)](/lib/benchmark-multilang) | Sub-millisecond latency vs Maroto (Go) and pdfmake (Node.js) |
+| [Polyglot Guide (Go, Node, Python)](/cli/examples) | Ready-to-use client code for non-JVM environments |
 | [Engine Documentation](/lib/) | Learn how to use the PDF Generator library |
 | [Editor Documentation](/editor/index.html) | Create templates visually with the desktop app |
 | [Examples](/lib/examples/) | Real-world template examples |
