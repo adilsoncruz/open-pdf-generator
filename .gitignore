@@ -60,3 +60,4 @@ docs/.vitepress/dist/
 # Codebase memory / MCP
 .codebase-memory/
 
+__pycache__/

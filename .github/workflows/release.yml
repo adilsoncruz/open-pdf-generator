@@ -204,6 +204,18 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
+      - name: Build Native Binary (GraalVM Linux x86_64)
+        if: steps.snapshot.outputs.skip == 'false' && steps.tagcheck.outputs.exists == 'false'
+        run: |
+          echo "Building GraalVM native binary image..."
+          docker build -f tools/cli/Dockerfile.native -t open-pdf-generator:native .
+          CONTAINER_ID=$(docker create open-pdf-generator:native)
+          docker cp "$CONTAINER_ID":/usr/local/bin/pdf-generator tools/cli/build/libs/pdf-generator-linux-amd64
+          docker rm -v "$CONTAINER_ID"
+          chmod +x tools/cli/build/libs/pdf-generator-linux-amd64
+          cd tools/cli/build/libs
+          sha256sum pdf-generator-linux-amd64 > pdf-generator-linux-amd64.sha256
+
       - name: Create GitHub Release
         if: steps.snapshot.outputs.skip == 'false' && steps.tagcheck.outputs.exists == 'false'
         uses: softprops/action-gh-release@v3
@@ -212,15 +224,26 @@ jobs:
           name: Open PDF Generator CLI v${{ steps.version.outputs.version }}
           body: |
             ## Open PDF Generator - Command Line Interface
-            
+
             CLI tool for generating PDFs from JSON templates.
-            
-            ### Usage
-            
+
+            ### Standalone Native Binary (Linux x86_64 — No Java required)
+
+            ```bash
+            curl -L https://github.com/adilsoncruz/open-pdf-generator/releases/download/cli-v${{ steps.version.outputs.version }}/pdf-generator-linux-amd64 -o pdf-generator
+            chmod +x pdf-generator
+            ./pdf-generator generate template.json -d data.json -o output.pdf
+            ```
+
+            ### Java Standalone JAR (Requires Java 17+)
+
             ```bash
             java -jar pdf-generator-cli-${{ steps.version.outputs.version }}.jar generate template.json -d data.json -o output.pdf
             ```
-          files: tools/cli/build/libs/*.jar
+          files: |
+            tools/cli/build/libs/*.jar
+            tools/cli/build/libs/pdf-generator-linux-amd64
+            tools/cli/build/libs/pdf-generator-linux-amd64.sha256
 
   # =========================
   # Build: Electron App (Matrix)

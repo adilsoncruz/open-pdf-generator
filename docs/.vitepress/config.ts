@@ -31,7 +31,13 @@ const en = {
       { text: 'Library', link: '/lib/' },
       { text: 'CLI', link: '/cli/' },
       { text: 'Editor', link: '/editor/' },
-      { text: '⚡ Benchmark', link: '/lib/benchmark' },
+      {
+        text: '⚡ Benchmark',
+        items: [
+          { text: 'vs JasperReports (JVM)', link: '/lib/benchmark' },
+          { text: 'vs Go (Maroto) & Node (pdfmake)', link: '/lib/benchmark-multilang' }
+        ]
+      },
       {
         text: '💖 Donate',
         items: [
@@ -93,7 +99,8 @@ const en = {
             { text: 'Pagination', link: '/lib/guide/advanced/pagination' },
             { text: 'Positioning', link: '/lib/guide/advanced/positioning' },
             { text: 'Performance', link: '/lib/guide/advanced/performance' },
-            { text: 'Benchmark (vs Jasper)', link: '/lib/benchmark' }
+            { text: 'Benchmark (vs Jasper)', link: '/lib/benchmark' },
+            { text: 'Benchmark (Go/Node/Docker)', link: '/lib/benchmark-multilang' }
           ]
         },
         {
@@ -114,7 +121,8 @@ const en = {
             { text: 'Overview', link: '/cli/' },
             { text: 'Installation', link: '/cli/installation' },
             { text: 'Commands', link: '/cli/commands' },
-            { text: 'Examples', link: '/cli/examples' }
+            { text: 'Examples', link: '/cli/examples' },
+            { text: '⚡ Benchmark (Go / Node / Docker)', link: '/lib/benchmark-multilang' }
           ]
         }
       ],
