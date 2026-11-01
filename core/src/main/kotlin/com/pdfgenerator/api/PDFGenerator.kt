@@ -11,6 +11,7 @@ import com.pdfgenerator.engine.RenderContext
 import com.pdfgenerator.engine.RenderEngine
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.Template
+import com.pdfgenerator.util.FontCache
 import com.pdfgenerator.validator.SchemaValidator
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
@@ -25,7 +26,6 @@ class PDFGenerator(
     private val logger = LoggerFactory.getLogger(PDFGenerator::class.java)
     private val renderEngine = RenderEngine(config)
     private val pageFlowOrchestrator = PageFlowOrchestrator(renderEngine, config)
-    private val gson = Gson()
     private var securityConfigurator = PDFSecurityConfigurator()
 
     constructor(
@@ -36,6 +36,15 @@ class PDFGenerator(
     }
 
     companion object {
+        private val sharedGson = Gson()
+        private val bufferPool = object : ThreadLocal<ByteArrayOutputStream>() {
+            override fun initialValue(): ByteArrayOutputStream = ByteArrayOutputStream(32 * 1024)
+        }
+
+        init {
+            FontCache.prewarm()
+        }
+
         private val templateCache = ConcurrentHashMap<String, Template>()
 
         @JvmStatic
@@ -81,9 +90,16 @@ class PDFGenerator(
         template: Template,
         data: Map<String, Any?>,
     ): ByteArray {
-        val output = ByteArrayOutputStream(maxOf(1, (template.pageElements?.size ?: 0) / 10) * 50 * 1024)
+        val output = bufferPool.get()
+        output.reset()
         generateToStream(template, data, output)
-        return output.toByteArray()
+        val bytes = output.toByteArray()
+        if (output.size() > 512 * 1024) {
+            bufferPool.set(ByteArrayOutputStream(32 * 1024))
+        } else {
+            output.reset()
+        }
+        return bytes
     }
 
     fun generate(
@@ -165,21 +181,13 @@ class PDFGenerator(
             throw PDFGenerationException("Template '$templatePath' is not valid JSON. Expected JSON object starting with '{'.")
         }
         return try {
-            Template.fromString(minifyJson(clean))
+            Template.fromString(clean)
         } catch (e: JsonSyntaxException) {
             throw PDFGenerationException("Erro de sintaxe JSON no template '$templatePath': ${e.message}.", e)
         } catch (e: Exception) {
             throw PDFGenerationException("Erro ao parsear template '$templatePath': ${e.message}", e)
         }
     }
-
-    private fun minifyJson(json: String): String =
-        try {
-            gson.toJson(gson.fromJson(json, JsonElement::class.java))
-        } catch (_: Exception) {
-            logger.debug("Could not minify JSON, using original")
-            json
-        }
 
     private fun tryLoadFromClasspath(path: String): String? =
         listOf(path, "/$path", path.removePrefix("/")).firstNotNullOfOrNull {
@@ -190,7 +198,7 @@ class PDFGenerator(
     @Suppress("UNCHECKED_CAST")
     private fun parseDataJson(dataJson: String): Map<String, Any?> =
         try {
-            val result = jsonToMap(gson.fromJson(dataJson, JsonElement::class.java))
+            val result = jsonToMap(sharedGson.fromJson(dataJson, JsonElement::class.java))
             if (result !is Map<*, *>) {
                 throw PDFGenerationException(
                     "JSON data must be a JSON object (starting with '{'). Received type: ${result?.javaClass?.simpleName ?: "null"}",
