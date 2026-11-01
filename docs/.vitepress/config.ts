@@ -157,7 +157,13 @@ const pt = {
       { text: 'Biblioteca', link: '/pt/lib/' },
       { text: 'CLI', link: '/pt/cli/' },
       { text: 'Editor', link: '/pt/editor/' },
-      { text: '⚡ Benchmark', link: '/pt/lib/benchmark' },
+      {
+        text: '⚡ Benchmark',
+        items: [
+          { text: 'vs JasperReports (JVM)', link: '/pt/lib/benchmark' },
+          { text: 'vs Go (Maroto) & Node (pdfmake)', link: '/lib/benchmark-multilang' }
+        ]
+      },
       {
         text: '💖 Doe',
         items: [
@@ -241,7 +247,8 @@ const pt = {
             { text: 'Visão Geral', link: '/pt/cli/' },
             { text: 'Instalação', link: '/pt/cli/installation' },
             { text: 'Comandos', link: '/pt/cli/commands' },
-            { text: 'Exemplos', link: '/pt/cli/examples' }
+            { text: 'Exemplos', link: '/pt/cli/examples' },
+            { text: '⚡ Benchmark (Go / Node / Docker)', link: '/lib/benchmark-multilang' }
           ]
         }
       ],
@@ -283,7 +290,13 @@ const es = {
       { text: 'Biblioteca', link: '/es/lib/' },
       { text: 'CLI', link: '/es/cli/' },
       { text: 'Editor', link: '/es/editor/' },
-      { text: '⚡ Benchmark', link: '/es/lib/benchmark' },
+      {
+        text: '⚡ Benchmark',
+        items: [
+          { text: 'vs JasperReports (JVM)', link: '/es/lib/benchmark' },
+          { text: 'vs Go (Maroto) & Node (pdfmake)', link: '/lib/benchmark-multilang' }
+        ]
+      },
       {
         text: '💖 Donar',
         items: [
@@ -367,7 +380,8 @@ const es = {
             { text: 'Visión General', link: '/es/cli/' },
             { text: 'Instalación', link: '/es/cli/installation' },
             { text: 'Comandos', link: '/es/cli/commands' },
-            { text: 'Ejemplos', link: '/es/cli/examples' }
+            { text: 'Ejemplos', link: '/es/cli/examples' },
+            { text: '⚡ Benchmark (Go / Node / Docker)', link: '/lib/benchmark-multilang' }
           ]
         }
       ],
