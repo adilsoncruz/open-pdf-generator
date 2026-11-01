@@ -226,6 +226,8 @@ const pt: Translations = {
     richText: 'Texto Formatado (Rich Text)',
     link: 'Link',
     container: 'Contêiner',
+    list: 'Lista',
+    checkList: 'Lista de Verificação (Checklist)',
   },
 
   dataPanel: {

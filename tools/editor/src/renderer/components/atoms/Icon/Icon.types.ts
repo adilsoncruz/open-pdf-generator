@@ -39,6 +39,8 @@ export type IconName =
   | 'barcode'
   | 'loop'
   | 'link'
+  | 'list'
+  | 'check-square'
   | 'markdown'
   | 'page-break'
   | 'spacer'

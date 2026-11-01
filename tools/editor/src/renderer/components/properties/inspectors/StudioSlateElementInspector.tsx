@@ -7,6 +7,7 @@ import { TransformSection } from './sections/TransformSection'
 import { TypographySection } from './sections/TypographySection'
 import { MediaPropertiesSection } from './sections/MediaPropertiesSection'
 import { ContainerPropertiesSection } from './sections/ContainerPropertiesSection'
+import { ListPropertiesSection } from './sections/ListPropertiesSection'
 import { AppearanceSection } from './sections/AppearanceSection'
 import { DataBindingSection } from './sections/DataBindingSection'
 
@@ -218,7 +219,9 @@ export function StudioSlateElementInspector(props: ElementInspectorProps) {
         {(element.type === 'text' ||
           element.type === 'static_text' ||
           element.type === 'rich_text' ||
-          element.type === 'link') && (
+          element.type === 'link' ||
+          element.type === 'list' ||
+          element.type === 'check_list') && (
           <TypographySection
             element={element}
             onUpdate={onUpdate}
@@ -231,9 +234,13 @@ export function StudioSlateElementInspector(props: ElementInspectorProps) {
           <MediaPropertiesSection element={element} onUpdate={onUpdate} onStyleUpdate={onStyleUpdate} />
         )}
 
-        {/* 5. Container specific */}
+        {/* 5. Container & List specific */}
         {element.type === 'container' && (
           <ContainerPropertiesSection element={element} onUpdate={onUpdate} />
+        )}
+
+        {(element.type === 'list' || element.type === 'check_list') && (
+          <ListPropertiesSection element={element} onUpdate={onUpdate} />
         )}
 
         {/* 6. Appearance Section (Não exibido para Page Break) */}

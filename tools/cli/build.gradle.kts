@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.0.21"
     application
-    id("com.gradleup.shadow") version "8.3.6"
+    id("com.gradleup.shadow") version "9.6.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
@@ -61,6 +61,11 @@ tasks.shadowJar {
         attributes["Main-Class"] = "io.pdfgenerator.cli.MainKt"
     }
 }
+
+tasks.named("distZip") { dependsOn(tasks.shadowJar) }
+tasks.named("distTar") { dependsOn(tasks.shadowJar) }
+tasks.named("startScripts") { dependsOn(tasks.shadowJar) }
+tasks.named("startShadowScripts") { dependsOn(tasks.jar) }
 
 tasks.test {
     useJUnitPlatform()
