@@ -100,8 +100,8 @@ export function registerPdfIpc(): void {
           }
         })
 
-        java.on('error', async (error) => {
-          console.error('❌ [Preview] Java spawn error:', error)
+        proc.on('error', async (error: Error) => {
+          console.error('❌ [Preview] CLI spawn error:', error)
           await fs.unlink(templateFile).catch(() => {})
           await fs.unlink(dataFile).catch(() => {})
           await fs.unlink(pdfFile).catch(() => {})
@@ -188,7 +188,7 @@ export function registerPdfIpc(): void {
           }
         })
 
-        java.on('error', async () => {
+        proc.on('error', async () => {
           await fs.unlink(templateFile).catch(() => {})
           await fs.unlink(dataFile).catch(() => {})
           await fs.unlink(pdfFile).catch(() => {})
