@@ -5,23 +5,26 @@ import { getFontFamily } from '../types'
 interface ListElementRendererProps {
   element: Element
   effectiveWidth?: number | string
-  isSelected: boolean
-  testData: Record<string, unknown> | null
-  onMouseDown: () => void
+  isSelected?: boolean
+  testData?: Record<string, unknown> | null
+  onMouseDown?: (e?: React.MouseEvent) => void
 }
 
 export function ListElementRenderer({
   element,
   effectiveWidth,
-  isSelected,
-  testData,
-  onMouseDown,
+  isSelected = false,
+  testData = null,
+  onMouseDown = () => {},
 }: ListElementRendererProps) {
   const style = (element.style || {}) as Record<string, unknown>
   const fontSize = typeof style.fontSize === 'number' ? style.fontSize : 12
   const fontFamily = getFontFamily(style.fontFamily)
-  const color = style.color || '#000000'
-  const backgroundColor = style.backgroundColor || 'transparent'
+  const color = (style.color as string) || '#000000'
+  const backgroundColor =
+    (style.backgroundColor as string) ||
+    (style.fillColor as string) ||
+    'transparent'
   const itemSpacing = typeof element.itemSpacing === 'number' ? element.itemSpacing : 6
   const paddingLeft = typeof style.paddingLeft === 'number' ? style.paddingLeft : 0
   const paddingRight = typeof style.paddingRight === 'number' ? style.paddingRight : 0
@@ -36,7 +39,9 @@ export function ListElementRenderer({
     ? `${elementWidth}px`
     : (elementWidth || '300px')
 
-  const heightCss = typeof element.height === 'number'
+  const heightCss = element.height === '100%'
+    ? '100%'
+    : typeof element.height === 'number'
     ? `${element.height}px`
     : (element.height || 'auto')
 
@@ -54,6 +59,7 @@ export function ListElementRenderer({
     color,
     display: 'flex',
     flexDirection: 'column',
+    boxSizing: 'border-box',
     overflow: 'hidden',
     userSelect: 'none',
   }
@@ -65,7 +71,13 @@ export function ListElementRenderer({
       ['Terceira tarefa aprovada', true],
     ]
 
-    if (element.dataBinding && testData && typeof testData[element.dataBinding] === 'object' && testData[element.dataBinding] !== null) {
+    if (element.items && typeof element.items === 'object') {
+      if (Array.isArray(element.items)) {
+        tasks = (element.items as unknown[]).map((it) => [String(it), false])
+      } else {
+        tasks = Object.entries(element.items as Record<string, unknown>).map(([key, val]) => [key, Boolean(val)])
+      }
+    } else if (element.dataBinding && testData && typeof testData[element.dataBinding] === 'object' && testData[element.dataBinding] !== null) {
       const bindingData = testData[element.dataBinding] as Record<string, unknown>
       tasks = Object.entries(bindingData).map(([key, val]) => [key, Boolean(val)])
     }
@@ -129,15 +141,18 @@ export function ListElementRenderer({
 
   // List Element
   let items: string[] = ['Primeiro item da lista', 'Segundo item com detalhamento', 'Terceiro item de exemplo']
-  if (element.dataBinding && testData && Array.isArray(testData[element.dataBinding])) {
+  if (Array.isArray(element.items) && element.items.length > 0) {
+    items = (element.items as unknown[]).map((it) => String(it))
+  } else if (element.dataBinding && testData && Array.isArray(testData[element.dataBinding])) {
     items = (testData[element.dataBinding] as unknown[]).map((it) => String(it))
   }
 
   const listMode = (element.listStyle as string) || 'BULLETED'
+  const startNumber = typeof element.startNumber === 'number' ? element.startNumber : 1
   const getPrefix = (idx: number): string => {
     switch (listMode) {
       case 'NUMBERED':
-        return `${idx + 1}. `
+        return `${startNumber + idx}. `
       case 'BULLETED':
         return '• '
       case 'START':

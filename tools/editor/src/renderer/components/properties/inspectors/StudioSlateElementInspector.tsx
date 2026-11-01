@@ -240,7 +240,11 @@ export function StudioSlateElementInspector(props: ElementInspectorProps) {
         )}
 
         {(element.type === 'list' || element.type === 'check_list') && (
-          <ListPropertiesSection element={element} onUpdate={onUpdate} />
+          <ListPropertiesSection
+            element={element}
+            onUpdate={onUpdate}
+            onStyleUpdate={onStyleUpdate}
+          />
         )}
 
         {/* 6. Appearance Section (Não exibido para Page Break) */}

@@ -96,4 +96,41 @@ describe('ListElementRenderer', () => {
     fireEvent.mouseDown(container.firstElementChild!)
     expect(handleMouseDown).toHaveBeenCalledTimes(1)
   })
+
+  it('renders custom static items and background color', () => {
+    const element: Element = {
+      id: 'list-3',
+      type: 'list',
+      x: 0,
+      y: 0,
+      width: 250,
+      height: 80,
+      listStyle: 'NUMBERED',
+      startNumber: 5,
+      items: ['teste 1', 'teste 2', 'teste 3'],
+      style: {
+        backgroundColor: '#f1f5f9',
+      },
+    }
+
+    const { container } = render(
+      <ListElementRenderer
+        element={element}
+        isSelected={false}
+        testData={null}
+      />
+    )
+
+    expect(screen.getByText('teste 1')).toBeDefined()
+    expect(screen.getByText('teste 2')).toBeDefined()
+    expect(screen.getByText('teste 3')).toBeDefined()
+    expect(screen.getByText('5.')).toBeDefined()
+    expect(screen.getByText('6.')).toBeDefined()
+    expect(screen.getByText('7.')).toBeDefined()
+
+    const el = container.firstElementChild as HTMLElement
+    expect(el.style.backgroundColor).toBe('rgb(241, 245, 249)')
+    expect(el.style.width).toBe('250px')
+    expect(el.style.height).toBe('80px')
+  })
 })

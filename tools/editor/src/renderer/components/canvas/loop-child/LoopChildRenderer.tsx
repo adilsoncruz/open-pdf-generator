@@ -2,6 +2,7 @@ import React from 'react'
 import { useTemplateStore, type Element } from '../../../store/templateStore'
 import { resolveChildDisplayText } from './childDisplayText'
 import { ContainerChildTableRenderer } from '../elements/ContainerChildTableRenderer'
+import { ListElementRenderer } from '../elements/ListElementRenderer'
 
 export interface LoopChildRendererProps {
   child: Element
@@ -148,6 +149,24 @@ export function LoopChildRenderer({
     }
     case 'table':
       return <ContainerChildTableRenderer child={child} containerWidth={loopWidth} />
+    case 'list':
+    case 'check_list': {
+      const listW = child.width ? resolveWidth(child.width) : undefined
+      const listH = child.height ? resolveHeight(child.height) : undefined
+      return (
+        <ListElementRenderer
+          element={{
+            ...child,
+            width: listW ?? child.width,
+            height: listH ?? child.height,
+          }}
+          effectiveWidth={listW}
+          isSelected={false}
+          testData={testData}
+          onMouseDown={() => {}}
+        />
+      )
+    }
     case 'container': {
       const contW = resolveWidth(child.width || '100%')
       const contH = resolveHeight(child.height || 60)

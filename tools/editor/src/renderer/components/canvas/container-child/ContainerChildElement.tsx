@@ -22,8 +22,15 @@ export function ContainerChildElement(props: ContainerChildElementProps) {
         top: child.height === '100%' ? 0 : effectiveY !== undefined ? effectiveY : child.y || 0,
         ...(child.width === '100%'
           ? { width: '100%' }
+          : typeof child.width === 'number'
+          ? { width: child.width }
           : effectiveWidth !== undefined && !child.width
           ? { width: effectiveWidth }
+          : {}),
+        ...(child.height === '100%'
+          ? { height: '100%' }
+          : typeof child.height === 'number'
+          ? { height: child.height }
           : {}),
       }}
       onMouseDown={handleMouseDown}
