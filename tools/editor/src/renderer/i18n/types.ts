@@ -128,6 +128,8 @@ export interface Translations {
     richText: string
     link: string
     container: string
+    list: string
+    checkList: string
   }
 
   // Data Panel

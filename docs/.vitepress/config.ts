@@ -71,7 +71,9 @@ const en = {
             { text: 'Line', link: '/lib/guide/elements/line' },
             { text: 'Barcode', link: '/lib/guide/elements/barcode' },
             { text: 'Loop', link: '/lib/guide/elements/loop' },
-            { text: 'Conditional', link: '/lib/guide/elements/conditional' }
+            { text: 'Conditional', link: '/lib/guide/elements/conditional' },
+            { text: 'List', link: '/lib/guide/elements/list' },
+            { text: 'Checklist', link: '/lib/guide/elements/check-list' }
           ]
         },
         {
@@ -190,7 +192,9 @@ const pt = {
             { text: 'Line', link: '/pt/lib/guide/elements/line' },
             { text: 'Barcode', link: '/pt/lib/guide/elements/barcode' },
             { text: 'Loop', link: '/pt/lib/guide/elements/loop' },
-            { text: 'Conditional', link: '/pt/lib/guide/elements/conditional' }
+            { text: 'Conditional', link: '/pt/lib/guide/elements/conditional' },
+            { text: 'Lista', link: '/pt/lib/guide/elements/list' },
+            { text: 'Checklist', link: '/pt/lib/guide/elements/check-list' }
           ]
         },
         {
@@ -316,7 +320,9 @@ const es = {
             { text: 'Line', link: '/es/lib/guide/elements/line' },
             { text: 'Barcode', link: '/es/lib/guide/elements/barcode' },
             { text: 'Loop', link: '/es/lib/guide/elements/loop' },
-            { text: 'Conditional', link: '/es/lib/guide/elements/conditional' }
+            { text: 'Conditional', link: '/es/lib/guide/elements/conditional' },
+            { text: 'Lista', link: '/es/lib/guide/elements/list' },
+            { text: 'Checklist', link: '/es/lib/guide/elements/check-list' }
           ]
         },
         {

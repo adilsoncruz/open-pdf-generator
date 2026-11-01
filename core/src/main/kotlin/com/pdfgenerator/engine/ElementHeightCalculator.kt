@@ -1,13 +1,16 @@
 package com.pdfgenerator.engine
 
+import com.pdfgenerator.adapter.openpdf.ListItemLayout
 import com.pdfgenerator.adapter.openpdf.TextRenderer
 import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.CheckListElement
 import com.pdfgenerator.model.ConditionalElement
 import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LinkElement
+import com.pdfgenerator.model.ListElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.RectangleElement
@@ -81,11 +84,51 @@ object ElementHeightCalculator {
                 element.elements.maxOfOrNull { getElementHeight(it, data, context) } ?: 0f
             }
             is ContainerElement -> ContainerHeightCalculator.calculateContainerHeight(element, data, context)
+            is ListElement -> measureListHeight(element, data)
+            is CheckListElement -> measureCheckListHeight(element, data)
             is PageBreakElement -> 0f
             is SpacerElement -> element.height
             else -> 0f
         }
     }
+
+    private fun measureListHeight(
+        element: ListElement,
+        data: Map<String, Any?>,
+    ): Float {
+        val items = DataBindingResolver.resolve(element.dataBinding, data, null) as? List<*> ?: return 0f
+        if (items.isEmpty()) return 0f
+        val style = element.style
+        val rowStyle = ListItemLayout.rowStyle(style)
+        val contentWidth = elementContentWidth(element.width, style?.paddingLeft ?: 0f, style?.paddingRight ?: 0f)
+        val contentHeight =
+            items.sumOf { item ->
+                (ListItemLayout.contentHeight(item?.toString() ?: "", contentWidth, rowStyle) + element.itemSpacing).toDouble()
+            }.toFloat() - element.itemSpacing
+        return contentHeight + (style?.paddingTop ?: 0f) + (style?.paddingBottom ?: 0f)
+    }
+
+    private fun measureCheckListHeight(
+        element: CheckListElement,
+        data: Map<String, Any?>,
+    ): Float {
+        val items = DataBindingResolver.resolve(element.dataBinding, data, null) as? Map<*, *> ?: return 0f
+        if (items.isEmpty()) return 0f
+        val style = element.style
+        val rowStyle = ListItemLayout.rowStyle(style)
+        val contentWidth = elementContentWidth(element.width, style?.paddingLeft ?: 0f, style?.paddingRight ?: 0f)
+        val contentHeight =
+            items.keys.sumOf { key ->
+                (ListItemLayout.contentHeight(key?.toString() ?: "", contentWidth, rowStyle) + element.itemSpacing).toDouble()
+            }.toFloat() - element.itemSpacing
+        return contentHeight + (style?.paddingTop ?: 0f) + (style?.paddingBottom ?: 0f)
+    }
+
+    private fun elementContentWidth(
+        width: Float,
+        paddingLeft: Float,
+        paddingRight: Float,
+    ): Float = kotlin.math.max(10f, width - paddingLeft - paddingRight)
 
     private fun measureTextHeight(
         elementId: String,

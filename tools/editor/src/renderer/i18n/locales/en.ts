@@ -226,6 +226,8 @@ const en: Translations = {
     richText: 'Rich Text',
     link: 'Link',
     container: 'Container',
+    list: 'List',
+    checkList: 'Checklist',
   },
 
   dataPanel: {

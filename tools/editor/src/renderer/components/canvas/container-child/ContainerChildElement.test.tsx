@@ -164,4 +164,33 @@ describe('ContainerChildElement component', () => {
       })
     )
   })
+
+  it('renders list element with items and background inside container', () => {
+    const listChild: Element = {
+      id: 'child-list-1',
+      type: 'list',
+      x: 10,
+      y: 10,
+      width: 280,
+      height: 70,
+      listStyle: 'BULLETED',
+      items: ['teste 1', 'teste 2', 'teste 3'],
+      style: {
+        backgroundColor: '#f1f5f9',
+      },
+    }
+
+    render(
+      <ContainerChildElement
+        child={listChild}
+        containerId="cont-1"
+        containerWidth={400}
+        containerHeight={200}
+      />
+    )
+
+    expect(screen.getByText('teste 1')).toBeInTheDocument()
+    expect(screen.getByText('teste 2')).toBeInTheDocument()
+    expect(screen.getByText('teste 3')).toBeInTheDocument()
+  })
 })

@@ -20,7 +20,7 @@ export function TypographySection({
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(true)
 
-  const isTextElement = ['text', 'rich_text', 'link', 'static_text'].includes(element.type)
+  const isTextElement = ['text', 'rich_text', 'link', 'static_text', 'list', 'check_list'].includes(element.type)
   if (!isTextElement) {
     return null
   }

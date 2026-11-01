@@ -226,6 +226,8 @@ const es: Translations = {
     richText: 'Texto Enriquecido',
     link: 'Enlace',
     container: 'Contenedor',
+    list: 'Lista',
+    checkList: 'Lista de Verificación',
   },
 
   dataPanel: {

@@ -524,6 +524,29 @@ class TemplateBuilderTest {
         }
 
         @Test
+        fun `should add list and checklist elements`() {
+            val template =
+                TemplateBuilder()
+                    .addList {
+                        id = "list1"
+                        x = 50f
+                        y = 100f
+                        dataBinding = "items"
+                    }
+                    .addCheckList {
+                        id = "chk1"
+                        x = 50f
+                        y = 200f
+                        dataBinding = "tasks"
+                    }
+                    .build()
+
+            assertEquals(2, template.bodyElements().size)
+            assertEquals("list", template.bodyElements()[0].type)
+            assertEquals("check_list", template.bodyElements()[1].type)
+        }
+
+        @Test
         fun `should chain builder methods fluently`() {
             val template =
                 TemplateBuilder()

@@ -53,6 +53,8 @@ class ElementDeserializer : JsonDeserializer<Element> {
             "spacer" -> gson.fromJson(json, SpacerElement::class.java)
             "rich_text", "richText" -> gson.fromJson(json, RichTextElement::class.java)
             "link" -> gson.fromJson(json, LinkElement::class.java)
+            "list" -> gson.fromJson(json, ListElement::class.java)
+            "check_list", "checkList" -> gson.fromJson(json, CheckListElement::class.java)
             else -> throw IllegalArgumentException("Unknown element type: $type")
         }
     }

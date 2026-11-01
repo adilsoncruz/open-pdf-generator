@@ -4,6 +4,7 @@ import type { ElementLocation } from '../../../store/templateStore/types'
 import type { GuideLine } from '../snapping'
 import { ContainerChildTableRenderer } from '../elements/ContainerChildTableRenderer'
 import { ContainerChildLoopRenderer } from './ContainerChildLoopRenderer'
+import { ListElementRenderer } from '../elements/ListElementRenderer'
 import { resolveChildDisplayText } from './childDisplayText'
 
 export interface ContainerChildRendererProps {
@@ -184,6 +185,24 @@ export function ContainerChildRenderer({
       )
     case 'table':
       return <ContainerChildTableRenderer child={child} containerWidth={containerWidth} />
+    case 'list':
+    case 'check_list': {
+      const listW = child.width ? resolveWidth(child.width) : undefined
+      const listH = child.height ? resolveHeight(child.height) : undefined
+      return (
+        <ListElementRenderer
+          element={{
+            ...child,
+            width: listW ?? child.width,
+            height: listH ?? child.height,
+          }}
+          effectiveWidth={listW}
+          isSelected={false}
+          testData={testData}
+          onMouseDown={() => {}}
+        />
+      )
+    }
     case 'barcode': {
       const barcodeType = ((child.barcodeType as string) || 'qrcode').toLowerCase()
       const is2D =

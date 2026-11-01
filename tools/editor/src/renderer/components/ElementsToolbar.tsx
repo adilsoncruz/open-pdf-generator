@@ -15,6 +15,8 @@ const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
   { type: 'spacer', label: 'Spacer', icon: 'spacer' },
   { type: 'rich_text', label: 'Rich Text', icon: 'markdown' },
   { type: 'link', label: 'Link', icon: 'link' },
+  { type: 'list', label: 'List', icon: 'list' },
+  { type: 'check_list', label: 'Checklist', icon: 'check-square' },
 ]
 
 export default function ElementsToolbar() {
@@ -35,6 +37,8 @@ export default function ElementsToolbar() {
     rich_text: t.elements.richText,
     link: t.elements.link,
     container: t.elements.container,
+    list: t.elements.list,
+    check_list: t.elements.checkList,
   }
 
   const handleAddElement = (type: string) => {
@@ -221,6 +225,36 @@ export default function ElementsToolbar() {
             borderColor: '#0ea5e9',
             borderWidth: 1,
             borderStyle: 'dashed',
+          },
+        }
+        break
+      case 'list':
+        element = {
+          ...baseElement,
+          width: 300,
+          height: 60,
+          dataBinding: 'items',
+          listStyle: 'BULLETED',
+          itemSpacing: 10,
+          style: {
+            fontSize: 12,
+            fontFamily: 'Helvetica',
+            color: '#000000',
+          },
+        }
+        break
+      case 'check_list':
+        element = {
+          ...baseElement,
+          width: 300,
+          height: 60,
+          dataBinding: 'tasks',
+          checkStyle: 'RECTANGLE',
+          itemSpacing: 0,
+          style: {
+            fontSize: 12,
+            fontFamily: 'Helvetica',
+            color: '#000000',
           },
         }
         break

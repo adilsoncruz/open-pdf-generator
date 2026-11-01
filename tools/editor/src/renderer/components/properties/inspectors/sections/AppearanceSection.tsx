@@ -9,11 +9,12 @@ interface AppearanceSectionProps {
 export function AppearanceSection({ element, onStyleUpdate }: AppearanceSectionProps) {
   const { t } = useTranslation()
   const isTextElement = ['text', 'rich_text', 'link', 'static_text'].includes(element.type)
-  const isShapeOrContainer = ['rectangle', 'circle', 'container', 'loop'].includes(element.type)
+  const isShapeOrContainer = ['rectangle', 'circle', 'container', 'loop', 'list', 'check_list'].includes(element.type)
+  const isTransparentByDefault = ['container', 'loop', 'list', 'check_list'].includes(element.type)
   const rawFillColor = String(
     isTextElement
       ? (element.style?.color || '#000000')
-      : (element.style?.fillColor || element.style?.backgroundColor || (element.type === 'container' || element.type === 'loop' ? 'transparent' : '#ffffff'))
+      : (element.style?.fillColor || element.style?.backgroundColor || (isTransparentByDefault ? 'transparent' : '#ffffff'))
   )
   const isFillTransparent = !isTextElement && (!rawFillColor || rawFillColor.toLowerCase() === 'transparent')
   const fillColor = isFillTransparent ? '#ffffff' : rawFillColor

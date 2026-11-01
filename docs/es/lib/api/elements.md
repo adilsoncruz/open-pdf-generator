@@ -21,6 +21,8 @@ Referencia completa de todos los elementos disponibles para las plantillas.
 | [BarcodeElement](#barcodeelement) | Códigos QR y códigos de barras | ✅ |
 | [ConditionalElement](#conditionalelement) | Renderizado condicional | ✅ |
 | [LoopElement](#loopelement) | Repetición de elementos | ✅ |
+| [ListElement](#listelement) | Listas con viñetas o numeradas | ✅ |
+| [CheckListElement](#checklistelement) | Listas de verificación con casillas | ✅ |
 
 ---
 
@@ -541,6 +543,75 @@ Fuerza un salto de página explícito.
   "id": "break-1"
 }
 ```
+
+---
+
+## ListElement
+
+Renderiza listas con viñetas, numeradas o personalizadas con soporte para flujo multipágina y ajuste automático.
+
+### Propiedades
+
+```json
+{
+  "type": "list",
+  "id": "caracteristicas-list",
+  "x": 40,
+  "y": 150,
+  "width": 500,
+  "dataBinding": "caracteristicas",
+  "listStyle": "BULLETED",
+  "itemSpacing": 8,
+  "style": {
+    "fontSize": 11,
+    "fontFamily": "Helvetica",
+    "color": "#1e293b"
+  }
+}
+```
+
+| Propiedad | Tipo | Por defecto | Descripción |
+|-----------|------|-------------|-------------|
+| `dataBinding` | string | `""` | Ruta al arreglo en los datos |
+| `items` | array | `[]` | Arreglo de cadenas estáticas (fallback) |
+| `listStyle` | string | `"BULLETED"` | `"BULLETED"`, `"NUMBERED"`, `"START"`, `"DASH"`, `"DIAMOND"` |
+| `startNumber` | number | `1` | Número inicial para listas numeradas |
+| `itemSpacing` | number | `10` | Espacio vertical entre elementos en puntos |
+| `startY` | number | `null` | Desplazamiento vertical inicial opcional |
+
+---
+
+## CheckListElement
+
+Renderiza listas de tareas con casillas de verificación configurables (`RECTANGLE`, `BORDERED`, `CIRCLE`).
+
+### Propiedades
+
+```json
+{
+  "type": "check_list",
+  "id": "tareas-checklist",
+  "x": 40,
+  "y": 280,
+  "width": 500,
+  "dataBinding": "tareas",
+  "checkStyle": "BORDERED",
+  "itemSpacing": 4,
+  "style": {
+    "fontSize": 11,
+    "fontFamily": "Helvetica",
+    "color": "#0f172a"
+  }
+}
+```
+
+| Propiedad | Tipo | Por defecto | Descripción |
+|-----------|------|-------------|-------------|
+| `dataBinding` | string | `""` | Ruta al mapa `{ "Etiqueta": boolean }` |
+| `items` | object | `{}` | Mapa estático de tareas `{ "Tarea": true }` |
+| `checkStyle` | string | `"RECTANGLE"` | `"RECTANGLE"`, `"BORDERED"`, `"CIRCLE"` |
+| `itemSpacing` | number | `0` | Espacio vertical entre tareas en puntos |
+| `startY` | number | `null` | Desplazamiento vertical inicial opcional |
 
 ---
 

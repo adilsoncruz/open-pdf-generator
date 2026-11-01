@@ -7,6 +7,7 @@ import { MediaElementRenderer } from '../elements/MediaElementRenderer'
 import { TableElementRenderer } from '../elements/TableElementRenderer'
 import { LoopElementRenderer } from '../elements/LoopElementRenderer'
 import { ContainerElementRenderer } from '../elements/ContainerElementRenderer'
+import { ListElementRenderer } from '../elements/ListElementRenderer'
 import { resolveDisplayText } from './resolveDisplayText'
 
 export interface CanvasElementContentProps {
@@ -81,6 +82,18 @@ export function CanvasElementContent({
           onTextBlur={onTextBlur}
           onTextKeyDown={onTextKeyDown}
           resolveDisplayText={resolveText}
+        />
+      )
+
+    case 'list':
+    case 'check_list':
+      return (
+        <ListElementRenderer
+          element={element}
+          effectiveWidth={effectiveWidth}
+          isSelected={isSelected}
+          testData={testData}
+          onMouseDown={onMouseDown}
         />
       )
 

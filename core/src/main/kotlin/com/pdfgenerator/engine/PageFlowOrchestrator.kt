@@ -3,10 +3,12 @@ package com.pdfgenerator.engine
 import com.pdfgenerator.api.PDFGenerationException
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.model.BarcodeElement
+import com.pdfgenerator.model.CheckListElement
 import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.LinkElement
+import com.pdfgenerator.model.ListElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.PositionMode
@@ -262,6 +264,8 @@ class PageFlowOrchestrator(
                 is PageBreakElement -> element.printCondition
                 is RichTextElement -> element.printCondition
                 is LinkElement -> element.printCondition
+                is ListElement -> element.printCondition
+                is CheckListElement -> element.printCondition
                 else -> null
             }
 

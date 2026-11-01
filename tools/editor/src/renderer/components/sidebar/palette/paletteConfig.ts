@@ -15,6 +15,8 @@ import {
   LineIcon,
   QrCodeIcon,
   BarcodeIcon,
+  ListPaletteIcon,
+  CheckListPaletteIcon,
 } from './paletteIcons'
 
 export interface PaletteItemConfig {
@@ -96,6 +98,34 @@ export const PALETTE_CATEGORIES: PaletteCategory[] = [
           makeElement('link', 'link', {
             value: 'Clique aqui', url: 'https://exemplo.com', x: 40, y: 40, width: 140, height: 25,
             style: { fontSize: 12, fontFamily: 'Helvetica', color: '#3b82f6' },
+          }),
+      },
+      {
+        id: 'list',
+        type: 'list',
+        label: 'List',
+        title: 'Lista com Marcadores',
+        keywords: ['list', 'lista', 'bullet', 'bulleted', 'numbered', 'numerada'],
+        icon: ListPaletteIcon,
+        createElement: () =>
+          makeElement('list', 'list', {
+            x: 40, y: 40, width: 300, height: 60, dataBinding: 'items',
+            listStyle: 'BULLETED', itemSpacing: 10,
+            style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' },
+          }),
+      },
+      {
+        id: 'check_list',
+        type: 'check_list',
+        label: 'Checklist',
+        title: 'Lista de Verificação (Checklist)',
+        keywords: ['check', 'checklist', 'tarefas', 'checkbox', 'tasks'],
+        icon: CheckListPaletteIcon,
+        createElement: () =>
+          makeElement('check_list', 'check_list', {
+            x: 40, y: 40, width: 300, height: 60, dataBinding: 'tasks',
+            checkStyle: 'RECTANGLE', itemSpacing: 0,
+            style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' },
           }),
       },
     ],
