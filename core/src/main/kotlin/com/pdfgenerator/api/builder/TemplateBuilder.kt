@@ -2,11 +2,15 @@ package com.pdfgenerator.api.builder
 
 import com.pdfgenerator.model.BarcodeElement
 import com.pdfgenerator.model.BarcodeStyle
+import com.pdfgenerator.model.CheckListElement
+import com.pdfgenerator.model.CheckStyle
 import com.pdfgenerator.model.CustomSize
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LineStyle
+import com.pdfgenerator.model.ListElement
+import com.pdfgenerator.model.ListMode
 import com.pdfgenerator.model.Margins
 import com.pdfgenerator.model.PageSettings
 import com.pdfgenerator.model.RectangleElement
@@ -84,6 +88,16 @@ class TemplateBuilder {
     fun addBarcode(block: BarcodeElementBuilder.() -> Unit) =
         apply {
             elements.add(BarcodeElementBuilder().apply(block).build())
+        }
+
+    fun addList(block: ListElementBuilder.() -> Unit) =
+        apply {
+            elements.add(ListElementBuilder().apply(block).build())
+        }
+
+    fun addCheckList(block: CheckListElementBuilder.() -> Unit) =
+        apply {
+            elements.add(CheckListElementBuilder().apply(block).build())
         }
 
     fun build(): Template {
@@ -276,5 +290,63 @@ class BarcodeElementBuilder {
             barcodeType = barcodeType,
             dataBinding = dataBinding,
             style = BarcodeStyle(errorCorrection),
+        )
+}
+
+class ListElementBuilder {
+    var id: String = ""
+    var x: Float = 0f
+    var y: Float = 0f
+    var width: Float = 400f
+    var height: Float = 50f
+    var dataBinding: String = ""
+    var startY: Float? = null
+    var itemSpacing: Float = 10f
+    var listStyle: ListMode? = null
+    var style: TextStyle? = null
+    var printCondition: String? = null
+
+    fun build() =
+        ListElement(
+            id = id,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            dataBinding = dataBinding,
+            startY = startY,
+            itemSpacing = itemSpacing,
+            listStyle = listStyle,
+            style = style,
+            printCondition = printCondition,
+        )
+}
+
+class CheckListElementBuilder {
+    var id: String = ""
+    var x: Float = 0f
+    var y: Float = 0f
+    var width: Float = 400f
+    var height: Float = 50f
+    var dataBinding: String = ""
+    var startY: Float? = null
+    var itemSpacing: Float = 0f
+    var checkStyle: CheckStyle? = CheckStyle.RECTANGLE
+    var style: TextStyle? = null
+    var printCondition: String? = null
+
+    fun build() =
+        CheckListElement(
+            id = id,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            dataBinding = dataBinding,
+            startY = startY,
+            itemSpacing = itemSpacing,
+            checkStyle = checkStyle,
+            style = style,
+            printCondition = printCondition,
         )
 }

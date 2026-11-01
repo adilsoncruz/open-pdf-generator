@@ -21,6 +21,8 @@ Complete reference of all available elements for templates.
 | [BarcodeElement](#barcodeelement) | QR Code and barcodes | ✅ |
 | [ConditionalElement](#conditionalelement) | Conditional rendering | ✅ |
 | [LoopElement](#loopelement) | Element repetition | ✅ |
+| [ListElement](#listelement) | Bulleted or numbered lists | ✅ |
+| [CheckListElement](#checklistelement) | Interactive-style task checklists | ✅ |
 
 ---
 
@@ -541,6 +543,75 @@ Forces an explicit page break.
   "id": "break-1"
 }
 ```
+
+---
+
+## ListElement
+
+Renders bulleted, numbered, or styled lists of items with support for multi-line flow and page splitting.
+
+### Properties
+
+```json
+{
+  "type": "list",
+  "id": "features-list",
+  "x": 40,
+  "y": 150,
+  "width": 500,
+  "dataBinding": "features",
+  "listStyle": "BULLETED",
+  "itemSpacing": 8,
+  "style": {
+    "fontSize": 11,
+    "fontFamily": "Helvetica",
+    "color": "#1e293b"
+  }
+}
+```
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `dataBinding` | string | `""` | Path to array in payload |
+| `items` | array | `[]` | Static string items fallback |
+| `listStyle` | string | `"BULLETED"` | `"BULLETED"`, `"NUMBERED"`, `"START"`, `"DASH"`, `"DIAMOND"` |
+| `startNumber` | number | `1` | Starting index for numbered lists |
+| `itemSpacing` | number | `10` | Vertical space between items in points |
+| `startY` | number | `null` | Optional starting Y offset |
+
+---
+
+## CheckListElement
+
+Renders checklists with customizable checkbox styles (`RECTANGLE`, `BORDERED`, `CIRCLE`).
+
+### Properties
+
+```json
+{
+  "type": "check_list",
+  "id": "tasks-checklist",
+  "x": 40,
+  "y": 280,
+  "width": 500,
+  "dataBinding": "tasks",
+  "checkStyle": "BORDERED",
+  "itemSpacing": 4,
+  "style": {
+    "fontSize": 11,
+    "fontFamily": "Helvetica",
+    "color": "#0f172a"
+  }
+}
+```
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `dataBinding` | string | `""` | Path to map `{ "Label": boolean }` |
+| `items` | object | `{}` | Static task map `{ "Task": true }` |
+| `checkStyle` | string | `"RECTANGLE"` | `"RECTANGLE"`, `"BORDERED"`, `"CIRCLE"` |
+| `itemSpacing` | number | `0` | Vertical space between tasks in points |
+| `startY` | number | `null` | Optional starting Y offset |
 
 ---
 
