@@ -38,11 +38,19 @@ bash benchmark/multi-lang/scripts/run-multi-lang-benchmark.sh openpdf-serve
 
 ## Integration guidance
 
-- Use **`serve`** for per-request PDF APIs: one long-lived container, one NDJSON request per document, no process start-up and no re-parsing of templates.
-- Use the **native binary** when the integration model is one short-lived process per document (`docker run` per call); it still removes the JVM but pays ~10–20 ms of fixed start-up.
-- Use the **JVM CLI** when you need the JAR itself (plugins, custom JVM options) and can keep a warm worker.
-- Native host-language libraries (Maroto, pdfmake) are competitive in-process, but you re-implement layout in each language and lose template portability.
-- Embedding the `core` JAR in a JVM service remains an option (see the [Jasper comparison](/lib/benchmark)).
+- Use **`serve`** for per-request PDF APIs in **Go, Node.js, Python, or Ruby**: one long-lived container, one NDJSON request per document, zero process start-up, and sub-millisecond (~0.6 ms) latency.
+- Use the **native binary** (`exec`) when the integration model is one short-lived process per document (`docker run` per call or CLI cron scripts); it removes the JVM with ~10–15 ms start-up.
+- Use the **Java/Kotlin Core Library** (`open-pdf-generator`) if your backend is already running on the JVM (Spring Boot, Quarkus, Micronaut, Ktor): in-process direct memory access delivers **0.20 ms** streaming latency and **27,000+ docs/sec** under multi-threaded concurrency with zero IPC overhead.
+- Native host-language libraries (Maroto, pdfmake) run in-process, but you re-implement layout in each language, lose template portability, and suffer ~7x–12x lower throughput compared to Open PDF resident serve mode.
+
+### Architecture Decision: Core Library vs Native Binary
+
+| Ecosystem | Recommended Approach | Key Advantage |
+|---|:---:|---|
+| **Java / Kotlin** | **Core Library (`open-pdf-generator`)** | **0.20 ms latency**, **27k docs/sec** under 16 threads, zero IPC serialization. |
+| **Go** | **Native Binary (`serve` mode)** | **9.6x faster than Maroto** (0.60 ms vs 5.74 ms), 5x smaller PDF, zero Java installed. |
+| **Node.js** | **Native Binary (`serve` mode)** | **12.2x faster than pdfmake** (0.57 ms vs 6.95 ms), 30% lower RAM, zero Java installed. |
+| **Python / C# / PHP** | **Native Binary (`serve` or Docker)** | Unified template syntax, sub-millisecond rendering without a JVM dependency. |
 
 ## Scenario: `invoice`
 
