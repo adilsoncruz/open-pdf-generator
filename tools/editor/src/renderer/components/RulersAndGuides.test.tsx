@@ -1,4 +1,4 @@
-import { render, fireEvent, screen } from '@testing-library/react'
+import { render, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { RulersAndGuides, Guide } from './RulersAndGuides'
 

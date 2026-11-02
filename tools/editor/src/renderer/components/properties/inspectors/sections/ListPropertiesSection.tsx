@@ -1,5 +1,4 @@
 import React from 'react'
-import type { ElementInspectorProps } from '../../types'
 
 type ListPropertiesSectionProps = {
   element: Element
