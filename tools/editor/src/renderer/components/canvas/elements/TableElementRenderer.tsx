@@ -1,7 +1,6 @@
 import React, { type MouseEvent as ReactMouseEvent } from 'react'
 import type { Element } from '../../../store/templateStore'
 import { getHeaderBorderValues, getCellBorderValues } from '../types'
-import { processExpression, hasTransformations } from '../../../utils/expressionProcessor'
 
 interface TableElementRendererProps {
   element: Element

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useI18nStore, AVAILABLE_LANGUAGES, LOCALES, detectSystemLanguage } from './index'
-import type { LanguageCode } from './index'
 
 describe('Internationalization (i18n)', () => {
   beforeEach(() => {

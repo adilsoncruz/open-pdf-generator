@@ -25,6 +25,10 @@ export default [
       "unused-imports": unusedImports,
     },
     rules: {
+      "no-undef": "off",
+      "no-unused-vars": "off",
+      "no-useless-assignment": "off",
+      "no-useless-escape": "off",
       "react/react-in-jsx-scope": "off",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
