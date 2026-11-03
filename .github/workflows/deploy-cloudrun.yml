@@ -2,13 +2,6 @@ name: Deploy Playground API to Google Cloud Run
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'tools/playground-api/**'
-      - 'tools/cli/**'
-      - 'core/**'
 
 permissions:
   contents: read
