@@ -167,7 +167,7 @@ Open PDF Generator includes built-in JSON Schema validation (Draft-07 & 2020-12)
 | **Concurrency Scaling** | Linear lock-free thread scaling | Sublinear (internal lock contention) |
 | **Dependencies** | Modern OpenPDF 2.x, Gson, ZXing | Legacy Commons (BeanUtils, Digester, Collections), ECJ |
 | **Visual Template Editor** | Modern Electron desktop app with Studio Slate | Legacy Eclipse-based Jaspersoft Studio |
-| **License** | Open Source (LGPL-3.0) | LGPL / Commercial licenses |
+| **License** | Open Source (AGPL-3.0) | LGPL / Commercial licenses |
 
 ---
 

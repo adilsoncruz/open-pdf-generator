@@ -55,7 +55,7 @@ Você define a estrutura, a geometria e o estilo do documento em um formato JSON
 | **Formato de Template** | **JSON** declarativo | **JRXML / XML** complexo | **Jackson XML** mais rígido | Amigável ao Git, sem compilação |
 | **Designer Visual** | ✅ Open PDF Studio | ✅ Jaspersoft Studio | ✅ Jaspersoft Studio | UI moderna em Electron/React |
 | **API de Streaming** | ✅ `OutputStream` direto | ⚠️ Exige buffer em memória | ⚠️ Exige buffer em memória | Byte stream zero-copy |
-| **Licença** | **LGPL-3.0** *(Grátis, uso comercial OK)* | LGPL-3.0 / Comercial | LGPL-3.0 / Comercial | Mesma liberdade |
+| **Licença** | **AGPL-3.0** *(Grátis, Copyleft)* | LGPL-3.0 / Comercial | LGPL-3.0 / Comercial | Proteção Copyleft |
 
 > 📊 **Explore as Evidências Completas:** Veja benchmarks JMH, resultados de estresse em containers com cgroup e análise de custos FinOps na nuvem em nosso [Relatório de Benchmark](/lib/benchmark).
 
