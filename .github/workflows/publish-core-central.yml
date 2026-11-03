@@ -30,6 +30,20 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Inspect GPG key format (sanitized)
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          python3 -c "
+          import os
+          k = os.environ.get('SIGNING_KEY', '')
+          print('Key length:', len(k))
+          print('Key starts with BEGIN:', '-----BEGIN PGP PRIVATE KEY BLOCK-----' in k)
+          print('Key ends with END:', '-----END PGP PRIVATE KEY BLOCK-----' in k)
+          print('Lines count:', len(k.splitlines()))
+          print('First line:', k.splitlines()[0] if k.splitlines() else 'EMPTY')
+          "
+
       - name: Publish to Maven Central Portal
         working-directory: core
         env:
