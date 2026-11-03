@@ -86,7 +86,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.adilsoncruz:open-pdf-generator:1.0.0")
+    implementation("io.github.adilsoncruz:open-pdf-generator:1.0.0")
 }
 ```
 

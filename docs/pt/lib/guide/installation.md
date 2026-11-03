@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.adilsoncruz:open-pdf-generator:1.0.0")
+    implementation("io.github.adilsoncruz:open-pdf-generator:1.0.0")
 }
 ```
 
@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.adilsoncruz:open-pdf-generator:1.0.0'
+    implementation 'io.github.adilsoncruz:open-pdf-generator:1.0.0'
 }
 ```
 
@@ -46,7 +46,7 @@ dependencies {
 
 <dependencies>
     <dependency>
-        <groupId>com.github.adilsoncruz</groupId>
+        <groupId>io.github.adilsoncruz</groupId>
         <artifactId>open-pdf-generator</artifactId>
         <version>1.0.0</version>
     </dependency>
@@ -65,7 +65,7 @@ dependencies {
 Para usar a versão mais recente do branch `main`:
 
 ```kotlin
-implementation("com.github.adilsoncruz:open-pdf-generator:main")
+implementation("io.github.adilsoncruz:open-pdf-generator:main")
 ```
 :::
 

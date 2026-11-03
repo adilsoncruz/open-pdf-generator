@@ -133,9 +133,19 @@ jobs:
             
             ```kotlin
             // Gradle (Kotlin DSL)
-            implementation("com.github.adilsoncruz:open-pdf-generator:${{ steps.version.outputs.version }}")
+            implementation("io.github.adilsoncruz:open-pdf-generator:${{ steps.version.outputs.version }}")
             ```
           generate_release_notes: true
+
+      - name: Publish to Maven Central Portal
+        if: steps.snapshot.outputs.skip == 'false'
+        working-directory: core
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: ./gradlew publishAggregationToCentralPortal
 
   # =========================
   # Release: CLI (Gradle)

@@ -1,19 +1,19 @@
 plugins {
     kotlin("jvm") version "2.1.10"
     `maven-publish`
+    signing
     id("java-library")
     jacoco
     id("io.gitlab.arturbosch.detekt") version "1.23.5"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
 
-group = "com.pdfgenerator"
+group = "io.github.adilsoncruz"
 version = "1.0.1"
 
 repositories {
     mavenCentral()
     mavenLocal()
-    maven { url = uri("$projectDir/maven-repo") }
 }
 
 dependencies {
@@ -160,7 +160,7 @@ java {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            groupId = "com.github.adilsoncruz"
+            groupId = "io.github.adilsoncruz"
             artifactId = "open-pdf-generator"
             version = project.version.toString()
 
@@ -192,6 +192,15 @@ publishing {
                 }
             }
         }
+    }
+}
+
+signing {
+    val signingKey = findProperty("signingKey") as String? ?: System.getenv("SIGNING_KEY")
+    val signingPassword = findProperty("signingPassword") as String? ?: System.getenv("SIGNING_PASSWORD")
+    if (!signingKey.isNullOrBlank()) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign(publishing.publications["maven"])
     }
 }
 
