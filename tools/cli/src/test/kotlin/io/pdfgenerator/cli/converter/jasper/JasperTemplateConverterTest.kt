@@ -1,11 +1,15 @@
 package io.pdfgenerator.cli.converter.jasper
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
+import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.StaticTextElement
+import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TextElement
+import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class JasperTemplateConverterTest {
@@ -227,5 +231,221 @@ class JasperTemplateConverterTest {
 
         val image = assertIs<ImageElement>(elements[5])
         assertEquals("logoPath", image.dataBinding)
+    }
+
+    @Test
+    fun `should convert tabular columnHeader and detail to TableElement`() {
+        val jrxml =
+            """
+            <jasperReport name="orders" pageWidth="595" pageHeight="842" topMargin="20" leftMargin="20" rightMargin="20" bottomMargin="20">
+                <title>
+                    <band height="30">
+                        <staticText>
+                            <reportElement x="0" y="0" width="200" height="25"/>
+                            <text><![CDATA[Orders Report]]></text>
+                        </staticText>
+                    </band>
+                </title>
+                <columnHeader>
+                    <band height="20">
+                        <rectangle>
+                            <reportElement x="0" y="0" width="500" height="20" backcolor="#1E293B" forecolor="#0F172A"/>
+                        </rectangle>
+                        <staticText>
+                            <reportElement x="10" y="2" width="100" height="16" forecolor="#FFFFFF"/>
+                            <textElement textAlignment="Left"/>
+                            <text><![CDATA[Item Code]]></text>
+                        </staticText>
+                        <staticText>
+                            <reportElement x="120" y="2" width="250" height="16" forecolor="#FFFFFF"/>
+                            <textElement textAlignment="Left"/>
+                            <text><![CDATA[Description]]></text>
+                        </staticText>
+                        <staticText>
+                            <reportElement x="380" y="2" width="100" height="16" forecolor="#FFFFFF"/>
+                            <textElement textAlignment="Right"/>
+                            <text><![CDATA[Total]]></text>
+                        </staticText>
+                    </band>
+                </columnHeader>
+                <detail>
+                    <band height="18">
+                        <textField>
+                            <reportElement x="10" y="1" width="100" height="16"/>
+                            <textFieldExpression><![CDATA[${'$'}F{code}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="120" y="1" width="250" height="16"/>
+                            <textFieldExpression><![CDATA[${'$'}F{description}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="380" y="1" width="100" height="16"/>
+                            <textElement textAlignment="Right"/>
+                            <textFieldExpression><![CDATA[${'$'}F{total}]]></textFieldExpression>
+                        </textField>
+                    </band>
+                </detail>
+            </jasperReport>
+            """.trimIndent()
+
+        val template = JasperTemplateConverter.fromString(
+            jrxml,
+            JasperConversionOptions(defaultItemsBinding = "orderItems"),
+        )
+
+        val elements = template.pageElements!!
+        // title static text + inferred table
+        assertEquals(2, elements.size)
+        val table = assertIs<TableElement>(elements[1])
+        assertEquals("orderItems", table.dataBinding)
+        assertEquals(30f, table.y) // Starts after title (height 30)
+        assertEquals(500f, table.width)
+        assertEquals(3, table.columns.size)
+
+        assertEquals("Item Code", table.columns[0].header)
+        assertEquals("code", table.columns[0].field)
+        assertEquals(100f, table.columns[0].width)
+        assertEquals("left", table.columns[0].alignment)
+
+        assertEquals("Description", table.columns[1].header)
+        assertEquals("description", table.columns[1].field)
+
+        assertEquals("Total", table.columns[2].header)
+        assertEquals("total", table.columns[2].field)
+        assertEquals("right", table.columns[2].alignment)
+
+        assertEquals("#1E293B", table.style?.headerBackground)
+        assertEquals("#FFFFFF", table.style?.headerColor)
+    }
+
+    @Test
+    fun `should convert detail to LoopElement when detail has non-tabular elements`() {
+        val jrxml =
+            """
+            <jasperReport name="cards" pageWidth="595" pageHeight="842" topMargin="20" leftMargin="20" rightMargin="20" bottomMargin="20">
+                <columnHeader>
+                    <band height="20">
+                        <staticText>
+                            <reportElement x="0" y="0" width="500" height="18"/>
+                            <text><![CDATA[Card Listing]]></text>
+                        </staticText>
+                    </band>
+                </columnHeader>
+                <detail>
+                    <band height="50">
+                        <image>
+                            <reportElement x="10" y="5" width="40" height="40"/>
+                            <imageExpression><![CDATA[${'$'}F{photo}]]></imageExpression>
+                        </image>
+                        <textField>
+                            <reportElement x="60" y="5" width="200" height="20"/>
+                            <textFieldExpression><![CDATA[${'$'}F{name}]]></textFieldExpression>
+                        </textField>
+                    </band>
+                </detail>
+            </jasperReport>
+            """.trimIndent()
+
+        val template = JasperTemplateConverter.fromString(jrxml)
+        val elements = template.pageElements!!
+
+        // columnHeader static text + detail LoopElement
+        assertEquals(2, elements.size)
+        assertIs<StaticTextElement>(elements[0])
+
+        val loop = assertIs<LoopElement>(elements[1])
+        assertEquals("items", loop.dataBinding)
+        assertEquals(20f, loop.y) // Positioned after columnHeader (height 20)
+        assertEquals(50f, loop.height)
+        assertEquals(2, loop.elements.size)
+
+        val img = assertIs<ImageElement>(loop.elements[0])
+        assertEquals("photo", img.dataBinding)
+        assertEquals(5f, img.y) // Relative to item row
+
+        val txt = assertIs<TextElement>(loop.elements[1])
+        assertEquals("name", txt.dataBinding)
+        assertEquals(5f, txt.y) // Relative to item row
+    }
+
+    @Test
+    fun `should allow disabling table inference to force LoopElement`() {
+        val jrxml =
+            """
+            <jasperReport name="orders" pageWidth="595" pageHeight="842" topMargin="20" leftMargin="20" rightMargin="20" bottomMargin="20">
+                <columnHeader>
+                    <band height="20">
+                        <staticText>
+                            <reportElement x="10" y="2" width="100" height="16"/>
+                            <text><![CDATA[Code]]></text>
+                        </staticText>
+                    </band>
+                </columnHeader>
+                <detail>
+                    <band height="18">
+                        <textField>
+                            <reportElement x="10" y="1" width="100" height="16"/>
+                            <textFieldExpression><![CDATA[${'$'}F{code}]]></textFieldExpression>
+                        </textField>
+                    </band>
+                </detail>
+            </jasperReport>
+            """.trimIndent()
+
+        val template = JasperTemplateConverter.fromString(
+            jrxml,
+            JasperConversionOptions(enableTableInference = false),
+        )
+
+        val elements = template.pageElements!!
+        assertEquals(2, elements.size)
+        assertIs<StaticTextElement>(elements[0])
+        val loop = assertIs<LoopElement>(elements[1])
+        assertEquals("items", loop.dataBinding)
+        assertEquals(18f, loop.height)
+    }
+
+    @Test
+    fun `should convert real sample relatorio_pedidos jrxml to TableElement`() {
+        val sampleFile = listOf(
+            File("tools/editor/samples/jasper/relatorio_pedidos.jrxml"),
+            File("../editor/samples/jasper/relatorio_pedidos.jrxml"),
+            File("../../tools/editor/samples/jasper/relatorio_pedidos.jrxml"),
+        ).firstOrNull { it.exists() } ?: File("tools/editor/samples/jasper/relatorio_pedidos.jrxml")
+        val template = JasperTemplateConverter.fromFile(
+            sampleFile.absolutePath,
+            JasperConversionOptions(defaultItemsBinding = "pedidos"),
+        )
+
+        val elements = template.pageElements!!
+        val table = elements.filterIsInstance<TableElement>().firstOrNull()
+        assertNotNull(table, "Deve inferir TableElement do relatorio_pedidos.jrxml")
+
+        assertEquals("pedidos", table.dataBinding)
+        assertEquals(5, table.columns.size)
+        assertEquals(listOf("Pedido", "Cliente", "Data", "Status", "Valor (R$)"), table.columns.map { it.header })
+        assertEquals(listOf("idPedido", "cliente", "dataPedido", "status", "valor"), table.columns.map { it.field })
+        assertEquals("right", table.columns[4].alignment)
+        assertEquals("#0F172A", table.style?.headerBackground)
+    }
+
+    @Test
+    fun `should convert sample fatura_servico jrxml with table and summary`() {
+        val sampleFile = listOf(
+            File("tools/editor/samples/jasper/fatura_servico.jrxml"),
+            File("../editor/samples/jasper/fatura_servico.jrxml"),
+            File("../../tools/editor/samples/jasper/fatura_servico.jrxml"),
+        ).firstOrNull { it.exists() } ?: File("tools/editor/samples/jasper/fatura_servico.jrxml")
+        val template = JasperTemplateConverter.fromFile(sampleFile.absolutePath)
+
+        val elements = template.pageElements!!
+        val table = elements.filterIsInstance<TableElement>().firstOrNull()
+        assertNotNull(table, "Deve inferir TableElement da fatura_servico.jrxml")
+
+        assertEquals(5, table.columns.size)
+        assertEquals(listOf("#", "Descrição do Serviço", "Qtd", "Unitário", "Total (R$)"), table.columns.map { it.header })
+        assertEquals(listOf("item", "descricao", "quantidade", "precoUnitario", "totalItem"), table.columns.map { it.field })
+        assertEquals("items", table.dataBinding)
+        assertEquals("#F8FAFC", table.style?.headerBackground)
     }
 }

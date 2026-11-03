@@ -15,6 +15,9 @@ import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.RectangleStyle
 import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.SummaryPage
+import com.pdfgenerator.model.TableColumn
+import com.pdfgenerator.model.TableElement
+import com.pdfgenerator.model.TableStyle
 import com.pdfgenerator.model.Template
 import com.pdfgenerator.model.TemplateMetadata
 import com.pdfgenerator.model.TextElement
@@ -165,61 +168,108 @@ object JasperTemplateConverter {
                 tags = listOf("jasper", "jrxml", "converted"),
             )
 
-        var elements = mutableListOf<com.pdfgenerator.model.Element>()
+        val elements = mutableListOf<com.pdfgenerator.model.Element>()
         var summaryElem: List<com.pdfgenerator.model.Element>? = null
-        val sectionOrder = listOf("background", "title", "pageHeader", "columnHeader", "detail", "columnFooter", "pageFooter", "summary")
         var yOffset = 0f
 
-        for (sectionTag in sectionOrder) {
-            val sectionNodes = root.getElementsByTagName(sectionTag)
-            when (sectionTag) {
-                "background" -> {
-                    val sectionElements = convertSection(sectionNodes, 0f, containerWidth, options)
-                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
-                    if (out.isNotEmpty()) {
-                        pageSettings = pageSettings.copy(bodyBackground = BodyBackground(out))
-                    }
+        // 1. Background
+        val backgroundNodes = root.getElementsByTagName("background")
+        if (backgroundNodes.length > 0) {
+            val sectionElements = convertSection(backgroundNodes, 0f, containerWidth, options)
+            val out = sectionElements["elements"] as List<com.pdfgenerator.model.Element>
+            if (out.isNotEmpty()) {
+                pageSettings = pageSettings.copy(bodyBackground = BodyBackground(out))
+            }
+        }
+
+        // 2. PageHeader
+        val pageHeaderNodes = root.getElementsByTagName("pageHeader")
+        if (pageHeaderNodes.length > 0) {
+            val sectionElements = convertSection(pageHeaderNodes, 0f, containerWidth, options)
+            val out = sectionElements["elements"] as List<com.pdfgenerator.model.Element>
+            if (out.isNotEmpty()) {
+                pageSettings =
+                    pageSettings.copy(header = HeaderFooter(sectionElements["height"] as Float, out))
+            }
+        }
+
+        // 3. PageFooter
+        val pageFooterNodes = root.getElementsByTagName("pageFooter")
+        if (pageFooterNodes.length > 0) {
+            val sectionElements = convertSection(pageFooterNodes, 0f, containerWidth, options)
+            val out = sectionElements["elements"] as List<com.pdfgenerator.model.Element>
+            if (out.isNotEmpty()) {
+                pageSettings =
+                    pageSettings.copy(footer = HeaderFooter(sectionElements["height"] as Float, out))
+            }
+        }
+
+        // 4. Title
+        val titleNodes = root.getElementsByTagName("title")
+        if (titleNodes.length > 0) {
+            val sectionElements = convertSection(titleNodes, 0f, containerWidth, options)
+            val out = sectionElements["elements"] as List<com.pdfgenerator.model.Element>
+            if (out.isNotEmpty()) {
+                yOffset = sectionElements["height"] as Float
+                elements.addAll(out)
+            }
+        }
+
+        // 5. ColumnHeader and Detail
+        val columnHeaderNodes = root.getElementsByTagName("columnHeader")
+        val detailNodes = root.getElementsByTagName("detail")
+
+        val tableInference = tryInferTable(columnHeaderNodes, detailNodes, yOffset, containerWidth, options)
+        if (tableInference != null) {
+            elements.add(tableInference.first)
+            yOffset = tableInference.second
+        } else {
+            if (columnHeaderNodes.length > 0) {
+                val chSection = convertSection(columnHeaderNodes, yOffset, containerWidth, options)
+                val chElements = chSection["elements"] as List<com.pdfgenerator.model.Element>
+                if (chElements.isNotEmpty()) {
+                    elements.addAll(chElements)
                 }
-                "title" -> {
-                    val sectionElements = convertSection(sectionNodes, 0f, containerWidth, options)
-                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
-                    if (out.isNotEmpty()) {
-                        yOffset = sectionElements.get("height") as Float
-                        elements.addAll(out)
+                yOffset = chSection["height"] as Float
+            }
+
+            if (detailNodes.length > 0) {
+                if (columnHeaderNodes.length > 0 || options.wrapDetailInLoop) {
+                    val loopResult = convertDetailToLoop(detailNodes, yOffset, containerWidth, options)
+                    elements.add(loopResult.first)
+                    yOffset = loopResult.second
+                } else {
+                    val dSection = convertSection(detailNodes, yOffset, containerWidth, options)
+                    val dElements = dSection["elements"] as List<com.pdfgenerator.model.Element>
+                    if (dElements.isNotEmpty()) {
+                        elements.addAll(dElements)
                     }
-                }
-                "pageHeader" -> {
-                    val sectionElements = convertSection(sectionNodes, 0f, containerWidth, options)
-                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
-                    if (out.isNotEmpty()) {
-                        pageSettings =
-                            pageSettings.copy(header = HeaderFooter(sectionElements.get("height") as Float, out))
-                    }
-                }
-                "pageFooter" -> {
-                    val sectionElements = convertSection(sectionNodes, 0f, containerWidth, options)
-                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
-                    if (out.isNotEmpty()) {
-                        pageSettings =
-                            pageSettings.copy(footer = HeaderFooter(sectionElements.get("height") as Float, out))
-                    }
-                }
-                "summary" -> {
-                    val sectionElements = convertSection(sectionNodes, 0f, containerWidth, options)
-                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
-                    if (out.isNotEmpty()) {
-                        summaryElem = out
-                    }
-                }
-                else -> {
-                    val sectionElements = convertSection(sectionNodes, yOffset, containerWidth, options)
-                    val out = sectionElements.get("elements") as List<com.pdfgenerator.model.Element>
-                    if (out.isNotEmpty()) {
-                        elements.addAll(out)
-                    }
+                    yOffset = dSection["height"] as Float
                 }
             }
         }
+
+        // 6. ColumnFooter
+        val columnFooterNodes = root.getElementsByTagName("columnFooter")
+        if (columnFooterNodes.length > 0) {
+            val cfSection = convertSection(columnFooterNodes, yOffset, containerWidth, options)
+            val cfElements = cfSection["elements"] as List<com.pdfgenerator.model.Element>
+            if (cfElements.isNotEmpty()) {
+                elements.addAll(cfElements)
+            }
+            yOffset = cfSection["height"] as Float
+        }
+
+        // 7. Summary
+        val summaryNodes = root.getElementsByTagName("summary")
+        if (summaryNodes.length > 0) {
+            val sSection = convertSection(summaryNodes, 0f, containerWidth, options)
+            val sElements = sSection["elements"] as List<com.pdfgenerator.model.Element>
+            if (sElements.isNotEmpty()) {
+                summaryElem = sElements
+            }
+        }
+
         return Template(
             version = "1.0",
             metadata = metadata,
@@ -227,6 +277,307 @@ object JasperTemplateConverter {
             pageElements = elements,
             summaryPage = summaryElem?.let { SummaryPage(summaryElem) },
         )
+    }
+
+    private data class CandidateHeader(
+        val x: Float,
+        val y: Float,
+        val width: Float,
+        val height: Float,
+        val text: String,
+        val alignment: String,
+        val forecolor: String?,
+        val fontSize: Float?,
+    )
+
+    private data class CandidateField(
+        val x: Float,
+        val y: Float,
+        val width: Float,
+        val height: Float,
+        val field: String,
+        val alignment: String,
+        val forecolor: String?,
+        val fontSize: Float?,
+    )
+
+    private fun getBands(sectionNodes: NodeList): List<Element> {
+        val bands = mutableListOf<Element>()
+        for (i in 0 until sectionNodes.length) {
+            val node = sectionNodes.item(i)
+            if (node is Element) {
+                val bandNodes = node.getElementsByTagName("band")
+                for (j in 0 until bandNodes.length) {
+                    val band = bandNodes.item(j)
+                    if (band is Element) {
+                        bands.add(band)
+                    }
+                }
+            }
+        }
+        return bands
+    }
+
+    private fun tryInferTable(
+        columnHeaderNodes: NodeList,
+        detailNodes: NodeList,
+        currentY: Float,
+        containerWidth: Float,
+        options: JasperConversionOptions,
+    ): Pair<TableElement, Float>? {
+        if (!options.enableTableInference) return null
+        if (columnHeaderNodes.length == 0 || detailNodes.length == 0) return null
+
+        val headerBands = getBands(columnHeaderNodes)
+        val detailBands = getBands(detailNodes)
+        if (headerBands.size != 1 || detailBands.size != 1) return null
+
+        val headerBand = headerBands[0]
+        val detailBand = detailBands[0]
+
+        val headers = extractCandidateHeaders(headerBand)
+        val fields = extractCandidateFields(detailBand) ?: return null
+
+        if (headers.isEmpty() || fields.isEmpty()) return null
+        if (headers.size != fields.size) return null
+
+        val minY = fields.minOf { it.y }
+        val maxY = fields.maxOf { it.y }
+        if (maxY - minY > 15f) return null
+
+        for (i in headers.indices) {
+            val h = headers[i]
+            val f = fields[i]
+            if (kotlin.math.abs(h.x - f.x) > 30f) return null
+        }
+
+        val rectList = headerBand.getElementsByTagName("rectangle")
+        val rect = if (rectList.length > 0) rectList.item(0) as? Element else null
+        val rectReportElem = rect?.firstDirectChild("reportElement")
+        val headerBg = rectReportElem?.getAttribute("backcolor")?.ifBlank { null }
+            ?: rect?.getAttribute("backcolor")?.ifBlank { null }
+            ?: rect?.getAttribute("fillColor")?.ifBlank { null }
+            ?: "#f8fafc"
+        val pen = rect?.firstDirectChild("graphicElement")?.firstDirectChild("pen")
+        val borderColor = pen?.getAttribute("lineColor")?.ifBlank { null }
+            ?: rectReportElem?.getAttribute("forecolor")?.ifBlank { null }
+            ?: rect?.getAttribute("forecolor")?.ifBlank { null }
+            ?: "#e2e8f0"
+
+        val detailLines = detailBand.getElementsByTagName("line")
+        val finalBorderColor = if (detailLines.length > 0) {
+            val lineElem = detailLines.item(0) as? Element
+            val lineReport = lineElem?.firstDirectChild("reportElement")
+            val linePen = lineElem?.firstDirectChild("graphicElement")?.firstDirectChild("pen")
+            linePen?.getAttribute("lineColor")?.ifBlank { null }
+                ?: lineReport?.getAttribute("forecolor")?.ifBlank { null }
+                ?: lineElem?.getAttribute("forecolor")?.ifBlank { null }
+                ?: borderColor
+        } else {
+            borderColor
+        }
+
+        val headerTextColor = headers.firstOrNull { it.forecolor != null }?.forecolor ?: "#0f172a"
+        val headerFontSize = headers.firstOrNull()?.fontSize ?: 9f
+        val rowTextColor = fields.firstOrNull { it.forecolor != null }?.forecolor ?: "#1e293b"
+        val rowFontSize = fields.firstOrNull()?.fontSize ?: 8f
+
+        val tableX = rectReportElem?.getIntAttribute("x", 0)?.toFloat() ?: 0f
+        val tableWidth = rectReportElem?.getIntAttribute("width", containerWidth.toInt())?.toFloat() ?: containerWidth
+
+        val columns = headers.zip(fields).map { (h, f) ->
+            TableColumn(
+                header = h.text,
+                field = f.field,
+                width = h.width,
+                alignment = f.alignment,
+                headerAlignment = h.alignment,
+                format = "text",
+            )
+        }
+
+        val table = TableElement(
+            id = UUID.randomUUID().toString(),
+            x = tableX,
+            y = currentY,
+            width = tableWidth,
+            dataBinding = options.defaultItemsBinding,
+            columns = columns,
+            style = TableStyle(
+                headerBackground = headerBg,
+                headerColor = headerTextColor,
+                headerTextColor = headerTextColor,
+                headerFontSize = headerFontSize,
+                rowColor = rowTextColor,
+                fontSize = rowFontSize,
+                borderColor = finalBorderColor,
+            ),
+        )
+
+        val headerHeight = headerBand.getIntAttribute("height", 24).toFloat()
+        val detailHeight = detailBand.getIntAttribute("height", 20).toFloat()
+        return Pair(table, currentY + headerHeight + detailHeight)
+    }
+
+    private fun extractCandidateHeaders(band: Element): List<CandidateHeader> {
+        val list = mutableListOf<CandidateHeader>()
+        collectCandidateHeaders(band, 0f, 0f, list)
+        return list.sortedBy { it.x }
+    }
+
+    private fun collectCandidateHeaders(
+        parent: Element,
+        offsetX: Float,
+        offsetY: Float,
+        list: MutableList<CandidateHeader>,
+    ) {
+        val children = parent.childNodes
+        for (i in 0 until children.length) {
+            val child = children.item(i)
+            if (child !is Element) continue
+            when (child.tagName) {
+                "staticText" -> {
+                    val reportElement = child.firstDirectChild("reportElement") ?: continue
+                    val text = child.firstDirectChild("text")?.textContent?.trim().orEmpty()
+                    if (text.isBlank()) continue
+                    val textElement = child.firstDirectChild("textElement")
+                    val font = textElement?.firstDirectChild("font")
+                    list.add(
+                        CandidateHeader(
+                            x = reportElement.getIntAttribute("x", 0).toFloat() + offsetX,
+                            y = reportElement.getIntAttribute("y", 0).toFloat() + offsetY,
+                            width = reportElement.getIntAttribute("width", 50).toFloat(),
+                            height = reportElement.getIntAttribute("height", 16).toFloat(),
+                            text = text,
+                            alignment = textElement?.getAttribute("textAlignment")?.ifBlank { "left" }?.lowercase() ?: "left",
+                            forecolor = reportElement.getAttribute("forecolor").ifBlank { null },
+                            fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: 9f,
+                        ),
+                    )
+                }
+                "textField" -> {
+                    val reportElement = child.firstDirectChild("reportElement") ?: continue
+                    val expr = child.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
+                    if (expr.startsWith("\"") && expr.endsWith("\"")) {
+                        val text = expr.removeSurrounding("\"")
+                        if (text.isNotBlank()) {
+                            val textElement = child.firstDirectChild("textElement")
+                            val font = textElement?.firstDirectChild("font")
+                            list.add(
+                                CandidateHeader(
+                                    x = reportElement.getIntAttribute("x", 0).toFloat() + offsetX,
+                                    y = reportElement.getIntAttribute("y", 0).toFloat() + offsetY,
+                                    width = reportElement.getIntAttribute("width", 50).toFloat(),
+                                    height = reportElement.getIntAttribute("height", 16).toFloat(),
+                                    text = text,
+                                    alignment = textElement?.getAttribute("textAlignment")?.ifBlank { "left" }?.lowercase() ?: "left",
+                                    forecolor = reportElement.getAttribute("forecolor").ifBlank { null },
+                                    fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: 9f,
+                                ),
+                            )
+                        }
+                    }
+                }
+                "frame" -> {
+                    val reportElement = child.firstDirectChild("reportElement")
+                    val fx = reportElement?.getIntAttribute("x", 0)?.toFloat() ?: 0f
+                    val fy = reportElement?.getIntAttribute("y", 0)?.toFloat() ?: 0f
+                    collectCandidateHeaders(child, offsetX + fx, offsetY + fy, list)
+                }
+            }
+        }
+    }
+
+    private fun extractCandidateFields(band: Element): List<CandidateField>? {
+        val list = mutableListOf<CandidateField>()
+        val hasDisqualifiers = collectCandidateFields(band, 0f, 0f, list)
+        if (hasDisqualifiers) return null
+        return list.sortedBy { it.x }
+    }
+
+    private fun collectCandidateFields(
+        parent: Element,
+        offsetX: Float,
+        offsetY: Float,
+        list: MutableList<CandidateField>,
+    ): Boolean {
+        val children = parent.childNodes
+        for (i in 0 until children.length) {
+            val child = children.item(i)
+            if (child !is Element) continue
+            when (child.tagName) {
+                "image", "componentElement", "subreport" -> return true
+                "textField" -> {
+                    val reportElement = child.firstDirectChild("reportElement") ?: continue
+                    val expr = child.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
+                    val dataBinding = JasperExpressionMapper.toDataBinding(expr)
+                    val fieldName = dataBinding ?: if (expr.startsWith("\"") && expr.endsWith("\"")) expr.removeSurrounding("\"") else expr
+                    if (fieldName.isBlank()) continue
+                    val textElement = child.firstDirectChild("textElement")
+                    val font = textElement?.firstDirectChild("font")
+                    list.add(
+                        CandidateField(
+                            x = reportElement.getIntAttribute("x", 0).toFloat() + offsetX,
+                            y = reportElement.getIntAttribute("y", 0).toFloat() + offsetY,
+                            width = reportElement.getIntAttribute("width", 50).toFloat(),
+                            height = reportElement.getIntAttribute("height", 16).toFloat(),
+                            field = fieldName,
+                            alignment = textElement?.getAttribute("textAlignment")?.ifBlank { "left" }?.lowercase() ?: "left",
+                            forecolor = reportElement.getAttribute("forecolor").ifBlank { null },
+                            fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: 9f,
+                        ),
+                    )
+                }
+                "frame" -> {
+                    val reportElement = child.firstDirectChild("reportElement")
+                    val fx = reportElement?.getIntAttribute("x", 0)?.toFloat() ?: 0f
+                    val fy = reportElement?.getIntAttribute("y", 0)?.toFloat() ?: 0f
+                    val disqualified = collectCandidateFields(child, offsetX + fx, offsetY + fy, list)
+                    if (disqualified) return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun convertDetailToLoop(
+        detailNodes: NodeList,
+        yOffset: Float,
+        containerWidth: Float,
+        options: JasperConversionOptions,
+    ): Pair<LoopElement, Float> {
+        val loopElements = mutableListOf<com.pdfgenerator.model.Element>()
+        var totalHeight = 0f
+        var currentRelY = 0f
+
+        for (sectionIdx in 0 until detailNodes.length) {
+            val sectionNode = detailNodes.item(sectionIdx)
+            if (sectionNode is Element) {
+                val bands = sectionNode.getElementsByTagName("band")
+                for (bandIdx in 0 until bands.length) {
+                    val bandNode = bands.item(bandIdx)
+                    if (bandNode is Element) {
+                        val bandHeight = bandNode.getIntAttribute("height", 0).toFloat()
+                        loopElements.addAll(parseBandElements(bandNode, currentRelY, options, null))
+                        currentRelY += bandHeight
+                        totalHeight += bandHeight
+                    }
+                }
+            }
+        }
+
+        val loop = LoopElement(
+            type = "loop",
+            id = UUID.randomUUID().toString(),
+            x = 0f,
+            y = yOffset,
+            width = containerWidth,
+            height = if (totalHeight > 0f) totalHeight else 50f,
+            dataBinding = options.defaultItemsBinding,
+            elements = loopElements,
+        )
+
+        return Pair(loop, yOffset + totalHeight)
     }
 
     private fun parseComponentElement(
@@ -304,20 +655,22 @@ object JasperTemplateConverter {
         sectionYOffset: Float,
         frame: Map<String, Float>?,
     ): BarcodeElement? {
-        var expression = node.firstDirectChild("jr:QRCode")?.textContent?.trim().orEmpty()
+        val expression = node.firstDirectChild("jr:QRCode")?.textContent?.trim()?.ifBlank { null }
+            ?: node.textContent?.trim().orEmpty()
         val dataBinding = JasperExpressionMapper.toDataBinding(expression)
         val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
         val condition = JasperExpressionMapper.toExpression(printCondition)
 
         return BarcodeElement(
             type = "barcode",
-            barcodeType = "barcodeType",
+            barcodeType = "qr_code",
             id = UUID.randomUUID().toString(),
             x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
             y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
             width = reportElement.getIntAttribute("width", 100).toFloat(),
             height = reportElement.getIntAttribute("height", 16).toFloat(),
             dataBinding = dataBinding ?: "",
+            value = if (dataBinding == null && expression.isNotBlank()) expression.trim('"') else null,
             printCondition = condition,
         )
     }
