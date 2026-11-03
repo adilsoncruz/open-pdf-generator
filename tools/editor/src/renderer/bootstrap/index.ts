@@ -1,4 +1,4 @@
-export { initBrowserFallback } from './browserFallback'
+export { initBrowserFallback, warmupApiServer } from './browserFallback'
 export {
   openTemplateFromContent,
   handleImportJasper,

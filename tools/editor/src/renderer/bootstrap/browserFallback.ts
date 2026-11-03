@@ -56,19 +56,73 @@ const DEFAULT_API = 'https://open-pdf-generator.onrender.com'
 const API_BASE =
   (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '') || (import.meta.env.DEV ? '' : DEFAULT_API)
 
-async function requestPdfPreview(templateJson: string, dataJson: string) {
-  try {
-    const endpoint = `${API_BASE}/api/generate-preview`
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ templateJson, dataJson }),
+let warmupPromise: Promise<boolean> | null = null
+
+export function warmupApiServer(): Promise<boolean> {
+  if (typeof window === 'undefined' || !API_BASE) return Promise.resolve(false)
+  if (warmupPromise) return warmupPromise
+
+  console.log('⚡ [Playground] Probing API server /health to wake up instance:', API_BASE)
+  warmupPromise = fetch(`${API_BASE}/health`, { method: 'GET', keepalive: true })
+    .then((res) => {
+      if (res.ok) {
+        console.log('⚡ [Playground] API server is warm and ready')
+        return true
+      }
+      return false
     })
-    return await response.json()
-  } catch (err) {
-    console.error('Failed to generate PDF via server:', err)
-    return { success: false, errorCode: 'ERROR_GENERATING_PDF' }
+    .catch((err) => {
+      console.warn('⚠️ [Playground] API server warmup probe triggered:', err.message)
+      return false
+    })
+
+  return warmupPromise
+}
+
+async function requestPdfPreview(templateJson: string, dataJson: string, retries = 2) {
+  warmupApiServer()
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const endpoint = `${API_BASE}/api/generate-preview`
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 50000)
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templateJson, dataJson }),
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+
+      if (response.ok) {
+        return await response.json()
+      }
+
+      if ((response.status === 502 || response.status === 503 || response.status === 504) && attempt < retries) {
+        console.warn(`[Playground] Server waking up (${response.status}), retrying in 3s... (attempt ${attempt + 1}/${retries})`)
+        await new Promise((r) => setTimeout(r, 3000))
+        continue
+      }
+
+      return await response.json()
+    } catch (err: unknown) {
+      if (attempt < retries) {
+        console.warn(`[Playground] Request failed, server may be starting up. Retrying in 3s... (attempt ${attempt + 1}/${retries})`)
+        await new Promise((r) => setTimeout(r, 3000))
+        continue
+      }
+      console.error('Failed to generate PDF via server after retries:', err)
+      return {
+        success: false,
+        errorCode: 'ERROR_GENERATING_PDF',
+        cliError: 'O servidor na nuvem estava hibernando e está acordando. Por favor, aguarde alguns segundos e tente novamente.',
+      }
+    }
   }
+
+  return { success: false, errorCode: 'ERROR_GENERATING_PDF' }
 }
 
 let lastGeneratedPdfBase64: string | null = null
@@ -96,6 +150,9 @@ export function initBrowserFallback(): void {
   if (typeof window === 'undefined' || window.electronAPI) return
 
   console.warn('⚠️ [Browser Fallback] window.electronAPI is NOT present, using mock fallback!')
+
+  // Warm up API server immediately in background on page load
+  warmupApiServer()
 
   ;(window as unknown as { electronAPI: unknown }).electronAPI = {
     openFile: () => promptFileInput('.json,.jrxml'),
