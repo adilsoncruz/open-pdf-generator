@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { EditorPage, HomePage, LoadingPage } from './components/pages'
 import { AiImportModal } from './components/AiImportModal'
 import { useTabStore } from './store/tabStore'
+import { useTemplateStore } from './store/templateStore'
 import { useRecentFilesStore } from './store/recentFilesStore'
 import { openTemplateFromContent, handleImportJasper } from './bootstrap'
 
@@ -45,6 +46,13 @@ export function App() {
           }}
           onImportJasper={handleJasperImport}
           onImportAI={() => setShowAiModal(true)}
+          onSelectGalleryTemplate={(item) => {
+            const success = openTemplateFromContent(`${item.id}.json`, JSON.stringify(item.template))
+            if (success) {
+              useTemplateStore.getState().setTestData(item.data)
+              setScreen('editor')
+            }
+          }}
           onOpenRecentFile={async (filePath: string) => {
             const result = await window.electronAPI.readFile(filePath)
             if (result.success && result.content) {

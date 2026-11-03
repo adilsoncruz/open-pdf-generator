@@ -583,6 +583,10 @@ const es: Translations = {
     switchThemeLight: 'Cambiar a tema claro',
     switchThemeDark: 'Cambiar a tema oscuro',
     selectLanguage: 'Seleccionar idioma',
+    galleryTitle: 'Galería de Plantillas Listas',
+    gallerySubtitle: 'Pruebe al instante en su navegador — sin necesidad de descargas ni instalación',
+    openInEditor: 'Abrir en el Editor',
+    testNow: 'Probar →',
   },
 }
 

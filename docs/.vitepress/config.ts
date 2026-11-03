@@ -31,6 +31,7 @@ const en = {
       { text: 'Library', link: '/lib/' },
       { text: 'CLI', link: '/cli/' },
       { text: 'Editor', link: '/editor/' },
+      { text: '🎮 Playground', link: '/open-pdf-generator/playground/', target: '_blank' },
       {
         text: '⚡ Benchmark',
         items: [
@@ -159,6 +160,7 @@ const pt = {
       { text: 'Biblioteca', link: '/pt/lib/' },
       { text: 'CLI', link: '/pt/cli/' },
       { text: 'Editor', link: '/pt/editor/' },
+      { text: '🎮 Playground Web', link: '/open-pdf-generator/playground/', target: '_blank' },
       {
         text: '⚡ Benchmark',
         items: [
@@ -294,6 +296,7 @@ const es = {
       { text: 'Biblioteca', link: '/es/lib/' },
       { text: 'CLI', link: '/es/cli/' },
       { text: 'Editor', link: '/es/editor/' },
+      { text: '🎮 Playground Web', link: '/open-pdf-generator/playground/', target: '_blank' },
       {
         text: '⚡ Benchmark',
         items: [

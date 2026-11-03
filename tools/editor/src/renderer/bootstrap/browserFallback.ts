@@ -34,18 +34,47 @@ function triggerDownload(content: string, fileName: string) {
   URL.revokeObjectURL(url)
 }
 
+function triggerBinaryDownload(base64Data: string, fileName: string) {
+  const byteCharacters = atob(base64Data)
+  const byteNumbers = new Array(byteCharacters.length)
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i)
+  }
+  const byteArray = new Uint8Array(byteNumbers)
+  const blob = new Blob([byteArray], { type: 'application/pdf' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+const API_BASE = (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '') || ''
+
 async function requestPdfPreview(templateJson: string, dataJson: string) {
   try {
-    const response = await fetch('/api/generate-preview', {
+    const endpoint = `${API_BASE}/api/generate-preview`
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ templateJson, dataJson }),
     })
     return await response.json()
   } catch (err) {
-    console.error('Failed to generate PDF via dev server:', err)
+    console.error('Failed to generate PDF via server:', err)
     return { success: false, errorCode: 'ERROR_GENERATING_PDF' }
   }
+}
+
+async function generatePdfInBrowser(templateJson: string, dataJson: string) {
+  const result = await requestPdfPreview(templateJson, dataJson)
+  if (result.success && result.pdfBase64) {
+    triggerBinaryDownload(result.pdfBase64, 'document.pdf')
+  }
+  return result
 }
 
 export function initBrowserFallback(): void {
@@ -105,10 +134,24 @@ export function initBrowserFallback(): void {
     installCLI: async () => ({ success: false }),
     installCLIFromFile: async () => ({ success: false }),
     getCLIInstallPath: async () => '',
-    generatePDF: (templateJson: string, dataJson: string) => requestPdfPreview(templateJson, dataJson),
+    generatePDF: (templateJson: string, dataJson: string) => generatePdfInBrowser(templateJson, dataJson),
     generatePDFPreview: (templateJson: string, dataJson: string) => requestPdfPreview(templateJson, dataJson),
     openPDF: async () => ({ success: false }),
-    openBase64PDF: async () => ({ success: false }),
+    openBase64PDF: async (base64: string) => {
+      try {
+        const byteCharacters = atob(base64)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' })
+        const url = URL.createObjectURL(blob)
+        window.open(url, '_blank')
+        return { success: true }
+      } catch (err) {
+        return { success: false, error: (err as Error).message }
+      }
+    },
     validateTemplate: async () => ({ valid: true }),
     onMenuNew: () => {},
     onMenuOpen: () => {},

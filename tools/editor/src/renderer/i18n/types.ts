@@ -498,6 +498,10 @@ export interface Translations {
     switchThemeLight: string
     switchThemeDark: string
     selectLanguage: string
+    galleryTitle: string
+    gallerySubtitle: string
+    openInEditor: string
+    testNow: string
   }
 }
 

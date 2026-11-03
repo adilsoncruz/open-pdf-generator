@@ -583,6 +583,10 @@ const en: Translations = {
     switchThemeLight: 'Switch to light theme',
     switchThemeDark: 'Switch to dark theme',
     selectLanguage: 'Select language',
+    galleryTitle: 'Ready-to-use Template Gallery',
+    gallerySubtitle: 'Test instantly in your browser — no download or installation required',
+    openInEditor: 'Open in Editor',
+    testNow: 'Test →',
   },
 }
 

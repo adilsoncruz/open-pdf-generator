@@ -3,6 +3,7 @@ import { StudioLogo } from '../LoadingPage'
 import { useUIStore } from '../../../store/uiStore'
 import { useRecentFilesStore, type RecentFileItem } from '../../../store/recentFilesStore'
 import { useTranslation, LanguageCode } from '../../../i18n'
+import { GALLERY_TEMPLATES, GalleryTemplateItem } from '../../../samples/galleryTemplates'
 
 interface HomePageProps {
   onNewTemplate: () => void
@@ -10,9 +11,17 @@ interface HomePageProps {
   onImportJasper?: () => void
   onImportAI?: () => void
   onOpenRecentFile?: (filePath: string) => void
+  onSelectGalleryTemplate?: (item: GalleryTemplateItem) => void
 }
 
-export function HomePage({ onNewTemplate, onOpenFile, onImportJasper, onImportAI, onOpenRecentFile }: HomePageProps) {
+export function HomePage({
+  onNewTemplate,
+  onOpenFile,
+  onImportJasper,
+  onImportAI,
+  onOpenRecentFile,
+  onSelectGalleryTemplate,
+}: HomePageProps) {
   const { theme, toggleTheme } = useUIStore()
   const { recentFiles, removeRecentFile } = useRecentFilesStore()
   const { t, language, setLanguage, availableLanguages } = useTranslation()
@@ -142,6 +151,54 @@ export function HomePage({ onNewTemplate, onOpenFile, onImportJasper, onImportAI
               <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-purple-400">→</span>
             </button>
           </div>
+
+          {/* Galeria de Modelos Prontos */}
+          <section className="mt-12">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+                  <span>🎨</span> {t.home.galleryTitle}
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {t.home.gallerySubtitle}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              {GALLERY_TEMPLATES.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => onSelectGalleryTemplate?.(item)}
+                  className="group relative cursor-pointer rounded-xl border border-slate-800 bg-slate-900/80 p-5 transition hover:border-indigo-500/80 hover:bg-slate-800/90 hover:shadow-[0_0_24px_rgba(99,102,241,0.15)] flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[11px] font-medium text-indigo-300">
+                        {item.badge}
+                      </span>
+                      <span className="text-xs text-slate-500 group-hover:text-indigo-400 transition font-medium">
+                        {t.home.testNow}
+                      </span>
+                    </div>
+                    <h4 className="mt-3 text-base font-semibold text-slate-200 group-hover:text-white">
+                      {item.title}
+                    </h4>
+                    <p className="mt-1.5 text-xs text-slate-400 line-clamp-2">
+                      {item.description}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+                    <span>
+                      {(item.template.pageSettings as { size?: string; orientation?: string })?.size || 'A4'} •{' '}
+                      {(item.template.pageSettings as { orientation?: string })?.orientation || 'portrait'}
+                    </span>
+                    <span className="text-indigo-400 font-medium">{t.home.openInEditor}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
           <section className="mt-12 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
             <h3 className="border-b border-slate-800 px-6 py-5 text-lg font-semibold">{t.home.recentFiles}</h3>

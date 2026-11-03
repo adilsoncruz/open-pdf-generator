@@ -7,6 +7,7 @@ on:
       - bootstrap
     paths:
       - 'docs/**'
+      - 'tools/editor/**'
   workflow_dispatch:
 
 permissions:
@@ -44,6 +45,19 @@ jobs:
       - name: Build with VitePress
         run: npm run build
         working-directory: docs
+
+      - name: Build Web Editor Playground
+        run: |
+          npm ci
+          npm run build:renderer
+        working-directory: tools/editor
+        env:
+          VITE_API_URL: ${{ secrets.OPEN_PDF_PLAYGROUND_API_URL || vars.OPEN_PDF_PLAYGROUND_API_URL }}
+
+      - name: Copy Playground to Docs Dist
+        run: |
+          mkdir -p docs/.vitepress/dist/playground
+          cp -r tools/editor/dist/renderer/* docs/.vitepress/dist/playground/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
