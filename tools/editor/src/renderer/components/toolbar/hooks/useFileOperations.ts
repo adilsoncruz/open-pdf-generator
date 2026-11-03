@@ -210,16 +210,6 @@ export function useFileOperations({
       const status = await window.electronAPI.getCLIStatus()
       setCLIStatus(status)
 
-      if (!status.javaInstalled) {
-        alert(
-          `⚠️ ${t.pdf.javaNotInstalled}\n\n` +
-          `${t.pdf.javaRequired}\n\n` +
-          `${t.pdf.installJava}:\n` +
-          'https://adoptium.net/'
-        )
-        return
-      }
-
       if (!status.installed) {
         openSettings()
         return
@@ -259,13 +249,6 @@ export function useFileOperations({
         if (result.cliNotInstalled) {
           await checkCLIStatus()
           openSettings()
-        } else if (result.javaNotInstalled) {
-          alert(
-            `⚠️ ${t.pdf.javaNotInstalled}\n\n` +
-            `${t.pdf.javaRequired}\n\n` +
-            `${t.pdf.installJava}:\n` +
-            'https://adoptium.net/'
-          )
         } else {
           alert(`${t.pdf.error}:\n\n${result.cliError || getErrorMessage(result.errorCode)}`)
         }

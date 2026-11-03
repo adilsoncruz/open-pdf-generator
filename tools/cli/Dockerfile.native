@@ -39,13 +39,14 @@ RUN mkdir -p /build/meta \
 
 RUN native-image \
         --no-fallback \
+        -march=compatibility \
         -Djava.awt.headless=true \
         -jar cli.jar \
         -o /build/pdf-generator \
         -H:ConfigurationFileDirectories=/build/meta \
         -H:+ReportExceptionStackTraces \
         --initialize-at-run-time=org.slf4j.LoggerFactory,org.slf4j.helpers.Reporter,ch.qos.logback \
-        --initialize-at-build-time=java.awt.Color,java.awt.Toolkit,java.awt.image,java.awt.color \
+        --initialize-at-build-time=java.awt.Color,java.awt.Toolkit,java.awt.image,java.awt.color,java.awt.Insets \
         -H:IncludeResources='logback.xml' \
     && /build/pdf-generator version
 

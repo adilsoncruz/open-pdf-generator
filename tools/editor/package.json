@@ -1,6 +1,6 @@
 {
   "name": "pdf-template-editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Desktop app for creating and editing PDF templates",
   "main": "dist/main/index.js",
   "scripts": {
@@ -29,7 +29,8 @@
     "editor",
     "electron"
   ],
-  "author": "Adilson Cruz",
+  "author": "Adilson Cruz <adilsoncruz.ac@gmail.com>",
+  "homepage": "https://github.com/adilsoncruz/open-pdf-generator",
   "license": "MIT",
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -96,6 +97,13 @@
       {
         "from": "resources/splash.html",
         "to": "splash.html"
+      },
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "publish": {
@@ -120,6 +128,7 @@
           ]
         }
       ],
+      "x64ArchFiles": "**",
       "icon": "resources/icon.icns"
     },
     "win": {

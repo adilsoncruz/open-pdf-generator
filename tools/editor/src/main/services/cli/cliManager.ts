@@ -113,17 +113,6 @@ export class CliManager {
       return { ok: true, status: cliStatus }
     }
 
-    if (!cliStatus.javaInstalled) {
-      return {
-        ok: false,
-        error: {
-          success: false,
-          errorCode: ErrorCodes.JAVA_NOT_INSTALLED,
-          javaNotInstalled: true,
-        },
-      }
-    }
-
     if (!cliStatus.installed || cliStatus.needsUpdate) {
       const wasInstalled = cliStatus.installed
       const installResult = await this.installCLI()
@@ -183,12 +172,12 @@ export class CliManager {
   ): Promise<{ success: boolean; content?: string; error?: string; errorCode?: string }> {
     const cliStatus = await this.checkCLIStatus()
 
-    if (!cliStatus.javaInstalled) {
-      return { success: false, errorCode: ErrorCodes.JAVA_NOT_INSTALLED, error: 'Java not installed' }
-    }
-
     if (!cliStatus.installed) {
       return { success: false, errorCode: ErrorCodes.CLI_NOT_INSTALLED, error: 'CLI not installed' }
+    }
+
+    if (cliStatus.isNative && cliStatus.nativePath) {
+      return convertJrxmlWithCli(cliStatus.nativePath, '', filePath)
     }
 
     return convertJrxmlWithCli(cliStatus.javaPath || 'java', CLI_JAR_PATH, filePath)

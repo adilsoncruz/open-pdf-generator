@@ -4,7 +4,6 @@ import {
   XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ArrowDownTrayIcon,
   ViewColumnsIcon,
   MagnifyingGlassPlusIcon,
   MagnifyingGlassMinusIcon,
@@ -152,24 +151,13 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
           </button>
         )}
 
-        {/* Download PDF button */}
-        <button
-          onClick={onDownload}
-          disabled={!hasPdfData || isLoading}
-          className="p-1.5 rounded theme-hover text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-          title="Baixar PDF"
-          aria-label="Baixar PDF"
-        >
-          <ArrowDownTrayIcon className="w-4 h-4" />
-        </button>
-
-        {/* Refresh button */}
+        {/* Refresh / Reload button */}
         <button
           onClick={onRefresh}
           disabled={isLoading}
-          className="p-1.5 rounded theme-hover theme-text-muted hover:theme-text disabled:opacity-30 transition"
+          className="p-1.5 rounded theme-hover text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
           title={t.preview.refresh || 'Atualizar Preview'}
-          aria-label="Atualizar Preview"
+          aria-label={t.preview.refresh || 'Atualizar Preview'}
         >
           <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
