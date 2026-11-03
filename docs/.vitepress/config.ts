@@ -130,6 +130,7 @@ const en = {
             { text: 'Overview', link: '/cli/' },
             { text: 'Installation', link: '/cli/installation' },
             { text: 'Commands', link: '/cli/commands' },
+            { text: 'Multi-Language Integration', link: '/cli/polyglot' },
             { text: 'Examples', link: '/cli/examples' },
             { text: '⚡ Benchmark (Go / Node / Docker)', link: '/lib/benchmark-multilang' }
           ]
@@ -260,6 +261,7 @@ const pt = {
             { text: 'Visão Geral', link: '/pt/cli/' },
             { text: 'Instalação', link: '/pt/cli/installation' },
             { text: 'Comandos', link: '/pt/cli/commands' },
+            { text: 'Uso em Outras Linguagens', link: '/pt/cli/polyglot' },
             { text: 'Exemplos', link: '/pt/cli/examples' },
             { text: '⚡ Benchmark (Go / Node / Docker)', link: '/lib/benchmark-multilang' }
           ]
@@ -397,6 +399,7 @@ const es = {
             { text: 'Visión General', link: '/es/cli/' },
             { text: 'Instalación', link: '/es/cli/installation' },
             { text: 'Comandos', link: '/es/cli/commands' },
+            { text: 'Integración Multilenguaje', link: '/es/cli/polyglot' },
             { text: 'Ejemplos', link: '/es/cli/examples' },
             { text: '⚡ Benchmark (Go / Node / Docker)', link: '/lib/benchmark-multilang' }
           ]
