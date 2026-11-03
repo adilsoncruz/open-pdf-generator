@@ -71,10 +71,23 @@ async function requestPdfPreview(templateJson: string, dataJson: string) {
   }
 }
 
+let lastGeneratedPdfBase64: string | null = null
+
 async function generatePdfInBrowser(templateJson: string, dataJson: string) {
   const result = await requestPdfPreview(templateJson, dataJson)
   if (result.success && result.pdfBase64) {
-    triggerBinaryDownload(result.pdfBase64, 'document.pdf')
+    lastGeneratedPdfBase64 = result.pdfBase64
+    let templateName = 'document'
+    try {
+      const parsed = JSON.parse(templateJson)
+      if (parsed.metadata?.name) {
+        templateName = parsed.metadata.name.toLowerCase().replace(/[^a-z0-9_-]/gi, '-')
+      }
+    } catch {
+      // fallback to document
+    }
+    triggerBinaryDownload(result.pdfBase64, `${templateName}.pdf`)
+    return { ...result, outputPath: `${templateName}.pdf` }
   }
   return result
 }
@@ -138,7 +151,24 @@ export function initBrowserFallback(): void {
     getCLIInstallPath: async () => '',
     generatePDF: (templateJson: string, dataJson: string) => generatePdfInBrowser(templateJson, dataJson),
     generatePDFPreview: (templateJson: string, dataJson: string) => requestPdfPreview(templateJson, dataJson),
-    openPDF: async () => ({ success: false }),
+    openPDF: async () => {
+      if (lastGeneratedPdfBase64) {
+        try {
+          const byteCharacters = atob(lastGeneratedPdfBase64)
+          const byteNumbers = new Array(byteCharacters.length)
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i)
+          }
+          const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' })
+          const url = URL.createObjectURL(blob)
+          window.open(url, '_blank')
+          return { success: true }
+        } catch {
+          return { success: false }
+        }
+      }
+      return { success: false }
+    },
     openBase64PDF: async (base64: string) => {
       try {
         const byteCharacters = atob(base64)
