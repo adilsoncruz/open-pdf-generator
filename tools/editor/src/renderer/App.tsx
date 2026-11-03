@@ -44,8 +44,6 @@ export function App() {
             if (!result) return
             handleOpenFromContent(result.path, result.content)
           }}
-          onImportJasper={handleJasperImport}
-          onImportAI={() => setShowAiModal(true)}
           onSelectGalleryTemplate={(item) => {
             const success = openTemplateFromContent(`${item.id}.json`, JSON.stringify(item.template))
             if (success) {
