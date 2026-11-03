@@ -5,6 +5,7 @@
 [![CI](https://github.com/adilsoncruz/open-pdf-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/adilsoncruz/open-pdf-generator/actions/workflows/ci.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![JitPack](https://jitpack.io/v/adilsoncruz/open-pdf-generator.svg)](https://jitpack.io/#adilsoncruz/open-pdf-generator)
+[![Web Playground](https://img.shields.io/badge/🎮%20Playground-Try%20Online-6366f1.svg)](https://adilsoncruz.github.io/open-pdf-generator/playground/)
 [![GitHub Stars](https://img.shields.io/github/stars/adilsoncruz/open-pdf-generator?style=social)](https://github.com/adilsoncruz/open-pdf-generator)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ff69b4?logo=github)](https://github.com/sponsors/adilsoncruz)
 
@@ -17,10 +18,10 @@ Open PDF Generator is a complete ecosystem for creating and generating PDFs from
 
 | Component | Description |
 |-----------|-------------|
-| **[Core Engine](./core/)** | Kotlin/Java library for PDF generation with OpenPDF |
-| **[Template Editor](./tools/editor/)** | Desktop app (Electron) for visual template editing |
-| **[CLI](./tools/cli/)** | Command-line interface for automation |
-| **[Documentation](./docs/)** | VitePress documentation site |
+| **[Core Engine](./core/)** | Kotlin/Java library for high-throughput PDF generation with OpenPDF |
+| **[Template Editor](./tools/editor/)** | Desktop app (Electron) & [Interactive Web Playground](https://adilsoncruz.github.io/open-pdf-generator/playground/) |
+| **[CLI](./tools/cli/)** | Native binary (GraalVM) & Docker container for CLI automation |
+| **[Documentation](https://adilsoncruz.github.io/open-pdf-generator/)** | Interactive VitePress documentation site with guides and API specs |
 
 ## ⚡ Performance: Open PDF Generator vs JasperReports
 
@@ -92,20 +93,35 @@ dependencies {
 Generate a PDF:
 
 ```kotlin
-val template = """
+import com.pdfgenerator.api.PDFGenerator
+import com.pdfgenerator.model.Template
+import java.io.File
+
+val templateJson = """
 {
-  "page": { "format": "A4" },
-  "body": {
-    "elements": [
-      { "type": "text", "x": 10, "y": 10, "text": "Hello, {{name}}!" }
-    ]
-  }
+  "version": "1.0",
+  "pageSettings": {
+    "size": "A4",
+    "orientation": "portrait",
+    "margins": { "top": 36, "right": 36, "bottom": 36, "left": 36 }
+  },
+  "page": [
+    {
+      "type": "text",
+      "id": "title",
+      "x": 36,
+      "y": 36,
+      "value": "Hello, ${'$'}{name}!",
+      "style": { "fontSize": 18, "fontWeight": "bold", "color": "#1e293b" }
+    }
+  ]
 }
 """
 
 val data = mapOf("name" to "World")
-val pdf = PDFGenerator().generate(template, data)
-File("hello.pdf").writeBytes(pdf)
+val generator = PDFGenerator()
+val pdfBytes = generator.generate(Template.fromString(templateJson), data)
+File("hello.pdf").writeBytes(pdfBytes)
 ```
 
 ### Using the CLI
@@ -123,7 +139,7 @@ pdf-generator convert report.jrxml --output template.json
 
 ### Using the Editor
 
-Download the [latest release](https://github.com/adilsoncruz/open-pdf-generator/releases) or build from source:
+Try the [Interactive Web Playground](https://adilsoncruz.github.io/open-pdf-generator/playground/) directly in your browser, or download the desktop app [latest release](https://github.com/adilsoncruz/open-pdf-generator/releases):
 
 ```bash
 cd tools/editor
@@ -133,33 +149,54 @@ npm run dev
 
 ## 🎯 Template Format
 
-Templates are JSON files with page settings, header/footer, and body elements:
+Templates are declarative JSON documents defining page dimensions, margins, headers/footers, and visual elements:
 
 ```json
 {
-  "page": {
-    "format": "A4",
+  "version": "1.0",
+  "metadata": {
+    "name": "Invoice Template",
+    "description": "Standard business invoice"
+  },
+  "pageSettings": {
+    "size": "A4",
     "orientation": "portrait",
-    "margins": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
+    "margins": { "top": 36, "right": 36, "bottom": 36, "left": 36 },
+    "header": {
+      "height": 30,
+      "elements": [
+        { "type": "text", "id": "hdr-title", "x": 0, "y": 5, "value": "Acme Corp", "style": { "fontWeight": "bold" } }
+      ]
+    },
+    "footer": {
+      "height": 20,
+      "elements": [
+        { "type": "text", "id": "ftr-page", "x": 0, "y": 5, "dataBinding": "pageNumber | prefix:'Page '" }
+      ]
+    }
   },
-  "header": {
-    "height": 30,
-    "elements": [
-      { "type": "text", "x": 10, "y": 10, "text": "Company Name" }
-    ]
-  },
-  "body": {
-    "elements": [
-      { "type": "text", "x": 10, "y": 10, "text": "Invoice #{{invoiceNumber}}" },
-      { "type": "table", "x": 10, "y": 30, "dataSource": "items", ... }
-    ]
-  },
-  "footer": {
-    "height": 20,
-    "elements": [
-      { "type": "text", "x": 10, "y": 5, "text": "Page {{pageNumber}} of {{totalPages}}" }
-    ]
-  }
+  "page": [
+    {
+      "type": "text",
+      "id": "inv-title",
+      "x": 0,
+      "y": 10,
+      "value": "Invoice #${fatura.numero}",
+      "style": { "fontSize": 14, "fontWeight": "bold", "color": "#4f46e5" }
+    },
+    {
+      "type": "table",
+      "id": "items-table",
+      "x": 0,
+      "y": 40,
+      "dataBinding": "items",
+      "columns": [
+        { "header": "Item", "field": "name", "width": 250 },
+        { "header": "Qty", "field": "qty", "width": 60, "alignment": "center" },
+        { "header": "Total", "field": "amount", "width": 100, "alignment": "right" }
+      ]
+    }
+  ]
 }
 ```
 

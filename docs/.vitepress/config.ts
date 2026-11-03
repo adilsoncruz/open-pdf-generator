@@ -8,6 +8,10 @@ const shared = {
   // Base path for GitHub Pages (repo name)
   base: '/open-pdf-generator/',
 
+  ignoreDeadLinks: [
+    /^\/open-pdf-generator\/playground/,
+  ],
+
   head: [['link', { rel: 'icon', href: '/open-pdf-generator/icon.png' }]],
 
   appearance: 'dark',
@@ -60,7 +64,8 @@ const en = {
             { text: 'What is Open PDF Generator?', link: '/lib/guide/what-is' },
             { text: 'Installation', link: '/lib/guide/installation' },
             { text: 'First Steps', link: '/lib/guide/first-steps' },
-            { text: 'Templates', link: '/lib/guide/templates' }
+            { text: 'Templates', link: '/lib/guide/templates' },
+            { text: 'Templates & Examples', link: '/lib/examples/' }
           ]
         },
         {
@@ -190,7 +195,8 @@ const pt = {
             { text: 'Instalação', link: '/pt/lib/guide/installation' },
             { text: 'Primeiros Passos', link: '/pt/lib/guide/first-steps' },
             { text: 'Início rápido', link: '/pt/lib/guide/getting-started' },
-            { text: 'Templates', link: '/pt/lib/guide/templates' }
+            { text: 'Templates', link: '/pt/lib/guide/templates' },
+            { text: 'Exemplos e Modelos Prontos', link: '/pt/lib/examples/' }
           ]
         },
         {
@@ -326,7 +332,8 @@ const es = {
             { text: 'Instalación', link: '/es/lib/guide/installation' },
             { text: 'Primeros Pasos', link: '/es/lib/guide/first-steps' },
             { text: 'Inicio rápido', link: '/es/lib/guide/getting-started' },
-            { text: 'Plantillas', link: '/es/lib/guide/templates' }
+            { text: 'Plantillas', link: '/es/lib/guide/templates' },
+            { text: 'Ejemplos y Plantillas Listas', link: '/es/lib/examples/' }
           ]
         },
         {
