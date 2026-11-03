@@ -181,7 +181,7 @@ publishing {
                 developers {
                     developer {
                         id.set("adilsoncruz")
-                        name.set("Adi Cruz")
+                        name.set("Adilson Cruz")
                     }
                 }
 

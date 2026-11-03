@@ -3,7 +3,7 @@
 > 🚀 Open source toolkit for generating PDFs from JSON templates
 
 [![CI](https://github.com/adilsoncruz/open-pdf-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/adilsoncruz/open-pdf-generator/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![JitPack](https://jitpack.io/v/adilsoncruz/open-pdf-generator.svg)](https://jitpack.io/#adilsoncruz/open-pdf-generator)
 [![GitHub Stars](https://img.shields.io/github/stars/adilsoncruz/open-pdf-generator?style=social)](https://github.com/adilsoncruz/open-pdf-generator)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ff69b4?logo=github)](https://github.com/sponsors/adilsoncruz)
@@ -314,7 +314,7 @@ If Open PDF Generator makes your stack faster or saves cloud infrastructure cost
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) - see the [LICENSE](./LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 

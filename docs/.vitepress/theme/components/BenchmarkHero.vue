@@ -75,12 +75,12 @@ const slides = [
     id: 'community',
     tag: '⭐ Free & Open Source',
     title: 'Modernizing PDF Generation Together',
-    description: 'Open PDF Generator is 100% free and open-source under LGPL-3.0. Built by developers, for developers.',
+    description: 'Open PDF Generator is 100% free and open-source under AGPL-3.0. Built by developers, for developers.',
     badge: 'Community Driven',
     bars: [],
     highlightStat: '100%',
     highlightUnit: 'free',
-    highlightLabel: 'LGPL-3.0 License (Commercial Use OK)',
+    highlightLabel: 'AGPL-3.0 License (Copyleft / Open Source)',
     footerTip: 'Help us build the fastest open-source PDF generator by starring the repo and sharing with colleagues.'
   }
 ]

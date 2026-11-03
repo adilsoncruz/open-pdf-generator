@@ -137,8 +137,8 @@ const en = {
     },
 
     footer: {
-      message: 'Released under the LGPL-3.0 License.',
-      copyright: 'Copyright © 2024 Adi Cruz'
+      message: 'Released under the AGPL-3.0 License.',
+      copyright: 'Copyright © 2024 Adilson Cruz'
     },
 
     editLink: {
@@ -265,8 +265,8 @@ const pt = {
     },
 
     footer: {
-      message: 'Publicado sob a licença LGPL-3.0.',
-      copyright: 'Copyright © 2024 Adi Cruz'
+      message: 'Publicado sob a licença AGPL-3.0.',
+      copyright: 'Copyright © 2024 Adilson Cruz'
     },
 
     editLink: {
@@ -400,8 +400,8 @@ const es = {
     },
 
     footer: {
-      message: 'Publicado bajo la licencia LGPL-3.0.',
-      copyright: 'Copyright © 2024 Adi Cruz'
+      message: 'Publicado bajo la licencia AGPL-3.0.',
+      copyright: 'Copyright © 2024 Adilson Cruz'
     },
 
     editLink: {

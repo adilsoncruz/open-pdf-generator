@@ -55,7 +55,7 @@ Definir la estructura, la geometría y el estilo del documento en un formato JSO
 | **Formato de Plantilla** | **JSON** declarativo | **JRXML / XML** complejo | **Jackson XML** más estricto | Amigable con Git, sin compilación |
 | **Diseñador Visual** | ✅ Open PDF Studio | ✅ Jaspersoft Studio | ✅ Jaspersoft Studio | UI moderna Electron/React |
 | **API de Streaming** | ✅ `OutputStream` directo | ⚠️ Requiere buffer en memoria | ⚠️ Requiere buffer en memoria | Stream de bytes zero-copy |
-| **Licencia** | **LGPL-3.0** *(Gratis, uso comercial OK)* | LGPL-3.0 / Comercial | LGPL-3.0 / Comercial | Misma libertad |
+| **Licencia** | **AGPL-3.0** *(Gratis, Copyleft)* | LGPL-3.0 / Comercial | LGPL-3.0 / Comercial | Protección Copyleft |
 
 > 📊 **Explora Toda la Evidencia:** Ve los benchmarks JMH, los resultados de estrés en contenedores cgroup y el análisis de costos cloud FinOps en nuestro [Reporte de Benchmark](/lib/benchmark).
 

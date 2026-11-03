@@ -167,7 +167,7 @@ Open PDF Generator incluye validación JSON Schema integrada (Draft-07 y 2020-12
 | **Escalado de concurrencia** | Escalado lineal de hilos sin locks | Sublineal (contención de locks internos) |
 | **Dependencias** | OpenPDF 2.x moderno, Gson, ZXing | Commons legacy (BeanUtils, Digester, Collections), ECJ |
 | **Editor visual de plantillas** | App desktop moderna en Electron con Studio Slate | Jaspersoft Studio legacy basado en Eclipse |
-| **Licencia** | Open Source (LGPL-3.0) | Licencias LGPL / comerciales |
+| **Licencia** | Open Source (AGPL-3.0) | Licencias LGPL / comerciales |
 
 ---
 

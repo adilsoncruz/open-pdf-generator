@@ -1627,7 +1627,7 @@ See the [LICENSE](LICENSE) file for more details.
 
 ## Authors
 
-- **Adi Cruz** - [GitHub](https://github.com/adilsoncruz)
+- **Adilson Cruz** - [GitHub](https://github.com/adilsoncruz)
 
 ## Links
 

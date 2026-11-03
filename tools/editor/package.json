@@ -31,7 +31,7 @@
   ],
   "author": "Adilson Cruz <adilsoncruz.ac@gmail.com>",
   "homepage": "https://github.com/adilsoncruz/open-pdf-generator",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "ajv": "^8.20.0",
