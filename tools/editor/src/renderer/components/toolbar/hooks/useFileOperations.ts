@@ -218,19 +218,6 @@ export function useFileOperations({
       const templateJson = JSON.stringify(template)
       const { testData } = useTemplateStore.getState()
       const hasTestData = testData && Object.keys(testData).length > 0
-
-      if (!hasTestData) {
-        const useEmpty = confirm(
-          `⚠️ ${t.pdf.noTestData}\n\n` +
-          `${t.pdf.noTestDataTip}\n\n` +
-          `${t.pdf.generateAnyway}`
-        )
-
-        if (!useEmpty) {
-          return
-        }
-      }
-
       const dataJson = JSON.stringify(testData || {})
 
       console.log('🎯 Generating PDF...')

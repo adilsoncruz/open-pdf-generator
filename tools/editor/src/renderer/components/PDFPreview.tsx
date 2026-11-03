@@ -73,17 +73,11 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
         lastGeneratedAt={lastGeneratedAt}
         numPages={numPages}
         currentPage={currentPage}
-        scale={scale}
         isLoading={isLoading}
         hasPdfData={!!pdfData}
         previewMode={previewMode}
         onPrevPage={goToPrevPage}
         onNextPage={goToNextPage}
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onFitWidth={fitToWidth}
-        onFitPage={fitToPage}
-        onScaleChange={setScale}
         onToggleSplit={handleToggleSplit}
         onDownload={downloadPdf}
         onRefresh={() => generatePreview(true)}
@@ -125,6 +119,7 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
             onZoomIn={zoomIn}
             onZoomOut={zoomOut}
             onFitWidth={fitToWidth}
+            onFitPage={fitToPage}
           />
         )}
 

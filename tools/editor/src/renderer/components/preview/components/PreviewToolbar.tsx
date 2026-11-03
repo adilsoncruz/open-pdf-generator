@@ -5,8 +5,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ViewColumnsIcon,
-  MagnifyingGlassPlusIcon,
-  MagnifyingGlassMinusIcon,
 } from '@heroicons/react/24/outline'
 import { useTranslation } from '../../../i18n'
 import type { PreviewToolbarProps } from '../types'
@@ -16,27 +14,16 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
   lastGeneratedAt,
   numPages,
   currentPage,
-  scale,
   isLoading,
-  hasPdfData,
   previewMode = 'split',
   onPrevPage,
   onNextPage,
-  onZoomIn,
-  onZoomOut,
-  onFitWidth,
-  onFitPage,
-  onScaleChange,
   onToggleSplit,
-  onDownload,
   onRefresh,
   onClose,
 }) => {
   const { t } = useTranslation()
   const displayTitle = title || t.preview.title
-  const currentPercent = Math.round(scale * 100)
-  const baseOptions = [40, 60, 80, 100, 120, 150, 200]
-  const zoomOptions = Array.from(new Set([...baseOptions, currentPercent])).sort((a, b) => a - b)
 
   return (
     <div className="flex items-center justify-between px-3 py-2 border-b theme-border theme-bg select-none gap-2">
@@ -79,62 +66,8 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
         </div>
       )}
 
-      {/* Right: Zoom, Fit, Split, Download, Refresh, Close */}
+      {/* Right: Split, Refresh, Close */}
       <div className="flex items-center gap-1.5">
-        {/* Zoom Controls */}
-        <div className="flex items-center gap-1 bg-slate-950/60 border border-slate-800 rounded px-1.5 py-0.5">
-          <button
-            onClick={onZoomOut}
-            disabled={scale <= 0.4}
-            className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-            title={t.preview.zoomOut || 'Diminuir Zoom'}
-            aria-label="Diminuir Zoom"
-          >
-            <MagnifyingGlassMinusIcon className="w-3.5 h-3.5" />
-          </button>
-
-          <select
-            value={currentPercent.toString()}
-            onChange={(e) => onScaleChange(Number(e.target.value) / 100)}
-            className="bg-transparent border-none text-[11px] font-mono font-medium text-slate-200 py-0 px-1 cursor-pointer appearance-none focus:outline-none"
-            title="Nível de zoom"
-          >
-            {zoomOptions.map((opt) => (
-              <option key={opt} value={opt.toString()} className="bg-slate-900 text-slate-200">
-                {opt}%
-              </option>
-            ))}
-          </select>
-
-          <button
-            onClick={onZoomIn}
-            disabled={scale >= 2.0}
-            className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-            title={t.preview.zoomIn || 'Aumentar Zoom'}
-            aria-label="Aumentar Zoom"
-          >
-            <MagnifyingGlassPlusIcon className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Fit Width & Fit Page buttons */}
-        <div className="flex items-center gap-0.5 border border-slate-800 rounded bg-slate-950/40 p-0.5 text-[11px]">
-          <button
-            onClick={onFitWidth}
-            className="px-1.5 py-0.5 font-medium text-slate-300 hover:text-white hover:bg-slate-800/80 rounded transition"
-            title="Ajustar à largura"
-          >
-            Fit
-          </button>
-          <button
-            onClick={onFitPage}
-            className="px-1.5 py-0.5 font-medium text-slate-300 hover:text-white hover:bg-slate-800/80 rounded transition"
-            title="Ajustar à página inteira"
-          >
-            Page
-          </button>
-        </div>
-
         {/* Split mode button */}
         {onToggleSplit && (
           <button

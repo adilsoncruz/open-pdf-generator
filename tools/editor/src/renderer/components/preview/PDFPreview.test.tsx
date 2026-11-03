@@ -18,7 +18,6 @@ describe('PreviewToolbar', () => {
     const onFitPage = vi.fn()
     const onScaleChange = vi.fn()
     const onToggleSplit = vi.fn()
-    const onDownload = vi.fn()
     const onRefresh = vi.fn()
     const onClose = vi.fn()
 
@@ -28,19 +27,12 @@ describe('PreviewToolbar', () => {
         lastGeneratedAt={new Date('2026-01-01T12:00:00')}
         numPages={5}
         currentPage={2}
-        scale={1}
         isLoading={false}
         hasPdfData={true}
         previewMode="split"
         onPrevPage={onPrevPage}
         onNextPage={onNextPage}
-        onZoomIn={onZoomIn}
-        onZoomOut={onZoomOut}
-        onFitWidth={onFitWidth}
-        onFitPage={onFitPage}
-        onScaleChange={onScaleChange}
         onToggleSplit={onToggleSplit}
-        onDownload={onDownload}
         onRefresh={onRefresh}
         onClose={onClose}
       />
@@ -55,12 +47,6 @@ describe('PreviewToolbar', () => {
 
     fireEvent.click(screen.getByTitle('Próxima página'))
     expect(onNextPage).toHaveBeenCalledTimes(1)
-
-    fireEvent.click(screen.getByTitle('Ajustar à largura'))
-    expect(onFitWidth).toHaveBeenCalledTimes(1)
-
-    fireEvent.click(screen.getByTitle('Ajustar à página inteira'))
-    expect(onFitPage).toHaveBeenCalledTimes(1)
 
     fireEvent.click(screen.getByTitle(/Atualizar Preview|Refresh/i))
     expect(onRefresh).toHaveBeenCalledTimes(1)

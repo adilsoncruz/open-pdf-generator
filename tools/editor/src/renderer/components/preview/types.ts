@@ -7,17 +7,17 @@ export interface PreviewToolbarProps {
   lastGeneratedAt: Date | null
   numPages: number
   currentPage: number
-  scale: number
+  scale?: number
   isLoading: boolean
   hasPdfData: boolean
   previewMode?: 'hidden' | 'tab' | 'split'
   onPrevPage: () => void
   onNextPage: () => void
-  onZoomIn: () => void
-  onZoomOut: () => void
-  onFitWidth: () => void
-  onFitPage: () => void
-  onScaleChange: (scale: number) => void
+  onZoomIn?: () => void
+  onZoomOut?: () => void
+  onFitWidth?: () => void
+  onFitPage?: () => void
+  onScaleChange?: (scale: number) => void
   onToggleSplit?: () => void
   onDownload?: () => void
   onRefresh: () => void
@@ -33,6 +33,7 @@ export interface PreviewViewerProps {
   onZoomIn?: () => void
   onZoomOut?: () => void
   onFitWidth?: () => void
+  onFitPage?: () => void
 }
 
 export interface PreviewErrorStateProps {

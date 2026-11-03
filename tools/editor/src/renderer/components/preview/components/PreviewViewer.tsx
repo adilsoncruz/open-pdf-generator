@@ -18,6 +18,7 @@ export const PreviewViewer: React.FC<PreviewViewerProps> = ({
   onZoomIn,
   onZoomOut,
   onFitWidth,
+  onFitPage,
 }) => {
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
@@ -144,6 +145,16 @@ export const PreviewViewer: React.FC<PreviewViewerProps> = ({
           >
             Fit
           </button>
+
+          {onFitPage && (
+            <button
+              onClick={onFitPage}
+              className="px-1.5 py-0.5 text-[11px] font-medium text-slate-300 hover:text-white hover:bg-slate-800/80 rounded transition"
+              title="Ajustar à página inteira"
+            >
+              Page
+            </button>
+          )}
 
           <button
             onClick={() => onScaleChange(1)}
