@@ -1,6 +1,6 @@
 # Ejemplos y Plantillas Listas
 
-Explore plantillas prácticas listas para producción incluidas en Open PDF Generator. Puede probarlas y editarlas directamente en su navegador usando el [Playground Web Interactivo](/open-pdf-generator/playground/) o ejecutarlas localmente mediante la CLI y la biblioteca Kotlin.
+Explore plantillas prácticas listas para producción incluidas en Open PDF Generator. Puede probarlas y editarlas directamente en su navegador usando el [Playground Web Interactivo](/playground/) o ejecutarlas localmente mediante la CLI y la biblioteca Kotlin.
 
 ---
 
@@ -9,7 +9,7 @@ Explore plantillas prácticas listas para producción incluidas en Open PDF Gene
 Factura corporativa completa con marca de empresa, bloque de facturación del cliente, tabla dinámica de artículos, cálculo de totales, código de barras Code128 y código QR de pago.
 
 <div style="margin: 16px 0;">
-  <a href="/open-pdf-generator/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #4f46e5; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
+  <a href="/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #4f46e5; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
     🎮 Probar Factura en el Playground Web →
   </a>
 </div>
@@ -32,7 +32,7 @@ pdf-generator generate invoice.json -d data.json -o factura.pdf
 Catálogo de inventario multipágina con encabezados y pies de página fijos, marcas de agua de confidencialidad y bordes tabulares claros.
 
 <div style="margin: 16px 0;">
-  <a href="/open-pdf-generator/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #059669; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
+  <a href="/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #059669; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
     🎮 Probar Catálogo en el Playground Web →
   </a>
 </div>
@@ -55,7 +55,7 @@ pdf-generator generate listing.json -d data_listing.json -o catalogo.pdf
 Certificado en orientación horizontal (landscape) adecuado para cursos, premios y reconocimientos.
 
 <div style="margin: 16px 0;">
-  <a href="/open-pdf-generator/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
+  <a href="/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
     🎮 Probar Certificado en el Playground Web →
   </a>
 </div>

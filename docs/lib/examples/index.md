@@ -1,6 +1,6 @@
 # Examples & Ready-to-Use Templates
 
-Explore practical, battle-tested templates included with Open PDF Generator. You can test and modify them directly in your browser using the [Interactive Web Playground](/open-pdf-generator/playground/) or run them locally via CLI and Kotlin.
+Explore practical, battle-tested templates included with Open PDF Generator. You can test and modify them directly in your browser using the [Interactive Web Playground](/playground/) or run them locally via CLI and Kotlin.
 
 ---
 
@@ -9,7 +9,7 @@ Explore practical, battle-tested templates included with Open PDF Generator. You
 A full corporate invoice featuring company branding, customer billing block, dynamic line-item table, calculated totals, Code128 barcode, and payment QR code.
 
 <div style="margin: 16px 0;">
-  <a href="/open-pdf-generator/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #4f46e5; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
+  <a href="/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #4f46e5; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
     🎮 Test Invoice in Web Playground →
   </a>
 </div>
@@ -32,7 +32,7 @@ pdf-generator generate invoice.json -d data.json -o invoice.pdf
 A multi-page inventory catalog with fixed running headers and footers, confidential watermarks, and alternating tabular borders.
 
 <div style="margin: 16px 0;">
-  <a href="/open-pdf-generator/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #059669; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
+  <a href="/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #059669; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
     🎮 Test Catalog in Web Playground →
   </a>
 </div>
@@ -55,7 +55,7 @@ pdf-generator generate listing.json -d data_listing.json -o catalog.pdf
 A modern landscape certificate suitable for course completions, awards, and accreditations.
 
 <div style="margin: 16px 0;">
-  <a href="/open-pdf-generator/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
+  <a href="/playground/" target="_blank" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: white; border-radius: 8px; font-weight: 600; text-decoration: none;">
     🎮 Test Certificate in Web Playground →
   </a>
 </div>
