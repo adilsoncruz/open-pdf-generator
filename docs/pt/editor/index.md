@@ -119,8 +119,6 @@ Compilação instantânea do PDF com resolução completa de data binding, loops
 ## Principais Recursos
 
 - **Design Studio Slate**: Tema escuro moderno de alto contraste, além de um elegante modo claro com o logo Precision Fold.
-- **Importador JasperReports**: Converta templates legados `.jrxml` diretamente em templates modernos do Open PDF Generator.
-- **Importador de PDF com IA**: Ingesta de documentos PDF existentes ou mockups de layout e geração automática de templates JSON com inferência estruturada.
 - **Workspace Multi-Abas**: Abra, edite e compare vários templates de PDF simultaneamente com rastreamento de estado pendente (dirty-state).
 - **Menu de Contexto (Clique Direito)**: Ações instantâneas nos elementos do canvas e nas camadas (Agrupar, Desagrupar, Duplicar, Excluir, Propriedades do Grupo).
 - **Grupos de Elementos**: Agrupe vários elementos para compartilhar regras de visibilidade e lógica condicional (`printCondition`).

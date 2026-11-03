@@ -119,8 +119,6 @@ Instant PDF compilation with full data binding resolution, loops, and automatic 
 ## Key Features
 
 - **Studio Slate Design**: Modern high-contrast dark theme alongside an elegant light mode with the Precision Fold logo.
-- **JasperReports Importer**: Convert legacy `.jrxml` templates directly into modern Open PDF Generator templates.
-- **AI-Powered PDF Importer**: Ingest existing PDF documents or design mockups and automatically generate JSON templates with structured inference.
 - **Multi-Tab Workspace**: Open, edit, and compare multiple PDF templates concurrently with dirty-state tracking.
 - **Right-Click Context Menu**: Instant actions on canvas elements and layers (Group, Ungroup, Duplicate, Delete, Group Properties).
 - **Element Groups**: Bundle multiple elements to share visibility rules and conditional logic (`printCondition`).

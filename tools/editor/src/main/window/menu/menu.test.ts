@@ -109,13 +109,7 @@ describe('fileMenu', () => {
     exportBtn?.click?.({} as any, {} as any, {} as any)
     expect(send).toHaveBeenCalledWith('menu:export')
 
-    const jasperBtn = submenu.find((item) => item.label === strings.importJasper)
-    jasperBtn?.click?.({} as any, {} as any, {} as any)
-    expect(send).toHaveBeenCalledWith('menu:import-jasper')
 
-    const aiBtn = submenu.find((item) => item.label === strings.importAi)
-    aiBtn?.click?.({} as any, {} as any, {} as any)
-    expect(send).toHaveBeenCalledWith('menu:import-ai')
 
     const exitBtn = submenu.find((item) => item.label === strings.exit)
     expect(exitBtn).toBeDefined()
