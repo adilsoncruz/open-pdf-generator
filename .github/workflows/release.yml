@@ -496,6 +496,8 @@ jobs:
             tools/editor/release/*.AppImage
             tools/editor/release/*.deb
             tools/editor/release/*.zip
+            tools/editor/release/*.yml
+            tools/editor/release/*.blockmap
           if-no-files-found: error
 
   # =========================
