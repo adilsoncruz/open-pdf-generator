@@ -52,7 +52,9 @@ function triggerBinaryDownload(base64Data: string, fileName: string) {
   URL.revokeObjectURL(url)
 }
 
-const API_BASE = (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '') || ''
+const DEFAULT_API = 'https://open-pdf-generator.onrender.com'
+const API_BASE =
+  (import.meta.env.VITE_API_URL as string)?.replace(/\/$/, '') || (import.meta.env.DEV ? '' : DEFAULT_API)
 
 async function requestPdfPreview(templateJson: string, dataJson: string) {
   try {
