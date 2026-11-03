@@ -1,61 +1,70 @@
-# Installation
+# CLI Installation
 
-## Standalone Native Binary (Recommended — No Java required)
+The Open PDF Generator CLI can be executed via **Docker** (no host Java required), as a **Standalone JAR** (runs on JVM 17+), or compiled locally from source into a **GraalVM Native Image**.
 
-Download the pre-compiled GraalVM native binary for instant start-up (~10 ms) without needing Java or Docker:
-
-```bash
-# Linux x86_64
-curl -L https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-linux-amd64 \
-  -o /usr/local/bin/pdf-generator
-chmod +x /usr/local/bin/pdf-generator
-
-# Verify
-pdf-generator version
-```
-
-In your application's `Dockerfile` (Go, Node.js, Python, Ruby):
-
-```dockerfile
-# Download directly into any Debian/Ubuntu container — zero Java dependencies
-RUN curl -L https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-linux-amd64 \
-    -o /usr/local/bin/pdf-generator && chmod +x /usr/local/bin/pdf-generator
-```
+::: tip Note on Native Binaries
+Pre-compiled native binaries are not distributed as pre-built downloads. For environments without Java, use the official **Docker container** or build a native binary locally from source using GraalVM.
+:::
 
 ---
 
-## Java Standalone JAR (Requires Java 17+)
+## Option 1: Docker (Recommended — No Java on host)
 
-If you prefer running on the JVM:
+The Docker image is the easiest and cleanest way to run the CLI from **Go, Node.js, Python, Ruby, or shell scripts** without installing a JVM on the host machine.
 
-```bash
-curl -L https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-cli.jar \
-  -o pdf-generator-cli.jar
-```
-
-## Setup
-
-### Option 1: Create an Alias
-
-Add to your `~/.zshrc` or `~/.bashrc`:
+### Build Image Locally
 
 ```bash
-alias pdf-generator="java -jar /path/to/pdf-generator-cli.jar"
+# Clone the repository
+git clone https://github.com/adilsoncruz/open-pdf-generator.git
+cd open-pdf-generator
+
+# Build CLI JAR and Docker container
+./gradlew :tools:cli:shadowJar
+docker build -t open-pdf-generator:cli tools/cli/
 ```
 
-Then reload:
+### Run via Docker
 
 ```bash
-source ~/.zshrc
+# File-based usage (mounting current directory)
+docker run --rm -v "$PWD:/data" open-pdf-generator:cli \
+  generate /data/invoice.json -d /data/data.json -o /data/invoice.pdf
+
+# Piped usage (stream JSON in on stdin, PDF out on stdout)
+cat data.json | docker run --rm -i \
+  -v "$PWD/templates:/templates:ro" open-pdf-generator:cli \
+  generate /templates/invoice.json -d - -o - > invoice.pdf
 ```
 
-### Option 2: Create a Wrapper Script
+In piped mode (`-d -` and `-o -`), all logs are routed to `stderr`, leaving `stdout` pure binary PDF for piping.
+
+---
+
+## Option 2: Standalone JAR (Requires Java 17+)
+
+If you already have Java 17 or 21 installed on your system, you can run the standalone fat JAR directly.
+
+### Build the JAR from Source
+
+```bash
+git clone https://github.com/adilsoncruz/open-pdf-generator.git
+cd open-pdf-generator
+./gradlew :tools:cli:shadowJar
+```
+
+The executable JAR is generated at:
+`tools/cli/build/libs/pdf-generator-cli-1.0.0.jar`
+
+### Setup CLI Command
+
+#### Method A: Create a Wrapper Script (Recommended)
 
 Create `/usr/local/bin/pdf-generator`:
 
 ```bash
 #!/bin/bash
-java -jar /path/to/pdf-generator-cli.jar "$@"
+java -jar /path/to/open-pdf-generator/tools/cli/build/libs/pdf-generator-cli-1.0.0.jar "$@"
 ```
 
 Make it executable:
@@ -64,80 +73,39 @@ Make it executable:
 chmod +x /usr/local/bin/pdf-generator
 ```
 
-### Option 3: Install to Home Directory
+#### Method B: Create a Shell Alias
+
+Add to your `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-mkdir -p ~/.pdf-generator
-mv pdf-generator-cli.jar ~/.pdf-generator/
-echo 'alias pdf-generator="java -jar ~/.pdf-generator/pdf-generator-cli.jar"' >> ~/.zshrc
-source ~/.zshrc
+alias pdf-generator="java -jar /path/to/open-pdf-generator/tools/cli/build/libs/pdf-generator-cli-1.0.0.jar"
 ```
 
-### Option 4: Docker
-
-The image is the easiest way to consume the CLI from **Go, Node.js, Python or any other
-language** — no JVM on the host and no version drift between services.
+Then reload:
 
 ```bash
-# Build from the repository root
-docker build -t open-pdf-generator:cli tools/cli/
-
-# File-based usage (mounted workdir)
-docker run --rm -v "$PWD:/data" open-pdf-generator:cli \
-  generate /data/invoice.json -d /data/data.json -o /data/invoice.pdf
-
-# Piped usage — JSON in on stdin, PDF out on stdout (no volume needed)
-cat data.json | docker run --rm -i \
-  -v "$PWD/templates:/templates:ro" open-pdf-generator:cli \
-  generate /templates/invoice.json -d - -o - > invoice.pdf
+source ~/.zshrc # or source ~/.bashrc
 ```
 
-<Note>
-`-d -` reads the data payload from stdin and `-o -` streams the PDF to stdout. All
-informational output is suppressed (and logs go to stderr) in streaming mode, so the
-binary stream stays clean.
-</Note>
+---
 
-### Option 5: Native Binary (GraalVM)
+## Option 3: Compile GraalVM Native Image (From Source)
 
-A `java -jar` invocation starts a JVM per document (~250 ms). If you call the CLI once
-per request — the common case for an API that renders one PDF per call — build the
-native image instead: same templates, same flags, **no JVM**, ~10–20 ms per document.
+For sub-millisecond execution without a JVM runtime, you can compile a native binary locally using GraalVM or the provided multi-stage Dockerfile:
 
 ```bash
-# Build from the repository root (several minutes: native-image compilation)
+# Build native image using Docker
 docker build -f tools/cli/Dockerfile.native -t open-pdf-generator:native .
-# or: make cli-native
 
+# Verify native build
 docker run --rm open-pdf-generator:native version
-
-# Piped usage — identical to the JVM image
-cat data.json | docker run --rm -i \
-  -v "$PWD/templates:/templates:ro" open-pdf-generator:native \
-  generate /templates/invoice.json -d - -o - > invoice.pdf
 ```
 
-| | `open-pdf-generator:cli` (JVM) | `open-pdf-generator:native` |
-|---|---|---|
-| Start-up per document | ~250 ms | ~10–20 ms |
-| Image size | ~334 MB | ~214 MB |
-| Java on host | not needed | not needed |
-
-The binary embeds the core library and the CLI, so rebuild it whenever either changes.
-Numbers and methodology: [Multi-language benchmark](/lib/benchmark-multilang).
-
-For an API that renders one PDF per request, add `serve` to keep the process warm:
-
-```bash
-docker run --rm -i -v "$PWD/templates:/templates:ro" \
-  open-pdf-generator:native serve --preload /templates/invoice.json
-# then write one NDJSON request per line on stdin and read one response per line
-```
-
-Measured at **0.4 ms per invoice** versus 12 ms for one process per document and 263 ms
-for the JVM CLI — see the [benchmark](/lib/benchmark-multilang).
+---
 
 ## Verify Installation
+
+Check that the CLI is working:
 
 ```bash
 pdf-generator version
@@ -149,16 +117,3 @@ Expected output:
 PDF Generator CLI v1.0.0
 Core Library v1.0.0
 ```
-
-## Build from Source
-
-```bash
-git clone https://github.com/adilsoncruz/open-pdf-generator.git
-cd open-pdf-generator/tools/cli
-../../gradlew shadowJar
-```
-
-The JAR will be at `build/libs/pdf-generator-cli-1.0.0.jar`.
-
-
-

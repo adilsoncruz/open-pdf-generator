@@ -41,7 +41,7 @@ const slidesByLang: Record<string, HeroSlideData[]> = {
       badge: '🌐 Polyglot & Zero Java',
       shortLabel: 'Polyglot',
       title: 'Run from Go, Node.js, Python & Docker',
-      tagline: 'Standalone GraalVM native binary with 0.6ms latency. Integrate with any tech stack without installing Java.'
+      tagline: 'Run via Docker container with sub-millisecond response. Integrate with any tech stack without installing Java.'
     },
     {
       id: 'barcodes',
@@ -129,7 +129,7 @@ const slidesByLang: Record<string, HeroSlideData[]> = {
       badge: '🌐 Políglota y Cero Java',
       shortLabel: 'Políglota',
       title: 'Ejecuta en Go, Node.js, Python y Docker',
-      tagline: 'Binario nativo autónomo con latencia de 0.6ms. Integra con cualquier stack sin necesidad de instalar Java.'
+      tagline: 'Ejecuta mediante contenedor Docker con respuesta de sub-milisegundo. Integra con cualquier stack sin necesidad de Java.'
     },
     {
       id: 'barcodes',

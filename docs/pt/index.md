@@ -39,8 +39,8 @@ features:
 
   - icon:
       src: /icons/terminal.svg
-    title: CLI Poliglota (Zero Java Necessário)
-    details: Binário nativo autônomo GraalVM para Linux, macOS e Windows. Integre perfeitamente com Go, Node.js, Python ou Docker com latência sub-milissegundo.
+    title: CLI Poliglota (Zero Java no Host)
+    details: Execute via container Docker ou JAR standalone. Integre perfeitamente com Go, Node.js, Python ou scripts bash.
     link: /pt/cli/examples
     linkText: Guia Go & Node
 
@@ -150,24 +150,19 @@ Compare o Open PDF Generator com as principais ferramentas em **Java**, **Go** e
 
 ## Instalação
 
-Adicione ao seu projeto via Gradle, Maven ou baixe o binário nativo autônomo diretamente:
+Adicione ao seu projeto via Gradle, Maven ou execute a CLI via Docker:
 
 ::: code-group
 
-```bash [CLI Nativa (Go / Node / Python)]
-# Linux (amd64) — Zero Java necessário
-curl -sSL -o /usr/local/bin/pdf-generator https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-linux-amd64 && chmod +x /usr/local/bin/pdf-generator
-
-# macOS (Apple Silicon arm64) — Zero Java necessário
-curl -sSL -o /usr/local/bin/pdf-generator https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-darwin-arm64 && chmod +x /usr/local/bin/pdf-generator
-
-# Docker (Execução direta em comando único)
-docker run --rm -v $(pwd):/work -w /work open-pdf-generator:native generate template.json -d data.json -o out.pdf
+```bash [CLI Docker (Go / Node / Python)]
+# Executar via Docker (Zero Java necessário no host)
+docker run --rm -v $(pwd):/work -w /work open-pdf-generator:cli \
+  generate template.json -d data.json -o out.pdf
 ```
 
 ```kotlin [Gradle (Kotlin)]
 repositories {
-    maven { url = uri("https://jitpack.io") }
+    mavenCentral()
 }
 
 dependencies {
@@ -177,7 +172,7 @@ dependencies {
 
 ```groovy [Gradle (Groovy)]
 repositories {
-    maven { url 'https://jitpack.io' }
+    mavenCentral()
 }
 
 dependencies {

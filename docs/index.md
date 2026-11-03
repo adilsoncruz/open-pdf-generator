@@ -39,8 +39,8 @@ features:
 
   - icon:
       src: /icons/terminal.svg
-    title: Polyglot CLI (Zero Java Required)
-    details: Standalone GraalVM native binary for Linux, macOS and Windows. Seamlessly integrate with Go, Node.js, Python, or Docker at sub-millisecond speeds.
+    title: Polyglot CLI (Zero Host Java Required)
+    details: Run via Docker container or standalone JAR. Seamlessly integrate with Go, Node.js, Python, or shell scripts.
     link: /cli/examples
     linkText: Go & Node Guide
 
@@ -150,24 +150,19 @@ Compare Open PDF Generator against the standard reporting and PDF tools across *
 
 ## Installation
 
-Add to your project with Gradle, Maven, or download the standalone native binary directly:
+Add to your project with Gradle, Maven, or run the CLI via Docker:
 
 ::: code-group
 
-```bash [Native CLI (Go / Node / Python)]
-# Linux (amd64) — No Java required
-curl -sSL -o /usr/local/bin/pdf-generator https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-linux-amd64 && chmod +x /usr/local/bin/pdf-generator
-
-# macOS (Apple Silicon arm64) — No Java required
-curl -sSL -o /usr/local/bin/pdf-generator https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-darwin-arm64 && chmod +x /usr/local/bin/pdf-generator
-
-# Docker (Single command execution)
-docker run --rm -v $(pwd):/work -w /work open-pdf-generator:native generate template.json -d data.json -o out.pdf
+```bash [Docker CLI (Go / Node / Python)]
+# Run via Docker (No Java required on host)
+docker run --rm -v $(pwd):/work -w /work open-pdf-generator:cli \
+  generate template.json -d data.json -o out.pdf
 ```
 
 ```kotlin [Gradle (Kotlin)]
 repositories {
-    maven { url = uri("https://jitpack.io") }
+    mavenCentral()
 }
 
 dependencies {
@@ -177,7 +172,7 @@ dependencies {
 
 ```groovy [Gradle (Groovy)]
 repositories {
-    maven { url 'https://jitpack.io' }
+    mavenCentral()
 }
 
 dependencies {
