@@ -118,17 +118,16 @@
         {
           "target": "dmg",
           "arch": [
-            "universal"
+            "arm64"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "universal"
+            "arm64"
           ]
         }
       ],
-      "x64ArchFiles": "**",
       "icon": "resources/icon.icns"
     },
     "win": {
