@@ -85,8 +85,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         />
 
         <DocumentTitle onSave={handleSave} />
-
-        <UpdateNotification />
       </div>
 
       {/* 2. SEÇÃO CENTRAL: Abas de Templates (Multi-tabs) */}
@@ -119,6 +117,9 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         onInstallCLIFromFile={() => handleInstallCLIFromFile(() => setShowCLIModal(false))}
         onRefreshStatus={checkCLIStatus}
       />
+
+      {/* Floating Update Notification (Bottom-Right) */}
+      <UpdateNotification />
     </div>
   )
 })
