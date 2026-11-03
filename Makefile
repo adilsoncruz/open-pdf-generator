@@ -39,7 +39,7 @@ NPM := npm
 .PHONY: help all build clean test install dev \
         hooks-install \
         core core-build core-test core-jar core-clean \
-        cli cli-build cli-clean cli-install cli-docker cli-native \
+        cli cli-build cli-clean cli-install cli-docker cli-docker-native cli-native \
         benchmark-multilang \
         editor editor-install editor-dev editor-build editor-package editor-package-mac editor-package-win editor-package-linux editor-package-all editor-clean \
         docs docs-install docs-dev docs-build docs-preview docs-clean \
@@ -80,7 +80,7 @@ help: ## Show this help message
 # GLOBAL TARGETS
 # ============================================================================
 
-all: core-build cli-build editor-build docs-build ## Build everything (core, cli, editor, docs)
+all: core-build cli-build cli-native editor-build docs-build ## Build everything (core, cli native, editor, docs)
 	@echo ""
 	@echo "$(GREEN)$(BOLD)✓ All components built successfully!$(NC)"
 
@@ -210,14 +210,19 @@ cli-docker: cli-build ## Build the CLI Docker image (open-pdf-generator:cli)
 	@docker build -t open-pdf-generator:cli $(CLI_DIR)
 	@echo "$(GREEN)✓ Image open-pdf-generator:cli built$(NC)"
 
-cli-native: ## Build the GraalVM native CLI image (open-pdf-generator:native, no JVM)
+cli-docker-native: ## Build the GraalVM native CLI Docker image (open-pdf-generator:native, no JVM)
 	@echo ""
-	@echo "$(BOLD)$(BLUE)Building native CLI image (GraalVM native-image)...$(NC)"
+	@echo "$(BOLD)$(BLUE)Building native CLI Docker image (GraalVM native-image)...$(NC)"
 	@echo "$(YELLOW)This compiles the binary and takes several minutes.$(NC)"
 	@docker build -f $(CLI_DIR)/Dockerfile.native -t open-pdf-generator:native $(ROOT_DIR)
 	@echo "$(GREEN)✓ Image open-pdf-generator:native built$(NC)"
 	@echo "  Usage: docker run --rm -i -v \"\$$PWD/templates:/templates:ro\" open-pdf-generator:native \\"
 	@echo "           generate /templates/invoice.json -d - -o - > invoice.pdf"
+
+cli-native: ## Build standalone native binary for host OS and copy to editor resources
+	@echo ""
+	@echo "$(BOLD)$(BLUE)Building Host Native CLI Binary (GraalVM)...$(NC)"
+	@bash $(CLI_DIR)/native-image/build-native.sh
 
 # ============================================================================
 # BENCHMARK (multi-language: CLI vs Maroto/Go vs pdfmake/Node)
@@ -253,35 +258,41 @@ editor-build: editor-install ## Build editor for production
 	@cd $(EDITOR_DIR) && $(NPM) run build
 	@echo "$(GREEN)✓ Editor built$(NC)"
 
-editor-package: editor-build ## Package editor as desktop app (current OS)
+editor-ensure-bin: ## Ensure native CLI binary exists in editor resources
+	@if [ ! -f $(EDITOR_DIR)/resources/bin/pdf-generator ] && [ ! -f $(EDITOR_DIR)/resources/bin/pdf-generator.exe ]; then \
+		echo "$(YELLOW)Native CLI binary not found in editor resources. Building with cli-native...$(NC)"; \
+		$(MAKE) cli-native; \
+	fi
+
+editor-package: editor-build editor-ensure-bin ## Package editor as desktop app (current OS)
 	@echo ""
 	@echo "$(BOLD)$(BLUE)Packaging Editor (Current OS)...$(NC)"
 	@cd $(EDITOR_DIR) && $(NPM) run package
 	@echo "$(GREEN)✓ Editor packaged$(NC)"
 	@echo "  Output: $(EDITOR_DIR)/release/"
 
-editor-package-mac: editor-build ## Package editor for macOS (DMG + ZIP)
+editor-package-mac: editor-build editor-ensure-bin ## Package editor for macOS (DMG + ZIP)
 	@echo ""
 	@echo "$(BOLD)$(BLUE)Packaging Editor (macOS)...$(NC)"
 	@cd $(EDITOR_DIR) && $(NPM) run package:mac
 	@echo "$(GREEN)✓ macOS app packaged$(NC)"
 	@echo "  Output: $(EDITOR_DIR)/release/"
 
-editor-package-win: editor-build ## Package editor for Windows (NSIS + ZIP)
+editor-package-win: editor-build editor-ensure-bin ## Package editor for Windows (NSIS + ZIP)
 	@echo ""
 	@echo "$(BOLD)$(BLUE)Packaging Editor (Windows)...$(NC)"
 	@cd $(EDITOR_DIR) && $(NPM) run package:win
 	@echo "$(GREEN)✓ Windows app packaged$(NC)"
 	@echo "  Output: $(EDITOR_DIR)/release/"
 
-editor-package-linux: editor-build ## Package editor for Linux (AppImage + DEB)
+editor-package-linux: editor-build editor-ensure-bin ## Package editor for Linux (AppImage + DEB)
 	@echo ""
 	@echo "$(BOLD)$(BLUE)Packaging Editor (Linux)...$(NC)"
 	@cd $(EDITOR_DIR) && $(NPM) run package:linux
 	@echo "$(GREEN)✓ Linux app packaged$(NC)"
 	@echo "  Output: $(EDITOR_DIR)/release/"
 
-editor-package-all: editor-build ## Package editor for all platforms (macOS, Windows, Linux)
+editor-package-all: editor-build editor-ensure-bin ## Package editor for all platforms (macOS, Windows, Linux)
 	@echo ""
 	@echo "$(BOLD)$(BLUE)Packaging Editor (All Platforms)...$(NC)"
 	@cd $(EDITOR_DIR) && $(NPM) run package:all
@@ -293,6 +304,13 @@ editor-clean: ## Clean editor build artifacts
 	@rm -rf $(EDITOR_DIR)/dist
 	@rm -rf $(EDITOR_DIR)/release
 	@echo "$(GREEN)✓ Editor cleaned$(NC)"
+
+editor-clean-artifacts: ## Clean temporary unpacked folders and blockmaps in release/ preserving installer packages
+	@echo "$(YELLOW)Cleaning temporary release artifacts...$(NC)"
+	@cd $(EDITOR_DIR)/release 2>/dev/null && \
+		rm -rf mac-arm64 mac-universal win-unpacked *-win && \
+		rm -f *.blockmap builder-debug.yml builder-effective-config.yaml latest*.yml .DS_Store
+	@echo "$(GREEN)✓ Cleaned temporary release artifacts$(NC)"
 
 editor-lint: ## Run editor linting
 	@echo ""

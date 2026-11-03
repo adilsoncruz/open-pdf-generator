@@ -62,8 +62,8 @@ describe('PreviewToolbar', () => {
     fireEvent.click(screen.getByTitle('Ajustar à página inteira'))
     expect(onFitPage).toHaveBeenCalledTimes(1)
 
-    fireEvent.click(screen.getByTitle('Baixar PDF'))
-    expect(onDownload).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByTitle(/Atualizar Preview|Refresh/i))
+    expect(onRefresh).toHaveBeenCalledTimes(1)
 
     fireEvent.click(screen.getByTitle('Fechar Preview'))
     expect(onClose).toHaveBeenCalledTimes(1)

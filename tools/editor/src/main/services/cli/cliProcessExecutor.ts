@@ -126,12 +126,13 @@ export function executeProcess(
 }
 
 export async function executeCliCommand(
-  javaPath: string,
+  execPath: string,
   jarPath: string,
   cliArgs: string[],
   options: ProcessExecutionOptions = {}
 ): Promise<ProcessExecutionResult> {
-  return executeProcess(javaPath, ['-jar', jarPath, ...cliArgs], options)
+  const args = jarPath ? ['-jar', jarPath, ...cliArgs] : cliArgs
+  return executeProcess(execPath, args, options)
 }
 
 export async function convertJrxmlWithCli(

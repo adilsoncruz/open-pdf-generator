@@ -52,6 +52,8 @@ tmp/
 # Electron / Editor
 tools/editor/dist/
 tools/editor/release/
+tools/editor/resources/bin/*
+!tools/editor/resources/bin/.gitkeep
 
 # VitePress
 docs/.vitepress/cache/

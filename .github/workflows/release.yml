@@ -101,6 +101,7 @@ jobs:
         run: |
           TAG="engine-v${{ steps.version.outputs.version }}"
           echo "Checking tag: $TAG"
+          git fetch --tags
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag exists"
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -192,6 +193,7 @@ jobs:
         run: |
           TAG="cli-v${{ steps.version.outputs.version }}"
           echo "Checking tag: $TAG"
+          git fetch --tags
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag exists"
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -219,7 +221,7 @@ jobs:
   # =======================================================
   build-native-cli:
     name: Build Native CLI (${{ matrix.target }})
-    needs: [changes, release-cli]
+    needs: [changes]
     if: needs.changes.outputs.cli == 'true' || inputs.release_cli == true || needs.changes.outputs.editor == 'true' || inputs.release_editor == true
     runs-on: ${{ matrix.os }}
 
@@ -285,21 +287,46 @@ jobs:
             generate tools/cli/native-image/train/listing.json -d tools/cli/native-image/train/data_listing.json -o out2.pdf
           java -agentlib:native-image-agent=config-merge-dir=meta -jar "$JAR_PATH" \
             generate tools/cli/native-image/train/complex.json -d tools/cli/native-image/train/data_complex.json -o out3.pdf
-          native-image \
+
+          if command -v cygpath >/dev/null 2>&1; then
+            [ -n "$JAVA_HOME" ] && export PATH="$(cygpath -u "$JAVA_HOME")/bin:$PATH"
+            [ -n "$GRAALVM_HOME" ] && export PATH="$(cygpath -u "$GRAALVM_HOME")/bin:$PATH"
+          else
+            [ -n "$JAVA_HOME" ] && export PATH="$JAVA_HOME/bin:$PATH"
+            [ -n "$GRAALVM_HOME" ] && export PATH="$GRAALVM_HOME/bin:$PATH"
+          fi
+
+          NATIVE_IMAGE_CMD="native-image"
+          if command -v native-image.cmd >/dev/null 2>&1; then
+            NATIVE_IMAGE_CMD="native-image.cmd"
+          elif command -v native-image >/dev/null 2>&1; then
+            NATIVE_IMAGE_CMD="native-image"
+          elif [ -n "$GRAALVM_HOME" ] && [ -f "$GRAALVM_HOME/bin/native-image.cmd" ]; then
+            NATIVE_IMAGE_CMD="$GRAALVM_HOME/bin/native-image.cmd"
+          elif [ -n "$JAVA_HOME" ] && [ -f "$JAVA_HOME/bin/native-image.cmd" ]; then
+            NATIVE_IMAGE_CMD="$JAVA_HOME/bin/native-image.cmd"
+          fi
+          echo "Using native image command: $NATIVE_IMAGE_CMD"
+
+          "$NATIVE_IMAGE_CMD" \
             --no-fallback \
+            -march=compatibility \
             -Djava.awt.headless=true \
             -jar "$JAR_PATH" \
             -o dist/${{ matrix.output_name }} \
             -H:ConfigurationFileDirectories=meta \
             -H:+ReportExceptionStackTraces \
             --initialize-at-run-time=org.slf4j.LoggerFactory,org.slf4j.helpers.Reporter,ch.qos.logback \
-            --initialize-at-build-time=java.awt.Color,java.awt.Toolkit,java.awt.image,java.awt.color \
+            --initialize-at-build-time=java.awt.Color,java.awt.Toolkit,java.awt.image,java.awt.color,java.awt.Insets \
             -H:IncludeResources='logback.xml'
 
       - name: Generate Checksum
         shell: bash
         working-directory: dist
         run: |
+          if [ ! -f "${{ matrix.output_name }}" ] && [ -f "${{ matrix.output_name }}.exe" ]; then
+            mv "${{ matrix.output_name }}.exe" "${{ matrix.output_name }}"
+          fi
           if command -v sha256sum >/dev/null 2>&1; then
             sha256sum ${{ matrix.output_name }} > ${{ matrix.output_name }}.sha256
           else
@@ -371,10 +398,11 @@ jobs:
   build-editor:
     name: Build Editor (${{ matrix.os }})
     needs: [changes, build-native-cli]
-    if: always() && (needs.changes.outputs.editor == 'true' || inputs.release_editor == true)
+    if: "!cancelled() && (needs.changes.outputs.editor == 'true' || inputs.release_editor == true)"
     runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
 
@@ -421,13 +449,21 @@ jobs:
           if [ -n "$ARTIFACT_FILE" ] && [ -f "$ARTIFACT_FILE" ]; then
             echo "Using native binary from build-native-cli: $ARTIFACT_FILE"
             cp "$ARTIFACT_FILE" "tools/editor/resources/bin/$BIN_NAME"
+            ARTIFACT_DIR=$(dirname "$ARTIFACT_FILE")
+            cp "$ARTIFACT_DIR"/*.dll tools/editor/resources/bin/ 2>/dev/null || true
           else
+            DOWNLOAD_TARGET="$TARGET"
+            [ "$TARGET" = "windows-amd64" ] && DOWNLOAD_TARGET="windows-amd64.exe"
             echo "Downloading released native binary for $TARGET..."
-            curl -fsSL "https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-$TARGET" \
+            curl -fsSL "https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-$DOWNLOAD_TARGET" \
               -o "tools/editor/resources/bin/$BIN_NAME" || echo "Warning: Could not download native binary"
           fi
           chmod +x "tools/editor/resources/bin/$BIN_NAME" 2>/dev/null || true
           ls -la tools/editor/resources/bin/
+          if [ ! -s "tools/editor/resources/bin/$BIN_NAME" ]; then
+            echo "ERROR: Native binary tools/editor/resources/bin/$BIN_NAME was not found or is empty!"
+            exit 1
+          fi
 
       - name: Build Electron app
         working-directory: tools/editor
@@ -472,7 +508,7 @@ jobs:
           node-version: 20
 
       - name: Download all editor artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           pattern: editor-dist-*
           path: release-artifacts

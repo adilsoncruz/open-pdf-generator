@@ -19,7 +19,7 @@ export interface PreviewToolbarProps {
   onFitPage: () => void
   onScaleChange: (scale: number) => void
   onToggleSplit?: () => void
-  onDownload: () => void
+  onDownload?: () => void
   onRefresh: () => void
   onClose?: () => void
 }
