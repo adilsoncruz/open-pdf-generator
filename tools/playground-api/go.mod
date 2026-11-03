@@ -1,3 +1,3 @@
 module github.com/open-pdf-generator/playground-api
 
-go 1.27.1
+go 1.24
