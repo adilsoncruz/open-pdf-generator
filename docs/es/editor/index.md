@@ -22,17 +22,17 @@ onMounted(() => {
 
 const downloads = {
   macos: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.dmg',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor-1.0.0-universal.dmg',
     label: 'Descargar para macOS',
     available: true
   },
   windows: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.exe',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor.Setup.1.0.0.exe',
     label: 'Descargar para Windows',
     available: true
   },
   linux: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.AppImage',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor-1.0.0.AppImage',
     label: 'Descargar para Linux',
     available: true
   }
@@ -44,7 +44,7 @@ const downloads = {
 Una potente aplicación de escritorio para diseñar y previsualizar plantillas PDF con un lienzo visual drag-and-drop, data binding en tiempo real y el sistema de diseño **Studio Slate**.
 
 <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 24px 0;">
-  <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem; font-weight: 600; color: var(--vp-c-brand-1);">v1.1.0</span>
+  <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem; font-weight: 600; color: var(--vp-c-brand-1);">v1.0.0</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">macOS · Windows · Linux</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">Studio Slate</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">Licencia AGPL-3.0</span>
@@ -59,12 +59,12 @@ Una potente aplicación de escritorio para diseñar y previsualizar plantillas P
   >
     ⬇️ {{ downloads[os].label }}
   </a>
-  <div v-else style="display: inline-block; padding: 16px 32px; background: var(--vp-c-bg-soft); color: var(--vp-c-text-3); border-radius: 12px; font-weight: 600; font-size: 1.1rem; border: 1px solid var(--vp-c-divider);">
+  <div v-else style="display: inline-block; padding: 16px 32px; background: var(--vp-c-bg-soft); color: var(--vp-c-text-3); border-radius: 12px; font-weight: 600; font-size: 1.1rem; border: 1px solid var(--vp-c-divider); border-radius: 12px;">
     {{ downloads[os].label }} - Próximamente
   </div>
   
   <p style="margin-top: 16px; font-size: 0.9rem; color: var(--vp-c-text-3);">
-    Versión 1.1.0 · {{ osName }} · ~117 MB
+    Versión 1.0.0 · {{ osName }} · Universal / x64
   </p>
   
   <p style="margin-top: 8px; font-size: 0.85rem; color: var(--vp-c-text-2);">
@@ -143,18 +143,18 @@ Compilación instantánea del PDF con resolución completa de data binding, loop
 
 ```bash [Windows]
 # 1. Download the .exe installer from the button above
-# 2. Run PDF-Template-Editor-1.1.0.exe
+# 2. Run PDF.Template.Editor.Setup.1.0.0.exe
 # 3. Follow the installation setup wizard
 # 4. Launch from Start Menu or Desktop shortcut
 ```
 
 ```bash [Linux]
 # Option A: AppImage (Recommended)
-chmod +x PDF-Template-Editor-1.1.0.AppImage
-./PDF-Template-Editor-1.1.0.AppImage
+chmod +x PDF.Template.Editor-1.0.0.AppImage
+./PDF.Template.Editor-1.0.0.AppImage
 
 # Option B: Debian / Ubuntu package (.deb)
-sudo dpkg -i PDF-Template-Editor-1.1.0.deb
+sudo dpkg -i pdf-template-editor_1.0.0_amd64.deb
 ```
 
 :::

@@ -22,17 +22,17 @@ onMounted(() => {
 
 const downloads = {
   macos: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.dmg',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor-1.0.0-universal.dmg',
     label: 'Download for macOS',
     available: true
   },
   windows: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.exe',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor.Setup.1.0.0.exe',
     label: 'Download for Windows',
     available: true
   },
   linux: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.AppImage',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor-1.0.0.AppImage',
     label: 'Download for Linux',
     available: true
   }
@@ -44,7 +44,7 @@ const downloads = {
 A powerful desktop application for designing and previewing PDF templates with a drag-and-drop visual canvas, real-time data binding, and the **Studio Slate** design system.
 
 <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 24px 0;">
-  <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem; font-weight: 600; color: var(--vp-c-brand-1);">v1.1.0</span>
+  <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem; font-weight: 600; color: var(--vp-c-brand-1);">v1.0.0</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">macOS · Windows · Linux</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">Studio Slate</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">AGPL-3.0 License</span>
@@ -64,7 +64,7 @@ A powerful desktop application for designing and previewing PDF templates with a
   </div>
   
   <p style="margin-top: 16px; font-size: 0.9rem; color: var(--vp-c-text-3);">
-    Version 1.1.0 · {{ osName }} · ~117 MB
+    Version 1.0.0 · {{ osName }} · Universal / x64
   </p>
   
   <p style="margin-top: 8px; font-size: 0.85rem; color: var(--vp-c-text-2);">
@@ -143,18 +143,18 @@ Instant PDF compilation with full data binding resolution, loops, and automatic 
 
 ```bash [Windows]
 # 1. Download the .exe installer from the button above
-# 2. Run PDF-Template-Editor-1.1.0.exe
+# 2. Run PDF.Template.Editor.Setup.1.0.0.exe
 # 3. Follow the installation setup wizard
 # 4. Launch from Start Menu or Desktop shortcut
 ```
 
 ```bash [Linux]
 # Option A: AppImage (Recommended)
-chmod +x PDF-Template-Editor-1.1.0.AppImage
-./PDF-Template-Editor-1.1.0.AppImage
+chmod +x PDF.Template.Editor-1.0.0.AppImage
+./PDF.Template.Editor-1.0.0.AppImage
 
 # Option B: Debian / Ubuntu package (.deb)
-sudo dpkg -i PDF-Template-Editor-1.1.0.deb
+sudo dpkg -i pdf-template-editor_1.0.0_amd64.deb
 ```
 
 :::
