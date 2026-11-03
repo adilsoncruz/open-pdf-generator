@@ -62,6 +62,10 @@ jobs:
         working-directory: tools/editor
         run: npm ci --legacy-peer-deps
 
+      - name: Audit dependencies for vulnerabilities
+        working-directory: tools/editor
+        run: npm audit --audit-level=high
+
       - name: Run tests
         working-directory: tools/editor
         run: npm test
@@ -86,6 +90,10 @@ jobs:
       - name: Install dependencies
         working-directory: docs
         run: npm ci
+
+      - name: Audit dependencies for vulnerabilities
+        working-directory: docs
+        run: npm audit --audit-level=high
 
       - name: Build VitePress docs
         working-directory: docs
