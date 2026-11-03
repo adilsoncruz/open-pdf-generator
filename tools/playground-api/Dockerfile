@@ -34,7 +34,7 @@ COPY --from=go-builder /app/api-server /usr/local/bin/api-server
 
 ENV PORT=8080
 ENV PDF_GENERATOR_JAR=/app/pdf-generator.jar
-ENV JAVA_TOOL_OPTIONS="-Xms64m -Xmx256m"
+ENV JAVA_TOOL_OPTIONS="-Xms32m -Xmx256m -XX:+UseSerialGC -XX:TieredStopAtLevel=1"
 
 WORKDIR /work
 USER pdf

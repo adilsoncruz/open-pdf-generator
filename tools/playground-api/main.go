@@ -174,7 +174,7 @@ func handleGeneratePreview(w http.ResponseWriter, r *http.Request) {
 	args := append([]string{}, baseArgs...)
 	args = append(args, "generate", templatePath, "-d", dataPath, "-o", outputPath)
 
-	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, bin, args...)
@@ -271,7 +271,7 @@ func handleRenderDirect(w http.ResponseWriter, r *http.Request) {
 	args := append([]string{}, baseArgs...)
 	args = append(args, "generate", templatePath, "-d", dataPath, "-o", outputPath)
 
-	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, bin, args...)
