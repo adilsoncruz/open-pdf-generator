@@ -78,9 +78,3 @@ dependencies {
 | [Barcode](/lib/guide/elements/barcode) | QR Codes e vários formatos de código de barra |
 | [Loop](/lib/guide/elements/loop) | Repetição de elementos para cada item de um array |
 | [Conditional](/lib/guide/elements/conditional) | Exibir/ocultar elementos com base em condições |
-
-## Próximos Passos
-
-- [Guia de Início Rápido](./guide/getting-started.md)
-- [Referência da API](/lib/api/pdf-generator)
-- [Exemplos](/lib/examples/)

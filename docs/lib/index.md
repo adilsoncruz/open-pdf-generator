@@ -78,9 +78,3 @@ dependencies {
 | [Barcode](./guide/elements/barcode.md) | QR codes and various barcode formats |
 | [Loop](./guide/elements/loop.md) | Repeat elements for each item in an array |
 | [Conditional](./guide/elements/conditional.md) | Show/hide elements based on conditions |
-
-## Next Steps
-
-- [Getting Started Guide](./guide/getting-started.md)
-- [API Reference](./api/pdf-generator.md)
-- [Examples](./examples/)
