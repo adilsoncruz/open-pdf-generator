@@ -22,7 +22,7 @@ onMounted(() => {
 
 const downloads = {
   macos: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor-1.0.0-universal.dmg',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor-1.0.0-arm64.dmg',
     label: 'Descargar para macOS',
     available: true
   },
