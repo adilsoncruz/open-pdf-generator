@@ -15,7 +15,7 @@ export function ContainerChildTableRenderer({
         const hasValidColumns = columns.length > 0 && columns.every((col: unknown) => col && typeof col === 'object')
         const tableStyle = child.style || {}
         const headerBg = tableStyle.headerBackground || '#f0f0f0'
-        const headerColor = tableStyle.headerColor || '#000000'
+        const headerColor = (tableStyle.headerTextColor as string) || (tableStyle.headerColor as string) || '#000000'
         const headerFontSize = (tableStyle.headerFontSize as number) || 12
         const fontSize = (tableStyle.fontSize as number) || 10
         const cellColor = tableStyle.cellColor || '#000000'

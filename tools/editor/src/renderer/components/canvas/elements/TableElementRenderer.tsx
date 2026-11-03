@@ -30,7 +30,7 @@ export function TableElementRenderer({
           // Estilos da tabela
           const tableStyle = element.style || {}
           const headerBg = tableStyle.headerBackground || '#f0f0f0'
-          const headerColor = tableStyle.headerColor || '#000000'
+          const headerColor = tableStyle.headerTextColor || tableStyle.headerColor || '#000000'
           const headerFontSize = tableStyle.headerFontSize || 12
           const fontSize = tableStyle.fontSize || 10
           const cellColor = tableStyle.cellColor || '#000000'

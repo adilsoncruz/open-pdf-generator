@@ -77,6 +77,7 @@ export const GALLERY_TEMPLATES: GalleryTemplateItem[] = [
           ],
           style: {
             headerBackground: '#0f172a',
+            headerColor: '#ffffff',
             headerTextColor: '#ffffff',
             borderColor: '#e2e8f0',
             borderWidth: 0.5,
@@ -223,6 +224,7 @@ export const GALLERY_TEMPLATES: GalleryTemplateItem[] = [
           ],
           style: {
             headerBackground: '#0f172a',
+            headerColor: '#ffffff',
             headerTextColor: '#ffffff',
             borderColor: '#e2e8f0',
             fontSize: 9,
