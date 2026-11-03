@@ -150,14 +150,19 @@ Compare Open PDF Generator against the standard reporting and PDF tools across *
 
 ## Installation
 
-Add to your project with Gradle, Maven, or run the CLI via Docker:
+Add to your project with Gradle, Maven, or download the standalone native binary directly:
 
 ::: code-group
 
-```bash [Docker CLI (Go / Node / Python)]
-# Run via Docker (No Java required on host)
-docker run --rm -v $(pwd):/work -w /work open-pdf-generator:cli \
-  generate template.json -d data.json -o out.pdf
+```bash [Native CLI (Go / Node / Python)]
+# Linux (amd64) — Zero Java required
+curl -sSL -o /usr/local/bin/pdf-generator https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-linux-amd64 && chmod +x /usr/local/bin/pdf-generator
+
+# macOS (Apple Silicon arm64) — Zero Java required
+curl -sSL -o /usr/local/bin/pdf-generator https://github.com/adilsoncruz/open-pdf-generator/releases/latest/download/pdf-generator-darwin-arm64 && chmod +x /usr/local/bin/pdf-generator
+
+# Docker
+docker run --rm -v $(pwd):/work -w /work open-pdf-generator:cli generate template.json -d data.json -o out.pdf
 ```
 
 ```kotlin [Gradle (Kotlin)]
