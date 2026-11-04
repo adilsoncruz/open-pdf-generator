@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { convertJrxmlToTemplate } from '../utils/jrxmlImporter'
 import { useTabStore } from '../store/tabStore'
 import { useRecentFilesStore } from '../store/recentFilesStore'
 import { useI18nStore, AVAILABLE_LANGUAGES } from '../i18n'
@@ -9,17 +8,17 @@ import { useI18nStore, AVAILABLE_LANGUAGES } from '../i18n'
  */
 export function openTemplateFromContent(filePath: string, content: string): boolean {
   try {
-    let loadedTemplate: any
     const isJrxml =
       filePath.toLowerCase().endsWith('.jrxml') ||
       content.trim().startsWith('<?xml') ||
       content.includes('<jasperReport')
 
     if (isJrxml && !content.trim().startsWith('{')) {
-      loadedTemplate = convertJrxmlToTemplate(content)
-    } else {
-      loadedTemplate = JSON.parse(content)
+      window.alert('A conversão de templates Jasper (.jrxml) requer a CLI em execução no Desktop App.')
+      return false
     }
+
+    const loadedTemplate: any = JSON.parse(content)
 
     if (loadedTemplate.pageElements && !loadedTemplate.page) {
       loadedTemplate.page = loadedTemplate.pageElements
@@ -71,12 +70,12 @@ export async function handleImportJasper(): Promise<boolean> {
       : await window.electronAPI.openFile()
     if (!result) return false
 
-    let loadedTemplate: any
-    if (result.content.trim().startsWith('{')) {
-      loadedTemplate = JSON.parse(result.content)
-    } else {
-      loadedTemplate = convertJrxmlToTemplate(result.content)
+    if (!result.content.trim().startsWith('{')) {
+      window.alert('A conversão de templates Jasper (.jrxml) requer a CLI em execução no Desktop App.')
+      return false
     }
+
+    const loadedTemplate: any = JSON.parse(result.content)
 
     const tabTitle = (result.path.split(/[/\\]/).pop() || 'jasper-template.jrxml').replace(/\.jrxml$/i, '.json')
     useTabStore.getState().addTab({
