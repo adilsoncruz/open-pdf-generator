@@ -3,3 +3,4 @@
 export * from './EditorPage'
 export * from './HomePage'
 export * from './LoadingPage'
+export * from './MobileViewerPage'
