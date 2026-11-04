@@ -20,7 +20,7 @@ dependencies {
     implementation("io.github.adilsoncruz:open-pdf-generator:1.0.0")
 
     // Dependencies used directly by the CLI
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.google.code.gson:gson:2.15.0")
     implementation("org.slf4j:slf4j-api:2.0.16")
     implementation("ch.qos.logback:logback-classic:1.6.6")
 
