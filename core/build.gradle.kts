@@ -30,7 +30,7 @@ dependencies {
 
     implementation(kotlin("stdlib"))
 
-    implementation("org.slf4j:slf4j-api:2.0.16")
+    implementation("org.slf4j:slf4j-api:2.0.20")
     runtimeOnly("ch.qos.logback:logback-classic:1.6.6")
 
     testImplementation(kotlin("test"))
