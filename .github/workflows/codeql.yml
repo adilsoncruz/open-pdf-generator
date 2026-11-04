@@ -44,7 +44,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'gradle'
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -56,8 +55,8 @@ jobs:
         if: matrix.language == 'java-kotlin'
         run: |
           chmod +x core/gradlew tools/cli/gradlew
-          (cd core && ./gradlew jar --no-daemon)
-          (cd tools/cli && ./gradlew jar --no-daemon)
+          ./core/gradlew -p core clean compileKotlin -Pkotlin.incremental=false --no-build-cache --no-daemon --rerun-tasks
+          ./tools/cli/gradlew -p tools/cli clean compileKotlin -Pkotlin.incremental=false --no-build-cache --no-daemon --rerun-tasks
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
