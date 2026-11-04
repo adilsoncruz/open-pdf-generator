@@ -280,4 +280,41 @@ const { slides, ctas, lang } = useHeroSlides()
     width: 100%;
   }
 }
+
+@media (max-width: 480px) {
+  .hero-bottom-container {
+    padding: 0 8px;
+    gap: 14px;
+    margin: 8px auto 24px auto;
+  }
+
+  .hero-dots-bar {
+    max-width: 100%;
+    gap: 4px;
+    padding: 4px 6px;
+  }
+
+  .dots-pill-track {
+    gap: 4px;
+    padding: 0 2px;
+  }
+
+  .dot-btn {
+    padding: 0 4px;
+    height: 24px;
+  }
+
+  .dot-btn.active {
+    padding: 0 6px;
+  }
+
+  .dot-label {
+    display: none;
+  }
+
+  .nav-arrow-btn {
+    width: 22px;
+    height: 22px;
+  }
+}
 </style>

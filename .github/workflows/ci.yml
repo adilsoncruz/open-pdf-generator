@@ -98,3 +98,11 @@ jobs:
       - name: Build VitePress docs
         working-directory: docs
         run: npm run build
+
+      - name: Install Playwright Browsers
+        working-directory: docs
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run E2E Mobile & Layout Tests
+        working-directory: docs
+        run: npm test
