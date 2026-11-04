@@ -113,13 +113,17 @@ Este documento define a especificação canônica de De-Para e as regras de tran
      `Estilo Default` -> `Estilo Nomeado (style="...")` -> `Propriedades inline do elemento`.
 
 ### Gap 2: Mapeamento de `<subreport>`
-* **Problema**: Relatórios complexos dividem partes do layout em subreports externos (`.jasper` ou `.jrxml`).
+* **Problema**: Relatórios Jasper dividem partes do layout em subreports externos (`.jrxml` ou `.jasper`). No Open PDF Generator não utilizamos sub-templates desacoplados em tempo de geração.
 * **Solução**:
-  1. **Subreport de Coleção (mesmo arquivo de dados)**:
-     * Sintaxe Jasper típica: `<dataSourceExpression>new JRBeanCollectionDataSource($F{itens})</dataSourceExpression>`.
-     * Se o arquivo de subreport for fornecido no mesmo diretório ou embutido, o conversor extrai a banda do subreport e a encapsula em um `LoopElement` com `dataBinding: "itens"`.
-  2. **Subreport Modular (seção isolada)**:
-     * O conversor gera um template mestre com referência ao sub-template, ou achata a árvore de seções se o subreport tiver apenas 1 página.
+  1. **Inline via `ContainerElement`**:
+     * Todo `<subreport>` é convertido em um `ContainerElement` com as dimensões (`x`, `y`, `width`, `height`) do elemento no template pai.
+     * O conversor localiza o arquivo `.jrxml` referenciado (em `subreportExpression`) relativo ao diretório do arquivo pai (`baseDir`).
+  2. **Extração de `dataSourceExpression`**:
+     * Sintaxe Jasper típica: `<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{orderItems})]]></dataSourceExpression>`.
+     * O conversor extrai o binding interno (`orderItems`) e o propaga como `defaultItemsBinding` para a conversão recursiva do subreport (fazendo tabelas e loops internos adotarem essa coleção).
+  3. **Resiliência e Ausência de Arquivo**:
+     * Se o arquivo referenciado não for encontrado no disco, a conversão **não quebra**.
+     * É emitido um aviso estruturado (`JasperConversionWarning`) e o `ContainerElement` é gerado com `elements = []` preservando posição e tamanho no layout.
 
 ### Gap 3: Gráficos (`<chart>`, `<pieChart>`, `<barChart>`)
 * **Problema**: Jasper Reports possui motor JFreeChart embutido no compilador Java.

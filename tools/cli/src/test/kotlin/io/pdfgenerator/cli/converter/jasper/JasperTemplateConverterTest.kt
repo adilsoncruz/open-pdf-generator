@@ -1,4 +1,5 @@
 package io.pdfgenerator.cli.converter.jasper
+import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.ImageElement
 import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LoopElement
@@ -526,5 +527,115 @@ class JasperTemplateConverterTest {
         assertEquals("#E11D48", elem4.style?.color)
         assertEquals("bold", elem4.style?.fontWeight)
         assertEquals("right", elem4.style?.alignment)
+    }
+
+    @Test
+    fun `should convert subreport to ContainerElement resolving child jrxml`() {
+        val tempDir = java.nio.file.Files.createTempDirectory("jasper-subreport-test").toFile()
+        try {
+            val childJrxml =
+                """
+                <jasperReport name="items_sub" pageWidth="500" pageHeight="200">
+                    <columnHeader>
+                        <band height="20">
+                            <staticText>
+                                <reportElement x="0" y="0" width="200" height="18"/>
+                                <text><![CDATA[Item Description]]></text>
+                            </staticText>
+                            <staticText>
+                                <reportElement x="210" y="0" width="100" height="18"/>
+                                <text><![CDATA[Qty]]></text>
+                            </staticText>
+                        </band>
+                    </columnHeader>
+                    <detail>
+                        <band height="18">
+                            <textField>
+                                <reportElement x="0" y="0" width="200" height="16"/>
+                                <textFieldExpression><![CDATA[${'$'}F{desc}]]></textFieldExpression>
+                            </textField>
+                            <textField>
+                                <reportElement x="210" y="0" width="100" height="16"/>
+                                <textFieldExpression><![CDATA[${'$'}F{qty}]]></textFieldExpression>
+                            </textField>
+                        </band>
+                    </detail>
+                </jasperReport>
+                """.trimIndent()
+            File(tempDir, "items_sub.jrxml").writeText(childJrxml)
+
+            val parentJrxml =
+                """
+                <jasperReport name="parent_doc" pageWidth="595" pageHeight="842" topMargin="20" leftMargin="20" rightMargin="20" bottomMargin="20">
+                    <title>
+                        <band height="40">
+                            <staticText>
+                                <reportElement x="0" y="0" width="200" height="30"/>
+                                <text><![CDATA[Order Header]]></text>
+                            </staticText>
+                        </band>
+                    </title>
+                    <detail>
+                        <band height="100">
+                            <subreport>
+                                <reportElement x="10" y="10" width="500" height="80"/>
+                                <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(${'$'}F{orderItems})]]></dataSourceExpression>
+                                <subreportExpression><![CDATA["items_sub.jasper"]]></subreportExpression>
+                            </subreport>
+                        </band>
+                    </detail>
+                </jasperReport>
+                """.trimIndent()
+            val parentFile = File(tempDir, "parent_doc.jrxml")
+            parentFile.writeText(parentJrxml)
+
+            val template = JasperTemplateConverter.fromFile(parentFile.absolutePath)
+            val elements = template.pageElements!!
+            assertEquals(2, elements.size)
+
+            assertIs<StaticTextElement>(elements[0])
+            val container = assertIs<ContainerElement>(elements[1])
+            assertEquals(10f, container.x)
+            assertEquals(50f, container.y) // Title (40) + detail band offset (10)
+            assertEquals(500f, container.width)
+
+            // Subreport elements resolved inside ContainerElement!
+            assertEquals(1, container.elements.size)
+            val table = assertIs<TableElement>(container.elements[0])
+            assertEquals("orderItems", table.dataBinding)
+            assertEquals(2, table.columns.size)
+            assertEquals("Item Description", table.columns[0].header)
+            assertEquals("desc", table.columns[0].field)
+        } finally {
+            tempDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `should convert missing subreport to empty ContainerElement without failing`() {
+        val jrxml =
+            """
+            <jasperReport name="parent_doc" pageWidth="595" pageHeight="842">
+                <detail>
+                    <band height="60">
+                        <subreport>
+                            <reportElement x="0" y="5" width="400" height="50"/>
+                            <subreportExpression><![CDATA["missing_sub.jasper"]]></subreportExpression>
+                        </subreport>
+                    </band>
+                </detail>
+            </jasperReport>
+            """.trimIndent()
+
+        val template = JasperTemplateConverter.fromString(
+            jrxml,
+            JasperConversionOptions(failOnUnsupportedElement = true),
+        )
+
+        val elements = template.pageElements!!
+        assertEquals(1, elements.size)
+        val container = assertIs<ContainerElement>(elements[0])
+        assertEquals(400f, container.width)
+        assertEquals(0, container.elements.size)
     }
 }

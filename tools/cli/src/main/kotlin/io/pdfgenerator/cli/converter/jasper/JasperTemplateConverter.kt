@@ -54,8 +54,15 @@ object JasperTemplateConverter {
         path: String,
         options: JasperConversionOptions = JasperConversionOptions(),
     ): Template {
-        val document = buildDocument(File(path).inputStream())
-        return convertDocument(document, options)
+        val file = File(path)
+        val effectiveOptions =
+            if (options.baseDir == null && file.parentFile != null) {
+                options.copy(baseDir = file.parentFile)
+            } else {
+                options
+            }
+        val document = buildDocument(file.inputStream())
+        return convertDocument(document, effectiveOptions)
     }
 
     fun fromInputStream(
@@ -879,7 +886,7 @@ object JasperTemplateConverter {
                 "image" -> parseImage(child, sectionYOffset, frame)?.let(out::add)
                 "componentElement" -> parseComponentElement(child, sectionYOffset, context, frame)?.let(out::addAll)
                 "frame" -> parseFrame(child, sectionYOffset, context)?.let(out::addAll)
-                // "subreport" -> parseSubReport(child, sectionYOffset, options)?.let(out::addAll)
+                "subreport" -> parseSubreport(child, sectionYOffset, context, frame)?.let(out::add)
                 else -> {
                     if (context.options.failOnUnsupportedElement) {
                         throw JasperTemplateConversionException("Elemento Jasper não suportado: <${child.tagName}>")
@@ -889,6 +896,83 @@ object JasperTemplateConverter {
         }
 
         return out
+    }
+
+    private fun extractSubreportFileName(rawExpression: String): String {
+        var expr = rawExpression.trim()
+        if (expr.isBlank()) return ""
+
+        val quotedMatch = Regex("\"([^\"]+)\"").findAll(expr).lastOrNull()
+        if (quotedMatch != null) {
+            expr = quotedMatch.groupValues[1]
+        } else {
+            expr = expr.trim('"', '\'')
+        }
+
+        if (expr.endsWith(".jasper", ignoreCase = true)) {
+            expr = expr.substring(0, expr.length - 7) + ".jrxml"
+        } else if (!expr.endsWith(".jrxml", ignoreCase = true)) {
+            expr += ".jrxml"
+        }
+
+        return File(expr).name
+    }
+
+    private fun resolveSubreportFile(fileName: String, baseDir: File?): File? {
+        if (fileName.isBlank()) return null
+        if (baseDir != null) {
+            val candidate = File(baseDir, fileName)
+            if (candidate.exists()) return candidate
+        }
+        val candidateCwd = File(fileName)
+        if (candidateCwd.exists()) return candidateCwd
+        return null
+    }
+
+    private fun parseSubreport(
+        node: Element,
+        sectionYOffset: Float,
+        context: ConversionContext,
+        frame: Map<String, Float>?,
+    ): ContainerElement? {
+        val reportElement = node.firstDirectChild("reportElement") ?: return null
+        val subExpr = node.firstDirectChild("subreportExpression")?.textContent?.trim().orEmpty()
+        val dataExpr = node.firstDirectChild("dataSourceExpression")?.textContent?.trim().orEmpty()
+        val embeddedBinding = Regex("\\\$[FP]\\{([A-Za-z0-9_.]+)}").find(dataExpr)?.groupValues?.get(1)
+        val listBinding = JasperExpressionMapper.toDataBinding(dataExpr) ?: embeddedBinding
+
+        val fileName = extractSubreportFileName(subExpr)
+        val subreportFile = resolveSubreportFile(fileName, context.options.baseDir)
+
+        val subElements = if (subreportFile != null && subreportFile.exists()) {
+            try {
+                val subOptions = context.options.copy(
+                    defaultItemsBinding = listBinding ?: context.options.defaultItemsBinding,
+                    baseDir = subreportFile.parentFile,
+                )
+                val subTemplate = fromFile(subreportFile.absolutePath, subOptions)
+                subTemplate.pageElements ?: emptyList()
+            } catch (e: Exception) {
+                System.err.println("Aviso: Falha ao converter subreport '${subreportFile.name}': ${e.message}")
+                emptyList()
+            }
+        } else {
+            if (fileName.isNotBlank()) {
+                System.err.println("Aviso: Arquivo de subreport '$fileName' não encontrado em ${context.options.baseDir?.absolutePath ?: "diretório atual"}. Container gerado com elements vazio.")
+            }
+            emptyList()
+        }
+
+        return ContainerElement(
+            type = "container",
+            id = UUID.randomUUID().toString(),
+            x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
+            width = reportElement.getIntAttribute("width", 100).toFloat(),
+            height = reportElement.getIntAttribute("height", 50).toFloat(),
+            relativeOffsetY = 0f,
+            elements = subElements,
+        )
     }
 
     private fun parseStaticText(
