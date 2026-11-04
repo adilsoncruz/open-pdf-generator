@@ -147,3 +147,22 @@ Este documento define a especificação canônica de De-Para e as regras de tran
 * **Solução**:
   1. Não-suporte intencional para segurança e portabilidade multiplataforma.
   2. As regras de cálculo/transformação devem residir no pipeline de dados que gera o JSON para o Open PDF Generator.
+
+---
+
+## 5. Backlog Futuro: Suporte ao JasperReports 7.x
+
+### Contexto
+O JasperReports 7 (lançado em 2024) introduziu uma ruptura de compatibilidade no schema XML (.jrxml), substituindo o modelo de 20 anos do Jasper 2.x - 6.x por uma sintaxe simplificada e achatada. Mais de 90% dos relatórios corporativos existentes no mercado ainda rodam em Jasper 5.x/6.x, tornando o conversor atual imediatamente aplicável para quase a totalidade dos casos legados.
+
+### Tarefa Registrada: Suporte a Sintaxe JRXML 7.x
+* **Status**: Backlog posterior (Planejado).
+* **Escopo**:
+  1. Reconhecer seções sem a tag `<band>` intermediária (onde `height` fica diretamente na tag da seção, ex: `<title height="140">`).
+  2. Reconhecer a tag unificada `<element kind="...">` (`kind="staticText"`, `kind="textField"`, `kind="line"`, etc.).
+  3. Ler coordenadas e estilos diretamente nos atributos do `<element>` (`x`, `y`, `width`, `height`, `forecolor`, `fontSize`, `bold`, `hTextAlign`, `vTextAlign`).
+  4. Extrair expressões a partir da tag filha simplificada `<expression>` em vez de `<textFieldExpression>`.
+* **Amostras de teste de referência**:
+  * `benchmark/jasper7/src/main/resources/templates/jasper/invoice.jrxml`
+  * `benchmark/jasper7/src/main/resources/templates/jasper/complex.jrxml`
+  * `benchmark/jasper7/src/main/resources/templates/jasper/listing.jrxml`
