@@ -3,7 +3,7 @@ plugins {
     application
     id("com.gradleup.shadow") version "9.6.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
 }
 
 group = "io.github.adilsoncruz"
