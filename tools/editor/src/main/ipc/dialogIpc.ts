@@ -67,6 +67,20 @@ export function registerDialogIpc(): void {
     }
 
     const filePath = result.filePaths[0]
+    try {
+      const conversion = await convertJrxmlToJson(filePath)
+      if (conversion.success && conversion.content) {
+        return {
+          path: filePath,
+          content: conversion.content,
+          isJrxml: true,
+          convertedFromJasper: true,
+        }
+      }
+    } catch {
+      // Fallback para leitura direta do arquivo XML caso a CLI não esteja disponível
+    }
+
     const content = await fs.readFile(filePath, 'utf-8')
     return {
       path: filePath,
