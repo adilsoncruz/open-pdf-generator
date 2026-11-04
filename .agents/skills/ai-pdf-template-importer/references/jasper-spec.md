@@ -93,6 +93,10 @@ Este documento define a especificação canônica de De-Para e as regras de tran
 | :--- | :--- | :--- |
 | `$F{campo}` | `campo` | Campo do objeto da lista iterada |
 | `$P{parametro}` | `parametro` | Parâmetro ou variável raiz do payload |
+| `$V{PAGE_NUMBER}` | `dataBinding: "pageNumber"` | Número da página atual |
+| `"Página " + $V{PAGE_NUMBER}` | `dataBinding: "pageNumber \| prefix:'Página '"` | Número da página com prefixo |
+| `$V{PAGE_NUMBER} + " de "` | `dataBinding: "pageNumber \| suffix:' de '"` | Número da página com sufixo |
+| `"Pág. " + $V{PAGE_NUMBER} + " de " + $P{total}` | `value: "Pág. ${pageNumber} de ${total}"` | Concatenação dinâmica interpolada |
 | `$F{nome}.toUpperCase()` | `nome \| uppercase` | Filtro de transformação nativo |
 | `$F{nome}.toLowerCase()` | `nome \| lowercase` | Filtro de transformação nativo |
 | `String.format("%.2f", $F{v})` | `v \| currency('BRL')` | Formatação de moeda |

@@ -638,4 +638,58 @@ class JasperTemplateConverterTest {
         assertEquals(400f, container.width)
         assertEquals(0, container.elements.size)
     }
+
+    @Test
+    fun `should map PAGE_NUMBER and pagination expressions accurately`() {
+        val jrxml =
+            """
+            <jasperReport name="pagination_test" pageWidth="595" pageHeight="842">
+                <pageFooter>
+                    <band height="40">
+                        <textField>
+                            <reportElement x="0" y="5" width="100" height="15"/>
+                            <textFieldExpression><![CDATA[${'$'}V{PAGE_NUMBER}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="110" y="5" width="150" height="15"/>
+                            <textFieldExpression><![CDATA["Página " + ${'$'}V{PAGE_NUMBER}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="270" y="5" width="100" height="15"/>
+                            <textFieldExpression><![CDATA[${'$'}V{PAGE_NUMBER} + " de "]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="380" y="5" width="150" height="15"/>
+                            <textFieldExpression><![CDATA["Página " + ${'$'}V{PAGE_NUMBER} + " de " + ${'$'}P{totalPaginas}]]></textFieldExpression>
+                        </textField>
+                    </band>
+                </pageFooter>
+            </jasperReport>
+            """.trimIndent()
+
+        val template = JasperTemplateConverter.fromString(jrxml)
+        val footerElements = template.pageSettings.footer?.elements
+        assertNotNull(footerElements)
+        assertEquals(4, footerElements.size)
+
+        // 1. Direct $V{PAGE_NUMBER} -> pageNumber
+        val t1 = assertIs<TextElement>(footerElements[0])
+        assertEquals("pageNumber", t1.dataBinding)
+        assertNull(t1.value)
+
+        // 2. "Página " + $V{PAGE_NUMBER} -> pageNumber | prefix:'Página '
+        val t2 = assertIs<TextElement>(footerElements[1])
+        assertEquals("pageNumber | prefix:'Página '", t2.dataBinding)
+        assertNull(t2.value)
+
+        // 3. $V{PAGE_NUMBER} + " de " -> pageNumber | suffix:' de '
+        val t3 = assertIs<TextElement>(footerElements[2])
+        assertEquals("pageNumber | suffix:' de '", t3.dataBinding)
+        assertNull(t3.value)
+
+        // 4. Concatenação geral -> "Página ${'$'}{pageNumber} de ${'$'}{totalPaginas}"
+        val t4 = assertIs<TextElement>(footerElements[3])
+        assertNull(t4.dataBinding)
+        assertEquals("Página \${pageNumber} de \${totalPaginas}", t4.value)
+    }
 }

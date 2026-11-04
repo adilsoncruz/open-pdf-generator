@@ -1008,14 +1008,10 @@ object JasperTemplateConverter {
         frame: Map<String, Float>?,
     ): TextElement? {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
-        var expression = node.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
-        val dataBinding = JasperExpressionMapper.toDataBinding(expression)
+        val rawExpression = node.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
+        val mapped = JasperExpressionMapper.mapExpression(rawExpression)
         val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
         val condition = JasperExpressionMapper.toExpression(printCondition)
-
-        if (expression.matches(Regex("^\".*\"$"))) {
-            expression = expression.substring(1, expression.length - 1)
-        }
 
         val styleName = node.getAttribute("style").ifBlank { null }
             ?: reportElement.getAttribute("style").ifBlank { null }
@@ -1027,8 +1023,8 @@ object JasperTemplateConverter {
             y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
             width = reportElement.getIntAttribute("width", 100).toFloat(),
             height = reportElement.getIntAttribute("height", 16).toFloat(),
-            dataBinding = dataBinding,
-            value = if (dataBinding == null) expression else null,
+            dataBinding = mapped.dataBinding,
+            value = mapped.value,
             style = parseTextStyle(node, resolvedStyle),
             printCondition = condition,
         )

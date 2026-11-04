@@ -180,6 +180,41 @@ describe('jrxmlImporter', () => {
       expect(template.pageSettings.footer?.elements[0].value).toBe('Footer Text')
     })
 
+    it('maps $V{PAGE_NUMBER} and pagination expressions in footer', () => {
+      const jrxml = `<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" name="PagTest" pageWidth="595" pageHeight="842">
+    <pageFooter>
+        <band height="30">
+            <textField>
+                <reportElement x="0" y="5" width="100" height="15"/>
+                <textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="110" y="5" width="150" height="15"/>
+                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="270" y="5" width="100" height="15"/>
+                <textFieldExpression><![CDATA[$V{PAGE_NUMBER} + " de "]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="380" y="5" width="150" height="15"/>
+                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER} + " de " + $P{totalPages}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+</jasperReport>`
+      const template = convertJrxmlToTemplate(jrxml)
+      const footerElements = template.pageSettings.footer?.elements
+      expect(footerElements).toBeDefined()
+      expect(footerElements?.length).toBe(4)
+
+      expect(footerElements?.[0].dataBinding).toBe('pageNumber')
+      expect(footerElements?.[1].dataBinding).toBe("pageNumber | prefix:'Página '")
+      expect(footerElements?.[2].dataBinding).toBe("pageNumber | suffix:' de '")
+      expect(footerElements?.[3].value).toBe('Página ${pageNumber} de ${totalPages}')
+    })
+
     it('throws error for invalid XML', () => {
       expect(() => convertJrxmlToTemplate('<invalid><unclosed>')).toThrow()
     })
