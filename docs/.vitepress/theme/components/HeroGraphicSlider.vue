@@ -297,6 +297,7 @@ onUnmounted(() => {
   justify-content: center;
   user-select: none;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 /* Ambient Radial Glow */
@@ -678,5 +679,44 @@ onUnmounted(() => {
 .fade-scale-leave-to {
   opacity: 0;
   transform: scale(1.04);
+}
+
+@media (max-width: 480px) {
+  .hero-graphic-viewport {
+    min-height: 290px;
+    padding: 0 8px;
+  }
+
+  .hero-main-logo {
+    width: 200px;
+    height: 200px;
+  }
+
+  .giant-stat {
+    font-size: 40px;
+  }
+
+  .giant-unit {
+    font-size: 16px;
+  }
+
+  .stat-center-block {
+    margin-bottom: 10px;
+  }
+
+  .metrics-pill-row {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .mini-chip {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+
+  .slide-caption {
+    font-size: 11.5px;
+    padding: 0 8px;
+  }
 }
 </style>

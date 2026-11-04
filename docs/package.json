@@ -7,9 +7,11 @@
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
-    "preview": "vitepress preview"
+    "preview": "vitepress preview",
+    "test": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "vitepress": "^1.0.0",
     "vue": "^3.3.4"
   },
@@ -25,4 +27,3 @@
   "author": "Adilson Cruz",
   "license": "AGPL-3.0"
 }
-
