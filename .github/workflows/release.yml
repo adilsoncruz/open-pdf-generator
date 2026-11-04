@@ -137,7 +137,7 @@ jobs:
           generate_release_notes: true
 
       - name: Publish to Maven Central Portal
-        if: steps.snapshot.outputs.skip == 'false'
+        if: steps.snapshot.outputs.skip == 'false' && steps.tagcheck.outputs.exists == 'false'
         working-directory: core
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
