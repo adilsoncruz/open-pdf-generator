@@ -21,6 +21,16 @@ export function openTemplateFromContent(filePath: string, content: string): bool
       loadedTemplate = JSON.parse(content)
     }
 
+    if (loadedTemplate.pageElements && !loadedTemplate.page) {
+      loadedTemplate.page = loadedTemplate.pageElements
+    }
+    if (loadedTemplate.elements && !loadedTemplate.page) {
+      loadedTemplate.page = loadedTemplate.elements
+    }
+    if (!Array.isArray(loadedTemplate.page)) {
+      loadedTemplate.page = []
+    }
+
     const fileName = filePath.split(/[/\\]/).pop() || 'Opened Template'
     if (!isJrxml) {
       useRecentFilesStore.getState().addRecentFile(filePath, fileName)

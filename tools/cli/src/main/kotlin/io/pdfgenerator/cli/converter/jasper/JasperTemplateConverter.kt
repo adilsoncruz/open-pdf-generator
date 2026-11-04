@@ -414,6 +414,7 @@ object JasperTemplateConverter {
             version = "1.0",
             metadata = metadata,
             pageSettings = pageSettings,
+            page = elements,
             pageElements = elements,
             summaryPage = summaryElem?.let { SummaryPage(summaryElem) },
         )

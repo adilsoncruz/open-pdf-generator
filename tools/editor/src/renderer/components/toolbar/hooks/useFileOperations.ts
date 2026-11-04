@@ -56,12 +56,22 @@ export function useFileOperations({
           loadedTemplate = JSON.parse(result.content)
         }
 
+        if (loadedTemplate.pageElements && !loadedTemplate.page) {
+          loadedTemplate.page = loadedTemplate.pageElements
+        }
+        if (loadedTemplate.elements && !loadedTemplate.page) {
+          loadedTemplate.page = loadedTemplate.elements
+        }
+        if (!Array.isArray(loadedTemplate.page)) {
+          loadedTemplate.page = []
+        }
+
         let structuralError = ''
         if (!loadedTemplate.version) {
           structuralError = t.validation.missingVersion
         } else if (!loadedTemplate.pageSettings) {
           structuralError = t.validation.missingPageSettings
-        } else if (!loadedTemplate.elements && !loadedTemplate.page) {
+        } else if (!loadedTemplate.elements && !loadedTemplate.page && !loadedTemplate.pageElements) {
           structuralError = t.validation.missingElements
         }
         if (structuralError) {
@@ -125,6 +135,16 @@ export function useFileOperations({
         loadedTemplate = JSON.parse(result.content)
       } else {
         loadedTemplate = convertJrxmlToTemplate(result.content)
+      }
+
+      if (loadedTemplate.pageElements && !loadedTemplate.page) {
+        loadedTemplate.page = loadedTemplate.pageElements
+      }
+      if (loadedTemplate.elements && !loadedTemplate.page) {
+        loadedTemplate.page = loadedTemplate.elements
+      }
+      if (!Array.isArray(loadedTemplate.page)) {
+        loadedTemplate.page = []
       }
 
       const tabTitle = (result.path.split(/[/\\]/).pop() || 'jasper-template.jrxml').replace(/\.jrxml$/i, '.json')
