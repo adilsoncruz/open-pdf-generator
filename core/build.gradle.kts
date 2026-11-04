@@ -19,7 +19,7 @@ repositories {
 dependencies {
     implementation("com.github.librepdf:openpdf:3.0.5")
 
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.google.code.gson:gson:2.15.0")
     implementation("com.networknt:json-schema-validator:1.5.6")
 
     implementation("com.google.zxing:core:3.5.3")
