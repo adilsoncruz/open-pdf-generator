@@ -89,11 +89,121 @@ object JasperTemplateConverter {
         return nodeList.length > 0
     }
 
+    data class JasperStyle(
+        val name: String = "",
+        val parentStyleName: String? = null,
+        val isDefault: Boolean = false,
+        val fontName: String? = null,
+        val fontSize: Float? = null,
+        val isBold: Boolean? = null,
+        val isItalic: Boolean? = null,
+        val forecolor: String? = null,
+        val backcolor: String? = null,
+        val alignment: String? = null,
+        val verticalAlignment: String? = null,
+    )
+
+    private data class ConversionContext(
+        val options: JasperConversionOptions,
+        val stylesMap: Map<String, JasperStyle> = emptyMap(),
+        val defaultStyle: JasperStyle? = null,
+    )
+
+    private fun parseJasperStyle(elem: Element): JasperStyle {
+        val fontNode = elem.firstDirectChild("font")
+        val fontName = elem.getAttribute("fontName").ifBlank { null }
+            ?: fontNode?.getAttribute("fontName")?.ifBlank { null }
+        val fontSize = elem.getAttribute("fontSize").toFloatOrNull()
+            ?: elem.getAttribute("size").toFloatOrNull()
+            ?: fontNode?.getAttribute("size")?.toFloatOrNull()
+        val isBold = elem.getAttribute("isBold").toBooleanStrictOrNull()
+            ?: fontNode?.getAttribute("isBold")?.toBooleanStrictOrNull()
+        val isItalic = elem.getAttribute("isItalic").toBooleanStrictOrNull()
+            ?: fontNode?.getAttribute("isItalic")?.toBooleanStrictOrNull()
+        val forecolor = elem.getAttribute("forecolor").ifBlank { null }
+        val backcolor = elem.getAttribute("backcolor").ifBlank { null }
+
+        val alignRaw = elem.getAttribute("hTextAlign").ifBlank { null }
+            ?: elem.getAttribute("hAlign").ifBlank { null }
+            ?: elem.getAttribute("textAlignment").ifBlank { null }
+        val vAlignRaw = elem.getAttribute("vTextAlign").ifBlank { null }
+            ?: elem.getAttribute("vAlign").ifBlank { null }
+            ?: elem.getAttribute("verticalAlignment").ifBlank { null }
+
+        val alignment = when (alignRaw?.lowercase()) {
+            "right" -> "right"
+            "center" -> "center"
+            "justify", "justified" -> "justify"
+            "left" -> "left"
+            else -> null
+        }
+        val verticalAlignment = when (vAlignRaw?.lowercase()) {
+            "middle", "center" -> "center"
+            "bottom" -> "bottom"
+            "top" -> "top"
+            else -> null
+        }
+
+        return JasperStyle(
+            name = elem.getAttribute("name").trim(),
+            parentStyleName = elem.getAttribute("style").ifBlank { null },
+            isDefault = elem.getAttribute("isDefault").toBooleanStrictOrNull() ?: false,
+            fontName = fontName,
+            fontSize = fontSize,
+            isBold = isBold,
+            isItalic = isItalic,
+            forecolor = forecolor,
+            backcolor = backcolor,
+            alignment = alignment,
+            verticalAlignment = verticalAlignment,
+        )
+    }
+
+    private fun resolveStyle(
+        styleName: String?,
+        stylesMap: Map<String, JasperStyle>,
+        defaultStyle: JasperStyle?,
+    ): JasperStyle {
+        val chain = mutableListOf<JasperStyle>()
+        if (defaultStyle != null) {
+            chain.add(defaultStyle)
+        }
+
+        if (!styleName.isNullOrBlank()) {
+            val visited = mutableSetOf<String>()
+            var currentName: String? = styleName
+            val namedChain = mutableListOf<JasperStyle>()
+            while (!currentName.isNullOrBlank() && currentName !in visited) {
+                visited.add(currentName)
+                val s = stylesMap[currentName] ?: break
+                namedChain.add(s)
+                currentName = s.parentStyleName
+            }
+            namedChain.reverse()
+            chain.addAll(namedChain)
+        }
+
+        var merged = JasperStyle()
+        for (s in chain) {
+            merged = merged.copy(
+                fontName = s.fontName ?: merged.fontName,
+                fontSize = s.fontSize ?: merged.fontSize,
+                isBold = s.isBold ?: merged.isBold,
+                isItalic = s.isItalic ?: merged.isItalic,
+                forecolor = s.forecolor ?: merged.forecolor,
+                backcolor = s.backcolor ?: merged.backcolor,
+                alignment = s.alignment ?: merged.alignment,
+                verticalAlignment = s.verticalAlignment ?: merged.verticalAlignment,
+            )
+        }
+        return merged
+    }
+
     private fun convertSection(
         sectionNodes: NodeList,
         offset: Float,
         maxWidth: Float,
-        options: JasperConversionOptions,
+        context: ConversionContext,
     ): Map<String, *> {
         var yOffset = 0f + offset
         val elements = mutableListOf<com.pdfgenerator.model.Element>()
@@ -105,7 +215,7 @@ object JasperTemplateConverter {
                     val bandNode = bands.item(0)
                     if (bandNode is Element) {
                         val bandHeight = bandNode.getIntAttribute("height", 0).toFloat()
-                        elements.addAll(parseBandElements(bandNode, yOffset, options, null))
+                        elements.addAll(parseBandElements(bandNode, yOffset, context, null))
                         yOffset += bandHeight
                     }
                 } else {
@@ -113,7 +223,7 @@ object JasperTemplateConverter {
                         val bandNode = bands.item(bandIdx)
                         if (bandNode is Element) {
                             val bandHeight = bandNode.getIntAttribute("height", 0).toFloat()
-                            elements.add(parseBand(bandNode, yOffset, maxWidth, options, null))
+                            elements.add(parseBand(bandNode, yOffset, maxWidth, context, null))
                             yOffset += bandHeight
                         }
                     }
@@ -135,6 +245,29 @@ object JasperTemplateConverter {
         if (root == null || root.tagName != "jasperReport") {
             throw JasperTemplateConversionException("JRXML inválido: raiz <jasperReport> não encontrada")
         }
+
+        val styleNodes = root.getElementsByTagName("style")
+        val stylesMap = mutableMapOf<String, JasperStyle>()
+        var defaultStyle: JasperStyle? = null
+
+        for (i in 0 until styleNodes.length) {
+            val styleElem = styleNodes.item(i)
+            if (styleElem is Element) {
+                val style = parseJasperStyle(styleElem)
+                if (style.name.isNotBlank()) {
+                    stylesMap[style.name] = style
+                }
+                if (style.isDefault) {
+                    defaultStyle = style
+                }
+            }
+        }
+
+        val context = ConversionContext(
+            options = options,
+            stylesMap = stylesMap,
+            defaultStyle = defaultStyle,
+        )
 
         val pageWidth = root.getIntAttribute("pageWidth", 595)
         val pageHeight = root.getIntAttribute("pageHeight", 842)
@@ -175,7 +308,7 @@ object JasperTemplateConverter {
         // 1. Background
         val backgroundNodes = root.getElementsByTagName("background")
         if (backgroundNodes.length > 0) {
-            val sectionElements = convertSection(backgroundNodes, 0f, containerWidth, options)
+            val sectionElements = convertSection(backgroundNodes, 0f, containerWidth, context)
             val out = sectionElements["elements"] as List<com.pdfgenerator.model.Element>
             if (out.isNotEmpty()) {
                 pageSettings = pageSettings.copy(bodyBackground = BodyBackground(out))
@@ -185,7 +318,7 @@ object JasperTemplateConverter {
         // 2. PageHeader
         val pageHeaderNodes = root.getElementsByTagName("pageHeader")
         if (pageHeaderNodes.length > 0) {
-            val sectionElements = convertSection(pageHeaderNodes, 0f, containerWidth, options)
+            val sectionElements = convertSection(pageHeaderNodes, 0f, containerWidth, context)
             val out = sectionElements["elements"] as List<com.pdfgenerator.model.Element>
             if (out.isNotEmpty()) {
                 pageSettings =
@@ -196,7 +329,7 @@ object JasperTemplateConverter {
         // 3. PageFooter
         val pageFooterNodes = root.getElementsByTagName("pageFooter")
         if (pageFooterNodes.length > 0) {
-            val sectionElements = convertSection(pageFooterNodes, 0f, containerWidth, options)
+            val sectionElements = convertSection(pageFooterNodes, 0f, containerWidth, context)
             val out = sectionElements["elements"] as List<com.pdfgenerator.model.Element>
             if (out.isNotEmpty()) {
                 pageSettings =
@@ -207,7 +340,7 @@ object JasperTemplateConverter {
         // 4. Title
         val titleNodes = root.getElementsByTagName("title")
         if (titleNodes.length > 0) {
-            val sectionElements = convertSection(titleNodes, 0f, containerWidth, options)
+            val sectionElements = convertSection(titleNodes, 0f, containerWidth, context)
             val out = sectionElements["elements"] as List<com.pdfgenerator.model.Element>
             if (out.isNotEmpty()) {
                 yOffset = sectionElements["height"] as Float
@@ -219,13 +352,13 @@ object JasperTemplateConverter {
         val columnHeaderNodes = root.getElementsByTagName("columnHeader")
         val detailNodes = root.getElementsByTagName("detail")
 
-        val tableInference = tryInferTable(columnHeaderNodes, detailNodes, yOffset, containerWidth, options)
+        val tableInference = tryInferTable(columnHeaderNodes, detailNodes, yOffset, containerWidth, context)
         if (tableInference != null) {
             elements.add(tableInference.first)
             yOffset = tableInference.second
         } else {
             if (columnHeaderNodes.length > 0) {
-                val chSection = convertSection(columnHeaderNodes, yOffset, containerWidth, options)
+                val chSection = convertSection(columnHeaderNodes, yOffset, containerWidth, context)
                 val chElements = chSection["elements"] as List<com.pdfgenerator.model.Element>
                 if (chElements.isNotEmpty()) {
                     elements.addAll(chElements)
@@ -235,11 +368,11 @@ object JasperTemplateConverter {
 
             if (detailNodes.length > 0) {
                 if (columnHeaderNodes.length > 0 || options.wrapDetailInLoop) {
-                    val loopResult = convertDetailToLoop(detailNodes, yOffset, containerWidth, options)
+                    val loopResult = convertDetailToLoop(detailNodes, yOffset, containerWidth, context)
                     elements.add(loopResult.first)
                     yOffset = loopResult.second
                 } else {
-                    val dSection = convertSection(detailNodes, yOffset, containerWidth, options)
+                    val dSection = convertSection(detailNodes, yOffset, containerWidth, context)
                     val dElements = dSection["elements"] as List<com.pdfgenerator.model.Element>
                     if (dElements.isNotEmpty()) {
                         elements.addAll(dElements)
@@ -252,7 +385,7 @@ object JasperTemplateConverter {
         // 6. ColumnFooter
         val columnFooterNodes = root.getElementsByTagName("columnFooter")
         if (columnFooterNodes.length > 0) {
-            val cfSection = convertSection(columnFooterNodes, yOffset, containerWidth, options)
+            val cfSection = convertSection(columnFooterNodes, yOffset, containerWidth, context)
             val cfElements = cfSection["elements"] as List<com.pdfgenerator.model.Element>
             if (cfElements.isNotEmpty()) {
                 elements.addAll(cfElements)
@@ -263,7 +396,7 @@ object JasperTemplateConverter {
         // 7. Summary
         val summaryNodes = root.getElementsByTagName("summary")
         if (summaryNodes.length > 0) {
-            val sSection = convertSection(summaryNodes, 0f, containerWidth, options)
+            val sSection = convertSection(summaryNodes, 0f, containerWidth, context)
             val sElements = sSection["elements"] as List<com.pdfgenerator.model.Element>
             if (sElements.isNotEmpty()) {
                 summaryElem = sElements
@@ -323,9 +456,9 @@ object JasperTemplateConverter {
         detailNodes: NodeList,
         currentY: Float,
         containerWidth: Float,
-        options: JasperConversionOptions,
+        context: ConversionContext,
     ): Pair<TableElement, Float>? {
-        if (!options.enableTableInference) return null
+        if (!context.options.enableTableInference) return null
         if (columnHeaderNodes.length == 0 || detailNodes.length == 0) return null
 
         val headerBands = getBands(columnHeaderNodes)
@@ -335,8 +468,8 @@ object JasperTemplateConverter {
         val headerBand = headerBands[0]
         val detailBand = detailBands[0]
 
-        val headers = extractCandidateHeaders(headerBand)
-        val fields = extractCandidateFields(detailBand) ?: return null
+        val headers = extractCandidateHeaders(headerBand, context)
+        val fields = extractCandidateFields(detailBand, context) ?: return null
 
         if (headers.isEmpty() || fields.isEmpty()) return null
         if (headers.size != fields.size) return null
@@ -401,7 +534,7 @@ object JasperTemplateConverter {
             x = tableX,
             y = currentY,
             width = tableWidth,
-            dataBinding = options.defaultItemsBinding,
+            dataBinding = context.options.defaultItemsBinding,
             columns = columns,
             style = TableStyle(
                 headerBackground = headerBg,
@@ -419,9 +552,12 @@ object JasperTemplateConverter {
         return Pair(table, currentY + headerHeight + detailHeight)
     }
 
-    private fun extractCandidateHeaders(band: Element): List<CandidateHeader> {
+    private fun extractCandidateHeaders(
+        band: Element,
+        context: ConversionContext,
+    ): List<CandidateHeader> {
         val list = mutableListOf<CandidateHeader>()
-        collectCandidateHeaders(band, 0f, 0f, list)
+        collectCandidateHeaders(band, 0f, 0f, context, list)
         return list.sortedBy { it.x }
     }
 
@@ -429,19 +565,29 @@ object JasperTemplateConverter {
         parent: Element,
         offsetX: Float,
         offsetY: Float,
+        context: ConversionContext,
         list: MutableList<CandidateHeader>,
     ) {
         val children = parent.childNodes
         for (i in 0 until children.length) {
             val child = children.item(i)
             if (child !is Element) continue
+            val reportElement = child.firstDirectChild("reportElement")
+            val styleName = child.getAttribute("style").ifBlank { null }
+                ?: reportElement?.getAttribute("style")?.ifBlank { null }
+            val resolved = resolveStyle(styleName, context.stylesMap, context.defaultStyle)
+
             when (child.tagName) {
                 "staticText" -> {
-                    val reportElement = child.firstDirectChild("reportElement") ?: continue
+                    if (reportElement == null) continue
                     val text = child.firstDirectChild("text")?.textContent?.trim().orEmpty()
                     if (text.isBlank()) continue
                     val textElement = child.firstDirectChild("textElement")
                     val font = textElement?.firstDirectChild("font")
+                    val forecolor = reportElement.getAttribute("forecolor").ifBlank { null } ?: resolved.forecolor
+                    val fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: resolved.fontSize ?: 9f
+                    val alignment = textElement?.getAttribute("textAlignment")?.ifBlank { null }?.lowercase() ?: resolved.alignment ?: "left"
+
                     list.add(
                         CandidateHeader(
                             x = reportElement.getIntAttribute("x", 0).toFloat() + offsetX,
@@ -449,20 +595,24 @@ object JasperTemplateConverter {
                             width = reportElement.getIntAttribute("width", 50).toFloat(),
                             height = reportElement.getIntAttribute("height", 16).toFloat(),
                             text = text,
-                            alignment = textElement?.getAttribute("textAlignment")?.ifBlank { "left" }?.lowercase() ?: "left",
-                            forecolor = reportElement.getAttribute("forecolor").ifBlank { null },
-                            fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: 9f,
+                            alignment = alignment,
+                            forecolor = forecolor,
+                            fontSize = fontSize,
                         ),
                     )
                 }
                 "textField" -> {
-                    val reportElement = child.firstDirectChild("reportElement") ?: continue
+                    if (reportElement == null) continue
                     val expr = child.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
                     if (expr.startsWith("\"") && expr.endsWith("\"")) {
                         val text = expr.removeSurrounding("\"")
                         if (text.isNotBlank()) {
                             val textElement = child.firstDirectChild("textElement")
                             val font = textElement?.firstDirectChild("font")
+                            val forecolor = reportElement.getAttribute("forecolor").ifBlank { null } ?: resolved.forecolor
+                            val fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: resolved.fontSize ?: 9f
+                            val alignment = textElement?.getAttribute("textAlignment")?.ifBlank { null }?.lowercase() ?: resolved.alignment ?: "left"
+
                             list.add(
                                 CandidateHeader(
                                     x = reportElement.getIntAttribute("x", 0).toFloat() + offsetX,
@@ -470,27 +620,29 @@ object JasperTemplateConverter {
                                     width = reportElement.getIntAttribute("width", 50).toFloat(),
                                     height = reportElement.getIntAttribute("height", 16).toFloat(),
                                     text = text,
-                                    alignment = textElement?.getAttribute("textAlignment")?.ifBlank { "left" }?.lowercase() ?: "left",
-                                    forecolor = reportElement.getAttribute("forecolor").ifBlank { null },
-                                    fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: 9f,
+                                    alignment = alignment,
+                                    forecolor = forecolor,
+                                    fontSize = fontSize,
                                 ),
                             )
                         }
                     }
                 }
                 "frame" -> {
-                    val reportElement = child.firstDirectChild("reportElement")
                     val fx = reportElement?.getIntAttribute("x", 0)?.toFloat() ?: 0f
                     val fy = reportElement?.getIntAttribute("y", 0)?.toFloat() ?: 0f
-                    collectCandidateHeaders(child, offsetX + fx, offsetY + fy, list)
+                    collectCandidateHeaders(child, offsetX + fx, offsetY + fy, context, list)
                 }
             }
         }
     }
 
-    private fun extractCandidateFields(band: Element): List<CandidateField>? {
+    private fun extractCandidateFields(
+        band: Element,
+        context: ConversionContext,
+    ): List<CandidateField>? {
         val list = mutableListOf<CandidateField>()
-        val hasDisqualifiers = collectCandidateFields(band, 0f, 0f, list)
+        val hasDisqualifiers = collectCandidateFields(band, 0f, 0f, context, list)
         if (hasDisqualifiers) return null
         return list.sortedBy { it.x }
     }
@@ -499,22 +651,32 @@ object JasperTemplateConverter {
         parent: Element,
         offsetX: Float,
         offsetY: Float,
+        context: ConversionContext,
         list: MutableList<CandidateField>,
     ): Boolean {
         val children = parent.childNodes
         for (i in 0 until children.length) {
             val child = children.item(i)
             if (child !is Element) continue
+            val reportElement = child.firstDirectChild("reportElement")
+            val styleName = child.getAttribute("style").ifBlank { null }
+                ?: reportElement?.getAttribute("style")?.ifBlank { null }
+            val resolved = resolveStyle(styleName, context.stylesMap, context.defaultStyle)
+
             when (child.tagName) {
                 "image", "componentElement", "subreport" -> return true
                 "textField" -> {
-                    val reportElement = child.firstDirectChild("reportElement") ?: continue
+                    if (reportElement == null) continue
                     val expr = child.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
                     val dataBinding = JasperExpressionMapper.toDataBinding(expr)
                     val fieldName = dataBinding ?: if (expr.startsWith("\"") && expr.endsWith("\"")) expr.removeSurrounding("\"") else expr
                     if (fieldName.isBlank()) continue
                     val textElement = child.firstDirectChild("textElement")
                     val font = textElement?.firstDirectChild("font")
+                    val forecolor = reportElement.getAttribute("forecolor").ifBlank { null } ?: resolved.forecolor
+                    val fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: resolved.fontSize ?: 9f
+                    val alignment = textElement?.getAttribute("textAlignment")?.ifBlank { null }?.lowercase() ?: resolved.alignment ?: "left"
+
                     list.add(
                         CandidateField(
                             x = reportElement.getIntAttribute("x", 0).toFloat() + offsetX,
@@ -522,17 +684,16 @@ object JasperTemplateConverter {
                             width = reportElement.getIntAttribute("width", 50).toFloat(),
                             height = reportElement.getIntAttribute("height", 16).toFloat(),
                             field = fieldName,
-                            alignment = textElement?.getAttribute("textAlignment")?.ifBlank { "left" }?.lowercase() ?: "left",
-                            forecolor = reportElement.getAttribute("forecolor").ifBlank { null },
-                            fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: 9f,
+                            alignment = alignment,
+                            forecolor = forecolor,
+                            fontSize = fontSize,
                         ),
                     )
                 }
                 "frame" -> {
-                    val reportElement = child.firstDirectChild("reportElement")
                     val fx = reportElement?.getIntAttribute("x", 0)?.toFloat() ?: 0f
                     val fy = reportElement?.getIntAttribute("y", 0)?.toFloat() ?: 0f
-                    val disqualified = collectCandidateFields(child, offsetX + fx, offsetY + fy, list)
+                    val disqualified = collectCandidateFields(child, offsetX + fx, offsetY + fy, context, list)
                     if (disqualified) return true
                 }
             }
@@ -544,7 +705,7 @@ object JasperTemplateConverter {
         detailNodes: NodeList,
         yOffset: Float,
         containerWidth: Float,
-        options: JasperConversionOptions,
+        context: ConversionContext,
     ): Pair<LoopElement, Float> {
         val loopElements = mutableListOf<com.pdfgenerator.model.Element>()
         var totalHeight = 0f
@@ -558,7 +719,7 @@ object JasperTemplateConverter {
                     val bandNode = bands.item(bandIdx)
                     if (bandNode is Element) {
                         val bandHeight = bandNode.getIntAttribute("height", 0).toFloat()
-                        loopElements.addAll(parseBandElements(bandNode, currentRelY, options, null))
+                        loopElements.addAll(parseBandElements(bandNode, currentRelY, context, null))
                         currentRelY += bandHeight
                         totalHeight += bandHeight
                     }
@@ -573,7 +734,7 @@ object JasperTemplateConverter {
             y = yOffset,
             width = containerWidth,
             height = if (totalHeight > 0f) totalHeight else 50f,
-            dataBinding = options.defaultItemsBinding,
+            dataBinding = context.options.defaultItemsBinding,
             elements = loopElements,
         )
 
@@ -583,7 +744,7 @@ object JasperTemplateConverter {
     private fun parseComponentElement(
         node: Element,
         sectionYOffset: Float,
-        options: JasperConversionOptions,
+        context: ConversionContext,
         frame: Map<String, Float>?,
     ): List<com.pdfgenerator.model.Element>? {
         val out = mutableListOf<com.pdfgenerator.model.Element>()
@@ -596,7 +757,7 @@ object JasperTemplateConverter {
 
             when (child.tagName) {
                 "jr:QRCode" -> parseJrQrCode(reportElement, child, sectionYOffset, frame)?.let(out::add)
-                "jr:list" -> parseJrList(reportElement, child, sectionYOffset, options, frame)?.let(out::add)
+                "jr:list" -> parseJrList(reportElement, child, sectionYOffset, context, frame)?.let(out::add)
             }
         }
         return out
@@ -606,14 +767,14 @@ object JasperTemplateConverter {
         reportElement: Element,
         node: Element,
         sectionYOffset: Float,
-        options: JasperConversionOptions,
+        context: ConversionContext,
         frame: Map<String, Float>?,
     ): LoopElement? {
         var expression = node.firstDirectChild("datasetRun")?.textContent?.trim().orEmpty()
         val content = node.firstDirectChild("jr:listContents")
         val dataBinding = JasperExpressionMapper.toDataBinding(expression)
         val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
-        val out = parseBandElements(content!!, 0f, options, frame)
+        val out = parseBandElements(content!!, 0f, context, frame)
 
         return LoopElement(
             type = "loop",
@@ -632,10 +793,10 @@ object JasperTemplateConverter {
         node: Element,
         sectionYOffset: Float,
         maxWidth: Float,
-        options: JasperConversionOptions,
+        context: ConversionContext,
         frame: Map<String, Float>?,
     ): ContainerElement {
-        val out = parseBandElements(node, 0f, options, frame)
+        val out = parseBandElements(node, 0f, context, frame)
 
         return ContainerElement(
             type = "container",
@@ -678,7 +839,7 @@ object JasperTemplateConverter {
     private fun parseFrame(
         node: Element,
         sectionYOffset: Float,
-        options: JasperConversionOptions,
+        context: ConversionContext,
     ): List<com.pdfgenerator.model.Element>? {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
         val x = reportElement.getIntAttribute("x", 0).toFloat()
@@ -687,7 +848,7 @@ object JasperTemplateConverter {
             parseBandElements(
                 node,
                 sectionYOffset,
-                options,
+                context,
                 mapOf(
                     "x" to x,
                     "y" to y,
@@ -700,7 +861,7 @@ object JasperTemplateConverter {
     private fun parseBandElements(
         band: Element,
         sectionYOffset: Float,
-        options: JasperConversionOptions,
+        context: ConversionContext,
         frame: Map<String, Float>?,
     ): List<com.pdfgenerator.model.Element> {
         val out = mutableListOf<com.pdfgenerator.model.Element>()
@@ -711,16 +872,16 @@ object JasperTemplateConverter {
             if (child !is Element) continue
 
             when (child.tagName) {
-                "staticText" -> parseStaticText(child, sectionYOffset, frame)?.let(out::add)
-                "textField" -> parseTextField(child, sectionYOffset, frame)?.let(out::add)
+                "staticText" -> parseStaticText(child, sectionYOffset, context, frame)?.let(out::add)
+                "textField" -> parseTextField(child, sectionYOffset, context, frame)?.let(out::add)
                 "line" -> parseLine(child, sectionYOffset, frame)?.let(out::add)
                 "rectangle" -> parseRectangle(child, sectionYOffset, frame)?.let(out::add)
                 "image" -> parseImage(child, sectionYOffset, frame)?.let(out::add)
-                "componentElement" -> parseComponentElement(child, sectionYOffset, options, frame)?.let(out::addAll)
-                "frame" -> parseFrame(child, sectionYOffset, options)?.let(out::addAll)
+                "componentElement" -> parseComponentElement(child, sectionYOffset, context, frame)?.let(out::addAll)
+                "frame" -> parseFrame(child, sectionYOffset, context)?.let(out::addAll)
                 // "subreport" -> parseSubReport(child, sectionYOffset, options)?.let(out::addAll)
                 else -> {
-                    if (options.failOnUnsupportedElement) {
+                    if (context.options.failOnUnsupportedElement) {
                         throw JasperTemplateConversionException("Elemento Jasper não suportado: <${child.tagName}>")
                     }
                 }
@@ -733,11 +894,16 @@ object JasperTemplateConverter {
     private fun parseStaticText(
         node: Element,
         sectionYOffset: Float,
+        context: ConversionContext,
         frame: Map<String, Float>?,
     ): StaticTextElement? {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
         val textValue = node.firstDirectChild("text")?.textContent?.trim().orEmpty()
         if (textValue.isBlank()) return null
+
+        val styleName = node.getAttribute("style").ifBlank { null }
+            ?: reportElement.getAttribute("style").ifBlank { null }
+        val resolvedStyle = resolveStyle(styleName, context.stylesMap, context.defaultStyle)
 
         return StaticTextElement(
             id = UUID.randomUUID().toString(),
@@ -746,13 +912,14 @@ object JasperTemplateConverter {
             width = reportElement.getIntAttribute("width", 100).toFloat(),
             height = reportElement.getIntAttribute("height", 16).toFloat(),
             value = textValue,
-            style = parseTextStyle(node),
+            style = parseTextStyle(node, resolvedStyle),
         )
     }
 
     private fun parseTextField(
         node: Element,
         sectionYOffset: Float,
+        context: ConversionContext,
         frame: Map<String, Float>?,
     ): TextElement? {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
@@ -765,6 +932,10 @@ object JasperTemplateConverter {
             expression = expression.substring(1, expression.length - 1)
         }
 
+        val styleName = node.getAttribute("style").ifBlank { null }
+            ?: reportElement.getAttribute("style").ifBlank { null }
+        val resolvedStyle = resolveStyle(styleName, context.stylesMap, context.defaultStyle)
+
         return TextElement(
             id = UUID.randomUUID().toString(),
             x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
@@ -773,7 +944,7 @@ object JasperTemplateConverter {
             height = reportElement.getIntAttribute("height", 16).toFloat(),
             dataBinding = dataBinding,
             value = if (dataBinding == null) expression else null,
-            style = parseTextStyle(node),
+            style = parseTextStyle(node, resolvedStyle),
             printCondition = condition,
         )
     }
@@ -847,20 +1018,34 @@ object JasperTemplateConverter {
         )
     }
 
-    private fun parseTextStyle(node: Element): TextStyle {
+    private fun parseTextStyle(
+        node: Element,
+        resolvedStyle: JasperStyle,
+    ): TextStyle {
+        val reportElement = node.firstDirectChild("reportElement")
         val textElement = node.firstDirectChild("textElement")
         val font = textElement?.firstDirectChild("font")
 
-        val isBold = font?.getAttribute("isBold")?.toBooleanStrictOrNull() ?: false
-        val isItalic = font?.getAttribute("isItalic")?.toBooleanStrictOrNull() ?: false
+        val inlineBold = font?.getAttribute("isBold")?.toBooleanStrictOrNull()
+        val inlineItalic = font?.getAttribute("isItalic")?.toBooleanStrictOrNull()
+        val isBold = inlineBold ?: resolvedStyle.isBold ?: false
+        val isItalic = inlineItalic ?: resolvedStyle.isItalic ?: false
+
+        val inlineFontSize = font?.getAttribute("size")?.toFloatOrNull()
+        val inlineFontName = font?.getAttribute("fontName")?.ifBlank { null }
+        val inlineColor = reportElement?.getAttribute("forecolor")?.ifBlank { null }
+        val inlineAlign = textElement?.getAttribute("textAlignment")?.ifBlank { null }?.lowercase()
+        val inlineVAlign = textElement?.getAttribute("verticalAlignment")?.ifBlank { null }?.lowercase()
 
         return TextStyle(
-            fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: 12f,
-            fontFamily = font?.getAttribute("fontName")?.ifBlank { "Helvetica" } ?: "Helvetica",
+            fontSize = inlineFontSize ?: resolvedStyle.fontSize ?: 12f,
+            fontFamily = inlineFontName ?: resolvedStyle.fontName ?: "Helvetica",
             fontWeight = if (isBold) "bold" else "normal",
             fontStyle = if (isItalic) "italic" else "normal",
-            alignment = textElement?.getAttribute("textAlignment")?.ifBlank { "left" }?.lowercase() ?: "left",
-            verticalAlignment = textElement?.getAttribute("verticalAlignment")?.ifBlank { "center" }?.lowercase() ?: "center",
+            color = inlineColor ?: resolvedStyle.forecolor ?: "#000000",
+            backgroundColor = reportElement?.getAttribute("backcolor")?.ifBlank { null } ?: resolvedStyle.backcolor,
+            alignment = inlineAlign ?: resolvedStyle.alignment ?: "left",
+            verticalAlignment = inlineVAlign ?: resolvedStyle.verticalAlignment ?: "center",
         )
     }
 

@@ -448,4 +448,83 @@ class JasperTemplateConverterTest {
         assertEquals("items", table.dataBinding)
         assertEquals("#F8FAFC", table.style?.headerBackground)
     }
+
+    @Test
+    fun `should resolve default style, named style, and style inheritance`() {
+        val jrxml =
+            """
+            <jasperReport name="styled_doc" pageWidth="595" pageHeight="842" topMargin="20" leftMargin="20" rightMargin="20" bottomMargin="20">
+                <style name="Base" isDefault="true" fontName="Arial" fontSize="11" forecolor="#475569" hTextAlign="Left"/>
+                <style name="Header" style="Base" fontSize="16" isBold="true" forecolor="#0F172A"/>
+                <style name="Highlight" style="Header" forecolor="#4F46E5" hTextAlign="Right"/>
+
+                <title>
+                    <band height="120">
+                        <!-- Uses default style Base -->
+                        <staticText>
+                            <reportElement x="0" y="0" width="200" height="20"/>
+                            <text><![CDATA[Default Styled Text]]></text>
+                        </staticText>
+
+                        <!-- Uses Header style (inherits Arial from Base, overrides size to 16, bold true, color #0F172A) -->
+                        <staticText style="Header">
+                            <reportElement x="0" y="25" width="200" height="25"/>
+                            <text><![CDATA[Header Text]]></text>
+                        </staticText>
+
+                        <!-- Uses Highlight style on reportElement (inherits Base -> Header -> Highlight) -->
+                        <staticText>
+                            <reportElement style="Highlight" x="0" y="55" width="200" height="25"/>
+                            <text><![CDATA[Highlighted Text]]></text>
+                        </staticText>
+
+                        <!-- Uses Highlight style but overrides inline color to #E11D48 and size to 20 -->
+                        <textField style="Highlight">
+                            <reportElement x="0" y="85" width="200" height="25" forecolor="#E11D48"/>
+                            <textElement>
+                                <font size="20"/>
+                            </textElement>
+                            <textFieldExpression><![CDATA["Inline Overridden"]]></textFieldExpression>
+                        </textField>
+                    </band>
+                </title>
+            </jasperReport>
+            """.trimIndent()
+
+        val template = JasperTemplateConverter.fromString(jrxml)
+        val elements = template.pageElements!!
+        assertEquals(4, elements.size)
+
+        // 1. Base (default style)
+        val elem1 = assertIs<StaticTextElement>(elements[0])
+        assertEquals("Arial", elem1.style?.fontFamily)
+        assertEquals(11f, elem1.style?.fontSize)
+        assertEquals("#475569", elem1.style?.color)
+        assertEquals("normal", elem1.style?.fontWeight)
+        assertEquals("left", elem1.style?.alignment)
+
+        // 2. Header style
+        val elem2 = assertIs<StaticTextElement>(elements[1])
+        assertEquals("Arial", elem2.style?.fontFamily)
+        assertEquals(16f, elem2.style?.fontSize)
+        assertEquals("#0F172A", elem2.style?.color)
+        assertEquals("bold", elem2.style?.fontWeight)
+        assertEquals("left", elem2.style?.alignment)
+
+        // 3. Highlight style
+        val elem3 = assertIs<StaticTextElement>(elements[2])
+        assertEquals("Arial", elem3.style?.fontFamily)
+        assertEquals(16f, elem3.style?.fontSize)
+        assertEquals("bold", elem3.style?.fontWeight)
+        assertEquals("#4F46E5", elem3.style?.color)
+        assertEquals("right", elem3.style?.alignment)
+
+        // 4. Inline override
+        val elem4 = assertIs<TextElement>(elements[3])
+        assertEquals("Arial", elem4.style?.fontFamily)
+        assertEquals(20f, elem4.style?.fontSize)
+        assertEquals("#E11D48", elem4.style?.color)
+        assertEquals("bold", elem4.style?.fontWeight)
+        assertEquals("right", elem4.style?.alignment)
+    }
 }
