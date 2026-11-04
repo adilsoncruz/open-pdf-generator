@@ -4,7 +4,7 @@ plugins {
     signing
     id("java-library")
     jacoco
-    id("io.gitlab.arturbosch.detekt") version "1.23.5"
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
 
