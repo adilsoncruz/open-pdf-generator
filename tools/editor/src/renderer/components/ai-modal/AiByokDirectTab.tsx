@@ -98,7 +98,7 @@ export const AiByokDirectTab = ({
             className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
           />
           <span className="text-[11px] text-slate-500 mt-1 block">
-            Armazenada exclusivamente no seu navegador/editor.
+            Mantida apenas em memória durante a sessão (não gravada em disco).
           </span>
         </div>
       ) : (

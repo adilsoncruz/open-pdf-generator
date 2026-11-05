@@ -9,9 +9,12 @@ interface UseAiByokOptions {
   onSuccess?: () => void
 }
 
+// In-memory session cache: apiKey is never written to persistent cleartext storage
+let sessionApiKey = ''
+
 export const useAiByok = ({ isOpen, onClose, onSuccess }: UseAiByokOptions) => {
   const [provider, setProvider] = useState<AiProvider>('gemini')
-  const [apiKey, setApiKey] = useState('')
+  const [apiKey, setApiKey] = useState(sessionApiKey)
   const [model, setModel] = useState('gemini-2.5-flash')
   const [endpoint, setEndpoint] = useState('http://localhost:11434')
   const [inferBindings, setInferBindings] = useState(true)
@@ -20,23 +23,31 @@ export const useAiByok = ({ isOpen, onClose, onSuccess }: UseAiByokOptions) => {
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const updateApiKey = useCallback((key: string) => {
+    sessionApiKey = key
+    setApiKey(key)
+  }, [])
+
   useEffect(() => {
     if (!isOpen) return
 
+    // Clean up any legacy cleartext storage of sensitive data
+    if (localStorage.getItem('open_pdf_ai_key')) {
+      localStorage.removeItem('open_pdf_ai_key')
+    }
+
     const savedProvider = localStorage.getItem('open_pdf_ai_provider') as AiProvider | null
-    const savedKey = localStorage.getItem('open_pdf_ai_key')
     const savedModel = localStorage.getItem('open_pdf_ai_model')
 
     if (savedProvider) setProvider(savedProvider)
-    if (savedKey) setApiKey(savedKey)
     if (savedModel) setModel(savedModel)
+    if (sessionApiKey) setApiKey(sessionApiKey)
   }, [isOpen])
 
   const handleSaveSettings = useCallback(() => {
     localStorage.setItem('open_pdf_ai_provider', provider)
-    localStorage.setItem('open_pdf_ai_key', apiKey)
     localStorage.setItem('open_pdf_ai_model', model)
-  }, [provider, apiKey, model])
+  }, [provider, model])
 
   const handleSelectPDF = useCallback(async () => {
     setErrorMessage(null)
@@ -168,7 +179,7 @@ Retorne APENAS o JSON válido sem blocos markdown ao redor.`
     provider,
     setProvider,
     apiKey,
-    setApiKey,
+    setApiKey: updateApiKey,
     model,
     setModel,
     endpoint,
