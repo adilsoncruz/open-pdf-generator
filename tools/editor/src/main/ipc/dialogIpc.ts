@@ -67,11 +67,16 @@ export function registerDialogIpc(): void {
     }
 
     const filePath = result.filePaths[0]
-    const content = await fs.readFile(filePath, 'utf-8')
+    const conversion = await convertJrxmlToJson(filePath)
+    if (!conversion.success || !conversion.content) {
+      throw new Error(conversion.error || 'Falha ao converter template JRXML via CLI')
+    }
+
     return {
       path: filePath,
-      content,
+      content: conversion.content,
       isJrxml: true,
+      convertedFromJasper: true,
     }
   })
 

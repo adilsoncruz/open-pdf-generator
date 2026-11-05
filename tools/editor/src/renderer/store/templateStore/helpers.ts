@@ -213,9 +213,11 @@ export const saveToHistory = (state: TemplateStore, newTemplate: Template) => {
   }
 }
 
-export function flattenElements(elements: Element[]): Element[] {
+export function flattenElements(elements?: Element[]): Element[] {
+  if (!elements || !Array.isArray(elements)) return []
   const result: Element[] = []
   for (const el of elements) {
+    if (!el) continue
     result.push(el)
     if (el.elements && el.elements.length > 0) {
       result.push(...flattenElements(el.elements))

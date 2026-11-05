@@ -288,6 +288,16 @@ class ConvertCommand : CliktCommand(
         help = "Fail conversion when an unsupported Jasper element is found",
     ).flag(default = false)
 
+    private val itemsBinding by option(
+        "--items-binding",
+        help = "Data binding property name for inferred tables or loops (default: items)",
+    ).default("items")
+
+    private val disableTableInference by option(
+        "--disable-table-inference",
+        help = "Disable automatic TableElement inference and force LoopElement for detail bands",
+    ).flag(default = false)
+
     override fun run() {
         require(input.extension.equals("jrxml", ignoreCase = true)) {
             "Input file must have .jrxml extension"
@@ -301,6 +311,8 @@ class ConvertCommand : CliktCommand(
                 options =
                     JasperConversionOptions(
                         failOnUnsupportedElement = failOnUnsupported,
+                        defaultItemsBinding = itemsBinding,
+                        enableTableInference = !disableTableInference,
                     ),
             )
 

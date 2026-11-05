@@ -11,6 +11,10 @@ Este procedimento orienta a conversão de layouts existentes (PDFs de faturas, r
 
 ## 1. Conversão Determinística de JasperReports (.jrxml)
 
+> [!TIP]
+> Consulte a especificação canônica completa de De-Para e regras de resolução de gaps em:
+> [references/jasper-spec.md](references/jasper-spec.md)
+
 Para converter relatórios legados do JasperReports sem custo de API e com preservação exata de coordenadas:
 
 ### Via Desktop Editor:
