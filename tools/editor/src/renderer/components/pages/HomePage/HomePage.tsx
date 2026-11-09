@@ -50,17 +50,17 @@ export function HomePage({
   }
 
   return (
-    <main className="min-h-screen overflow-auto bg-slate-950 px-8 py-10 text-slate-100 animate-[fadeIn_0.35s_ease-out]">
+    <main className="min-h-screen overflow-auto bg-slate-950 px-4 py-6 sm:px-8 sm:py-10 text-slate-100 animate-[fadeIn_0.35s_ease-out]">
       <div className="mx-auto max-w-6xl">
-        <header className="flex items-center justify-between gap-5">
-          <div className="flex items-center gap-5">
-            <StudioLogo className="h-20 w-20 rounded-2xl shadow-[0_0_30px_rgba(99,102,241,0.3)]" />
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-5">
+          <div className="flex items-center gap-3 sm:gap-5">
+            <StudioLogo className="h-12 w-12 sm:h-20 sm:w-20 rounded-2xl shadow-[0_0_30px_rgba(99,102,241,0.3)] shrink-0" />
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight">Open PDF Template Studio</h1>
-              <p className="mt-1 text-sm text-slate-400">{t.home.tagline}</p>
+              <h1 className="text-xl sm:text-3xl font-semibold tracking-tight">Open PDF Template Studio</h1>
+              <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-400">{t.home.tagline}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
             <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-300">
               <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -85,20 +85,20 @@ export function HomePage({
             <button
               onClick={toggleTheme}
               title={theme === 'dark' ? t.home.switchThemeLight : t.home.switchThemeDark}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 transition hover:border-indigo-400 hover:bg-slate-800 hover:text-indigo-400"
+              className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 transition hover:border-indigo-400 hover:bg-slate-800 hover:text-indigo-400"
             >
               <Icon name={theme === 'dark' ? 'sun' : 'moon'} size="md" />
             </button>
           </div>
         </header>
 
-        <section className="mx-auto mt-16 max-w-5xl">
+        <section className="mx-auto mt-8 sm:mt-16 max-w-5xl">
           <div className="text-center">
-            <h2 className="text-5xl font-semibold tracking-tight text-slate-50">{t.home.whatDoYouWantToDo}</h2>
-            <p className="mt-4 text-lg text-slate-400">{t.home.chooseOption}</p>
+            <h2 className="text-2xl sm:text-5xl font-semibold tracking-tight text-slate-50">{t.home.whatDoYouWantToDo}</h2>
+            <p className="mt-2 sm:mt-4 text-sm sm:text-lg text-slate-400">{t.home.chooseOption}</p>
           </div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={`mt-6 sm:mt-10 grid gap-4 sm:gap-5 grid-cols-1 ${onImportJasper || onImportAI ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-2'}`}>
             {/* 1. Novo Template */}
             <button
               onClick={onNewTemplate}
@@ -126,33 +126,37 @@ export function HomePage({
             </button>
 
             {/* 3. Importar Jasper (.jrxml) */}
-            <button
-              onClick={onImportJasper || onOpenFile}
-              className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-emerald-400 hover:bg-slate-800 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between">
-                  <Icon name="file-text" size="xl" className="text-emerald-400" />
-                  <Badge variant="warning" className="uppercase tracking-wider text-[10px] font-semibold">Beta</Badge>
+            {onImportJasper && (
+              <button
+                onClick={onImportJasper}
+                className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-emerald-400 hover:bg-slate-800 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <Icon name="file-text" size="xl" className="text-emerald-400" />
+                    <Badge variant="warning" className="uppercase tracking-wider text-[10px] font-semibold">Beta</Badge>
+                  </div>
+                  <span className="mt-5 block text-lg font-semibold">{t.home.importJasper}</span>
+                  <span className="mt-2 block text-xs text-slate-400">{t.home.importJasperDesc}</span>
                 </div>
-                <span className="mt-5 block text-lg font-semibold">{t.home.importJasper}</span>
-                <span className="mt-2 block text-xs text-slate-400">{t.home.importJasperDesc}</span>
-              </div>
-              <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-emerald-400">→</span>
-            </button>
+                <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-emerald-400">→</span>
+              </button>
+            )}
 
             {/* 4. Importar PDF com IA */}
-            <button
-              onClick={onImportAI}
-              className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-purple-400 hover:bg-slate-800 flex flex-col justify-between"
-            >
-              <div>
-                <Icon name="preview" size="xl" className="text-purple-400" />
-                <span className="mt-5 block text-lg font-semibold">{t.home.importAI}</span>
-                <span className="mt-2 block text-xs text-slate-400">{t.home.importAIDesc}</span>
-              </div>
-              <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-purple-400">→</span>
-            </button>
+            {onImportAI && (
+              <button
+                onClick={onImportAI}
+                className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-purple-400 hover:bg-slate-800 flex flex-col justify-between"
+              >
+                <div>
+                  <Icon name="preview" size="xl" className="text-purple-400" />
+                  <span className="mt-5 block text-lg font-semibold">{t.home.importAI}</span>
+                  <span className="mt-2 block text-xs text-slate-400">{t.home.importAIDesc}</span>
+                </div>
+                <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-purple-400">→</span>
+              </button>
+            )}
           </div>
 
           {/* Galeria de Modelos Prontos */}
@@ -168,7 +172,7 @@ export function HomePage({
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {GALLERY_TEMPLATES.map((item) => (
                 <div
                   key={item.id}

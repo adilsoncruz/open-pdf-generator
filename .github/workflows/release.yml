@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - bootstrap
   workflow_dispatch:
     inputs:
       release_engine:
@@ -138,7 +137,7 @@ jobs:
           generate_release_notes: true
 
       - name: Publish to Maven Central Portal
-        if: steps.snapshot.outputs.skip == 'false'
+        if: steps.snapshot.outputs.skip == 'false' && steps.tagcheck.outputs.exists == 'false'
         working-directory: core
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
@@ -497,6 +496,8 @@ jobs:
             tools/editor/release/*.AppImage
             tools/editor/release/*.deb
             tools/editor/release/*.zip
+            tools/editor/release/*.yml
+            tools/editor/release/*.blockmap
           if-no-files-found: error
 
   # =========================

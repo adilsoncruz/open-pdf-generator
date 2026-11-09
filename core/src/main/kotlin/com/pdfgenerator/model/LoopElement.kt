@@ -13,7 +13,7 @@ data class LoopElement(
     val startY: Float? = null,
     val itemSpacing: Float = 0f,
     val elements: List<Element>,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {

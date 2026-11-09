@@ -12,6 +12,8 @@ describe('CanvasStandardPage modular components', () => {
   beforeEach(() => {
     useTemplateStore.setState({
       template: {
+        version: '1.0',
+        metadata: { name: 'Test' },
         pageSettings: {
           size: 'A4',
           orientation: 'portrait',
@@ -40,7 +42,7 @@ describe('CanvasStandardPage modular components', () => {
       },
       currentSection: 'body',
       selectedElementIds: [],
-      selectedElementLocation: null,
+      selectedElementLocation: 'body',
     })
   })
 
@@ -52,6 +54,8 @@ describe('CanvasStandardPage modular components', () => {
           id: '2',
           type: 'text',
           value: 'Second',
+          x: 0,
+          y: 0,
           positionMode: 'RELATIVE',
           relativeOffsetY: 5,
           width: 100,
@@ -84,6 +88,48 @@ describe('CanvasStandardPage modular components', () => {
       // (100 - 20) / 2 = 40
       // (200 - 40) / 2 = 80
       expect(coords).toEqual({ x: 40, y: 80 })
+    })
+
+    it('handles drag over and drop of elements with application/x-openpdf-element', () => {
+      const onDropElement = vi.fn()
+      const { result } = renderHook(() =>
+        useCanvasPageDrop({
+          section: 'body',
+          scale: 1,
+          onDropElement,
+        })
+      )
+
+      const preventDefault = vi.fn()
+      const mockDragEvent = {
+        preventDefault,
+        dataTransfer: {
+          dropEffect: '',
+          getData: (type: string) =>
+            type === 'application/x-openpdf-element'
+              ? JSON.stringify({ type: 'static_text', value: 'Static Text Dropped' })
+              : '',
+        },
+        clientX: 50,
+        clientY: 60,
+        currentTarget: {
+          getBoundingClientRect: () => ({ left: 10, top: 10 }),
+        },
+      } as unknown as React.DragEvent
+
+      act(() => {
+        result.current.handleDrop(mockDragEvent)
+      })
+
+      expect(onDropElement).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'static_text',
+          value: 'Static Text Dropped',
+          x: 40,
+          y: 50,
+        }),
+        'body'
+      )
     })
 
     it('handles drag over and drop of elements', () => {
@@ -162,7 +208,7 @@ describe('CanvasStandardPage modular components', () => {
       horizontalGuides: [],
       verticalGuides: [],
       onSnapGuide: vi.fn(),
-      marginSnap: { snapLines: [], snappedMargin: null },
+      marginSnap: { top: false, bottom: false, left: false, right: false },
       numberOfPages: 1,
       bodyUsableHeight: 692,
       headerHeight: 50,

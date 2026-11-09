@@ -12,7 +12,7 @@ data class RichTextElement(
     val dataBinding: String? = null,
     val value: String? = null,
     val style: TextStyle? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return width ?: containerWidth

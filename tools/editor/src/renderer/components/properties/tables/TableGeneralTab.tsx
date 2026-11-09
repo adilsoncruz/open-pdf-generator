@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../../../i18n'
-import type { Element } from '../../../../store/templateStore'
+import type { Element } from '../../../store/templateStore'
 
 interface TableGeneralTabProps {
   element: Element

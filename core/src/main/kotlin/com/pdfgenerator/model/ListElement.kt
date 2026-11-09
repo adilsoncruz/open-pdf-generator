@@ -22,7 +22,7 @@ data class ListElement(
     val itemSpacing: Float = 10f,
     val style: TextStyle? = null,
     val listStyle: ListMode? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()

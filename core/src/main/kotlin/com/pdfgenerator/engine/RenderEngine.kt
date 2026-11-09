@@ -35,6 +35,7 @@ import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.TextElement
 import org.slf4j.LoggerFactory
+import kotlin.reflect.KClass
 
 class RenderEngine(private val config: PDFGeneratorConfig) {
     private val logger = LoggerFactory.getLogger(RenderEngine::class.java)
@@ -55,8 +56,36 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
     private val spacerRenderer = SpacerRenderer()
     private val linkRenderer = LinkRenderer()
 
+    private val renderers: MutableMap<KClass<out Element>, Renderer<out Element>> =
+        mutableMapOf(
+            TextElement::class to textRenderer,
+            RichTextElement::class to richTextRenderer,
+            StaticTextElement::class to staticTextRenderer,
+            ImageElement::class to imageRenderer,
+            TableElement::class to tableRenderer,
+            RectangleElement::class to rectangleRenderer,
+            LineElement::class to lineRenderer,
+            BarcodeElement::class to barcodeRenderer,
+            ConditionalElement::class to conditionalRenderer,
+            LoopElement::class to loopRenderer,
+            ListElement::class to listRenderer,
+            CheckListElement::class to checkListRenderer,
+            ContainerElement::class to containerRenderer,
+            PageBreakElement::class to PageBreakRenderer,
+            SpacerElement::class to spacerRenderer,
+            LinkElement::class to linkRenderer,
+        )
+
+    fun <T : Element> registerRenderer(
+        elementClass: KClass<T>,
+        renderer: Renderer<T>,
+    ) {
+        renderers[elementClass] = renderer
+    }
+
     internal fun loadImage(source: String): org.openpdf.text.Image = imageRenderer.loadImage(source)
 
+    @Suppress("UNCHECKED_CAST")
     fun render(
         element: Element,
         context: RenderContext,
@@ -72,23 +101,9 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
             context.offsetY,
             context.bodyOffsetY,
         )
-        when (element) {
-            is TextElement -> textRenderer.render(element, context)
-            is RichTextElement -> richTextRenderer.render(element, context)
-            is StaticTextElement -> staticTextRenderer.render(element, context)
-            is ImageElement -> imageRenderer.render(element, context)
-            is TableElement -> tableRenderer.render(element, context)
-            is RectangleElement -> rectangleRenderer.render(element, context)
-            is LineElement -> lineRenderer.render(element, context)
-            is BarcodeElement -> barcodeRenderer.render(element, context)
-            is ConditionalElement -> conditionalRenderer.render(element, context)
-            is LoopElement -> loopRenderer.render(element, context)
-            is ListElement -> listRenderer.render(element, context)
-            is CheckListElement -> checkListRenderer.render(element, context)
-            is ContainerElement -> containerRenderer.render(element, context)
-            is PageBreakElement -> PageBreakRenderer.render(element, context)
-            is SpacerElement -> spacerRenderer.render(element, context)
-            is LinkElement -> linkRenderer.render(element, context)
-        }
+        val renderer =
+            renderers[element::class] as? Renderer<Element>
+                ?: throw IllegalArgumentException("No renderer registered for element class: ${element::class.simpleName}")
+        renderer.render(element, context)
     }
 }

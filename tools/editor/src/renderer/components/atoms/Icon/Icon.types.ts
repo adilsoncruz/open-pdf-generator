@@ -81,6 +81,11 @@ export type IconName =
   | 'refresh'
   | 'pin'
   | 'pin-off'
+  | 'search'
+  | 'clock'
+  | 'corner-up-left'
+  | 'corner-up-right'
+  | 'code'
 
 export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 

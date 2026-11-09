@@ -93,6 +93,21 @@ const activeSlide = computed(() => slides.value[currentSlide.value])
   color: var(--vp-c-text-1);
   line-height: 1.15;
   min-height: 76px;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 480px) {
+  .name {
+    font-size: 26px;
+  }
+  .text {
+    font-size: 24px;
+    min-height: 60px;
+  }
+  .tagline {
+    font-size: 15px;
+    line-height: 24px;
+  }
 }
 
 @media (min-width: 640px) {

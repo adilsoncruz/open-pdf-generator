@@ -1,6 +1,8 @@
 import type { Element, ElementLocation } from '../../store/templateStore'
 import type { SnappedGuides } from './types'
 
+export type GuideLine = number
+
 export interface MarginSnapResult {
   top: boolean
   bottom: boolean

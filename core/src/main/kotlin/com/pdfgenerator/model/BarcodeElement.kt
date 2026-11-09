@@ -13,7 +13,7 @@ data class BarcodeElement(
     val dataBinding: String? = "",
     val value: String? = null,
     val style: BarcodeStyle? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return width

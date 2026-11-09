@@ -317,3 +317,48 @@
   gap: 12px;
   color: var(--vp-c-brand-2);
 }
+
+/* ==========================================================================
+   Mobile Responsiveness & Layout Safety Guards
+   ========================================================================== */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+  }
+
+  .VPHome {
+    overflow-x: clip;
+    max-width: 100vw;
+  }
+
+  .vp-doc {
+    max-width: 100%;
+  }
+
+  .vp-doc table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vp-code-group {
+    max-width: 100%;
+  }
+
+  .vp-code-group .tabs {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  div[class*='language-'] {
+    max-width: 100%;
+  }
+
+  div[class*='language-'] pre {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

@@ -58,6 +58,9 @@ tools/editor/resources/bin/*
 # VitePress
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+docs/public/playground/
+docs/test-results/
+docs/playwright-report/
 
 # Codebase memory / MCP
 .codebase-memory/

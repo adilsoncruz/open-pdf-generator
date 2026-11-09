@@ -1,4 +1,4 @@
-import { useTemplateStore } from '../store/templateStore'
+import { useTemplateStore, type Element } from '../store/templateStore'
 import { Icon, type IconName } from './atoms'
 import { useTranslation } from '../i18n'
 
@@ -51,7 +51,7 @@ export default function ElementsToolbar() {
       y: 50,
     }
 
-    let element
+    let element: Element
     switch (type) {
       case 'text':
         element = {

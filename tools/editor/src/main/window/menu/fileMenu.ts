@@ -45,19 +45,7 @@ export function createFileMenu(
           getMainWindow()?.webContents.send('menu:export')
         },
       },
-      { type: 'separator' },
-      {
-        label: strings.importJasper,
-        click: () => {
-          getMainWindow()?.webContents.send('menu:import-jasper')
-        },
-      },
-      {
-        label: strings.importAi,
-        click: () => {
-          getMainWindow()?.webContents.send('menu:import-ai')
-        },
-      },
+
       ...(isMac
         ? []
         : [

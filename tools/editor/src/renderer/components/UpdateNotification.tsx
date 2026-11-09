@@ -1,17 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { ArrowPathIcon, ArrowDownTrayIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
-
-interface UpdateStatus {
-  checking: boolean
-  available: boolean
-  downloaded: boolean
-  downloading: boolean
-  error: string | null
-  progress: number
-  version: string | null
-  releaseNotes: string | null
-  releaseDate: string | null
-}
+import type { UpdateStatus } from '../../shared/types'
 
 export function UpdateNotification() {
   const [status, setStatus] = useState<UpdateStatus | null>(null)
@@ -59,85 +48,98 @@ export function UpdateNotification() {
     return null
   }
 
-  
+  // Verificando atualizações
   if (status?.checking) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm">
-        <ArrowPathIcon className="w-4 h-4 animate-spin" />
-        <span>Checking for updates...</span>
+      <div className="fixed bottom-9 right-4 z-50 flex items-center gap-2.5 px-3.5 py-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 text-slate-300 rounded-xl shadow-2xl text-xs">
+        <ArrowPathIcon className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+        <span>Verificando atualizações...</span>
       </div>
     )
   }
 
-  
+  // Baixando atualização
   if (status?.downloading) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm">
-        <ArrowDownTrayIcon className="w-4 h-4" />
+      <div className="fixed bottom-9 right-4 z-50 flex items-center gap-3 px-4 py-2.5 bg-slate-900/95 backdrop-blur-md border border-indigo-500/40 text-slate-200 rounded-xl shadow-2xl text-xs">
+        <ArrowDownTrayIcon className="w-4 h-4 text-indigo-400 animate-bounce" />
         <span>Baixando {status.version}...</span>
-        <div className="w-20 h-2 bg-blue-200 rounded-full overflow-hidden">
+        <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-blue-600 transition-all duration-300"
+            className="h-full bg-indigo-500 transition-all duration-300"
             style={{ width: `${status.progress}%` }}
           />
         </div>
-        <span className="text-xs">{status.progress.toFixed(0)}%</span>
+        <span className="text-[11px] text-slate-400 font-mono">{status.progress.toFixed(0)}%</span>
       </div>
     )
   }
 
-  
+  // Atualização baixada e pronta
   if (status?.downloaded) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm">
-        <CheckCircleIcon className="w-4 h-4" />
-        <span>Version {status.version} ready!</span>
+      <div className="fixed bottom-9 right-4 z-50 flex items-center gap-3 px-4 py-2.5 bg-slate-900/95 backdrop-blur-md border border-emerald-500/40 text-slate-200 rounded-xl shadow-2xl text-xs">
+        <CheckCircleIcon className="w-4 h-4 text-emerald-400 shrink-0" />
+        <span>Versão {status.version} pronta!</span>
         <button
           onClick={handleInstall}
-          className="px-2 py-0.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs font-medium"
+          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors text-xs font-medium shadow-sm"
         >
           Reiniciar e Atualizar
         </button>
+        <button
+          onClick={handleDismiss}
+          className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-lg transition-colors"
+          title="Dispensar"
+        >
+          <XMarkIcon className="w-3.5 h-3.5" />
+        </button>
       </div>
     )
   }
 
-  
+  // Nova versão disponível
   if (status?.available && status.version) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-sm relative">
-        <ArrowDownTrayIcon className="w-4 h-4" />
-        <span>New version {status.version} available!</span>
-        <button
-          onClick={handleDownload}
-          className="px-2 py-0.5 bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors text-xs font-medium"
-        >
-          Baixar
-        </button>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-xs text-amber-600 hover:text-amber-800 underline"
-        >
-          {showDetails ? 'Ocultar' : 'Detalhes'}
-        </button>
-        <button
-          onClick={handleDismiss}
-          className="p-0.5 hover:bg-amber-200 rounded transition-colors"
-          title="Dispensar"
-        >
-          <XMarkIcon className="w-4 h-4" />
-        </button>
+      <div className="fixed bottom-9 right-4 z-50 flex flex-col gap-2 p-3 bg-slate-900/95 backdrop-blur-md border border-indigo-500/40 text-slate-200 rounded-xl shadow-2xl text-xs max-w-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ArrowDownTrayIcon className="w-4 h-4 text-indigo-400 shrink-0" />
+            <span className="font-semibold text-slate-100">Nova versão {status.version} disponível</span>
+          </div>
+          <button
+            onClick={handleDismiss}
+            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-lg transition-colors"
+            title="Dispensar"
+          >
+            <XMarkIcon className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 mt-0.5">
+          {status.releaseNotes ? (
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="text-xs text-indigo-400 hover:text-indigo-300 underline"
+            >
+              {showDetails ? 'Ocultar notas' : 'Ver notas'}
+            </button>
+          ) : <span />}
+          <button
+            onClick={handleDownload}
+            className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors text-xs font-medium shadow-sm"
+          >
+            Baixar atualização
+          </button>
+        </div>
 
         {/* Modal de detalhes */}
         {showDetails && status.releaseNotes && (
-          <div className="absolute top-full left-0 mt-2 w-80 p-3 bg-white rounded-lg shadow-lg border border-amber-200 z-50">
-            <h4 className="font-medium text-gray-900 mb-2">What's new in version {status.version}</h4>
-            <div className="text-xs text-gray-600 whitespace-pre-wrap max-h-40 overflow-y-auto">
-              {status.releaseNotes}
-            </div>
+          <div className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-lg text-[11px] text-slate-300 whitespace-pre-wrap max-h-36 overflow-y-auto">
+            {status.releaseNotes}
             {status.releaseDate && (
-              <p className="text-xs text-gray-400 mt-2">
-                Released: {new Date(status.releaseDate).toLocaleDateString('en-US')}
+              <p className="text-[10px] text-slate-500 mt-2">
+                Lançado em: {new Date(status.releaseDate).toLocaleDateString('pt-BR')}
               </p>
             )}
           </div>
@@ -146,27 +148,36 @@ export function UpdateNotification() {
     )
   }
 
-  // Erro
+  // Erro ao verificar
   if (status?.error) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-sm">
-        <XMarkIcon className="w-4 h-4" />
-        <span className="truncate max-w-xs" title={status.error}>
-          Error checking for updates
-        </span>
-        <button
-          onClick={handleCheckUpdates}
-          className="px-2 py-0.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs font-medium"
-        >
-          Tentar Novamente
-        </button>
-        <button
-          onClick={handleDismiss}
-          className="p-0.5 hover:bg-red-200 rounded transition-colors"
-          title="Dispensar"
-        >
-          <XMarkIcon className="w-4 h-4" />
-        </button>
+      <div className="fixed bottom-9 right-4 z-50 flex flex-col gap-2 p-3 bg-slate-900/95 backdrop-blur-md border border-red-500/40 text-slate-200 rounded-xl shadow-2xl text-xs max-w-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-red-400 font-medium">
+            <XMarkIcon className="w-4 h-4 shrink-0" />
+            <span>Erro ao verificar atualizações</span>
+          </div>
+          <button
+            onClick={handleDismiss}
+            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-lg transition-colors"
+            title="Dispensar"
+          >
+            <XMarkIcon className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg text-[11px] text-slate-400 whitespace-pre-wrap max-h-24 overflow-y-auto font-mono">
+          {status.error}
+        </div>
+
+        <div className="flex justify-end gap-2 mt-0.5">
+          <button
+            onClick={handleCheckUpdates}
+            className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors text-xs font-medium shadow-sm"
+          >
+            Tentar Novamente
+          </button>
+        </div>
       </div>
     )
   }

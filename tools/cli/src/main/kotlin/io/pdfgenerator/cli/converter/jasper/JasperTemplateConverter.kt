@@ -89,10 +89,7 @@ object JasperTemplateConverter {
     }
 
     fun hasSubreport(jrxmlFile: File): Boolean {
-        val factory = DocumentBuilderFactory.newInstance()
-        val builder = factory.newDocumentBuilder()
-        val document = builder.parse(jrxmlFile)
-
+        val document = buildDocument(jrxmlFile.inputStream())
         val nodeList = document.getElementsByTagName("subreport")
         return nodeList.length > 0
     }

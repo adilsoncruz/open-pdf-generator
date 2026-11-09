@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { EditorPage, HomePage, LoadingPage } from './components/pages'
+import React, { useEffect, useState, useMemo } from 'react'
+import { EditorPage, HomePage, LoadingPage, MobileViewerPage } from './components/pages'
 import { AiImportModal } from './components/AiImportModal'
 import { useTabStore } from './store/tabStore'
 import { useTemplateStore } from './store/templateStore'
@@ -7,29 +7,58 @@ import { useRecentFilesStore } from './store/recentFilesStore'
 import { openTemplateFromContent, handleImportJasper } from './bootstrap'
 
 export function App() {
-  const [screen, setScreen] = useState<'loading' | 'home' | 'editor'>('loading')
+  const [screen, setScreen] = useState<'loading' | 'home' | 'editor' | 'mobile-viewer'>('loading')
+  const [selectedTemplateTitle, setSelectedTemplateTitle] = useState<string>('')
   const [showAiModal, setShowAiModal] = useState(false)
+  const [forceDesktop, setForceDesktop] = useState(false)
+
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth < 768
+  }, [])
 
   useEffect(() => {
     const timer = window.setTimeout(() => setScreen('home'), 2200)
     return () => window.clearTimeout(timer)
   }, [])
 
+  const navigateToTemplate = (title?: string) => {
+    if (title) setSelectedTemplateTitle(title)
+    if (isMobile && !forceDesktop) {
+      setScreen('mobile-viewer')
+    } else {
+      setScreen('editor')
+    }
+  }
+
   const handleOpenFromContent = (filePath: string, content: string) => {
     const success = openTemplateFromContent(filePath, content)
     if (success) {
-      setScreen('editor')
+      navigateToTemplate(filePath.split('/').pop())
     }
   }
 
   const handleJasperImport = async () => {
     const success = await handleImportJasper()
     if (success) {
-      setScreen('editor')
+      navigateToTemplate('Jasper Import')
     }
   }
 
   if (screen === 'loading') return <LoadingPage />
+
+  if (screen === 'mobile-viewer') {
+    return (
+      <MobileViewerPage
+        templateTitle={selectedTemplateTitle}
+        onBack={() => setScreen('home')}
+        onOpenDesktopEditor={() => {
+          setForceDesktop(true)
+          setScreen('editor')
+        }}
+      />
+    )
+  }
 
   if (screen === 'home') {
     return (
@@ -37,20 +66,18 @@ export function App() {
         <HomePage
           onNewTemplate={() => {
             useTabStore.getState().createNewTemplateTab()
-            setScreen('editor')
+            navigateToTemplate('Novo Template')
           }}
           onOpenFile={async () => {
             const result = await window.electronAPI.openFile()
             if (!result) return
             handleOpenFromContent(result.path, result.content)
           }}
-          onImportJasper={handleJasperImport}
-          onImportAI={() => setShowAiModal(true)}
           onSelectGalleryTemplate={(item) => {
             const success = openTemplateFromContent(`${item.id}.json`, JSON.stringify(item.template))
             if (success) {
               useTemplateStore.getState().setTestData(item.data)
-              setScreen('editor')
+              navigateToTemplate(item.title)
             }
           }}
           onOpenRecentFile={async (filePath: string) => {

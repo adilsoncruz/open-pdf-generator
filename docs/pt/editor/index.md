@@ -22,17 +22,17 @@ onMounted(() => {
 
 const downloads = {
   macos: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.dmg',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor-1.0.0-arm64.dmg',
     label: 'Baixar para macOS',
     available: true
   },
   windows: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.exe',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor.Setup.1.0.0.exe',
     label: 'Baixar para Windows',
     available: true
   },
   linux: {
-    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/v1.1.0/PDF-Template-Editor-1.1.0.AppImage',
+    url: 'https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v1.0.0/PDF.Template.Editor-1.0.0.AppImage',
     label: 'Baixar para Linux',
     available: true
   }
@@ -44,7 +44,7 @@ const downloads = {
 Um aplicativo desktop poderoso para projetar e pré-visualizar templates de PDF com canvas visual de arrastar e soltar, data binding em tempo real e o design system **Studio Slate**.
 
 <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 24px 0;">
-  <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem; font-weight: 600; color: var(--vp-c-brand-1);">v1.1.0</span>
+  <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem; font-weight: 600; color: var(--vp-c-brand-1);">v1.0.0</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">macOS · Windows · Linux</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">Studio Slate</span>
   <span style="padding: 6px 14px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); border-radius: 20px; font-size: 0.875rem;">Licença AGPL-3.0</span>
@@ -64,7 +64,7 @@ Um aplicativo desktop poderoso para projetar e pré-visualizar templates de PDF 
   </div>
   
   <p style="margin-top: 16px; font-size: 0.9rem; color: var(--vp-c-text-3);">
-    Versão 1.1.0 · {{ osName }} · ~117 MB
+    Versão 1.0.0 · {{ osName }} · Universal / x64
   </p>
   
   <p style="margin-top: 8px; font-size: 0.85rem; color: var(--vp-c-text-2);">
@@ -119,8 +119,6 @@ Compilação instantânea do PDF com resolução completa de data binding, loops
 ## Principais Recursos
 
 - **Design Studio Slate**: Tema escuro moderno de alto contraste, além de um elegante modo claro com o logo Precision Fold.
-- **Importador JasperReports**: Converta templates legados `.jrxml` diretamente em templates modernos do Open PDF Generator.
-- **Importador de PDF com IA**: Ingesta de documentos PDF existentes ou mockups de layout e geração automática de templates JSON com inferência estruturada.
 - **Workspace Multi-Abas**: Abra, edite e compare vários templates de PDF simultaneamente com rastreamento de estado pendente (dirty-state).
 - **Menu de Contexto (Clique Direito)**: Ações instantâneas nos elementos do canvas e nas camadas (Agrupar, Desagrupar, Duplicar, Excluir, Propriedades do Grupo).
 - **Grupos de Elementos**: Agrupe vários elementos para compartilhar regras de visibilidade e lógica condicional (`printCondition`).
@@ -145,18 +143,18 @@ Compilação instantânea do PDF com resolução completa de data binding, loops
 
 ```bash [Windows]
 # 1. Baixe o instalador .exe pelo botão acima
-# 2. Execute o PDF-Template-Editor-1.1.0.exe
+# 2. Execute o PDF.Template.Editor.Setup.1.0.0.exe
 # 3. Siga o assistente de instalação
 # 4. Inicie pelo Menu Iniciar ou pelo atalho na Área de Trabalho
 ```
 
 ```bash [Linux]
 # Opção A: AppImage (Recomendado)
-chmod +x PDF-Template-Editor-1.1.0.AppImage
-./PDF-Template-Editor-1.1.0.AppImage
+chmod +x PDF.Template.Editor-1.0.0.AppImage
+./PDF.Template.Editor-1.0.0.AppImage
 
 # Opção B: Pacote Debian / Ubuntu (.deb)
-sudo dpkg -i PDF-Template-Editor-1.1.0.deb
+sudo dpkg -i pdf-template-editor_1.0.0_amd64.deb
 ```
 
 :::
