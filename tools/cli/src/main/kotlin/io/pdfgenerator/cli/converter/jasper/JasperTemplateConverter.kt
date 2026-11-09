@@ -411,13 +411,25 @@ object JasperTemplateConverter {
             yOffset = cfSection["height"] as Float
         }
 
+        val isSummaryNewPage = root.getAttribute("isSummaryNewPage").equals("true", ignoreCase = true)
+
         // 7. Summary
         val summaryNodes = root.getElementsByTagName("summary")
         if (summaryNodes.length > 0) {
-            val sSection = convertSection(summaryNodes, 0f, containerWidth, context)
-            val sElements = sSection["elements"] as List<com.pdfgenerator.model.Element>
-            if (sElements.isNotEmpty()) {
-                summaryElem = sElements
+            if (isSummaryNewPage) {
+                val sSection = convertSection(summaryNodes, 0f, containerWidth, context)
+                val sElements = sSection["elements"] as List<com.pdfgenerator.model.Element>
+                if (sElements.isNotEmpty()) {
+                    summaryElem = sElements
+                }
+            } else {
+                // When isSummaryNewPage is false (Jasper default), summary renders on the same page
+                val sSection = convertSection(summaryNodes, yOffset, containerWidth, context)
+                val sElements = sSection["elements"] as List<com.pdfgenerator.model.Element>
+                if (sElements.isNotEmpty()) {
+                    elements.addAll(sElements)
+                    yOffset = sSection["height"] as Float
+                }
             }
         }
 
@@ -704,7 +716,11 @@ object JasperTemplateConverter {
                     if (reportElement == null) continue
                     val expr = child.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
                     val dataBinding = JasperExpressionMapper.toDataBinding(expr)
-                    val fieldName = dataBinding ?: if (expr.startsWith("\"") && expr.endsWith("\"")) expr.removeSurrounding("\"") else expr
+                    val rawPattern = child.getAttribute("pattern").ifBlank { null }
+                    val formattedBinding = JasperExpressionMapper.applyPattern(dataBinding, rawPattern)
+                    val fieldName =
+                        formattedBinding
+                            ?: if (expr.startsWith("\"") && expr.endsWith("\"")) expr.removeSurrounding("\"") else expr
                     if (fieldName.isBlank()) continue
                     val textElement = child.firstDirectChild("textElement")
                     val font = textElement?.firstDirectChild("font")
@@ -796,6 +812,7 @@ object JasperTemplateConverter {
 
             when (child.tagName) {
                 "jr:QRCode" -> parseJrQrCode(reportElement, child, sectionYOffset, frame)?.let(out::add)
+                "jr:Code128", "jr:code128" -> parseJrCode128(reportElement, child, sectionYOffset, frame)?.let(out::add)
                 "jr:list" -> parseJrList(reportElement, child, sectionYOffset, context, frame)?.let(out::add)
             }
         }
@@ -876,6 +893,33 @@ object JasperTemplateConverter {
         )
     }
 
+    private fun parseJrCode128(
+        reportElement: Element,
+        node: Element,
+        sectionYOffset: Float,
+        frame: Map<String, Float>?,
+    ): BarcodeElement? {
+        val expression =
+            node.firstDirectChild("jr:codeExpression")?.textContent?.trim()?.ifBlank { null }
+                ?: node.textContent?.trim().orEmpty()
+        val dataBinding = JasperExpressionMapper.toDataBinding(expression)
+        val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
+        val condition = JasperExpressionMapper.toExpression(printCondition)
+
+        return BarcodeElement(
+            type = "barcode",
+            barcodeType = "code128",
+            id = UUID.randomUUID().toString(),
+            x = reportElement.getIntAttribute("x", 0).toFloat() + (frame?.get("x") ?: 0f),
+            y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
+            width = reportElement.getIntAttribute("width", 160).toFloat(),
+            height = reportElement.getIntAttribute("height", 30).toFloat(),
+            dataBinding = dataBinding ?: "",
+            value = if (dataBinding == null && expression.isNotBlank()) expression.trim('"') else null,
+            printCondition = condition,
+        )
+    }
+
     private fun parseFrame(
         node: Element,
         sectionYOffset: Float,
@@ -884,6 +928,9 @@ object JasperTemplateConverter {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
         val x = reportElement.getIntAttribute("x", 0).toFloat()
         val y = reportElement.getIntAttribute("y", 0).toFloat()
+        val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
+        val condition = JasperExpressionMapper.toExpression(printCondition)
+
         val out =
             parseBandElements(
                 node,
@@ -893,7 +940,32 @@ object JasperTemplateConverter {
                     "x" to x,
                     "y" to y,
                 ),
-            ).toMutableList()
+            ).map { child ->
+                if (condition != null) {
+                    when (child) {
+                        is RectangleElement -> child.copy(printCondition = condition)
+                        is TextElement -> child.copy(printCondition = condition)
+                        is StaticTextElement ->
+                            TextElement(
+                                id = child.id,
+                                x = child.x,
+                                y = child.y,
+                                width = child.width,
+                                height = child.height,
+                                value = child.value,
+                                style = child.style,
+                                printCondition = condition,
+                            )
+                        is LineElement -> child.copy(printCondition = condition)
+                        is ImageElement -> child.copy(printCondition = condition)
+                        is BarcodeElement -> child.copy(printCondition = condition)
+                        is ContainerElement -> child.copy(printCondition = condition)
+                        else -> child
+                    }
+                } else {
+                    child
+                }
+            }
 
         return out
     }
@@ -1051,6 +1123,8 @@ object JasperTemplateConverter {
         val reportElement = node.firstDirectChild("reportElement") ?: return null
         val rawExpression = node.firstDirectChild("textFieldExpression")?.textContent?.trim().orEmpty()
         val mapped = JasperExpressionMapper.mapExpression(rawExpression)
+        val rawPattern = node.getAttribute("pattern").ifBlank { null }
+        val effectiveBinding = JasperExpressionMapper.applyPattern(mapped.dataBinding, rawPattern)
         val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
         val condition = JasperExpressionMapper.toExpression(printCondition)
 
@@ -1065,7 +1139,7 @@ object JasperTemplateConverter {
             y = reportElement.getIntAttribute("y", 0).toFloat() + (frame?.get("y") ?: 0f) + sectionYOffset,
             width = reportElement.getIntAttribute("width", 100).toFloat(),
             height = reportElement.getIntAttribute("height", 16).toFloat(),
-            dataBinding = mapped.dataBinding,
+            dataBinding = effectiveBinding,
             value = mapped.value,
             style = parseTextStyle(node, resolvedStyle),
             printCondition = condition,

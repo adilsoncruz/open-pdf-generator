@@ -94,6 +94,37 @@ object JasperExpressionMapper {
         return MappedExpression()
     }
 
+    /**
+     * Applies a Jasper number/currency pattern (e.g. `#,##0.00`, `$#,##0.00`, `Final Amount Due: $#,##0.00`)
+     * to a dataBinding or expression.
+     */
+    fun applyPattern(
+        binding: String?,
+        pattern: String?,
+    ): String? {
+        if (binding.isNullOrBlank()) return binding
+        if (pattern.isNullOrBlank()) return binding
+
+        val trimmedPattern = pattern.trim()
+
+        // 1. Prefix + Currency pattern: "Final Amount Due: $#,##0.00"
+        val prefixCurrencyMatch = Regex("""^(.*?)\$([#,0.]+.*)$""").find(trimmedPattern)
+        if (prefixCurrencyMatch != null) {
+            val prefix = prefixCurrencyMatch.groupValues[1]
+            val numPattern = prefixCurrencyMatch.groupValues[2]
+            return "$binding | format:'$numPattern' | prefix:'${prefix}\$'"
+        }
+
+        // 2. Simple currency pattern with dollar: "$#,##0.00"
+        if (trimmedPattern.startsWith("$")) {
+            val numPattern = trimmedPattern.removePrefix("$")
+            return "$binding | format:'$numPattern' | prefix:'\$'"
+        }
+
+        // 3. Direct number format pattern: "#,##0.00"
+        return "$binding | format:'$trimmedPattern'"
+    }
+
     private fun convertConcatToInterpolation(expr: String): String? {
         val parts = expr.split("+")
         val sb = StringBuilder()

@@ -36,27 +36,25 @@ class JasperPdfSnapshotTest {
         val dataJson =
             """
             {
-              "invoiceNumber": "INV-2026-0042",
-              "date": "2026-11-09",
-              "customerName": "Global Tech Industries Ltd.",
-              "customerEmail": "billing@globaltech.example.com",
-              "customerAddress": "742 Evergreen Terrace, Suite 200",
-              "subtotal": "2,500.00",
-              "tax": "250.00",
-              "total": "2,750.00",
+              "invoiceNumber": "INV-2026-000001",
+              "date": "2026-10-21",
+              "customerName": "Customer #1 Global Industries",
+              "customerEmail": "client-1@globalcorp.internal",
+              "customerAddress": "1 Enterprise Way, Suite 400, Austin, TX",
+              "subtotal": 2355.0,
+              "tax": 235.5,
+              "total": 2590.5,
               "items": [
-                {
-                  "description": "Enterprise Cloud License (Annual)",
-                  "quantity": 1,
-                  "unitPrice": "1,800.00",
-                  "total": "1,800.00"
-                },
-                {
-                  "description": "Dedicated Support & SLA 99.9%",
-                  "quantity": 2,
-                  "unitPrice": "350.00",
-                  "total": "700.00"
-                }
+                { "description": "Item #1 - Enterprise Module Pack (Batch #1)", "quantity": 3, "unitPrice": 16.0, "total": 48.0 },
+                { "description": "Item #2 - Enterprise Module Pack (Batch #1)", "quantity": 4, "unitPrice": 31.0, "total": 124.0 },
+                { "description": "Item #3 - Enterprise Module Pack (Batch #1)", "quantity": 5, "unitPrice": 46.0, "total": 230.0 },
+                { "description": "Item #4 - Enterprise Module Pack (Batch #1)", "quantity": 1, "unitPrice": 61.0, "total": 61.0 },
+                { "description": "Item #5 - Enterprise Module Pack (Batch #1)", "quantity": 2, "unitPrice": 76.0, "total": 152.0 },
+                { "description": "Item #6 - Enterprise Module Pack (Batch #1)", "quantity": 3, "unitPrice": 91.0, "total": 273.0 },
+                { "description": "Item #7 - Enterprise Module Pack (Batch #1)", "quantity": 4, "unitPrice": 106.0, "total": 424.0 },
+                { "description": "Item #8 - Enterprise Module Pack (Batch #1)", "quantity": 5, "unitPrice": 121.0, "total": 605.0 },
+                { "description": "Item #9 - Enterprise Module Pack (Batch #1)", "quantity": 1, "unitPrice": 136.0, "total": 136.0 },
+                { "description": "Item #10 - Enterprise Module Pack (Batch #1)", "quantity": 2, "unitPrice": 151.0, "total": 302.0 }
               ]
             }
             """.trimIndent()
