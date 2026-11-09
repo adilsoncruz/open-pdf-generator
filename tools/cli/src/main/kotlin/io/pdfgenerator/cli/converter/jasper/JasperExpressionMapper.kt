@@ -25,11 +25,12 @@ object JasperExpressionMapper {
      */
     fun mapExpression(rawExpr: String?): MappedExpression {
         if (rawExpr.isNullOrBlank()) return MappedExpression()
-        val expr = rawExpr
-            .replace("<![CDATA[", "")
-            .replace("]]>", "")
-            .replace("]]", "")
-            .trim()
+        val expr =
+            rawExpr
+                .replace("<![CDATA[", "")
+                .replace("]]>", "")
+                .replace("]]", "")
+                .trim()
 
         if (expr.isEmpty()) return MappedExpression()
 

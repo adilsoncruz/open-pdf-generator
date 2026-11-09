@@ -1,0 +1,161 @@
+package io.pdfgenerator.cli.converter.jasper
+
+import com.github.adilsoncruz.pdfsnapshottesting.EnablePdfSnapshots
+import com.github.adilsoncruz.pdfsnapshottesting.assertPdfByFile
+import com.pdfgenerator.api.PDFGenerator
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import java.io.File
+
+/**
+ * End-to-end visual regression tests for the JasperReports (.jrxml) converter.
+ *
+ * Pipeline under test:
+ * `.jrxml` -> [JasperTemplateConverter] -> JSON `Template` -> [PDFGenerator.generate] -> PDF Snapshot comparison.
+ */
+@EnablePdfSnapshots
+class JasperPdfSnapshotTest {
+    private val generator = PDFGenerator()
+
+    private fun resolvePath(vararg candidates: String): File =
+        candidates.map { File(it) }.firstOrNull { it.exists() }
+            ?: error("Could not find sample file in candidates: ${candidates.joinToString()}")
+
+    @Test
+    @DisplayName("Snapshot E2E: benchmark/jasper6/invoice.jrxml converted and rendered to PDF")
+    fun testJasper6InvoiceSnapshot() {
+        val jrxmlFile =
+            resolvePath(
+                "benchmark/jasper6/src/main/resources/templates/jasper/invoice.jrxml",
+                "../../benchmark/jasper6/src/main/resources/templates/jasper/invoice.jrxml",
+            )
+
+        val template = JasperTemplateConverter.fromFile(jrxmlFile.absolutePath)
+        val templateJson = template.toJson()
+
+        val dataJson =
+            """
+            {
+              "invoiceNumber": "INV-2026-0042",
+              "date": "2026-11-09",
+              "customerName": "Global Tech Industries Ltd.",
+              "customerEmail": "billing@globaltech.example.com",
+              "customerAddress": "742 Evergreen Terrace, Suite 200",
+              "subtotal": "2,500.00",
+              "tax": "250.00",
+              "total": "2,750.00",
+              "items": [
+                {
+                  "description": "Enterprise Cloud License (Annual)",
+                  "quantity": 1,
+                  "unitPrice": "1,800.00",
+                  "total": "1,800.00"
+                },
+                {
+                  "description": "Dedicated Support & SLA 99.9%",
+                  "quantity": 2,
+                  "unitPrice": "350.00",
+                  "total": "700.00"
+                }
+              ]
+            }
+            """.trimIndent()
+
+        val pdfBytes = generator.generate(templateJson, dataJson)
+        assertPdfByFile("jasper/jasper6-invoice.pdf", pdfBytes)
+    }
+
+    @Test
+    @DisplayName("Snapshot E2E: fatura_servico.jrxml converted and rendered to PDF")
+    fun testFaturaServicoSnapshot() {
+        val jrxmlFile =
+            resolvePath(
+                "tools/editor/samples/jasper/fatura_servico.jrxml",
+                "../editor/samples/jasper/fatura_servico.jrxml",
+                "../../tools/editor/samples/jasper/fatura_servico.jrxml",
+            )
+
+        val template = JasperTemplateConverter.fromFile(jrxmlFile.absolutePath)
+        val templateJson = template.toJson()
+
+        val dataJson =
+            """
+            {
+              "numeroFatura": "FAT-2026-089",
+              "dataEmissao": "09/11/2026",
+              "vencimento": "20/11/2026",
+              "nomeCliente": "Horizon Sistemas S.A.",
+              "documentoCliente": "CNPJ: 45.987.123/0001-10",
+              "enderecoCliente": "Av. Paulista, 1000 - São Paulo, SP",
+              "valorTotal": "R$ 4.850,00",
+              "chavePix": "00020126360014BR.GOV.BCB.PIX0114+55119999999995204000053039865802BR",
+              "items": [
+                {
+                  "item": 1,
+                  "descricao": "Assinatura Plataforma Enterprise",
+                  "quantidade": 1,
+                  "precoUnitario": "3.500,00",
+                  "totalItem": "3.500,00"
+                },
+                {
+                  "item": 2,
+                  "descricao": "Pacote Adicional de Processamento PDF",
+                  "quantidade": 3,
+                  "precoUnitario": "450,00",
+                  "totalItem": "1.350,00"
+                }
+              ]
+            }
+            """.trimIndent()
+
+        val pdfBytes = generator.generate(templateJson, dataJson)
+        assertPdfByFile("jasper/fatura-servico.pdf", pdfBytes)
+    }
+
+    @Test
+    @DisplayName("Snapshot E2E: relatorio_pedidos.jrxml converted and rendered to PDF")
+    fun testRelatorioPedidosSnapshot() {
+        val jrxmlFile =
+            resolvePath(
+                "tools/editor/samples/jasper/relatorio_pedidos.jrxml",
+                "../editor/samples/jasper/relatorio_pedidos.jrxml",
+                "../../tools/editor/samples/jasper/relatorio_pedidos.jrxml",
+            )
+
+        val template =
+            JasperTemplateConverter.fromFile(
+                jrxmlFile.absolutePath,
+                JasperConversionOptions(defaultItemsBinding = "pedidos"),
+            )
+        val templateJson = template.toJson()
+
+        val dataJson =
+            """
+            {
+              "nomeEmpresa": "Open PDF E-Commerce",
+              "periodoRelatorio": "01/11/2026 a 09/11/2026",
+              "geradoEm": "09/11/2026 08:30",
+              "totalGeral": "R$ 3.420,00",
+              "pedidos": [
+                {
+                  "idPedido": "#1042",
+                  "cliente": "Ana Carolina Souza",
+                  "dataPedido": "03/11/2026",
+                  "status": "APROVADO",
+                  "valor": "1.200,00"
+                },
+                {
+                  "idPedido": "#1043",
+                  "cliente": "Carlos Eduardo Lima",
+                  "dataPedido": "05/11/2026",
+                  "status": "ENVIADO",
+                  "valor": "2.220,00"
+                }
+              ]
+            }
+            """.trimIndent()
+
+        val pdfBytes = generator.generate(templateJson, dataJson)
+        assertPdfByFile("jasper/relatorio-pedidos.pdf", pdfBytes)
+    }
+}

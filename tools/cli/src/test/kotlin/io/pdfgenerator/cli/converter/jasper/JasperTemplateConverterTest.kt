@@ -13,6 +13,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+@Suppress("LargeClass")
 class JasperTemplateConverterTest {
     @Test
     fun `should convert basic jrxml to template`() {
@@ -289,10 +290,11 @@ class JasperTemplateConverterTest {
             </jasperReport>
             """.trimIndent()
 
-        val template = JasperTemplateConverter.fromString(
-            jrxml,
-            JasperConversionOptions(defaultItemsBinding = "orderItems"),
-        )
+        val template =
+            JasperTemplateConverter.fromString(
+                jrxml,
+                JasperConversionOptions(defaultItemsBinding = "orderItems"),
+            )
 
         val elements = template.pageElements!!
         // title static text + inferred table
@@ -393,10 +395,11 @@ class JasperTemplateConverterTest {
             </jasperReport>
             """.trimIndent()
 
-        val template = JasperTemplateConverter.fromString(
-            jrxml,
-            JasperConversionOptions(enableTableInference = false),
-        )
+        val template =
+            JasperTemplateConverter.fromString(
+                jrxml,
+                JasperConversionOptions(enableTableInference = false),
+            )
 
         val elements = template.pageElements!!
         assertEquals(2, elements.size)
@@ -408,15 +411,17 @@ class JasperTemplateConverterTest {
 
     @Test
     fun `should convert real sample relatorio_pedidos jrxml to TableElement`() {
-        val sampleFile = listOf(
-            File("tools/editor/samples/jasper/relatorio_pedidos.jrxml"),
-            File("../editor/samples/jasper/relatorio_pedidos.jrxml"),
-            File("../../tools/editor/samples/jasper/relatorio_pedidos.jrxml"),
-        ).firstOrNull { it.exists() } ?: File("tools/editor/samples/jasper/relatorio_pedidos.jrxml")
-        val template = JasperTemplateConverter.fromFile(
-            sampleFile.absolutePath,
-            JasperConversionOptions(defaultItemsBinding = "pedidos"),
-        )
+        val sampleFile =
+            listOf(
+                File("tools/editor/samples/jasper/relatorio_pedidos.jrxml"),
+                File("../editor/samples/jasper/relatorio_pedidos.jrxml"),
+                File("../../tools/editor/samples/jasper/relatorio_pedidos.jrxml"),
+            ).firstOrNull { it.exists() } ?: File("tools/editor/samples/jasper/relatorio_pedidos.jrxml")
+        val template =
+            JasperTemplateConverter.fromFile(
+                sampleFile.absolutePath,
+                JasperConversionOptions(defaultItemsBinding = "pedidos"),
+            )
 
         val elements = template.pageElements!!
         val table = elements.filterIsInstance<TableElement>().firstOrNull()
@@ -432,11 +437,12 @@ class JasperTemplateConverterTest {
 
     @Test
     fun `should convert sample fatura_servico jrxml with table and summary`() {
-        val sampleFile = listOf(
-            File("tools/editor/samples/jasper/fatura_servico.jrxml"),
-            File("../editor/samples/jasper/fatura_servico.jrxml"),
-            File("../../tools/editor/samples/jasper/fatura_servico.jrxml"),
-        ).firstOrNull { it.exists() } ?: File("tools/editor/samples/jasper/fatura_servico.jrxml")
+        val sampleFile =
+            listOf(
+                File("tools/editor/samples/jasper/fatura_servico.jrxml"),
+                File("../editor/samples/jasper/fatura_servico.jrxml"),
+                File("../../tools/editor/samples/jasper/fatura_servico.jrxml"),
+            ).firstOrNull { it.exists() } ?: File("tools/editor/samples/jasper/fatura_servico.jrxml")
         val template = JasperTemplateConverter.fromFile(sampleFile.absolutePath)
 
         val elements = template.pageElements!!
@@ -627,10 +633,11 @@ class JasperTemplateConverterTest {
             </jasperReport>
             """.trimIndent()
 
-        val template = JasperTemplateConverter.fromString(
-            jrxml,
-            JasperConversionOptions(failOnUnsupportedElement = true),
-        )
+        val template =
+            JasperTemplateConverter.fromString(
+                jrxml,
+                JasperConversionOptions(failOnUnsupportedElement = true),
+            )
 
         val elements = template.pageElements!!
         assertEquals(1, elements.size)

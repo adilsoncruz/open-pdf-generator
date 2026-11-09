@@ -41,6 +41,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  * - rectangle
  * - image
  */
+@Suppress("LargeClass")
 object JasperTemplateConverter {
     fun fromString(
         jrxml: String,
@@ -118,38 +119,46 @@ object JasperTemplateConverter {
 
     private fun parseJasperStyle(elem: Element): JasperStyle {
         val fontNode = elem.firstDirectChild("font")
-        val fontName = elem.getAttribute("fontName").ifBlank { null }
-            ?: fontNode?.getAttribute("fontName")?.ifBlank { null }
-        val fontSize = elem.getAttribute("fontSize").toFloatOrNull()
-            ?: elem.getAttribute("size").toFloatOrNull()
-            ?: fontNode?.getAttribute("size")?.toFloatOrNull()
-        val isBold = elem.getAttribute("isBold").toBooleanStrictOrNull()
-            ?: fontNode?.getAttribute("isBold")?.toBooleanStrictOrNull()
-        val isItalic = elem.getAttribute("isItalic").toBooleanStrictOrNull()
-            ?: fontNode?.getAttribute("isItalic")?.toBooleanStrictOrNull()
+        val fontName =
+            elem.getAttribute("fontName").ifBlank { null }
+                ?: fontNode?.getAttribute("fontName")?.ifBlank { null }
+        val fontSize =
+            elem.getAttribute("fontSize").toFloatOrNull()
+                ?: elem.getAttribute("size").toFloatOrNull()
+                ?: fontNode?.getAttribute("size")?.toFloatOrNull()
+        val isBold =
+            elem.getAttribute("isBold").toBooleanStrictOrNull()
+                ?: fontNode?.getAttribute("isBold")?.toBooleanStrictOrNull()
+        val isItalic =
+            elem.getAttribute("isItalic").toBooleanStrictOrNull()
+                ?: fontNode?.getAttribute("isItalic")?.toBooleanStrictOrNull()
         val forecolor = elem.getAttribute("forecolor").ifBlank { null }
         val backcolor = elem.getAttribute("backcolor").ifBlank { null }
 
-        val alignRaw = elem.getAttribute("hTextAlign").ifBlank { null }
-            ?: elem.getAttribute("hAlign").ifBlank { null }
-            ?: elem.getAttribute("textAlignment").ifBlank { null }
-        val vAlignRaw = elem.getAttribute("vTextAlign").ifBlank { null }
-            ?: elem.getAttribute("vAlign").ifBlank { null }
-            ?: elem.getAttribute("verticalAlignment").ifBlank { null }
+        val alignRaw =
+            elem.getAttribute("hTextAlign").ifBlank { null }
+                ?: elem.getAttribute("hAlign").ifBlank { null }
+                ?: elem.getAttribute("textAlignment").ifBlank { null }
+        val vAlignRaw =
+            elem.getAttribute("vTextAlign").ifBlank { null }
+                ?: elem.getAttribute("vAlign").ifBlank { null }
+                ?: elem.getAttribute("verticalAlignment").ifBlank { null }
 
-        val alignment = when (alignRaw?.lowercase()) {
-            "right" -> "right"
-            "center" -> "center"
-            "justify", "justified" -> "justify"
-            "left" -> "left"
-            else -> null
-        }
-        val verticalAlignment = when (vAlignRaw?.lowercase()) {
-            "middle", "center" -> "center"
-            "bottom" -> "bottom"
-            "top" -> "top"
-            else -> null
-        }
+        val alignment =
+            when (alignRaw?.lowercase()) {
+                "right" -> "right"
+                "center" -> "center"
+                "justify", "justified" -> "justify"
+                "left" -> "left"
+                else -> null
+            }
+        val verticalAlignment =
+            when (vAlignRaw?.lowercase()) {
+                "middle", "center" -> "center"
+                "bottom" -> "bottom"
+                "top" -> "top"
+                else -> null
+            }
 
         return JasperStyle(
             name = elem.getAttribute("name").trim(),
@@ -192,16 +201,17 @@ object JasperTemplateConverter {
 
         var merged = JasperStyle()
         for (s in chain) {
-            merged = merged.copy(
-                fontName = s.fontName ?: merged.fontName,
-                fontSize = s.fontSize ?: merged.fontSize,
-                isBold = s.isBold ?: merged.isBold,
-                isItalic = s.isItalic ?: merged.isItalic,
-                forecolor = s.forecolor ?: merged.forecolor,
-                backcolor = s.backcolor ?: merged.backcolor,
-                alignment = s.alignment ?: merged.alignment,
-                verticalAlignment = s.verticalAlignment ?: merged.verticalAlignment,
-            )
+            merged =
+                merged.copy(
+                    fontName = s.fontName ?: merged.fontName,
+                    fontSize = s.fontSize ?: merged.fontSize,
+                    isBold = s.isBold ?: merged.isBold,
+                    isItalic = s.isItalic ?: merged.isItalic,
+                    forecolor = s.forecolor ?: merged.forecolor,
+                    backcolor = s.backcolor ?: merged.backcolor,
+                    alignment = s.alignment ?: merged.alignment,
+                    verticalAlignment = s.verticalAlignment ?: merged.verticalAlignment,
+                )
         }
         return merged
     }
@@ -270,11 +280,12 @@ object JasperTemplateConverter {
             }
         }
 
-        val context = ConversionContext(
-            options = options,
-            stylesMap = stylesMap,
-            defaultStyle = defaultStyle,
-        )
+        val context =
+            ConversionContext(
+                options = options,
+                stylesMap = stylesMap,
+                defaultStyle = defaultStyle,
+            )
 
         val pageWidth = root.getIntAttribute("pageWidth", 595)
         val pageHeight = root.getIntAttribute("pageHeight", 842)
@@ -495,28 +506,31 @@ object JasperTemplateConverter {
         val rectList = headerBand.getElementsByTagName("rectangle")
         val rect = if (rectList.length > 0) rectList.item(0) as? Element else null
         val rectReportElem = rect?.firstDirectChild("reportElement")
-        val headerBg = rectReportElem?.getAttribute("backcolor")?.ifBlank { null }
-            ?: rect?.getAttribute("backcolor")?.ifBlank { null }
-            ?: rect?.getAttribute("fillColor")?.ifBlank { null }
-            ?: "#f8fafc"
+        val headerBg =
+            rectReportElem?.getAttribute("backcolor")?.ifBlank { null }
+                ?: rect?.getAttribute("backcolor")?.ifBlank { null }
+                ?: rect?.getAttribute("fillColor")?.ifBlank { null }
+                ?: "#f8fafc"
         val pen = rect?.firstDirectChild("graphicElement")?.firstDirectChild("pen")
-        val borderColor = pen?.getAttribute("lineColor")?.ifBlank { null }
-            ?: rectReportElem?.getAttribute("forecolor")?.ifBlank { null }
-            ?: rect?.getAttribute("forecolor")?.ifBlank { null }
-            ?: "#e2e8f0"
+        val borderColor =
+            pen?.getAttribute("lineColor")?.ifBlank { null }
+                ?: rectReportElem?.getAttribute("forecolor")?.ifBlank { null }
+                ?: rect?.getAttribute("forecolor")?.ifBlank { null }
+                ?: "#e2e8f0"
 
         val detailLines = detailBand.getElementsByTagName("line")
-        val finalBorderColor = if (detailLines.length > 0) {
-            val lineElem = detailLines.item(0) as? Element
-            val lineReport = lineElem?.firstDirectChild("reportElement")
-            val linePen = lineElem?.firstDirectChild("graphicElement")?.firstDirectChild("pen")
-            linePen?.getAttribute("lineColor")?.ifBlank { null }
-                ?: lineReport?.getAttribute("forecolor")?.ifBlank { null }
-                ?: lineElem?.getAttribute("forecolor")?.ifBlank { null }
-                ?: borderColor
-        } else {
-            borderColor
-        }
+        val finalBorderColor =
+            if (detailLines.length > 0) {
+                val lineElem = detailLines.item(0) as? Element
+                val lineReport = lineElem?.firstDirectChild("reportElement")
+                val linePen = lineElem?.firstDirectChild("graphicElement")?.firstDirectChild("pen")
+                linePen?.getAttribute("lineColor")?.ifBlank { null }
+                    ?: lineReport?.getAttribute("forecolor")?.ifBlank { null }
+                    ?: lineElem?.getAttribute("forecolor")?.ifBlank { null }
+                    ?: borderColor
+            } else {
+                borderColor
+            }
 
         val headerTextColor = headers.firstOrNull { it.forecolor != null }?.forecolor ?: "#0f172a"
         val headerFontSize = headers.firstOrNull()?.fontSize ?: 9f
@@ -526,34 +540,37 @@ object JasperTemplateConverter {
         val tableX = rectReportElem?.getIntAttribute("x", 0)?.toFloat() ?: 0f
         val tableWidth = rectReportElem?.getIntAttribute("width", containerWidth.toInt())?.toFloat() ?: containerWidth
 
-        val columns = headers.zip(fields).map { (h, f) ->
-            TableColumn(
-                header = h.text,
-                field = f.field,
-                width = h.width,
-                alignment = f.alignment,
-                headerAlignment = h.alignment,
-                format = "text",
-            )
-        }
+        val columns =
+            headers.zip(fields).map { (h, f) ->
+                TableColumn(
+                    header = h.text,
+                    field = f.field,
+                    width = h.width,
+                    alignment = f.alignment,
+                    headerAlignment = h.alignment,
+                    format = "text",
+                )
+            }
 
-        val table = TableElement(
-            id = UUID.randomUUID().toString(),
-            x = tableX,
-            y = currentY,
-            width = tableWidth,
-            dataBinding = context.options.defaultItemsBinding,
-            columns = columns,
-            style = TableStyle(
-                headerBackground = headerBg,
-                headerColor = headerTextColor,
-                headerTextColor = headerTextColor,
-                headerFontSize = headerFontSize,
-                rowColor = rowTextColor,
-                fontSize = rowFontSize,
-                borderColor = finalBorderColor,
-            ),
-        )
+        val table =
+            TableElement(
+                id = UUID.randomUUID().toString(),
+                x = tableX,
+                y = currentY,
+                width = tableWidth,
+                dataBinding = context.options.defaultItemsBinding,
+                columns = columns,
+                style =
+                    TableStyle(
+                        headerBackground = headerBg,
+                        headerColor = headerTextColor,
+                        headerTextColor = headerTextColor,
+                        headerFontSize = headerFontSize,
+                        rowColor = rowTextColor,
+                        fontSize = rowFontSize,
+                        borderColor = finalBorderColor,
+                    ),
+            )
 
         val headerHeight = headerBand.getIntAttribute("height", 24).toFloat()
         val detailHeight = detailBand.getIntAttribute("height", 20).toFloat()
@@ -569,6 +586,7 @@ object JasperTemplateConverter {
         return list.sortedBy { it.x }
     }
 
+    @Suppress("LoopWithTooManyJumpStatements")
     private fun collectCandidateHeaders(
         parent: Element,
         offsetX: Float,
@@ -581,8 +599,9 @@ object JasperTemplateConverter {
             val child = children.item(i)
             if (child !is Element) continue
             val reportElement = child.firstDirectChild("reportElement")
-            val styleName = child.getAttribute("style").ifBlank { null }
-                ?: reportElement?.getAttribute("style")?.ifBlank { null }
+            val styleName =
+                child.getAttribute("style").ifBlank { null }
+                    ?: reportElement?.getAttribute("style")?.ifBlank { null }
             val resolved = resolveStyle(styleName, context.stylesMap, context.defaultStyle)
 
             when (child.tagName) {
@@ -594,7 +613,10 @@ object JasperTemplateConverter {
                     val font = textElement?.firstDirectChild("font")
                     val forecolor = reportElement.getAttribute("forecolor").ifBlank { null } ?: resolved.forecolor
                     val fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: resolved.fontSize ?: 9f
-                    val alignment = textElement?.getAttribute("textAlignment")?.ifBlank { null }?.lowercase() ?: resolved.alignment ?: "left"
+                    val alignment =
+                        textElement?.getAttribute(
+                            "textAlignment",
+                        )?.ifBlank { null }?.lowercase() ?: resolved.alignment ?: "left"
 
                     list.add(
                         CandidateHeader(
@@ -619,7 +641,10 @@ object JasperTemplateConverter {
                             val font = textElement?.firstDirectChild("font")
                             val forecolor = reportElement.getAttribute("forecolor").ifBlank { null } ?: resolved.forecolor
                             val fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: resolved.fontSize ?: 9f
-                            val alignment = textElement?.getAttribute("textAlignment")?.ifBlank { null }?.lowercase() ?: resolved.alignment ?: "left"
+                            val alignment =
+                                textElement?.getAttribute(
+                                    "textAlignment",
+                                )?.ifBlank { null }?.lowercase() ?: resolved.alignment ?: "left"
 
                             list.add(
                                 CandidateHeader(
@@ -655,6 +680,7 @@ object JasperTemplateConverter {
         return list.sortedBy { it.x }
     }
 
+    @Suppress("LoopWithTooManyJumpStatements")
     private fun collectCandidateFields(
         parent: Element,
         offsetX: Float,
@@ -667,8 +693,9 @@ object JasperTemplateConverter {
             val child = children.item(i)
             if (child !is Element) continue
             val reportElement = child.firstDirectChild("reportElement")
-            val styleName = child.getAttribute("style").ifBlank { null }
-                ?: reportElement?.getAttribute("style")?.ifBlank { null }
+            val styleName =
+                child.getAttribute("style").ifBlank { null }
+                    ?: reportElement?.getAttribute("style")?.ifBlank { null }
             val resolved = resolveStyle(styleName, context.stylesMap, context.defaultStyle)
 
             when (child.tagName) {
@@ -683,7 +710,10 @@ object JasperTemplateConverter {
                     val font = textElement?.firstDirectChild("font")
                     val forecolor = reportElement.getAttribute("forecolor").ifBlank { null } ?: resolved.forecolor
                     val fontSize = font?.getAttribute("size")?.toFloatOrNull() ?: resolved.fontSize ?: 9f
-                    val alignment = textElement?.getAttribute("textAlignment")?.ifBlank { null }?.lowercase() ?: resolved.alignment ?: "left"
+                    val alignment =
+                        textElement?.getAttribute(
+                            "textAlignment",
+                        )?.ifBlank { null }?.lowercase() ?: resolved.alignment ?: "left"
 
                     list.add(
                         CandidateField(
@@ -735,16 +765,17 @@ object JasperTemplateConverter {
             }
         }
 
-        val loop = LoopElement(
-            type = "loop",
-            id = UUID.randomUUID().toString(),
-            x = 0f,
-            y = yOffset,
-            width = containerWidth,
-            height = if (totalHeight > 0f) totalHeight else 50f,
-            dataBinding = context.options.defaultItemsBinding,
-            elements = loopElements,
-        )
+        val loop =
+            LoopElement(
+                type = "loop",
+                id = UUID.randomUUID().toString(),
+                x = 0f,
+                y = yOffset,
+                width = containerWidth,
+                height = if (totalHeight > 0f) totalHeight else 50f,
+                dataBinding = context.options.defaultItemsBinding,
+                elements = loopElements,
+            )
 
         return Pair(loop, yOffset + totalHeight)
     }
@@ -824,8 +855,9 @@ object JasperTemplateConverter {
         sectionYOffset: Float,
         frame: Map<String, Float>?,
     ): BarcodeElement? {
-        val expression = node.firstDirectChild("jr:QRCode")?.textContent?.trim()?.ifBlank { null }
-            ?: node.textContent?.trim().orEmpty()
+        val expression =
+            node.firstDirectChild("jr:QRCode")?.textContent?.trim()?.ifBlank { null }
+                ?: node.textContent?.trim().orEmpty()
         val dataBinding = JasperExpressionMapper.toDataBinding(expression)
         val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
         val condition = JasperExpressionMapper.toExpression(printCondition)
@@ -919,7 +951,10 @@ object JasperTemplateConverter {
         return File(expr).name
     }
 
-    private fun resolveSubreportFile(fileName: String, baseDir: File?): File? {
+    private fun resolveSubreportFile(
+        fileName: String,
+        baseDir: File?,
+    ): File? {
         if (fileName.isBlank()) return null
         if (baseDir != null) {
             val candidate = File(baseDir, fileName)
@@ -945,24 +980,29 @@ object JasperTemplateConverter {
         val fileName = extractSubreportFileName(subExpr)
         val subreportFile = resolveSubreportFile(fileName, context.options.baseDir)
 
-        val subElements = if (subreportFile != null && subreportFile.exists()) {
-            try {
-                val subOptions = context.options.copy(
-                    defaultItemsBinding = listBinding ?: context.options.defaultItemsBinding,
-                    baseDir = subreportFile.parentFile,
-                )
-                val subTemplate = fromFile(subreportFile.absolutePath, subOptions)
-                subTemplate.pageElements ?: emptyList()
-            } catch (e: Exception) {
-                System.err.println("Aviso: Falha ao converter subreport '${subreportFile.name}': ${e.message}")
+        val subElements =
+            if (subreportFile != null && subreportFile.exists()) {
+                try {
+                    val subOptions =
+                        context.options.copy(
+                            defaultItemsBinding = listBinding ?: context.options.defaultItemsBinding,
+                            baseDir = subreportFile.parentFile,
+                        )
+                    val subTemplate = fromFile(subreportFile.absolutePath, subOptions)
+                    subTemplate.pageElements ?: emptyList()
+                } catch (e: Exception) {
+                    System.err.println("Aviso: Falha ao converter subreport '${subreportFile.name}': ${e.message}")
+                    emptyList()
+                }
+            } else {
+                if (fileName.isNotBlank()) {
+                    val dirLabel = context.options.baseDir?.absolutePath ?: "diretório atual"
+                    System.err.println(
+                        "Aviso: Subreport '$fileName' não encontrado em $dirLabel. Container gerado vazio.",
+                    )
+                }
                 emptyList()
             }
-        } else {
-            if (fileName.isNotBlank()) {
-                System.err.println("Aviso: Arquivo de subreport '$fileName' não encontrado em ${context.options.baseDir?.absolutePath ?: "diretório atual"}. Container gerado com elements vazio.")
-            }
-            emptyList()
-        }
 
         return ContainerElement(
             type = "container",
@@ -986,8 +1026,9 @@ object JasperTemplateConverter {
         val textValue = node.firstDirectChild("text")?.textContent?.trim().orEmpty()
         if (textValue.isBlank()) return null
 
-        val styleName = node.getAttribute("style").ifBlank { null }
-            ?: reportElement.getAttribute("style").ifBlank { null }
+        val styleName =
+            node.getAttribute("style").ifBlank { null }
+                ?: reportElement.getAttribute("style").ifBlank { null }
         val resolvedStyle = resolveStyle(styleName, context.stylesMap, context.defaultStyle)
 
         return StaticTextElement(
@@ -1013,8 +1054,9 @@ object JasperTemplateConverter {
         val printCondition = reportElement.firstDirectChild("printWhenExpression")?.textContent?.trim().orEmpty()
         val condition = JasperExpressionMapper.toExpression(printCondition)
 
-        val styleName = node.getAttribute("style").ifBlank { null }
-            ?: reportElement.getAttribute("style").ifBlank { null }
+        val styleName =
+            node.getAttribute("style").ifBlank { null }
+                ?: reportElement.getAttribute("style").ifBlank { null }
         val resolvedStyle = resolveStyle(styleName, context.stylesMap, context.defaultStyle)
 
         return TextElement(
