@@ -1,5 +1,5 @@
 import { useTranslation } from '../../../i18n'
-import { Icon } from '../../atoms'
+import { Badge, Icon } from '../../atoms'
 import { MenuItem, DropdownMenu } from '../../molecules'
 
 interface FileMenuProps {
@@ -54,7 +54,8 @@ export function FileMenu({
       </MenuItem>
       {onImportJasper && (
         <MenuItem onClick={() => { onImportJasper(); onOpenChange(false) }}>
-          {t.toolbar.importJasper}
+          <span>{t.toolbar.importJasper}</span>
+          <Badge variant="warning" className="uppercase tracking-wider text-[10px] py-0 px-1.5 font-semibold">Beta</Badge>
         </MenuItem>
       )}
       {onImportAI && (
