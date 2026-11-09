@@ -1,4 +1,4 @@
-import type { Element } from '../../../../../store/templateStore'
+import type { Element } from '../../../../store/templateStore'
 import { TableHeaderStyleSection } from './TableHeaderStyleSection'
 import { TableDataRowStyleSection } from './TableDataRowStyleSection'
 import { TableBorderStyleSection } from './TableBorderStyleSection'

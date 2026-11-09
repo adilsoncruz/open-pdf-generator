@@ -1,4 +1,4 @@
-export type ElementLocation = 'body' | 'header' | 'footer' | 'bodyBackground' | 'summary'
+export type ElementLocation = 'body' | 'header' | 'footer' | 'bodyBackground' | 'summary' | 'page'
 
 /**
  * Represents a template element that can be rendered in the PDF.
@@ -15,14 +15,14 @@ export interface Element {
   height?: number | string
   heightMode?: 'auto' | 'fixed'
   autoHeight?: boolean
-  style?: Record<string, unknown>  
+  style?: Record<string, any>  
   value?: string
   dataBinding?: string
   printCondition?: string  
   elements?: Element[]
   itemSpacing?: number  
   startY?: number  
-  [key: string]: unknown  
+  [key: string]: any  
 }
 
 export interface ElementGroup {
@@ -55,10 +55,12 @@ export interface WatermarkConfig {
 }
 
 export interface Template {
+  id?: string
+  name?: string
   version: string
   metadata: {
     name: string
-    description: string
+    description?: string
     author?: string
     created?: string
     modified?: string
@@ -67,6 +69,8 @@ export interface Template {
   pageSettings: {
     size: string
     orientation: string
+    customWidth?: number
+    customHeight?: number
     margins: {
       top: number
       right: number
@@ -123,12 +127,19 @@ export interface TemplateStore {
   currentSection: ElementLocation
   history: Template[]
   historyIndex: number
-  copiedElements: { elements: Element[]; location: ElementLocation; isChild?: boolean; parentId?: string | null } | null
+  copiedElements: {
+    elements: Element[]
+    location?: ElementLocation
+    sourceLocation?: ElementLocation
+    isChild?: boolean
+    parentId?: string | null
+  } | null
   isSidebarPinned: boolean
   isSidebarMinimized: boolean
 
   // Actions
   setTemplate: (template: Template) => void
+  loadTemplate?: (template: Template) => void
   updateTemplate: (updates: Partial<Template>) => void
   updatePageSettings: (updates: Partial<Template['pageSettings']>) => void
   updateWatermark: (updates: Partial<WatermarkConfig>) => void

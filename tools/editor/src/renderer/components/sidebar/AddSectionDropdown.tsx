@@ -173,7 +173,7 @@ export function AddSectionDropdown({
               onClick={() => {
                 const id = `container-${Date.now()}`
                 addElement(
-                  { type: 'container', id, name: 'Container', x: 0, width: '100%', height: 120, elements: [] },
+                  { type: 'container', id, name: 'Container', x: 0, y: 0, width: '100%', height: 120, elements: [] },
                   currentSection
                 )
                 onClose()

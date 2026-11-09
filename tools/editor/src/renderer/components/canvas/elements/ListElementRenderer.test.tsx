@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { ListElementRenderer } from './ListElementRenderer'
-import type { Element } from '../../../../store/templateStore'
+import type { Element } from '../../../store/templateStore'
 
 describe('ListElementRenderer', () => {
   it('renders default placeholder list with bullets', () => {

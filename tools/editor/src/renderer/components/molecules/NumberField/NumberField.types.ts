@@ -5,4 +5,4 @@ export type NumberFieldProps = {
   unit?: string
   leftIcon?: ReactNode
   onValueChange?: (value: number) => void
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'>
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange' | 'size'>

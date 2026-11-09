@@ -1,6 +1,7 @@
 import { autoUpdater, UpdateInfo, ProgressInfo } from 'electron-updater'
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import * as log from 'electron-log'
+import type { UpdateStatus } from '../shared/types'
 
 // Configure logging
 autoUpdater.logger = log
@@ -9,18 +10,6 @@ log.transports.file.level = 'info'
 // Disable auto-download (let user decide)
 autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = true
-
-interface UpdateStatus {
-  checking: boolean
-  available: boolean
-  downloaded: boolean
-  downloading: boolean
-  error: string | null
-  progress: number
-  version: string | null
-  releaseNotes: string | null
-  releaseDate: string | null
-}
 
 let mainWindow: BrowserWindow | null = null
 let handlersRegistered = false

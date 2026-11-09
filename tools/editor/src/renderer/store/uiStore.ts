@@ -11,6 +11,7 @@ export interface ContextMenuState {
   targetType: 'element' | 'canvas' | 'container'
   elementId?: string
   containerId?: string
+  loopId?: string
   location?: ElementLocation
 }
 

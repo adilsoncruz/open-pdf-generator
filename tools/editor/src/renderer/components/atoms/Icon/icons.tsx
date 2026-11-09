@@ -1,6 +1,6 @@
-import type { SVGProps } from 'react'
+import type { SVGProps, ReactElement } from 'react'
 
-type IconComponent = (props: SVGProps<SVGSVGElement>) => JSX.Element
+type IconComponent = (props: SVGProps<SVGSVGElement>) => ReactElement
 
 export const icons: Record<string, IconComponent> = {
   search: (props) => (

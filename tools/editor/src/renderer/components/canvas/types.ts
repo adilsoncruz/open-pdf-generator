@@ -25,7 +25,7 @@ export interface LoopChildElementProps {
 export interface ContainerChildElementProps {
   child: Element
   containerId: string
-  location: ElementLocation
+  location?: ElementLocation
   containerWidth: number
   containerHeight: number
   effectiveY?: number
@@ -53,7 +53,7 @@ export interface CanvasElementProps {
   selectedElementIds: string[]
   selectedElementLocation: ElementLocation | null
   allElements: Element[]
-  onUpdateMultiple: () => void
+  onUpdateMultiple?: () => void
   updateElement: (id: string, updates: Partial<Element>, location?: ElementLocation) => void
   location: ElementLocation
   horizontalGuides?: number[]
