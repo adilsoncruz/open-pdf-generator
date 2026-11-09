@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.1.10"
     application
     id("com.gradleup.shadow") version "9.6.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
