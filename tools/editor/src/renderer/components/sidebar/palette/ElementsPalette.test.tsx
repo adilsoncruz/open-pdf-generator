@@ -111,5 +111,9 @@ describe('ElementsPalette', () => {
       'application/x-openpdf-element',
       expect.stringContaining('"barcodeType":"qrcode"')
     )
+    expect(setDataMock).toHaveBeenCalledWith(
+      'application/json',
+      expect.stringContaining('"barcodeType":"qrcode"')
+    )
   })
 })
