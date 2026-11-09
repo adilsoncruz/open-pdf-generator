@@ -2,6 +2,7 @@ package io.pdfgenerator.cli.commands
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.file
@@ -11,10 +12,10 @@ import java.io.File
 
 class ConvertCommand : CliktCommand(
     name = "convert",
-    help = "Convert Jasper JRXML template to JSON template",
+    help = "Convert JasperReports 6.x JRXML template to JSON template",
 ) {
     private val input by argument(
-        help = "Path to the Jasper JRXML file",
+        help = "Path to the JasperReports 6.x JRXML file",
     ).file(mustExist = true)
 
     private val output by option(
@@ -32,6 +33,16 @@ class ConvertCommand : CliktCommand(
         help = "Fail conversion when an unsupported Jasper element is found",
     ).flag(default = false)
 
+    private val itemsBinding by option(
+        "--items-binding",
+        help = "Data binding property name for inferred tables or loops (default: items)",
+    ).default("items")
+
+    private val disableTableInference by option(
+        "--disable-table-inference",
+        help = "Disable automatic TableElement inference and force LoopElement for detail bands",
+    ).flag(default = false)
+
     override fun run() {
         require(input.extension.equals("jrxml", ignoreCase = true)) {
             "Input file must have .jrxml extension"
@@ -45,6 +56,8 @@ class ConvertCommand : CliktCommand(
                 options =
                     JasperConversionOptions(
                         failOnUnsupportedElement = failOnUnsupported,
+                        defaultItemsBinding = itemsBinding,
+                        enableTableInference = !disableTableInference,
                     ),
             )
 

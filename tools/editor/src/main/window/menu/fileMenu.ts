@@ -23,6 +23,12 @@ export function createFileMenu(
           getMainWindow()?.webContents.send('menu:open')
         },
       },
+      {
+        label: strings.importJasper,
+        click: () => {
+          getMainWindow()?.webContents.send('menu:import-jasper')
+        },
+      },
       { type: 'separator' },
       {
         label: strings.save,

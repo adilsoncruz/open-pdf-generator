@@ -244,6 +244,7 @@ export function initBrowserFallback(): void {
     validateTemplate: async () => ({ valid: true }),
     onMenuNew: () => {},
     onMenuOpen: () => {},
+    onMenuImportJasper: () => {},
     onMenuSave: () => {},
     onMenuSaveAs: () => {},
     onMenuExport: () => {},

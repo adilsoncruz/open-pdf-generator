@@ -224,7 +224,11 @@ Validating template: broken.json
 
 ## convert
 
-Convert JasperReports JRXML template to Open PDF Generator JSON format.
+Convert JasperReports JRXML template (**version 6.x**) to Open PDF Generator JSON format.
+
+::: tip JasperReports Version Compatibility
+The converter supports templates created for **JasperReports 6.x** (traditional schema using namespace `http://jasperreports.sourceforge.net/jasperreports`, `<staticText>`, `<textField>`, `<reportElement>`, and `<band>` elements). **JasperReports 7.x** templates (which migrated to the redesigned `<element kind="...">` syntax) are not directly supported by this converter.
+:::
 
 ```bash
 pdf-generator convert <input.jrxml> [options]
@@ -234,7 +238,7 @@ pdf-generator convert <input.jrxml> [options]
 
 | Argument | Description |
 |----------|-------------|
-| `input` | Path to the input `.jrxml` file (required) |
+| `input` | Path to the input `.jrxml` file (required, JasperReports 6.x format) |
 
 ### Options
 
@@ -243,11 +247,13 @@ pdf-generator convert <input.jrxml> [options]
 | `--output` | Path to destination JSON template file | - |
 | `--stdout` | Print converted JSON to standard output | `false` |
 | `--fail-on-unsupported` | Fail conversion if an unsupported Jasper element is found | `false` |
+| `--items-binding` | Data binding property name for inferred tables or loops | `items` |
+| `--disable-table-inference` | Disable automatic TableElement inference and force LoopElement for detail bands | `false` |
 
 ### Examples
 
 ```bash
-# Convert JRXML to template file
+# Convert JRXML (Jasper 6.x) to template file
 pdf-generator convert report.jrxml --output template.json
 
 # Convert and output directly to stdout or pipe
@@ -255,6 +261,12 @@ pdf-generator convert report.jrxml --stdout > template.json
 
 # Strict conversion failing on unknown tags
 pdf-generator convert report.jrxml --output template.json --fail-on-unsupported
+
+# Customize items data binding list name for inferred tables
+pdf-generator convert report.jrxml --output template.json --items-binding orders
+
+# Force LoopElement container instead of TableElement for detail bands
+pdf-generator convert report.jrxml --output template.json --disable-table-inference
 ```
 
 Output:

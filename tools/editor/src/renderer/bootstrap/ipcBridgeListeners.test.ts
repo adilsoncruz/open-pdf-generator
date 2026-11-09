@@ -36,20 +36,14 @@ describe('ipcBridgeListeners', () => {
       expect(recentFiles[0].path).toBe('/path/to/invoice.json')
     })
 
-    it('loads a JRXML template, marks tab as dirty without saving to recentFiles', () => {
-      const jrxml = `<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" name="TestReport">
-  <detail>
-    <band height="100">
-      <staticText>
-        <reportElement x="0" y="0" width="100" height="20"/>
-        <text><![CDATA[Hello Jasper]]></text>
-      </staticText>
-    </band>
-  </detail>
-</jasperReport>`
+    it('loads a converted JRXML template, marks tab as dirty without saving to recentFiles', () => {
+      const convertedJson = JSON.stringify({
+        version: '1.0',
+        pageSettings: { size: 'A4' },
+        page: [{ type: 'static_text', id: 't1', value: 'Hello Jasper' }],
+      })
 
-      const success = openTemplateFromContent('report.jrxml', jrxml)
+      const success = openTemplateFromContent('report.jrxml', convertedJson)
       expect(success).toBe(true)
 
       const tabs = useTabStore.getState().tabs
@@ -60,6 +54,15 @@ describe('ipcBridgeListeners', () => {
 
       const recentFiles = useRecentFilesStore.getState().recentFiles
       expect(recentFiles).toHaveLength(0)
+    })
+
+    it('rejects raw XML without CLI conversion in openTemplateFromContent', () => {
+      const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {})
+      const jrxml = `<jasperReport name="Raw"><detail><band height="50"/></detail></jasperReport>`
+      const success = openTemplateFromContent('raw.jrxml', jrxml)
+      expect(success).toBe(false)
+      expect(alertMock).toHaveBeenCalled()
+      alertMock.mockRestore()
     })
 
     it('handles invalid template content with an alert and returns false', () => {
@@ -75,17 +78,15 @@ describe('ipcBridgeListeners', () => {
 
   describe('handleImportJasper', () => {
     it('imports JRXML via openJasperFile bridge', async () => {
-      const jrxml = `<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" name="Imported">
-  <detail>
-    <band height="50">
-    </band>
-  </detail>
-</jasperReport>`
+      const convertedJson = JSON.stringify({
+        version: '1.0',
+        pageSettings: { size: 'A4' },
+        page: [],
+      })
 
       window.electronAPI = {
         ...window.electronAPI,
-        openJasperFile: vi.fn().mockResolvedValue({ path: '/reports/imported.jrxml', content: jrxml }),
+        openJasperFile: vi.fn().mockResolvedValue({ path: '/reports/imported.jrxml', content: convertedJson, convertedFromJasper: true }),
       } as any
 
       const success = await handleImportJasper()

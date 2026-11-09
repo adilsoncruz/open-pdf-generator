@@ -62,6 +62,9 @@ export function createWindow(): BrowserWindow {
   if (isDev) {
     const devPort = process.env.VITE_PORT || '5173'
     mainWindow.loadURL(`http://localhost:${devPort}`)
+    mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+      console.log(`[Renderer L${level}] ${message} (${sourceId}:${line})`)
+    })
   } else {
     mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'))
   }

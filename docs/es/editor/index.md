@@ -124,6 +124,7 @@ Compilación instantánea del PDF con resolución completa de data binding, loop
 - **Grupos de elementos**: Agrupa múltiples elementos para compartir reglas de visibilidad y lógica condicional (`printCondition`).
 - **Contenedores & layouts anidados**: Anida elementos hijos con altura automática y tamaños porcentuales responsivos.
 - **Reglas & guías interactivas**: Reglas de precisión con guías arrastrables y ayuda de ajuste al borde (snap-to-edge).
+- **Importación de Plantillas JasperReports (6.x)**: Convierta y abra informes legados `.jrxml` (JasperReports 6.x) directamente en pestañas JSON desde el menú Archivo o Hub inicial.
 - **Validación JSON Schema & generador de mocks**: Inspecciona los esquemas de la plantilla y genera datos de prueba realistas con un clic.
 - **Soporte multi-idioma**: Localización completa en inglés, portugués (pt-BR) y español (es).
 - **Sin nube requerida**: Aplicación de escritorio 100% offline, potenciada por compilación y renderizado locales.

@@ -1,4 +1,4 @@
-import { Icon } from '../../atoms'
+import { Badge, Icon } from '../../atoms'
 import { StudioLogo } from '../LoadingPage'
 import { useUIStore } from '../../../store/uiStore'
 import { useRecentFilesStore, type RecentFileItem } from '../../../store/recentFilesStore'
@@ -132,7 +132,10 @@ export function HomePage({
                 className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-emerald-400 hover:bg-slate-800 flex flex-col justify-between"
               >
                 <div>
-                  <Icon name="file-text" size="xl" className="text-emerald-400" />
+                  <div className="flex items-center justify-between">
+                    <Icon name="file-text" size="xl" className="text-emerald-400" />
+                    <Badge variant="warning" className="uppercase tracking-wider text-[10px] font-semibold">Beta</Badge>
+                  </div>
                   <span className="mt-5 block text-lg font-semibold">{t.home.importJasper}</span>
                   <span className="mt-2 block text-xs text-slate-400">{t.home.importJasperDesc}</span>
                 </div>
