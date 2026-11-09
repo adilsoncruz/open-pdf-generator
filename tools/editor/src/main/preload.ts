@@ -44,6 +44,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('menu:open')
     ipcRenderer.on('menu:open', callback)
   },
+  onMenuImportJasper: (callback: () => void) => {
+    ipcRenderer.removeAllListeners('menu:import-jasper')
+    ipcRenderer.on('menu:import-jasper', callback)
+  },
   onMenuSave: (callback: () => void) => {
     ipcRenderer.removeAllListeners('menu:save')
     ipcRenderer.on('menu:save', callback)

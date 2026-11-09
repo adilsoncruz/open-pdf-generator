@@ -166,6 +166,7 @@ export interface ElectronAPI {
   // Menu Events
   onMenuNew: (callback: () => void) => void
   onMenuOpen: (callback: () => void) => void
+  onMenuImportJasper?: (callback: () => void) => void
   onMenuSave: (callback: () => void) => void
   onMenuSaveAs: (callback: () => void) => void
   onMenuExport: (callback: () => void) => void
