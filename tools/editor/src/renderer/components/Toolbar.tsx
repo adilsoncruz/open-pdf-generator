@@ -78,6 +78,8 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
           onOpenChange={setShowFileMenu}
           onNew={handleNew}
           onOpen={handleOpen}
+          onImportJasper={handleImportJasper}
+          onImportAI={() => setShowAiModal(true)}
           onSave={handleSave}
           onSaveAs={handleSaveAs}
           onExport={handleExport}
