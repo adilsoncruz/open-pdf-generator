@@ -12,20 +12,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
-data class ContainerRunMetrics(
-    val engine: String,
-    val totalRequests: Int,
-    val concurrency: Int,
-    val totalDurationSec: Double,
-    val throughputDocsPerSec: Double,
-    val peakMemoryRssMb: Double,
-    val averageMemoryRssMb: Double,
-    val peakCpuPercent: Double,
-    val averageCpuPercent: Double,
-    val cgroupPeakMemoryMb: Double?,
-    val jvmHeapPeakMb: Double,
-)
-
 fun main(args: Array<String>) {
     val engine = args.getOrNull(0)?.lowercase() ?: "all"
     val count = args.getOrNull(1)?.toIntOrNull() ?: 300
