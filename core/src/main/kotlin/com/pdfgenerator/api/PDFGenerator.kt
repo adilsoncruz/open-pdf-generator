@@ -3,6 +3,7 @@ package com.pdfgenerator.api
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonSyntaxException
+import com.pdfgenerator.adapter.openpdf.ImageRenderer
 import com.pdfgenerator.engine.DocumentFactory
 import com.pdfgenerator.engine.ElementHeightCalculator
 import com.pdfgenerator.engine.PDFSecurityConfigurator
@@ -55,6 +56,15 @@ class PDFGenerator(
 
         @JvmStatic
         fun cacheSize(): Int = templateCache.size
+
+        @JvmStatic
+        fun clearImageCache() = ImageRenderer.clearCache()
+
+        @JvmStatic
+        fun imageCacheSize(): Int = ImageRenderer.cacheSize()
+
+        @JvmStatic
+        fun setMaxImageCacheSize(size: Int) = ImageRenderer.setMaxCacheSize(size)
 
         internal fun getElementHeight(
             element: Element,

@@ -24,7 +24,7 @@ data class CheckListElement(
     val itemSpacing: Float = 0f,
     val checkStyle: CheckStyle? = CheckStyle.RECTANGLE,
     val style: TextStyle? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()

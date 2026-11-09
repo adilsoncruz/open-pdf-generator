@@ -6,6 +6,7 @@ import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import java.lang.reflect.Type
+import java.util.concurrent.ConcurrentHashMap
 
 sealed interface Element {
     val type: String
@@ -14,12 +15,49 @@ sealed interface Element {
     public val y: Float
     val positionMode: PositionMode?
     val relativeOffsetY: Float?
+    val printCondition: String?
+        get() = null
 
     fun validate(pageSettings: PageSettings): List<ValidationError>
 }
 
 class ElementDeserializer : JsonDeserializer<Element> {
     companion object {
+        private val typeRegistry: MutableMap<String, Class<out Element>> =
+            ConcurrentHashMap(
+                mapOf(
+                    "text" to TextElement::class.java,
+                    "static_text" to StaticTextElement::class.java,
+                    "staticText" to StaticTextElement::class.java,
+                    "image" to ImageElement::class.java,
+                    "table" to TableElement::class.java,
+                    "rectangle" to RectangleElement::class.java,
+                    "line" to LineElement::class.java,
+                    "barcode" to BarcodeElement::class.java,
+                    "qrcode" to BarcodeElement::class.java,
+                    "conditional" to ConditionalElement::class.java,
+                    "loop" to LoopElement::class.java,
+                    "container" to ContainerElement::class.java,
+                    "page_break" to PageBreakElement::class.java,
+                    "pageBreak" to PageBreakElement::class.java,
+                    "spacer" to SpacerElement::class.java,
+                    "rich_text" to RichTextElement::class.java,
+                    "richText" to RichTextElement::class.java,
+                    "link" to LinkElement::class.java,
+                    "list" to ListElement::class.java,
+                    "check_list" to CheckListElement::class.java,
+                    "checkList" to CheckListElement::class.java,
+                ),
+            )
+
+        @JvmStatic
+        fun registerType(
+            type: String,
+            elementClass: Class<out Element>,
+        ) {
+            typeRegistry[type] = elementClass
+        }
+
         private val gson: Gson by lazy {
             GsonBuilder()
                 .registerTypeAdapter(Element::class.java, ElementDeserializer())
@@ -38,24 +76,10 @@ class ElementDeserializer : JsonDeserializer<Element> {
             jsonObject.get("type")?.asString
                 ?: throw IllegalArgumentException("Element must have a 'type' field")
 
-        return when (type) {
-            "text" -> gson.fromJson(json, TextElement::class.java)
-            "static_text", "staticText" -> gson.fromJson(json, StaticTextElement::class.java)
-            "image" -> gson.fromJson(json, ImageElement::class.java)
-            "table" -> gson.fromJson(json, TableElement::class.java)
-            "rectangle" -> gson.fromJson(json, RectangleElement::class.java)
-            "line" -> gson.fromJson(json, LineElement::class.java)
-            "barcode", "qrcode" -> gson.fromJson(json, BarcodeElement::class.java)
-            "conditional" -> gson.fromJson(json, ConditionalElement::class.java)
-            "loop" -> gson.fromJson(json, LoopElement::class.java)
-            "container" -> gson.fromJson(json, ContainerElement::class.java)
-            "page_break", "pageBreak" -> gson.fromJson(json, PageBreakElement::class.java)
-            "spacer" -> gson.fromJson(json, SpacerElement::class.java)
-            "rich_text", "richText" -> gson.fromJson(json, RichTextElement::class.java)
-            "link" -> gson.fromJson(json, LinkElement::class.java)
-            "list" -> gson.fromJson(json, ListElement::class.java)
-            "check_list", "checkList" -> gson.fromJson(json, CheckListElement::class.java)
-            else -> throw IllegalArgumentException("Unknown element type: $type")
-        }
+        val targetClass =
+            typeRegistry[type]
+                ?: throw IllegalArgumentException("Unknown element type: $type")
+
+        return gson.fromJson(json, targetClass)
     }
 }

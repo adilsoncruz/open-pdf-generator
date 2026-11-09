@@ -1,14 +1,17 @@
 package com.pdfgenerator.engine
 
+import com.pdfgenerator.api.PDFGenerator
 import com.pdfgenerator.api.PDFGeneratorConfig
 import com.pdfgenerator.model.BodyBackground
 import com.pdfgenerator.model.ContainerElement
+import com.pdfgenerator.model.ElementDeserializer
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.Margins
 import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.PageSettings
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
+import com.pdfgenerator.model.StaticTextElement
 import com.pdfgenerator.model.SummaryPage
 import com.pdfgenerator.model.TableElement
 import com.pdfgenerator.model.Template
@@ -19,6 +22,7 @@ import org.openpdf.text.pdf.PdfWriter
 import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class PageFlowOrchestratorTest {
@@ -118,6 +122,34 @@ class PageFlowOrchestratorTest {
 
         val elemWithCondFalse = TextElement(id = "e3", x = 0f, y = 0f, printCondition = "\${hidden}")
         assertFalse(orchestrator.shouldRenderElement(elemWithCondFalse, emptyMap(), data))
+
+        val staticElem = StaticTextElement(id = "st1", x = 0f, y = 0f, value = "Static")
+        assertNull(staticElem.printCondition)
+        assertTrue(orchestrator.shouldRenderElement(staticElem, emptyMap(), data))
+    }
+
+    @Test
+    fun `test registries and facade image cache delegation`() {
+        PDFGenerator.setMaxImageCacheSize(50)
+        PDFGenerator.clearImageCache()
+        assertEquals(0, PDFGenerator.imageCacheSize())
+
+        ElementDeserializer.registerType("text_alias", TextElement::class.java)
+        val localEngine = RenderEngine(config)
+        var customRendered = false
+        localEngine.registerRenderer(
+            StaticTextElement::class,
+            object : Renderer<StaticTextElement> {
+                override fun render(
+                    element: StaticTextElement,
+                    context: RenderContext,
+                ) {
+                    customRendered = true
+                }
+            },
+        )
+        localEngine.render(StaticTextElement(id = "s", x = 0f, y = 0f, value = "v"), createDummyContext())
+        assertTrue(customRendered)
     }
 
     @Test

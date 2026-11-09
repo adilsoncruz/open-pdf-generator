@@ -10,7 +10,7 @@ data class ContainerElement(
     val height: Any? = 50f,
     val elements: List<Element>,
     val style: RectangleStyle? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
     val heightMode: String? = "auto",
     val autoHeight: Boolean? = true,
 ) : Element {

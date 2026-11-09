@@ -8,7 +8,7 @@ data class PageBreakElement(
     override val positionMode: PositionMode? = PositionMode.RELATIVE,
     override val relativeOffsetY: Float? = null,
     val width: Any = "100%",
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {

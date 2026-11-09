@@ -10,7 +10,7 @@ data class LineElement(
     val width: Any,
     val height: Any = 0f,
     val style: LineStyle? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {
