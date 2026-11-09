@@ -39,6 +39,10 @@ application {
     mainClass.set("io.pdfgenerator.cli.MainKt")
 }
 
+tasks.jar {
+    archiveClassifier.set("plain")
+}
+
 tasks.shadowJar {
     archiveBaseName.set("pdf-generator-cli")
     archiveClassifier.set("")

@@ -23,7 +23,7 @@ export async function findLatestLocalCliJar(): Promise<string | null> {
     const files = await fs.readdir(cliBuildDir)
     const jarCandidates = files
       .filter((file) => file.endsWith('.jar'))
-      .filter((file) => !file.includes('sources') && !file.includes('javadoc'))
+      .filter((file) => !file.includes('sources') && !file.includes('javadoc') && !file.includes('plain'))
       .filter(
         (file) =>
           file.startsWith('pdf-generator-cli-') ||
