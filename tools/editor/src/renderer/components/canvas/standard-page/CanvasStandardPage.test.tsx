@@ -90,6 +90,48 @@ describe('CanvasStandardPage modular components', () => {
       expect(coords).toEqual({ x: 40, y: 80 })
     })
 
+    it('handles drag over and drop of elements with application/x-openpdf-element', () => {
+      const onDropElement = vi.fn()
+      const { result } = renderHook(() =>
+        useCanvasPageDrop({
+          section: 'body',
+          scale: 1,
+          onDropElement,
+        })
+      )
+
+      const preventDefault = vi.fn()
+      const mockDragEvent = {
+        preventDefault,
+        dataTransfer: {
+          dropEffect: '',
+          getData: (type: string) =>
+            type === 'application/x-openpdf-element'
+              ? JSON.stringify({ type: 'static_text', value: 'Static Text Dropped' })
+              : '',
+        },
+        clientX: 50,
+        clientY: 60,
+        currentTarget: {
+          getBoundingClientRect: () => ({ left: 10, top: 10 }),
+        },
+      } as unknown as React.DragEvent
+
+      act(() => {
+        result.current.handleDrop(mockDragEvent)
+      })
+
+      expect(onDropElement).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'static_text',
+          value: 'Static Text Dropped',
+          x: 40,
+          y: 50,
+        }),
+        'body'
+      )
+    })
+
     it('handles drag over and drop of elements', () => {
       const onDropElement = vi.fn()
       const { result } = renderHook(() =>
