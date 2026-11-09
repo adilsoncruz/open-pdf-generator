@@ -77,8 +77,8 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
                 ? 'bg-indigo-600/30 text-indigo-400 hover:bg-indigo-600/40'
                 : 'text-slate-400 hover:text-white theme-hover'
             }`}
-            title="Modo Split"
-            aria-label="Modo Split"
+            title={previewMode === 'split' ? t.preview.fullMode : t.preview.splitMode}
+            aria-label={previewMode === 'split' ? t.preview.fullMode : t.preview.splitMode}
           >
             <ViewColumnsIcon className="w-4 h-4" />
           </button>

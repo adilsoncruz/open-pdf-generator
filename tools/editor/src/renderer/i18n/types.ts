@@ -392,6 +392,8 @@ export interface Translations {
     emptyTemplateHint: string
     genericError: string
     tryAgain: string
+    splitMode: string
+    fullMode: string
   }
 
   // Error messages
