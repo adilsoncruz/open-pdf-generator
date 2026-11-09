@@ -12,10 +12,10 @@ import java.io.File
 
 class ConvertCommand : CliktCommand(
     name = "convert",
-    help = "Convert Jasper JRXML template to JSON template",
+    help = "Convert JasperReports 6.x JRXML template to JSON template",
 ) {
     private val input by argument(
-        help = "Path to the Jasper JRXML file",
+        help = "Path to the JasperReports 6.x JRXML file",
     ).file(mustExist = true)
 
     private val output by option(

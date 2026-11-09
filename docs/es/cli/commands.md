@@ -139,7 +139,11 @@ Validating template: broken.json
 
 ## convert
 
-Convierte una plantilla JasperReports JRXML al formato JSON de Open PDF Generator.
+Convierte una plantilla JasperReports JRXML (**versión 6.x**) al formato JSON de Open PDF Generator.
+
+::: tip Compatibilidad de Versión de JasperReports
+El conversor soporta plantillas creadas para **JasperReports 6.x** (sintaxis tradicional con namespace `http://jasperreports.sourceforge.net/jasperreports`, elementos `<staticText>`, `<textField>`, `<reportElement>` y bandas `<band>`). Las plantillas de **JasperReports 7.x** (que migraron a la nueva sintaxis `<element kind="...">`) no son soportadas directamente por este conversor.
+:::
 
 ```bash
 pdf-generator convert <input.jrxml> [options]
@@ -149,7 +153,7 @@ pdf-generator convert <input.jrxml> [options]
 
 | Argumento | Descripción |
 |----------|-------------|
-| `input` | Ruta del archivo `.jrxml` de entrada (requerido) |
+| `input` | Ruta del archivo `.jrxml` de entrada (requerido, formato JasperReports 6.x) |
 
 ### Opciones
 
@@ -158,18 +162,26 @@ pdf-generator convert <input.jrxml> [options]
 | `--output` | Ruta del archivo de plantilla JSON de destino | - |
 | `--stdout` | Imprime el JSON convertido en la salida estándar | `false` |
 | `--fail-on-unsupported` | Falla la conversión si se encuentra un elemento de Jasper no soportado | `false` |
+| `--items-binding` | Nombre de la propiedad de data binding para tablas o bucles inferidos | `items` |
+| `--disable-table-inference` | Desactiva la inferencia automática de `TableElement` y fuerza `LoopElement` para bandas detail | `false` |
 
 ### Ejemplos
 
 ```bash
-# Convert JRXML to template file
+# Convierte JRXML (Jasper 6.x) a archivo de plantilla JSON
 pdf-generator convert report.jrxml --output template.json
 
-# Convert and output directly to stdout or pipe
+# Convierte e imprime directamente en stdout o redirecciona mediante pipe
 pdf-generator convert report.jrxml --stdout > template.json
 
-# Strict conversion failing on unknown tags
+# Conversión estricta fallando ante etiquetas desconocidas
 pdf-generator convert report.jrxml --output template.json --fail-on-unsupported
+
+# Personaliza el nombre de la lista inferida para la tabla
+pdf-generator convert report.jrxml --output template.json --items-binding orders
+
+# Fuerza el contenedor LoopElement en lugar de TableElement para la banda detail
+pdf-generator convert report.jrxml --output template.json --disable-table-inference
 ```
 
 Salida:

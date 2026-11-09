@@ -139,7 +139,11 @@ Validating template: broken.json
 
 ## convert
 
-Converte um template JasperReports JRXML para o formato JSON do Open PDF Generator.
+Converte um template JasperReports JRXML (**versão 6.x**) para o formato JSON do Open PDF Generator.
+
+::: tip Compatibilidade de Versão do JasperReports
+O conversor suporta templates criados para o **JasperReports 6.x** (sintaxe com namespace clássico `http://jasperreports.sourceforge.net/jasperreports`, elementos `<staticText>`, `<textField>`, `<reportElement>` e bandas `<band>`). Templates do **JasperReports 7.x** (que utilizam a nova sintaxe `<element kind="...">`) não são suportados diretamente por este conversor.
+:::
 
 ```bash
 pdf-generator convert <input.jrxml> [options]
@@ -149,7 +153,7 @@ pdf-generator convert <input.jrxml> [options]
 
 | Argumento | Descrição |
 |----------|-------------|
-| `input` | Caminho para o arquivo `.jrxml` de entrada (obrigatório) |
+| `input` | Caminho para o arquivo `.jrxml` de entrada (obrigatório, formato JasperReports 6.x) |
 
 ### Opções
 
@@ -158,18 +162,26 @@ pdf-generator convert <input.jrxml> [options]
 | `--output` | Caminho para o arquivo JSON de template de destino | - |
 | `--stdout` | Imprime o JSON convertido na saída padrão | `false` |
 | `--fail-on-unsupported` | Falha a conversão se um elemento Jasper não suportado for encontrado | `false` |
+| `--items-binding` | Nome da propriedade de data binding para tabelas ou loops inferidos | `items` |
+| `--disable-table-inference` | Desativa a inferência automática de `TableElement` e força `LoopElement` para bandas detail | `false` |
 
 ### Exemplos
 
 ```bash
-# Convert JRXML to template file
+# Converte JRXML (Jasper 6.x) para arquivo de template JSON
 pdf-generator convert report.jrxml --output template.json
 
-# Convert and output directly to stdout or pipe
+# Converte e imprime diretamente no stdout ou redireciona via pipe
 pdf-generator convert report.jrxml --stdout > template.json
 
-# Strict conversion failing on unknown tags
+# Conversão estrita falhando em tags não mapeadas
 pdf-generator convert report.jrxml --output template.json --fail-on-unsupported
+
+# Customiza o nome da lista inferida na tabela de itens
+pdf-generator convert report.jrxml --output template.json --items-binding orders
+
+# Força o uso de container LoopElement em vez de TableElement para a banda detail
+pdf-generator convert report.jrxml --output template.json --disable-table-inference
 ```
 
 Saída:

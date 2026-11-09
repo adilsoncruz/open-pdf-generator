@@ -124,6 +124,7 @@ Instant PDF compilation with full data binding resolution, loops, and automatic 
 - **Element Groups**: Bundle multiple elements to share visibility rules and conditional logic (`printCondition`).
 - **Containers & Nested Layouts**: Nest child elements with auto-height and responsive percentage sizing.
 - **Rulers & Interactive Guides**: Precision rulers with draggable guides and snap-to-edge assistance.
+- **JasperReports (6.x) Template Import**: Convert and open legacy `.jrxml` templates (JasperReports 6.x) directly into JSON tabs from the File menu or Home Hub.
 - **JSON Schema Validation & Mock Generator**: Inspect template schemas and generate realistic test data with one click.
 - **Multi-Language Support**: Complete localization for English, Portuguese (pt-BR), and Spanish (es).
 - **No Cloud Required**: 100% offline desktop app powered by local compilation and rendering.
