@@ -54,13 +54,13 @@ export function TableElementRenderer({
           const cellPaddingLeft = tableStyle.cellPaddingLeft ?? tableStyle.cellPadding ?? 5
           
           // Calcular larguras proporcionais das colunas
-          const columnWidths = columns.map((col: Record<string, unknown>) => (col.width as number) || 100)
+          const columnWidths = columns.map((col: Record<string, any>) => (col.width as number) || 100)
           const totalWidth = columnWidths.reduce((sum: number, w: number) => sum + w, 0)
-          const tableWidth = element.width || 400
+          const tableWidth = typeof element.width === 'number' ? element.width : 400
           const proportionalWidths = columnWidths.map((w: number) => (w / totalWidth) * tableWidth)
           
           // Helper para converter alignment
-          const getTextAlign = (alignment?: string): string => {
+          const getTextAlign = (alignment?: string): 'left' | 'center' | 'right' | 'justify' => {
             switch (alignment?.toLowerCase()) {
               case 'center': return 'center'
               case 'right': return 'right'
@@ -90,7 +90,7 @@ export function TableElementRenderer({
                         fontSize: `${headerFontSize}px`,
                       }}
                     >
-                      {columns.map((col: Record<string, unknown>, i: number) => {
+                      {columns.map((col: Record<string, any>, i: number) => {
                         const isFirstColumn = i === 0
                         const isLastColumn = i === columns.length - 1
                         const headerBorderType = tableStyle.headerBorderType
@@ -154,7 +154,7 @@ export function TableElementRenderer({
                         color: cellColor,
                       }}
                     >
-                      {columns.map((col: Record<string, unknown>, i: number) => {
+                      {columns.map((col: Record<string, any>, i: number) => {
                         const isFirstColumn = i === 0
                         const isLastColumn = i === columns.length - 1
                         const cellBorderType = tableStyle.cellBorderType

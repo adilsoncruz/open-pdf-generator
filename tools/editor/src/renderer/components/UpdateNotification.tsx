@@ -1,17 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { ArrowPathIcon, ArrowDownTrayIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
-
-interface UpdateStatus {
-  checking: boolean
-  available: boolean
-  downloaded: boolean
-  downloading: boolean
-  error: string | null
-  progress: number
-  version: string | null
-  releaseNotes: string | null
-  releaseDate: string | null
-}
+import type { UpdateStatus } from '../../shared/types'
 
 export function UpdateNotification() {
   const [status, setStatus] = useState<UpdateStatus | null>(null)

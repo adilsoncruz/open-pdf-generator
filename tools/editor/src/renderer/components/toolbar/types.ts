@@ -1,19 +1,6 @@
-export interface CLIStatus {
-  installed: boolean
-  version: string | null
-  jarPath: string
-  nativePath?: string | null
-  isNative?: boolean
-  needsUpdate: boolean
-  javaInstalled: boolean
-  javaVersion: string | null
-}
+import type { CLIStatus, AppVersions, VersionInfo } from '../../../shared/types'
 
-export interface AppVersions {
-  editor: string
-  core: string | null
-  cli: string | null
-}
+export type { CLIStatus, AppVersions, VersionInfo }
 
 export interface ToolbarProps {
   onToggleDataPanel: () => void

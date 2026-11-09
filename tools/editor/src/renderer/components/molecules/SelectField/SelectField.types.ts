@@ -5,4 +5,4 @@ export type SelectFieldProps = {
   label: string
   options: SelectOption[]
   onValueChange?: (value: string) => void
-} & Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange'>
+} & Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange' | 'size'>

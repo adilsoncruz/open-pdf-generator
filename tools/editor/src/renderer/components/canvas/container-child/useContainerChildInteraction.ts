@@ -10,7 +10,7 @@ import { resolveChildWidth, resolveChildHeight } from './childDimensions'
 export function useContainerChildInteraction({
   child,
   containerId,
-  location,
+  location = 'body',
   containerWidth,
   containerHeight,
   effectiveY,

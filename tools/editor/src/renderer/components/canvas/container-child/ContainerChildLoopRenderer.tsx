@@ -3,6 +3,7 @@ import type { Element } from '../../../store/templateStore'
 import { LoopChildElement } from '../LoopChildElement'
 import { useTranslation } from '../../../i18n'
 import type { GuideLine } from '../snapping'
+import type { SnappedGuides } from '../types'
 import type { ElementLocation } from '../../../store/templateStore/types'
 
 export interface ContainerChildLoopRendererProps {
@@ -13,7 +14,7 @@ export interface ContainerChildLoopRendererProps {
   containerPageX?: number
   containerPageY?: number
   scale?: number
-  onSnapGuide?: (guide: GuideLine | null) => void
+  onSnapGuide?: (guide: SnappedGuides) => void
   resolveWidth: (value: string | number | undefined) => number
   resolveHeight: (value: string | number | undefined) => number
 }
@@ -116,7 +117,7 @@ export function ContainerChildLoopRenderer({
                   key={childLoop.id}
                   child={childLoop}
                   loopId={child.id}
-                  location={location}
+                  location={location || 'body'}
                   effectiveY={effectiveChildY}
                   effectiveX={effectiveChildX}
                   effectiveWidth={effectiveChildWidth}

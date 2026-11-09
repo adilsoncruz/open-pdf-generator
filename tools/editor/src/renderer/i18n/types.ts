@@ -30,6 +30,8 @@ export interface Translations {
     no: string
     none: string
     unsaved: string
+    title?: string
+    [key: string]: string | undefined
   }
 
   // Toolbar

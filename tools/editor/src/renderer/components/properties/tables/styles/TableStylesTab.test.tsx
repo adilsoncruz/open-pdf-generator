@@ -6,7 +6,7 @@ import { TableStylesTab as ReExportedTableStylesTab } from '../TableStylesTab'
 import { TableHeaderStyleSection } from './TableHeaderStyleSection'
 import { TableDataRowStyleSection } from './TableDataRowStyleSection'
 import { TableBorderStyleSection } from './TableBorderStyleSection'
-import type { Element } from '../../../../../store/templateStore'
+import type { Element } from '../../../../store/templateStore'
 
 function createMockTableElement(styleOverrides: Record<string, unknown> = {}): Element {
   return {

@@ -7,7 +7,7 @@ interface ListElementRendererProps {
   effectiveWidth?: number | string
   isSelected?: boolean
   testData?: Record<string, unknown> | null
-  onMouseDown?: (e?: React.MouseEvent) => void
+  onMouseDown?: (e: React.MouseEvent) => void
 }
 
 export function ListElementRenderer({
@@ -19,7 +19,7 @@ export function ListElementRenderer({
 }: ListElementRendererProps) {
   const style = (element.style || {}) as Record<string, unknown>
   const fontSize = typeof style.fontSize === 'number' ? style.fontSize : 12
-  const fontFamily = getFontFamily(style.fontFamily)
+  const fontFamily = getFontFamily(style.fontFamily as string | undefined)
   const color = (style.color as string) || '#000000'
   const backgroundColor =
     (style.backgroundColor as string) ||

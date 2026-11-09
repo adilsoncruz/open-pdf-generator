@@ -12,7 +12,7 @@ import { resolveDisplayText } from './resolveDisplayText'
 
 export interface CanvasElementContentProps {
   element: Element
-  effectiveWidth?: number
+  effectiveWidth?: number | string
   effectiveX?: number
   effectiveY?: number
   scale?: number
@@ -28,7 +28,7 @@ export interface CanvasElementContentProps {
   margins: { top: number; right: number; bottom: number; left: number }
   template: Template
   testData: Record<string, unknown> | null
-  onMouseDown: (e: ReactMouseEvent<HTMLDivElement>) => void
+  onMouseDown: (e: ReactMouseEvent) => void
   onDoubleClick: (e: ReactMouseEvent<HTMLDivElement>) => void
   onTextChange: (value: string) => void
   onTextBlur: () => void

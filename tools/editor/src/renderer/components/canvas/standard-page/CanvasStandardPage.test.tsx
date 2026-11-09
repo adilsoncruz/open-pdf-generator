@@ -12,6 +12,8 @@ describe('CanvasStandardPage modular components', () => {
   beforeEach(() => {
     useTemplateStore.setState({
       template: {
+        version: '1.0',
+        metadata: { name: 'Test' },
         pageSettings: {
           size: 'A4',
           orientation: 'portrait',
@@ -40,7 +42,7 @@ describe('CanvasStandardPage modular components', () => {
       },
       currentSection: 'body',
       selectedElementIds: [],
-      selectedElementLocation: null,
+      selectedElementLocation: 'body',
     })
   })
 
@@ -52,6 +54,8 @@ describe('CanvasStandardPage modular components', () => {
           id: '2',
           type: 'text',
           value: 'Second',
+          x: 0,
+          y: 0,
           positionMode: 'RELATIVE',
           relativeOffsetY: 5,
           width: 100,
@@ -162,7 +166,7 @@ describe('CanvasStandardPage modular components', () => {
       horizontalGuides: [],
       verticalGuides: [],
       onSnapGuide: vi.fn(),
-      marginSnap: { snapLines: [], snappedMargin: null },
+      marginSnap: { top: false, bottom: false, left: false, right: false },
       numberOfPages: 1,
       bodyUsableHeight: 692,
       headerHeight: 50,

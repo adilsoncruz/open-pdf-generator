@@ -12,7 +12,7 @@ export function HistoryContent() {
     canUndo, 
     canRedo,
     template,
-    loadTemplate,
+    setTemplate,
   } = useTemplateStore()
 
   const [snapshots, setSnapshots] = useState<Array<{ id: string; name: string; timestamp: string; template: any }>>(() => {
@@ -44,7 +44,7 @@ export function HistoryContent() {
   }
 
   const handleRestoreSnapshot = (snap: any) => {
-    loadTemplate(snap.template)
+    setTemplate(snap.template)
   }
 
   const handleDeleteSnapshot = (id: string) => {
