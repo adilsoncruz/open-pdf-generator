@@ -14,7 +14,7 @@ data class TableElement(
     val columns: List<TableColumn>,
     val style: TableStyle? = null,
     val paginated: Boolean? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return when (width) {

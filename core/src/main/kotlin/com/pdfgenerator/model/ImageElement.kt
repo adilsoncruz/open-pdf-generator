@@ -13,7 +13,7 @@ data class ImageElement(
     val source: String? = null,
     val fit: String? = null,
     val alignment: String? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     fun getEffectiveFit(): String = fit ?: "contain"
 

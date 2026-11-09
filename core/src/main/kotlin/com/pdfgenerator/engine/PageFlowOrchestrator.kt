@@ -2,21 +2,15 @@ package com.pdfgenerator.engine
 
 import com.pdfgenerator.api.PDFGenerationException
 import com.pdfgenerator.api.PDFGeneratorConfig
-import com.pdfgenerator.model.BarcodeElement
-import com.pdfgenerator.model.CheckListElement
 import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
-import com.pdfgenerator.model.LinkElement
-import com.pdfgenerator.model.ListElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
-import com.pdfgenerator.model.RichTextElement
 import com.pdfgenerator.model.SummaryPage
 import com.pdfgenerator.model.TableElement
-import com.pdfgenerator.model.TextElement
 import com.pdfgenerator.util.ConditionEvaluator
 import org.slf4j.LoggerFactory
 
@@ -255,19 +249,7 @@ class PageFlowOrchestrator(
             }
         }
 
-        val elementCondition =
-            when (element) {
-                is ContainerElement -> element.printCondition
-                is TextElement -> element.printCondition
-                is BarcodeElement -> element.printCondition
-                is LoopElement -> element.printCondition
-                is PageBreakElement -> element.printCondition
-                is RichTextElement -> element.printCondition
-                is LinkElement -> element.printCondition
-                is ListElement -> element.printCondition
-                is CheckListElement -> element.printCondition
-                else -> null
-            }
+        val elementCondition = element.printCondition
 
         if (elementCondition != null) {
             val shouldRenderElement = ConditionEvaluator.evaluate(elementCondition, data)

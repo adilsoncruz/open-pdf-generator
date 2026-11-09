@@ -13,7 +13,7 @@ data class LinkElement(
     val value: String? = null,
     val url: String,
     val style: TextStyle? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     fun resolveWidth(containerWidth: Float): Float {
         return width ?: containerWidth
