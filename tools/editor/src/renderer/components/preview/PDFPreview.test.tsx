@@ -48,6 +48,9 @@ describe('PreviewToolbar', () => {
     fireEvent.click(screen.getByTitle('Próxima página'))
     expect(onNextPage).toHaveBeenCalledTimes(1)
 
+    fireEvent.click(screen.getByRole('button', { name: /Tela cheia|Full view/i }))
+    expect(onToggleSplit).toHaveBeenCalledTimes(1)
+
     fireEvent.click(screen.getByTitle(/Atualizar Preview|Refresh/i))
     expect(onRefresh).toHaveBeenCalledTimes(1)
 
@@ -227,5 +230,20 @@ describe('PDFPreview component integration', () => {
 
     render(<PDFPreview />)
     expect(screen.getByText(/Compilation failed/i)).toBeInTheDocument()
+  })
+
+  it('toggles mode between split and tab when split button is clicked', () => {
+    usePreviewStore.setState({ mode: 'split' })
+    const { unmount } = render(<PDFPreview />)
+
+    const splitBtn = screen.getByRole('button', { name: /Tela cheia|Full view/i })
+    fireEvent.click(splitBtn)
+    expect(usePreviewStore.getState().mode).toBe('tab')
+
+    unmount()
+    render(<PDFPreview />)
+    const tabBtn = screen.getByRole('button', { name: /Modo dividido|Split view/i })
+    fireEvent.click(tabBtn)
+    expect(usePreviewStore.getState().mode).toBe('split')
   })
 })

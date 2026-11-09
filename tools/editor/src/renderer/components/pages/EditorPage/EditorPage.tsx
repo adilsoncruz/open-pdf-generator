@@ -86,13 +86,8 @@ export function EditorPage() {
         {/* Left Sidebar */}
         <Sidebar />
 
-        {/* Canvas/Editor Area */}
-        <div className="flex flex-col min-w-0 overflow-hidden flex-1">
-          <Canvas />
-        </div>
-
-        {/* PDF Preview Panel - Split View */}
-        {previewMode === 'split' && (
+        {/* Canvas or Full Preview Tab */}
+        {previewMode === 'tab' ? (
           <div className="flex-1 min-w-0 overflow-hidden">
             <PDFPreview
               onClose={() => {
@@ -101,10 +96,29 @@ export function EditorPage() {
               }}
             />
           </div>
+        ) : (
+          <>
+            {/* Canvas/Editor Area */}
+            <div className="flex flex-col min-w-0 overflow-hidden flex-1">
+              <Canvas />
+            </div>
+
+            {/* PDF Preview Panel - Split View */}
+            {previewMode === 'split' && (
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <PDFPreview
+                  onClose={() => {
+                    setPreviewMode('hidden')
+                    clearPreview()
+                  }}
+                />
+              </div>
+            )}
+          </>
         )}
 
-        {/* Right Panel - Properties (only in elements/components tab) */}
-        {sidebarTab === 'elements' && <PropertiesPanel />}
+        {/* Right Panel - Properties (only in elements/components tab and not in full preview tab) */}
+        {sidebarTab === 'elements' && previewMode !== 'tab' && <PropertiesPanel />}
       </div>
 
       {/* Status Bar */}

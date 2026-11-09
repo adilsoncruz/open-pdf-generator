@@ -482,6 +482,8 @@ const es: Translations = {
     emptyTemplateHint: 'Agregue elementos a su plantilla y guarde para obtener una vista previa.',
     genericError: 'Ocurrió un error al generar la vista previa.',
     tryAgain: 'Intentar nuevamente',
+    splitMode: 'Vista dividida',
+    fullMode: 'Pantalla completa',
   },
 
   errors: {

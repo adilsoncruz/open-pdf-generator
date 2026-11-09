@@ -482,6 +482,8 @@ const en: Translations = {
     emptyTemplateHint: 'Add elements to your PDF and save to preview.',
     genericError: 'An error occurred while generating the preview.',
     tryAgain: 'Try again',
+    splitMode: 'Split view',
+    fullMode: 'Full view',
   },
 
   errors: {
