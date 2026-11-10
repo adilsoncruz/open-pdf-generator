@@ -98,6 +98,7 @@ The Fat JAR was optimized from **12 MB to 5.1 MB** (reduction of **57%**):
   - [Barcode/QR Code](#6-barcode---barcode-qr-code)
   - [Conditional](#7-conditional---conditional-element)
   - [Loop](#8-loop---loop-element)
+  - [Container](#9-container---container-element)
 - [Header and Footer](#header-and-footer)
 - [Body Background](#body-background)
 - [Data Binding](#data-binding)
@@ -950,6 +951,60 @@ Repeats elements for each item in a list.
 | `$item` | Current iteration item |
 | `$index` | Current index (0-based) |
 | `$item.property` | Access item property |
+
+---
+
+### 9. Container - Container Element
+
+Groups child elements into a modular block with optional styling (background color, borders, radius, padding) and dynamic height calculation (`autoHeight: true`).
+
+```json
+{
+  "type": "container",
+  "id": "customer-card",
+  "x": 0,
+  "y": 35,
+  "width": "100%",
+  "autoHeight": true,
+  "pageBreakBefore": false,
+  "style": {
+    "backgroundColor": "#f8fafc",
+    "borderColor": "#e2e8f0",
+    "borderWidth": 1,
+    "borderRadius": 6,
+    "padding": 12
+  },
+  "elements": [
+    {
+      "type": "text",
+      "id": "card-title",
+      "x": 10,
+      "y": 10,
+      "value": "Billed To: ${customer.name}",
+      "style": { "fontWeight": "bold", "fontSize": 10 }
+    },
+    {
+      "type": "text",
+      "id": "card-address",
+      "x": 10,
+      "y": 24,
+      "value": "${customer.address}",
+      "style": { "color": "#64748b", "fontSize": 9 }
+    }
+  ]
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `elements` | array | Child elements positioned relative to container |
+| `width` | number / string | Width in points or percentage (`"100%"`) |
+| `height` | number / string | Height in points or percentage (used when `autoHeight: false`) |
+| `autoHeight` | boolean | Expands height automatically based on children (default: `true`) |
+| `pageBreakBefore` | boolean | Forces container to start on a new page (default: `false`) |
+| `pageBreakCondition` | string | Optional condition expression to evaluate page break |
+| `style` | object | Visual styles: `backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`, `padding` |
+| `printCondition` | string | Optional condition expression to render container |
 
 ---
 
