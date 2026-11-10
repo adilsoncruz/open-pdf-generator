@@ -1,0 +1,37 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ShapeElementRenderer > renders line with diagonal and straight styles and across sections 1`] = `
+<div>
+  <svg
+    class="cursor-move select-none "
+    style="width: 555px; height: 10px; margin-left: -0.5px; margin-top: -0.5px;"
+  >
+    <line
+      stroke="#000000"
+      stroke-width="1"
+      x1="0.5"
+      x2="554.5"
+      y1="0.5"
+      y2="9.5"
+    />
+  </svg>
+</div>
+`;
+
+exports[`ShapeElementRenderer > renders line with diagonal and straight styles and across sections 2`] = `
+<div>
+  <svg
+    class="cursor-move select-none ring-2 ring-primary-500"
+    style="width: 555px; height: 10px; margin-left: -0.5px; margin-top: -0.5px;"
+  >
+    <line
+      stroke="#000000"
+      stroke-width="1"
+      x1="0.5"
+      x2="554.5"
+      y1="0.5"
+      y2="9.5"
+    />
+  </svg>
+</div>
+`;

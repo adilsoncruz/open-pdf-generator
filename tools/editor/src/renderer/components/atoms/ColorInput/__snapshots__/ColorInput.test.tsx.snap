@@ -1,0 +1,34 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ColorInput atom > renders correctly with hex display and matches snapshot 1`] = `
+<div>
+  <div
+    class="flex items-center gap-2 flex-1"
+  >
+    <input
+      class="w-10 h-8 rounded-lg border cursor-pointer shrink-0 theme-bg-tertiary theme-border focus:outline-none focus:ring-2 focus:ring-blue-500"
+      type="color"
+      value="#ff5500"
+    />
+    <span
+      class="text-xs theme-text-muted font-mono flex-1"
+    >
+      #FF5500
+    </span>
+  </div>
+</div>
+`;
+
+exports[`ColorInput atom > renders without hex display and handles change event 1`] = `
+<div>
+  <div
+    class="flex items-center gap-2 flex-1"
+  >
+    <input
+      class="w-10 h-8 rounded-lg border cursor-pointer shrink-0 theme-bg-tertiary theme-border focus:outline-none focus:ring-2 focus:ring-blue-500"
+      type="color"
+      value="#00aa00"
+    />
+  </div>
+</div>
+`;

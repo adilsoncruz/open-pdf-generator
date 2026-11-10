@@ -1,0 +1,94 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LoopElementRenderer > renders empty loop element with placeholder text and snapshot 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative "
+    style="width: 300px; height: 80px; box-sizing: border-box; background-color: transparent; border-width: 0px; border-style: none; border-color: rgb(139, 92, 246); border-radius: 4px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute inset-0 flex items-center justify-center"
+      >
+        <div
+          class="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50"
+        >
+          <div
+            class="text-primary-400 text-[10px] font-medium"
+          >
+            Add elements
+          </div>
+          <div
+            class="text-primary-300 text-[9px]"
+          >
+            via sidebar
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`LoopElementRenderer > renders loop with 100% width, children, and badge 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative ring-2 ring-primary-500"
+    style="width: 555px; height: 120px; box-sizing: border-box; background-color: rgb(255, 255, 255); border-width: 2px; border-style: solid; border-color: rgb(99, 102, 241); border-radius: 6px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute cursor-move "
+        style="left: 5px; top: 5px; width: 80px; height: 20px;"
+      >
+        <div
+          style="font-size: 10px; font-family: Helvetica; color: rgb(0, 0, 0); font-weight: normal; text-decoration: none; width: 80px; height: 20px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          title="Double-click to edit"
+        >
+          Item row
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`LoopElementRenderer > renders multiple relative children and computes loop flow coordinates 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative "
+    style="width: 400px; height: 250px; box-sizing: border-box; background-color: transparent; border-width: 2px; border-style: dashed; border-color: rgb(139, 92, 246); border-radius: 4px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute cursor-move "
+        style="left: 10px; top: 15px; width: 120px; height: 25px;"
+      >
+        <div
+          style="font-size: 10px; font-family: Helvetica; color: rgb(0, 0, 0); font-weight: normal; text-decoration: none; width: 120px; height: 25px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          title="Double-click to edit"
+        >
+          campo
+        </div>
+      </div>
+      <div
+        class="absolute cursor-move "
+        style="left: 10px; top: 50px; width: 120px; height: 25px;"
+      >
+        <div
+          style="font-size: 10px; font-family: Helvetica; color: rgb(0, 0, 0); font-weight: normal; text-decoration: none; width: 120px; height: 25px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          title="Double-click to edit"
+        >
+          campo
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

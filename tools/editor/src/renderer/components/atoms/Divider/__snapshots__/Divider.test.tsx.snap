@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Divider atom > renders horizontal divider and matches snapshot 1`] = `
+<div>
+  <div
+    class="theme-border border-t w-full"
+  />
+</div>
+`;
+
+exports[`Divider atom > renders vertical divider with custom class and matches snapshot 1`] = `
+<div>
+  <div
+    class="theme-border border-l h-full my-2"
+  />
+</div>
+`;

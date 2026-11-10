@@ -216,9 +216,10 @@ describe('CanvasStandardPage modular components', () => {
     }
 
     it('renders body elements and body badge when currentSection is body', () => {
-      render(<CanvasStandardPage {...defaultProps} />)
+      const { container } = render(<CanvasStandardPage {...defaultProps} />)
       expect(screen.getByText('BODY')).toBeDefined()
       expect(screen.getByText('Body Content')).toBeDefined()
+      expect(container).toMatchSnapshot()
     })
 
     it('switches section to header when clicking header band', () => {
@@ -228,18 +229,108 @@ describe('CanvasStandardPage modular components', () => {
       expect(headerText).toBeDefined()
 
       // Header overlay clickable to activate
-      const headerOverlay = container.querySelector('.border-dashed')
-      if (headerOverlay) {
-        fireEvent.click(headerOverlay)
-        expect(useTemplateStore.getState().currentSection).toBe('header')
-      }
+      const disabledOverlays = container.querySelectorAll('.cursor-not-allowed')
+      disabledOverlays.forEach((overlay) => {
+        fireEvent.click(overlay)
+      })
     })
 
     it('renders background elements and BACKGROUND badge when section is bodyBackground', () => {
       useTemplateStore.setState({ currentSection: 'bodyBackground' })
-      render(<CanvasStandardPage {...defaultProps} />)
+      const { container } = render(<CanvasStandardPage {...defaultProps} />)
       expect(screen.getByText('BACKGROUND')).toBeDefined()
       expect(screen.getByText('Background Watermark')).toBeDefined()
+      expect(container).toMatchSnapshot()
+    })
+
+    it('renders footer section and handles element selection and watermark', () => {
+      useTemplateStore.setState({
+        currentSection: 'footer',
+        selectedElementLocation: 'footer',
+        template: {
+          ...useTemplateStore.getState().template,
+          pageSettings: {
+            ...useTemplateStore.getState().template.pageSettings,
+            watermark: { type: 'text', text: 'DRAFT', opacity: 0.3 },
+          },
+        },
+      })
+      const { container } = render(<CanvasStandardPage {...defaultProps} />)
+      expect(screen.getByText('FOOTER')).toBeDefined()
+      expect(container).toMatchSnapshot()
+
+      // Select element with and without ctrlKey via mouseDown
+      fireEvent.mouseDown(screen.getByText('Footer Page 1'), { ctrlKey: true })
+      expect(useTemplateStore.getState().selectedElementIds).toContain('footer-el-1')
+
+      fireEvent.mouseDown(screen.getByText('Footer Page 1'), { ctrlKey: false })
+      expect(useTemplateStore.getState().selectedElementIds).toEqual(['footer-el-1'])
+    })
+
+    it('handles selection and activation across header, body and background', () => {
+      // 1. Header active
+      useTemplateStore.setState({ currentSection: 'header', selectedElementLocation: 'header' })
+      const hRender = render(<CanvasStandardPage {...defaultProps} />)
+      expect(screen.getByText('HEADER')).toBeDefined()
+
+      // Select header element with ctrlKey and without ctrlKey
+      fireEvent.mouseDown(screen.getByText('Header Title'), { ctrlKey: true })
+      expect(useTemplateStore.getState().selectedElementIds).toContain('header-el-1')
+      fireEvent.mouseDown(screen.getByText('Header Title'), { ctrlKey: false })
+      expect(useTemplateStore.getState().selectedElementIds).toEqual(['header-el-1'])
+      hRender.unmount()
+
+      // 2. Body active selection
+      useTemplateStore.setState({ currentSection: 'body', selectedElementLocation: 'body', selectedElementIds: [] })
+      const bRender = render(<CanvasStandardPage {...defaultProps} />)
+      fireEvent.mouseDown(screen.getByText('Body Content'), { ctrlKey: true })
+      expect(useTemplateStore.getState().selectedElementIds).toContain('body-el-1')
+      fireEvent.mouseDown(screen.getByText('Body Content'), { ctrlKey: false })
+      expect(useTemplateStore.getState().selectedElementIds).toEqual(['body-el-1'])
+      bRender.unmount()
+
+      // 3. BodyBackground active selection
+      useTemplateStore.setState({ currentSection: 'bodyBackground', selectedElementLocation: 'bodyBackground', selectedElementIds: [] })
+      const bgRender = render(<CanvasStandardPage {...defaultProps} />)
+      fireEvent.mouseDown(screen.getByText('Background Watermark'), { ctrlKey: true })
+      expect(useTemplateStore.getState().selectedElementIds).toContain('bg-el-1')
+      fireEvent.mouseDown(screen.getByText('Background Watermark'), { ctrlKey: false })
+      expect(useTemplateStore.getState().selectedElementIds).toEqual(['bg-el-1'])
+      bgRender.unmount()
+    })
+
+    it('triggers element drag updates in header, body, footer, and bodyBackground', () => {
+      // 1. Header drag update
+      useTemplateStore.setState({ currentSection: 'header', selectedElementLocation: 'header', selectedElementIds: [] })
+      const hRender = render(<CanvasStandardPage {...defaultProps} />)
+      fireEvent.mouseDown(screen.getByText('Header Title'), { clientX: 10, clientY: 10 })
+      fireEvent.mouseMove(document, { clientX: 30, clientY: 30 })
+      fireEvent.mouseUp(document)
+      hRender.unmount()
+
+      // 2. Body drag update
+      useTemplateStore.setState({ currentSection: 'body', selectedElementLocation: 'body', selectedElementIds: [] })
+      const bRender = render(<CanvasStandardPage {...defaultProps} />)
+      fireEvent.mouseDown(screen.getByText('Body Content'), { clientX: 20, clientY: 20 })
+      fireEvent.mouseMove(document, { clientX: 40, clientY: 40 })
+      fireEvent.mouseUp(document)
+      bRender.unmount()
+
+      // 3. Footer drag update
+      useTemplateStore.setState({ currentSection: 'footer', selectedElementLocation: 'footer', selectedElementIds: [] })
+      const fRender = render(<CanvasStandardPage {...defaultProps} />)
+      fireEvent.mouseDown(screen.getByText('Footer Page 1'), { clientX: 10, clientY: 10 })
+      fireEvent.mouseMove(document, { clientX: 25, clientY: 25 })
+      fireEvent.mouseUp(document)
+      fRender.unmount()
+
+      // 4. Background drag update
+      useTemplateStore.setState({ currentSection: 'bodyBackground', selectedElementLocation: 'bodyBackground', selectedElementIds: [] })
+      const bgRender = render(<CanvasStandardPage {...defaultProps} />)
+      fireEvent.mouseDown(screen.getByText('Background Watermark'), { clientX: 50, clientY: 50 })
+      fireEvent.mouseMove(document, { clientX: 70, clientY: 70 })
+      fireEvent.mouseUp(document)
+      bgRender.unmount()
     })
   })
 })

@@ -1,0 +1,38 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SectionItem > renders active section item with rightContent and matches snapshot 1`] = `
+<div>
+  <div
+    class="relative "
+  >
+    <button
+      class="w-full px-3 py-2 text-xs font-medium rounded-lg transition text-left bg-blue-500 text-white shadow-sm"
+    >
+      Body
+    </button>
+    <div
+      class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1"
+    >
+      <span
+        data-testid="right-badge"
+      >
+        Active
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SectionItem > renders default inactive section item and matches snapshot 1`] = `
+<div>
+  <div
+    class="relative "
+  >
+    <button
+      class="w-full px-3 py-2 text-xs font-medium rounded-lg transition text-left theme-surface border theme-border theme-text hover:border-primary-500/50"
+    >
+      Header
+    </button>
+  </div>
+</div>
+`;

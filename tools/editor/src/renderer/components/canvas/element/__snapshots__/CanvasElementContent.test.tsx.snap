@@ -1,0 +1,189 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CanvasElementContent > renders default fallback element and triggers onMouseDown 1`] = `
+<div>
+  <div
+    class="cursor-move select-none p-2 bg-gray-200 border "
+    style="width: 100px; height: 50px;"
+  >
+    custom_widget
+  </div>
+</div>
+`;
+
+exports[`CanvasElementContent > renders list element and matches snapshot 1`] = `
+<div>
+  <div
+    class="cursor-pointer "
+    style="width: 300px; height: auto; min-height: auto; background-color: transparent; padding: 0px; font-family: Arial, sans-serif; font-size: 12px; color: rgb(0, 0, 0); display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; user-select: none;"
+  >
+    <div
+      style="display: flex; align-items: flex-start; margin-bottom: 6px; gap: 4px;"
+    >
+      <span
+        style="flex-shrink: 0; font-weight: normal;"
+      >
+        • 
+      </span>
+      <span
+        style="line-height: 1.2; word-break: break-word;"
+      >
+        Item 1
+      </span>
+    </div>
+    <div
+      style="display: flex; align-items: flex-start; margin-bottom: 0px; gap: 4px;"
+    >
+      <span
+        style="flex-shrink: 0; font-weight: normal;"
+      >
+        • 
+      </span>
+      <span
+        style="line-height: 1.2; word-break: break-word;"
+      >
+        Item 2
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`CanvasElementContent > renders loop and container elements and matches snapshot 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative "
+    style="width: 400px; height: 150px; box-sizing: border-box; background-color: transparent; border-width: 2px; border-style: dashed; border-color: rgb(139, 92, 246); border-radius: 4px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute inset-0 flex items-center justify-center"
+      >
+        <div
+          class="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50"
+        >
+          <div
+            class="text-primary-400 text-[10px] font-medium"
+          >
+            Add elements
+          </div>
+          <div
+            class="text-primary-300 text-[9px]"
+          >
+            via sidebar
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`CanvasElementContent > renders loop and container elements and matches snapshot 2`] = `
+<div>
+  <div
+    class="cursor-move select-none relative "
+    style="width: 400px; height: 150px; box-sizing: border-box; background-color: transparent; border-width: 2px; border-style: dashed; border-color: rgb(139, 92, 246); border-radius: 4px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute inset-0 flex items-center justify-center"
+      >
+        <div
+          class="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50"
+        >
+          <div
+            class="text-primary-400 text-[10px] font-medium"
+          >
+            Add elements
+             
+            <span
+              class="text-primary-300 text-[9px]"
+            >
+              via sidebar
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`CanvasElementContent > renders media element and matches snapshot 1`] = `
+<div>
+  <div
+    class="cursor-move select-none border-2 border-dashed border-gray-400 flex items-center overflow-hidden justify-center "
+    style="width: 80px; height: 80px;"
+  >
+    <span
+      class="text-gray-400 text-sm"
+    >
+      🖼️ Image
+    </span>
+  </div>
+</div>
+`;
+
+exports[`CanvasElementContent > renders shape and spacer elements and matches snapshot 1`] = `
+<div>
+  <div
+    class="cursor-move select-none "
+    style="width: 100px; height: 50px; box-sizing: border-box; background-color: transparent; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px;"
+  />
+</div>
+`;
+
+exports[`CanvasElementContent > renders table element and matches snapshot 1`] = `
+<div>
+  <div
+    class="cursor-move select-none "
+    style="width: 400px; min-height: 50px;"
+  >
+    <table
+      class="w-full pointer-events-none border-collapse"
+      style="table-layout: fixed;"
+    >
+      <thead>
+        <tr
+          style="background-color: rgb(240, 240, 240); color: rgb(0, 0, 0); font-size: 12px;"
+        >
+          <th
+            class="font-semibold"
+            style="border-left-width: 1px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(204, 204, 204); border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); width: 400px; min-width: 400px; max-width: 400px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; vertical-align: center;"
+          >
+            Col 1
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          style="font-size: 10px; color: rgb(0, 0, 0);"
+        >
+          <td
+            style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(204, 204, 204); width: 400px; min-width: 400px; max-width: 400px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; vertical-align: center;"
+          >
+            field
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
+
+exports[`CanvasElementContent > renders text element and matches snapshot 1`] = `
+<div>
+  <div
+    class="cursor-move select-none "
+    style="width: auto; height: auto; font-size: 12px; font-weight: normal; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 0px;"
+    title="Double-click to edit"
+  >
+    Hello World
+  </div>
+</div>
+`;

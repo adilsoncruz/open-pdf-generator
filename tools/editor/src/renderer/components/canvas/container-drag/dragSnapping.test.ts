@@ -42,7 +42,7 @@ describe('dragSnapping', () => {
       expect(snapCenter.snappedX).toBe(75)
     })
 
-    it('snaps to vertical and horizontal guides', () => {
+    it('snaps to vertical and horizontal guides on start edge', () => {
       // containerPageX = 50, vertical guide at pageX = 150 => guideLocalX = 100
       const snapGuide = snapSingleChildCoordinates({
         rawX: 98,
@@ -61,6 +61,41 @@ describe('dragSnapping', () => {
       expect(snapGuide.snappedY).toBe(50)
       expect(snapGuide.activeSnapH).toBe(100)
     })
+
+    it('snaps to guides on end edge and center edge', () => {
+      // containerPageX = 0, guide at 200.
+      // childWidth = 50. snapped + 50 ≈ 200 => snapped ≈ 150.
+      // rawX = 148 => distEnd = |148 + 50 - 200| = 2 < 8.
+      const snapEnd = snapSingleChildCoordinates({
+        rawX: 148,
+        rawY: 100,
+        childWidth: 50,
+        childHeight: 30,
+        containerWidth: 500,
+        containerHeight: 500,
+        containerPageX: 0,
+        containerPageY: 0,
+        verticalGuides: [200],
+      })
+      expect(snapEnd.snappedX).toBe(150)
+      expect(snapEnd.activeSnapV).toBe(200)
+
+      // guide at 200. snapped + 25 ≈ 200 => snapped ≈ 175.
+      // rawX = 176 => distCenter = |176 + 25 - 200| = 1 < 8.
+      const snapCenterGuide = snapSingleChildCoordinates({
+        rawX: 176,
+        rawY: 100,
+        childWidth: 50,
+        childHeight: 30,
+        containerWidth: 500,
+        containerHeight: 500,
+        containerPageX: 0,
+        containerPageY: 0,
+        verticalGuides: [200],
+      })
+      expect(snapCenterGuide.snappedX).toBe(175)
+      expect(snapCenterGuide.activeSnapV).toBe(200)
+    })
   })
 
   describe('snapMultiChildCoordinates', () => {
@@ -75,6 +110,23 @@ describe('dragSnapping', () => {
       })
       expect(snap.snappedX).toBe(0)
       expect(snap.snappedY).toBe(290)
+    })
+
+    it('snaps multi-child reference position to guides (start and end edges)', () => {
+      const snap = snapMultiChildCoordinates({
+        rawX: 98,
+        rawY: 148,
+        childWidth: 50,
+        childHeight: 50,
+        containerWidth: 500,
+        containerHeight: 500,
+        containerPageX: 0,
+        containerPageY: 0,
+        verticalGuides: [100], // snaps start edge to 100
+        horizontalGuides: [200], // snaps end edge to 200 - 50 = 150
+      })
+      expect(snap.snappedX).toBe(100)
+      expect(snap.snappedY).toBe(150)
     })
   })
 

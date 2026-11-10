@@ -1,0 +1,196 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ContainerChildTableRenderer > renders placeholder when table has no columns 1`] = `
+<div>
+  <div
+    style="width: 400px; min-height: 40px;"
+  >
+    <div
+      class="w-full min-h-[40px] flex items-center justify-center text-slate-400 text-xs border border-dashed border-slate-600 rounded bg-slate-900/40 p-2"
+    >
+      📊 Tabela sem colunas (configure no painel)
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ContainerChildTableRenderer > renders table inside container and matches snapshot 1`] = `
+<div>
+  <div
+    style="width: 500px; min-height: 40px;"
+  >
+    <table
+      class="w-full pointer-events-none border-collapse"
+      style="table-layout: fixed;"
+    >
+      <thead>
+        <tr
+          style="background-color: rgb(30, 41, 59); color: rgb(255, 255, 255); font-size: 11px;"
+        >
+          <th
+            class="font-semibold"
+            style="width: 300px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(71, 85, 105); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(71, 85, 105); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(71, 85, 105); border-right-width: 0.5px; border-right-style: solid; border-right-color: rgb(71, 85, 105); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            Item
+          </th>
+          <th
+            class="font-semibold"
+            style="width: 200px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(71, 85, 105); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(71, 85, 105); border-left-width: 0.5px; border-left-style: solid; border-left-color: rgb(71, 85, 105); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(71, 85, 105); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            Preço
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          style="font-size: 10px; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+        >
+          <td
+            style="width: 300px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(71, 85, 105); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(71, 85, 105); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(71, 85, 105); border-right-width: 0.5px; border-right-style: solid; border-right-color: rgb(71, 85, 105); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            field
+          </td>
+          <td
+            style="width: 200px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(71, 85, 105); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(71, 85, 105); border-left-width: 0.5px; border-left-style: solid; border-left-color: rgb(71, 85, 105); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(71, 85, 105); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            field
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
+
+exports[`ContainerChildTableRenderer > renders table with row border and none border types 1`] = `
+<div>
+  <div
+    style="width: 400px; min-height: 40px;"
+  >
+    <table
+      class="w-full pointer-events-none border-collapse"
+      style="table-layout: fixed;"
+    >
+      <thead>
+        <tr
+          style="background-color: rgb(240, 240, 240); color: rgb(0, 0, 0); font-size: 12px;"
+        >
+          <th
+            class="font-semibold"
+            style="width: 400px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            Col 1
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          style="font-size: 10px; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+        >
+          <td
+            style="width: 400px; padding: 5px; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            field
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
+
+exports[`ContainerChildTableRenderer > renders table with row border and none border types 2`] = `
+<div>
+  <div
+    style="width: 400px; min-height: 40px;"
+  >
+    <table
+      class="w-full pointer-events-none border-collapse"
+      style="table-layout: fixed;"
+    >
+      <thead>
+        <tr
+          style="background-color: rgb(240, 240, 240); color: rgb(0, 0, 0); font-size: 12px;"
+        >
+          <th
+            class="font-semibold"
+            style="width: 200px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 0.5px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            Col 1
+          </th>
+          <th
+            class="font-semibold"
+            style="width: 200px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 0.5px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            Col 2
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          style="font-size: 10px; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+        >
+          <td
+            style="width: 200px; padding: 5px; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 0.5px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            f1
+          </td>
+          <td
+            style="width: 200px; padding: 5px; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 0.5px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            f2
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
+
+exports[`ContainerChildTableRenderer > renders table with row border and none border types 3`] = `
+<div>
+  <div
+    style="width: 400px; min-height: 40px;"
+  >
+    <table
+      class="w-full pointer-events-none border-collapse"
+      style="table-layout: fixed;"
+    >
+      <thead>
+        <tr
+          style="background-color: rgb(240, 240, 240); color: rgb(0, 0, 0); font-size: 12px;"
+        >
+          <th
+            class="font-semibold"
+            style="width: 200px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 0.5px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            Col 1
+          </th>
+          <th
+            class="font-semibold"
+            style="width: 200px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 0.5px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            Col 2
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          style="font-size: 10px; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"
+        >
+          <td
+            style="width: 200px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            f1
+          </td>
+          <td
+            style="width: 200px; padding: 5px; border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(204, 204, 204); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+          >
+            f2
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+`;

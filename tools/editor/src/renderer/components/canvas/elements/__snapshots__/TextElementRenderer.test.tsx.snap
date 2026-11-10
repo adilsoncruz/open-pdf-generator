@@ -1,0 +1,48 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TextElementRenderer > renders editing textarea and handles text changes, blur, and keyDown 1`] = `
+<div>
+  <textarea
+    class="resize-none outline-none ring-2 ring-blue-500"
+    style="width: 200px; height: 50px; font-size: 14px; font-weight: bold; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(51, 51, 51); text-decoration-color: rgb(51, 51, 51); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 2px 4px; cursor: text; background: white;"
+  >
+    Editing text
+  </textarea>
+</div>
+`;
+
+exports[`TextElementRenderer > renders multiline and link styles with alignment variants: top, bottom, justify, right 1`] = `
+<div>
+  <div
+    class="cursor-move select-none ring-2 ring-primary-500"
+    style="width: 350px; height: auto; font-size: 12px; font-weight: normal; text-decoration: underline; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); overflow: auto; text-overflow: clip; white-space: pre-wrap; box-sizing: border-box; display: block; text-align: justify; text-indent: 15px; line-height: normal; border-top-width: 2px; border-top-style: dashed; border-top-color: rgb(255, 0, 0); border-right-width: 2px; border-right-style: dashed; border-right-color: rgb(255, 0, 0); border-bottom-width: 2px; border-bottom-style: dashed; border-bottom-color: rgb(255, 0, 0); border-left-width: 2px; border-left-style: dashed; border-left-color: rgb(255, 0, 0); border-radius: 4px; padding: 8px 6px;"
+    title="Double-click to edit"
+  >
+    https://example.com
+  </div>
+</div>
+`;
+
+exports[`TextElementRenderer > renders multiline and link styles with alignment variants: top, bottom, justify, right 2`] = `
+<div>
+  <div
+    class="cursor-move select-none "
+    style="width: auto; height: auto; font-size: 12px; font-weight: normal; text-decoration: underline; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: rgb(240, 240, 240); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; line-height: normal; border-top-width: 2px; border-top-style: dashed; border-top-color: rgb(255, 0, 0); border-right-width: 2px; border-right-style: dashed; border-right-color: rgb(255, 0, 0); border-bottom-width: 2px; border-bottom-style: dashed; border-bottom-color: rgb(255, 0, 0); border-left-width: 2px; border-left-style: dashed; border-left-color: rgb(255, 0, 0); border-radius: 4px; padding: 8px 6px; align-items: flex-start; justify-content: flex-end;"
+    title="Double-click to edit"
+  >
+    https://example.com
+  </div>
+</div>
+`;
+
+exports[`TextElementRenderer > renders normal text and matches snapshot 1`] = `
+<div>
+  <div
+    class="cursor-move select-none "
+    style="width: 200px; height: 50px; font-size: 14px; font-weight: bold; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(51, 51, 51); text-decoration-color: rgb(51, 51, 51); background-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 2px 4px;"
+    title="Double-click to edit"
+  >
+    Hello World
+  </div>
+</div>
+`;

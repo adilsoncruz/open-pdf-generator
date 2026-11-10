@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TextArea atom > renders default textarea and matches snapshot 1`] = `
+<div>
+  <textarea
+    class="w-full rounded-lg border transition-colors theme-bg-tertiary theme-border theme-text placeholder:theme-text-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 text-xs resize-y"
+    placeholder="Type here..."
+  />
+</div>
+`;
+
+exports[`TextArea atom > renders with error, sizes, and resizes 1`] = `
+<div>
+  <textarea
+    class="w-full rounded-lg border transition-colors theme-bg-tertiary theme-border theme-text placeholder:theme-text-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed border-red-500 focus:ring-red-500 focus:border-red-500 px-4 py-2 text-base resize-none"
+  >
+    Content
+  </textarea>
+</div>
+`;
+
+exports[`TextArea atom > renders with error, sizes, and resizes 2`] = `
+<div>
+  <textarea
+    class="w-full rounded-lg border transition-colors theme-bg-tertiary theme-border theme-text placeholder:theme-text-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 text-sm resize"
+  />
+</div>
+`;

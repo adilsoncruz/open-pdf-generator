@@ -1,0 +1,544 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ElementsPalette > renders all categories and default elements 1`] = `
+<div>
+  <div
+    class="p-2.5 space-y-2.5 border-b border-slate-800/80 shrink-0"
+  >
+    <div
+      class="relative"
+    >
+      <input
+        class="w-full bg-slate-900/90 border border-slate-800 rounded-md pl-7 pr-7 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
+        placeholder="Buscar elementos..."
+        type="text"
+        value=""
+      />
+      <svg
+        class="w-3.5 h-3.5 text-slate-500 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          cx="11"
+          cy="11"
+          r="8"
+        />
+        <path
+          d="m21 21-4.35-4.35"
+        />
+      </svg>
+    </div>
+    <div>
+      <div
+        class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5"
+      >
+        Standard
+      </div>
+      <div
+        class="grid grid-cols-3 gap-1.5"
+      >
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Texto Dinâmico / Expressão"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M4 7V4h16v3M9 20h6M12 4v16"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Text
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Texto Estático / Rótulo"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M4 6h16M4 10h16M4 14h12M4 18h8"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Static Text
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Rich Text"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M4 6h16M4 12h10M4 18h14"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Rich Text
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Hyperlink"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            />
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Hyperlink
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Lista com Marcadores"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <line
+              stroke-linecap="round"
+              x1="8"
+              x2="21"
+              y1="6"
+              y2="6"
+            />
+            <line
+              stroke-linecap="round"
+              x1="8"
+              x2="21"
+              y1="12"
+              y2="12"
+            />
+            <line
+              stroke-linecap="round"
+              x1="8"
+              x2="21"
+              y1="18"
+              y2="18"
+            />
+            <line
+              stroke-linecap="round"
+              x1="3"
+              x2="3.01"
+              y1="6"
+              y2="6"
+            />
+            <line
+              stroke-linecap="round"
+              x1="3"
+              x2="3.01"
+              y1="12"
+              y2="12"
+            />
+            <line
+              stroke-linecap="round"
+              x1="3"
+              x2="3.01"
+              y1="18"
+              y2="18"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            List
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Lista de Verificação (Checklist)"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <polyline
+              points="9 11 12 14 22 4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Checklist
+          </span>
+        </button>
+      </div>
+    </div>
+    <div>
+      <div
+        class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5"
+      >
+        Layout
+      </div>
+      <div
+        class="grid grid-cols-3 gap-1.5"
+      >
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Container"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              height="18"
+              rx="3"
+              stroke-dasharray="3 3"
+              width="18"
+              x="3"
+              y="3"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Container
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Loop Repetidor de Dados"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <polyline
+              points="17 1 21 5 17 9"
+            />
+            <path
+              d="M3 11V9a4 4 0 0 1 4-4h14"
+            />
+            <polyline
+              points="7 23 3 19 7 15"
+            />
+            <path
+              d="M21 13v2a4 4 0 0 1-4 4H3"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Loop
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Spacer"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M7 3h10M7 21h10M12 7v10M9 10l3-3 3 3M9 14l3 3 3-3"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Spacer
+          </span>
+        </button>
+      </div>
+    </div>
+    <div>
+      <div
+        class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5"
+      >
+        Media & Shapes
+      </div>
+      <div
+        class="grid grid-cols-3 gap-1.5"
+      >
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Image"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              height="18"
+              rx="2"
+              width="18"
+              x="3"
+              y="3"
+            />
+            <circle
+              cx="8.5"
+              cy="8.5"
+              r="1.5"
+            />
+            <polyline
+              points="21 15 16 10 5 21"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Image
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Table"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              height="18"
+              rx="2"
+              width="18"
+              x="3"
+              y="3"
+            />
+            <path
+              d="M3 9h18M3 15h18M9 3v18M15 3v18"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Table
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Shape (Retângulo)"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              height="16"
+              rx="2"
+              width="16"
+              x="4"
+              y="4"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Shape
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Linha Divisória"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <line
+              stroke-linecap="round"
+              stroke-width="2.5"
+              x1="3"
+              x2="21"
+              y1="12"
+              y2="12"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Line
+          </span>
+        </button>
+      </div>
+    </div>
+    <div>
+      <div
+        class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5"
+      >
+        Barcodes
+      </div>
+      <div
+        class="grid grid-cols-3 gap-1.5"
+      >
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Barcodes / QR"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              height="7"
+              rx="1"
+              width="7"
+              x="3"
+              y="3"
+            />
+            <rect
+              height="7"
+              rx="1"
+              width="7"
+              x="14"
+              y="3"
+            />
+            <rect
+              height="7"
+              rx="1"
+              width="7"
+              x="3"
+              y="14"
+            />
+            <rect
+              height="4"
+              width="4"
+              x="14"
+              y="14"
+            />
+            <path
+              d="M18 18h3v3h-3z"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            QR Code
+          </span>
+        </button>
+        <button
+          class="h-14 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-indigo-500 hover:bg-slate-800/60 transition flex flex-col items-center justify-center p-1 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          draggable="true"
+          title="Código de Barras 1D"
+          type="button"
+        >
+          <svg
+            class="w-5 h-5 text-slate-300 group-hover:text-indigo-400 mb-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M4 5v14M7 5v14M10 5v14M13 5v14M16 5v14M19 5v14"
+            />
+          </svg>
+          <span
+            class="text-[9.5px] leading-tight text-slate-400 group-hover:text-slate-200 truncate max-w-full px-0.5"
+          >
+            Barcode
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;

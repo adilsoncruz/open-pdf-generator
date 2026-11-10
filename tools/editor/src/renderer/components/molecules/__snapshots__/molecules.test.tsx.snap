@@ -1,0 +1,56 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Design System Molecules and Atoms > DropdownMenu opens and closes on trigger click and outside click 1`] = `
+<body>
+  <div>
+    <div
+      class="relative"
+    >
+      <div>
+        <button>
+          Menu
+        </button>
+      </div>
+      <div
+        class="absolute top-full mt-1 w-48 theme-surface border theme-border rounded-lg shadow-lg z-50 left-0"
+      >
+        <div>
+          Item 1
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+`;
+
+exports[`Design System Molecules and Atoms > FormField, Divider, Label render properly 1`] = `
+<div>
+  <div>
+    <label
+      class="flex items-center gap-1 text-xs font-medium theme-text-muted"
+    >
+      My Label
+    </label>
+    <div
+      class="theme-border border-t w-full"
+    />
+    <div
+      class="space-y-1"
+    >
+      <label
+        class="flex items-center gap-1 text-xs font-medium theme-text-muted"
+      >
+        Field Name
+        <span
+          class="text-xs theme-text-muted opacity-70"
+        >
+          (
+          Some hint
+          )
+        </span>
+      </label>
+      <input />
+    </div>
+  </div>
+</div>
+`;
