@@ -57,7 +57,7 @@ export const PALETTE_CATEGORIES: PaletteCategory[] = [
         icon: TextIcon,
         createElement: () =>
           makeElement('text', 'text', {
-            value: 'Novo Texto', x: 40, y: 40, width: 200, height: 25,
+            dataBinding: 'field', x: 40, y: 40, width: 200, height: 25,
             style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' },
           }),
       },

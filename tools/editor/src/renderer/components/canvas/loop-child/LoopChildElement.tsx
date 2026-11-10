@@ -7,8 +7,14 @@ export function LoopChildElement(props: LoopChildElementProps) {
   const { child, effectiveX, effectiveY, effectiveWidth, loopId, loopWidth, loopHeight } = props
   const {
     isSelected,
+    isEditingText,
+    editingValue,
+    setEditingValue,
     handleMouseDown,
     handleResizeMouseDown,
+    handleDoubleClick,
+    handleTextEditBlur,
+    handleTextEditKeyDown,
     handleContextMenu,
     resolveWidth,
     resolveHeight,
@@ -33,7 +39,7 @@ export function LoopChildElement(props: LoopChildElementProps) {
             ? { height: child.height }
             : {}),
       }}
-      onMouseDown={handleMouseDown}
+      onMouseDown={isEditingText ? undefined : handleMouseDown}
       onContextMenu={handleContextMenu}
     >
       <LoopChildRenderer
@@ -43,6 +49,12 @@ export function LoopChildElement(props: LoopChildElementProps) {
         loopHeight={loopHeight}
         resolveWidth={resolveWidth}
         resolveHeight={resolveHeight}
+        isEditingText={isEditingText}
+        editingValue={editingValue}
+        onDoubleClick={handleDoubleClick}
+        onTextChange={setEditingValue}
+        onTextBlur={handleTextEditBlur}
+        onTextKeyDown={handleTextEditKeyDown}
       />
       {isSelected && (
         <>
