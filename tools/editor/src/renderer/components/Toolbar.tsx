@@ -1,6 +1,5 @@
 import { useState, forwardRef, useImperativeHandle } from 'react'
 import { usePreviewStore } from '../store/previewStore'
-import { UpdateNotification } from './UpdateNotification'
 import { TabBar } from './TabBar'
 import { StudioLogo } from './pages/LoadingPage'
 import { useCLIStatus } from './toolbar/hooks/useCLIStatus'
@@ -119,9 +118,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         onInstallCLIFromFile={() => handleInstallCLIFromFile(() => setShowCLIModal(false))}
         onRefreshStatus={checkCLIStatus}
       />
-
-      {/* Floating Update Notification (Bottom-Right) */}
-      <UpdateNotification />
     </div>
   )
 })

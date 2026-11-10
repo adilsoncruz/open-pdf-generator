@@ -589,6 +589,7 @@ const pt: Translations = {
     gallerySubtitle: 'Teste instantaneamente no navegador — sem precisar instalar nada',
     openInEditor: 'Abrir no Editor',
     testNow: 'Testar →',
+    checkForUpdates: 'Verificar atualizações',
   },
 }
 

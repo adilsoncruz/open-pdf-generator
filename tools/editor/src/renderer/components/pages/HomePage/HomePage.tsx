@@ -1,4 +1,5 @@
 import { Badge, Icon } from '../../atoms'
+import { UpdateBadge } from '../../UpdateNotification'
 import { StudioLogo } from '../LoadingPage'
 import { useUIStore } from '../../../store/uiStore'
 import { useRecentFilesStore, type RecentFileItem } from '../../../store/recentFilesStore'
@@ -81,6 +82,16 @@ export function HomePage({
                 ))}
               </select>
             </div>
+
+            <button
+              onClick={() => window.electronAPI?.checkForUpdates?.()}
+              title={t.home.checkForUpdates}
+              className="relative flex h-9 sm:h-10 items-center gap-1.5 px-3 rounded-xl border border-slate-800 bg-slate-900 text-xs font-medium text-slate-300 transition hover:border-indigo-400 hover:bg-slate-800 hover:text-indigo-400"
+            >
+              <Icon name="refresh" size="sm" />
+              <span className="hidden sm:inline">{t.home.checkForUpdates}</span>
+              <UpdateBadge />
+            </button>
 
             <button
               onClick={toggleTheme}

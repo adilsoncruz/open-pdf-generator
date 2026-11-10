@@ -589,6 +589,7 @@ const es: Translations = {
     gallerySubtitle: 'Pruebe al instante en su navegador — sin necesidad de descargas ni instalación',
     openInEditor: 'Abrir en el Editor',
     testNow: 'Probar →',
+    checkForUpdates: 'Buscar actualizaciones',
   },
 }
 

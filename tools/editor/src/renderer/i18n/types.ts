@@ -506,6 +506,7 @@ export interface Translations {
     gallerySubtitle: string
     openInEditor: string
     testNow: string
+    checkForUpdates: string
   }
 }
 
