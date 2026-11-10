@@ -10,7 +10,6 @@ interface HomePageProps {
   onNewTemplate: () => void
   onOpenFile: () => void
   onImportJasper?: () => void
-  onImportAI?: () => void
   onOpenRecentFile?: (filePath: string) => void
   onSelectGalleryTemplate?: (item: GalleryTemplateItem) => void
 }
@@ -19,7 +18,6 @@ export function HomePage({
   onNewTemplate,
   onOpenFile,
   onImportJasper,
-  onImportAI,
   onOpenRecentFile,
   onSelectGalleryTemplate,
 }: HomePageProps) {
@@ -109,7 +107,7 @@ export function HomePage({
             <p className="mt-2 sm:mt-4 text-sm sm:text-lg text-slate-400">{t.home.chooseOption}</p>
           </div>
 
-          <div className={`mt-6 sm:mt-10 grid gap-4 sm:gap-5 grid-cols-1 ${onImportJasper || onImportAI ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-2'}`}>
+          <div className={`mt-6 sm:mt-10 grid gap-4 sm:gap-5 grid-cols-1 ${onImportJasper ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'}`}>
             {/* 1. Novo Template */}
             <button
               onClick={onNewTemplate}
@@ -151,21 +149,6 @@ export function HomePage({
                   <span className="mt-2 block text-xs text-slate-400">{t.home.importJasperDesc}</span>
                 </div>
                 <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-emerald-400">→</span>
-              </button>
-            )}
-
-            {/* 4. Importar PDF com IA */}
-            {onImportAI && (
-              <button
-                onClick={onImportAI}
-                className="group rounded-xl border border-slate-700 bg-slate-900/80 p-6 text-left transition hover:border-purple-400 hover:bg-slate-800 flex flex-col justify-between"
-              >
-                <div>
-                  <Icon name="preview" size="xl" className="text-purple-400" />
-                  <span className="mt-5 block text-lg font-semibold">{t.home.importAI}</span>
-                  <span className="mt-2 block text-xs text-slate-400">{t.home.importAIDesc}</span>
-                </div>
-                <span className="mt-5 block text-right text-xl text-slate-500 transition group-hover:text-purple-400">→</span>
               </button>
             )}
           </div>

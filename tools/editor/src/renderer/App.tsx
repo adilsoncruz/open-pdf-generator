@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { EditorPage, HomePage, LoadingPage, MobileViewerPage } from './components/pages'
-import { AiImportModal } from './components/AiImportModal'
 import { UpdateNotification } from './components/UpdateNotification'
 import { useTabStore } from './store/tabStore'
 import { useTemplateStore } from './store/templateStore'
@@ -10,7 +9,6 @@ import { openTemplateFromContent, handleImportJasper } from './bootstrap'
 export function App() {
   const [screen, setScreen] = useState<'loading' | 'home' | 'editor' | 'mobile-viewer'>('loading')
   const [selectedTemplateTitle, setSelectedTemplateTitle] = useState<string>('')
-  const [showAiModal, setShowAiModal] = useState(false)
   const [forceDesktop, setForceDesktop] = useState(false)
 
   const isMobile = useMemo(() => {
@@ -90,11 +88,6 @@ export function App() {
                 useRecentFilesStore.getState().removeRecentFile(filePath)
               }
             }}
-          />
-          <AiImportModal
-            isOpen={showAiModal}
-            onClose={() => setShowAiModal(false)}
-            onSuccess={() => setScreen('editor')}
           />
         </>
       )}

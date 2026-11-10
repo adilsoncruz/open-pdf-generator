@@ -12,7 +12,6 @@ export interface ToolbarRef {
   handleNew: () => void
   handleOpen: () => void
   handleImportJasper?: () => void
-  openAiModal?: () => void
   handleSave: () => void
   handleSaveAs: () => void
   handleExport: () => void

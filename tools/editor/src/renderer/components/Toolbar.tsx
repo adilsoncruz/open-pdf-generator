@@ -8,7 +8,6 @@ import { FileMenu } from './toolbar/components/FileMenu'
 import { DocumentTitle } from './toolbar/components/DocumentTitle'
 import { ToolbarActions } from './toolbar/components/ToolbarActions'
 import { SettingsModal } from './toolbar/components/SettingsModal'
-import { AiImportModal } from './AiImportModal'
 import type { ToolbarProps, ToolbarRef } from './toolbar/types'
 
 export type { ToolbarProps, ToolbarRef }
@@ -19,7 +18,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
 
   const [showFileMenu, setShowFileMenu] = useState(false)
   const [showCLIModal, setShowCLIModal] = useState(false)
-  const [showAiModal, setShowAiModal] = useState(false)
 
   const {
     cliStatus,
@@ -53,7 +51,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
     handleNew,
     handleOpen,
     handleImportJasper,
-    openAiModal: () => setShowAiModal(true),
     handleSave,
     handleSaveAs,
     handleExport,
@@ -78,7 +75,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
           onNew={handleNew}
           onOpen={handleOpen}
           onImportJasper={handleImportJasper}
-          onImportAI={() => setShowAiModal(true)}
           onSave={handleSave}
           onSaveAs={handleSaveAs}
           onExport={handleExport}
@@ -102,9 +98,6 @@ const Toolbar = forwardRef<ToolbarRef, ToolbarProps>(({ onToggleDataPanel, onTog
         effectivePreviewMode={effectivePreviewMode}
         onGeneratePDF={handleGeneratePDF}
       />
-
-      {/* Modal de Importação com IA */}
-      <AiImportModal isOpen={showAiModal} onClose={() => setShowAiModal(false)} />
 
       {/* Modal de Configurações CLI */}
       <SettingsModal
