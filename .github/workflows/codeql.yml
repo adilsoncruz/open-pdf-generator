@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - main
+      - develop
       - bootstrap*
   pull_request:
     branches:
       - main
+      - develop
       - bootstrap*
   schedule:
     - cron: '0 6 * * 1'
