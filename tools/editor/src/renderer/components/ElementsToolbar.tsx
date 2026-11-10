@@ -56,7 +56,7 @@ export default function ElementsToolbar() {
       case 'text':
         element = {
           ...baseElement,
-          value: 'New Text',
+          dataBinding: 'field',
           width: 200,
           height: 30,
           style: {

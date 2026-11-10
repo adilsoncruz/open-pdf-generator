@@ -239,7 +239,7 @@ describe('ContextMenu Component', () => {
 
     fireEvent.click(screen.getByText('Texto Dinâmico'))
     expect(addElementSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'text', value: 'Novo Texto' }),
+      expect.objectContaining({ type: 'text', dataBinding: 'field' }),
       'body'
     )
   })

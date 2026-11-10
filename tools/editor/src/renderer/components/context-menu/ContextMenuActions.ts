@@ -138,7 +138,8 @@ export function useContextMenuActions() {
       y: 30,
       width: type === 'line' ? 200 : type === 'container' ? '100%' : 150,
       height: type === 'line' ? 0 : 30,
-      value: type === 'text' ? 'Novo Texto' : type === 'static_text' ? 'Texto Fixo' : '',
+      dataBinding: type === 'text' ? 'field' : undefined,
+      value: type === 'static_text' ? 'Texto Fixo' : '',
     }
     addElement(baseElement as any, targetLocation)
     closeContextMenu()

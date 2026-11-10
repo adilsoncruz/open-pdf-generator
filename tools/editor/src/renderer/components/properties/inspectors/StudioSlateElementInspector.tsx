@@ -35,6 +35,12 @@ export function StudioSlateElementInspector(props: ElementInspectorProps) {
     }
   }, [element.type, element.dataBinding])
 
+  useEffect(() => {
+    if (element.type === 'text' && element.value !== undefined) {
+      onUpdate('value', undefined)
+    }
+  }, [element.type, element.value])
+
   const store = useTemplateStore()
   const {
     selectedElementIds,

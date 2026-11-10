@@ -22,6 +22,12 @@ export interface ContainerChildRendererProps {
   onSnapGuide?: (guide: SnappedGuides) => void
   resolveWidth: (value: string | number | undefined) => number
   resolveHeight: (value: string | number | undefined) => number
+  isEditingText?: boolean
+  editingValue?: string
+  onDoubleClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+  onTextChange?: (val: string) => void
+  onTextBlur?: () => void
+  onTextKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
 }
 
 export function ContainerChildRenderer({
@@ -38,6 +44,12 @@ export function ContainerChildRenderer({
   onSnapGuide,
   resolveWidth,
   resolveHeight,
+  isEditingText,
+  editingValue = '',
+  onDoubleClick,
+  onTextChange,
+  onTextBlur,
+  onTextKeyDown,
 }: ContainerChildRendererProps) {
   const testData = useTemplateStore((state) => state.testData)
 
@@ -51,6 +63,29 @@ export function ContainerChildRenderer({
       const rawW = isChildRelative && effectiveWidth !== undefined ? effectiveWidth : child.width
       const textWidth = rawW ? resolveWidth(rawW) : undefined
       const textHeight = child.height ? resolveHeight(child.height) : undefined
+
+      if (isEditingText) {
+        return (
+          <textarea
+            autoFocus
+            value={editingValue}
+            onChange={(e) => onTextChange?.(e.target.value)}
+            onBlur={onTextBlur}
+            onKeyDown={onTextKeyDown}
+            className="resize-none outline-none ring-2 ring-purple-500 bg-white"
+            style={{
+              fontSize: child.style?.fontSize || 10,
+              fontFamily: child.style?.fontFamily || 'Helvetica',
+              color: child.style?.color || '#000000',
+              fontWeight: child.style?.fontWeight || 'normal',
+              width: textWidth || '100%',
+              height: textHeight || 'auto',
+              boxSizing: 'border-box',
+            }}
+          />
+        )
+      }
+
       const displayText = resolveChildDisplayText(
         child,
         testData,
@@ -58,6 +93,8 @@ export function ContainerChildRenderer({
       )
       return (
         <div
+          onDoubleClick={onDoubleClick}
+          title="Double-click to edit"
           style={{
             fontSize: child.style?.fontSize || 10,
             fontFamily: child.style?.fontFamily || 'Helvetica',
