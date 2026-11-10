@@ -11,7 +11,6 @@ import com.pdfgenerator.model.StaticTextElement
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class ModelElementsCoverageTest {
@@ -214,6 +213,7 @@ class ModelElementsCoverageTest {
     @Test
     fun `test ImageRenderer cache and preload helpers`() {
         val prevSize = com.pdfgenerator.adapter.openpdf.ImageRenderer.cacheSize()
+        assertTrue(prevSize >= 0)
         com.pdfgenerator.adapter.openpdf.ImageRenderer.setMaxCacheSize(50)
         com.pdfgenerator.adapter.openpdf.ImageRenderer.preloadFromClasspath("non_existent_image.png")
         com.pdfgenerator.adapter.openpdf.ImageRenderer.preloadFromFiles("/non/existent/image.png")

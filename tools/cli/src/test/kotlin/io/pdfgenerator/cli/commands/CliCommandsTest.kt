@@ -1,30 +1,22 @@
 package io.pdfgenerator.cli.commands
 
-import com.github.ajalt.clikt.core.CliktError
-import com.github.ajalt.clikt.core.subcommands
-import com.pdfgenerator.adapter.openpdf.ImageRenderer
-import com.pdfgenerator.api.PDFGenerator
-import io.pdfgenerator.cli.PdfGeneratorCli
 import io.pdfgenerator.cli.serve.ServeCommand
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.io.PrintStream
 import java.nio.file.Path
 
 class CliCommandsTest {
-
     @TempDir
     lateinit var tempDir: Path
 
-    private val sampleTemplateJson = """
+    private val sampleTemplateJson =
+        """
         {
           "version": "1.0",
           "metadata": { "name": "sample" },
@@ -43,7 +35,7 @@ class CliCommandsTest {
             { "type": "text", "id": "t1", "x": 10, "y": 10, "value": "Hello ${'$'}{name}" }
           ]
         }
-    """.trimIndent()
+        """.trimIndent()
 
     private fun captureOutput(action: () -> Unit): Pair<String, String> {
         val originalOut = System.out
@@ -63,9 +55,10 @@ class CliCommandsTest {
 
     @Test
     fun testVersionCommand() {
-        val (out, _) = captureOutput {
-            VersionCommand().parse(emptyList())
-        }
+        val (out, _) =
+            captureOutput {
+                VersionCommand().parse(emptyList())
+            }
         assertTrue(out.contains("PDF Generator CLI v1.0.0"))
         assertTrue(out.contains("Documentation:"))
     }
@@ -73,30 +66,34 @@ class CliCommandsTest {
     @Test
     fun testCacheCommands() {
         // CacheStatsCommand
-        val (statsOut, _) = captureOutput {
-            CacheStatsCommand().parse(emptyList())
-        }
+        val (statsOut, _) =
+            captureOutput {
+                CacheStatsCommand().parse(emptyList())
+            }
         assertTrue(statsOut.contains("Cache Statistics"))
         assertTrue(statsOut.contains("Templates cached:"))
 
         // CacheClearCommand default (clear both)
-        val (clearOutAll, _) = captureOutput {
-            CacheClearCommand().parse(emptyList())
-        }
+        val (clearOutAll, _) =
+            captureOutput {
+                CacheClearCommand().parse(emptyList())
+            }
         assertTrue(clearOutAll.contains("Template cache cleared"))
         assertTrue(clearOutAll.contains("Image cache cleared"))
 
         // Clear only templates
-        val (clearTemplatesOut, _) = captureOutput {
-            CacheClearCommand().parse(listOf("-t"))
-        }
+        val (clearTemplatesOut, _) =
+            captureOutput {
+                CacheClearCommand().parse(listOf("-t"))
+            }
         assertTrue(clearTemplatesOut.contains("Template cache cleared"))
         assertFalse(clearTemplatesOut.contains("Image cache cleared"))
 
         // Clear only images
-        val (clearImagesOut, _) = captureOutput {
-            CacheClearCommand().parse(listOf("-i"))
-        }
+        val (clearImagesOut, _) =
+            captureOutput {
+                CacheClearCommand().parse(listOf("-i"))
+            }
         assertFalse(clearImagesOut.contains("Template cache cleared"))
         assertTrue(clearImagesOut.contains("Image cache cleared"))
 
@@ -109,9 +106,10 @@ class CliCommandsTest {
         val tplFile = tempDir.resolve("template.json").toFile()
         tplFile.writeText(sampleTemplateJson)
 
-        val (out, _) = captureOutput {
-            ValidateCommand().parse(listOf(tplFile.absolutePath, "-v"))
-        }
+        val (out, _) =
+            captureOutput {
+                ValidateCommand().parse(listOf(tplFile.absolutePath, "-v"))
+            }
         assertTrue(out.contains("Validating template:"))
         assertTrue(out.contains("Template details:"))
         assertTrue(out.contains("Template is valid"))
@@ -122,27 +120,33 @@ class CliCommandsTest {
         val invalidTpl = tempDir.resolve("invalid.json").toFile()
         invalidTpl.writeText("""{"version": "1.0"}""") // missing pageSettings
 
-        val (_, err) = captureOutput {
-            assertThrows<Exception> {
-                ValidateCommand().parse(listOf(invalidTpl.absolutePath, "-v"))
+        val (_, err) =
+            captureOutput {
+                assertThrows<Exception> {
+                    ValidateCommand().parse(listOf(invalidTpl.absolutePath, "-v"))
+                }
             }
-        }
         assertTrue(err.contains("Template validation failed"))
 
         val noVersionTpl = tempDir.resolve("no_version.json").toFile()
-        noVersionTpl.writeText("""{"pageSettings": {"size": "A4", "orientation": "portrait", "margins": {"top": 10, "right": 10, "bottom": 10, "left": 10}}}""")
-        val (_, err2) = captureOutput {
-            assertThrows<Exception> {
-                ValidateCommand().parse(listOf(noVersionTpl.absolutePath, "-v"))
+        noVersionTpl.writeText(
+            """{"pageSettings": {"size": "A4", "orientation": "portrait",""" +
+                """"margins": {"top": 10, "right": 10, "bottom": 10, "left": 10}}}""",
+        )
+        val (_, err2) =
+            captureOutput {
+                assertThrows<Exception> {
+                    ValidateCommand().parse(listOf(noVersionTpl.absolutePath, "-v"))
+                }
             }
-        }
         assertTrue(err2.contains("Missing required field: 'version'"))
     }
 
     @Test
     fun testValidateCommandValidationErrors() {
         val dupIdTpl = tempDir.resolve("dup_ids.json").toFile()
-        dupIdTpl.writeText("""
+        dupIdTpl.writeText(
+            """
             {
               "version": "1.0",
               "pageSettings": { "size": "A4", "orientation": "portrait", "margins": { "top": 10, "right": 10, "bottom": 10, "left": 10 } },
@@ -151,13 +155,15 @@ class CliCommandsTest {
                 { "type": "text", "id": "dup", "x": 0, "y": 10, "value": "B" }
               ]
             }
-        """.trimIndent())
+            """.trimIndent(),
+        )
 
-        val (_, err) = captureOutput {
-            assertThrows<IllegalArgumentException> {
-                ValidateCommand().parse(listOf(dupIdTpl.absolutePath, "-v"))
+        val (_, err) =
+            captureOutput {
+                assertThrows<IllegalArgumentException> {
+                    ValidateCommand().parse(listOf(dupIdTpl.absolutePath, "-v"))
+                }
             }
-        }
         assertTrue(err.contains("Duplicate IDs"))
     }
 
@@ -169,18 +175,19 @@ class CliCommandsTest {
         dummyDir.mkdirs()
         val outFile = tempDir.resolve("out_res.pdf").toFile()
 
-        val (out, _) = captureOutput {
-            GenerateCommand().parse(
-                listOf(
-                    tplFile.absolutePath,
-                    "-o", outFile.absolutePath,
-                    "-v",
-                    "--font-dir", dummyDir.absolutePath,
-                    "--resources-dir", dummyDir.absolutePath,
-                    "--default-font", "Courier"
+        val (out, _) =
+            captureOutput {
+                GenerateCommand().parse(
+                    listOf(
+                        tplFile.absolutePath,
+                        "-o", outFile.absolutePath,
+                        "-v",
+                        "--font-dir", dummyDir.absolutePath,
+                        "--resources-dir", dummyDir.absolutePath,
+                        "--default-font", "Courier",
+                    ),
                 )
-            )
-        }
+            }
         assertTrue(out.contains("Font directory:"))
         assertTrue(out.contains("Resources directory:"))
     }
@@ -196,8 +203,9 @@ class CliCommandsTest {
             ServeCommand().parse(
                 listOf(
                     "-v",
-                    "--preload", "/non/existent/path/for/preload.json"
-                )
+                    "--preload",
+                    "/non/existent/path/for/preload.json",
+                ),
             )
         } finally {
             System.setIn(originalIn)
@@ -215,19 +223,20 @@ class CliCommandsTest {
         dataFile.writeText("""{"name": "World"}""")
         val outFile = tempDir.resolve("out.pdf").toFile()
 
-        val (out, _) = captureOutput {
-            GenerateCommand().parse(
-                listOf(
-                    tplFile.absolutePath,
-                    "-d", dataFile.absolutePath,
-                    "-o", outFile.absolutePath,
-                    "-v",
-                    "--clear-cache",
-                    "--image-cache-size", "50",
-                    "--strict"
+        val (out, _) =
+            captureOutput {
+                GenerateCommand().parse(
+                    listOf(
+                        tplFile.absolutePath,
+                        "-d", dataFile.absolutePath,
+                        "-o", outFile.absolutePath,
+                        "-v",
+                        "--clear-cache",
+                        "--image-cache-size", "50",
+                        "--strict",
+                    ),
                 )
-            )
-        }
+            }
         assertTrue(outFile.exists())
         assertTrue(outFile.length() > 0)
         assertTrue(out.contains("PDF generated successfully"))
@@ -246,9 +255,11 @@ class CliCommandsTest {
             GenerateCommand().parse(
                 listOf(
                     tplFile.absolutePath,
-                    "-d", "-",
-                    "-o", outFile.absolutePath
-                )
+                    "-d",
+                    "-",
+                    "-o",
+                    outFile.absolutePath,
+                ),
             )
         } finally {
             System.setIn(originalIn)
@@ -262,16 +273,18 @@ class CliCommandsTest {
         val tplFile = tempDir.resolve("template.json").toFile()
         tplFile.writeText(sampleTemplateJson)
 
-        val (out, _) = captureOutput {
-            GenerateCommand().parse(
-                listOf(
-                    tplFile.absolutePath,
-                    "-o", "-",
-                    "--no-image-cache",
-                    "--no-strict"
+        val (out, _) =
+            captureOutput {
+                GenerateCommand().parse(
+                    listOf(
+                        tplFile.absolutePath,
+                        "-o",
+                        "-",
+                        "--no-image-cache",
+                        "--no-strict",
+                    ),
                 )
-            )
-        }
+            }
         assertTrue(out.startsWith("%PDF-"))
     }
 
@@ -280,17 +293,19 @@ class CliCommandsTest {
         val tplFile = tempDir.resolve("template.json").toFile()
         tplFile.writeText(sampleTemplateJson)
 
-        val (_, err) = captureOutput {
-            assertThrows<Exception> {
-                GenerateCommand().parse(
-                    listOf(
-                        tplFile.absolutePath,
-                        "-d", tempDir.resolve("missing.json").toFile().absolutePath,
-                        "-v"
+        val (_, err) =
+            captureOutput {
+                assertThrows<Exception> {
+                    GenerateCommand().parse(
+                        listOf(
+                            tplFile.absolutePath,
+                            "-d",
+                            tempDir.resolve("missing.json").toFile().absolutePath,
+                            "-v",
+                        ),
                     )
-                )
+                }
             }
-        }
         assertTrue(err.contains("Error generating PDF"))
     }
 
@@ -317,29 +332,33 @@ class CliCommandsTest {
         val jsonOutput = tempDir.resolve("converted.json").toFile()
 
         // 1. Output to file
-        val (out1, _) = captureOutput {
-            ConvertCommand().parse(
-                listOf(
-                    jrxmlFile.absolutePath,
-                    "--output", jsonOutput.absolutePath,
-                    "--items-binding", "records"
+        val (out1, _) =
+            captureOutput {
+                ConvertCommand().parse(
+                    listOf(
+                        jrxmlFile.absolutePath,
+                        "--output",
+                        jsonOutput.absolutePath,
+                        "--items-binding",
+                        "records",
+                    ),
                 )
-            )
-        }
+            }
         assertTrue(jsonOutput.exists())
         assertTrue(out1.contains("Template converted successfully"))
 
         // 2. Output to stdout
-        val (out2, _) = captureOutput {
-            ConvertCommand().parse(
-                listOf(
-                    jrxmlFile.absolutePath,
-                    "--stdout",
-                    "--fail-on-unsupported",
-                    "--disable-table-inference"
+        val (out2, _) =
+            captureOutput {
+                ConvertCommand().parse(
+                    listOf(
+                        jrxmlFile.absolutePath,
+                        "--stdout",
+                        "--fail-on-unsupported",
+                        "--disable-table-inference",
+                    ),
                 )
-            )
-        }
+            }
         assertTrue(out2.contains("\"version\""))
 
         // 3. Invalid extension
@@ -373,8 +392,8 @@ class CliCommandsTest {
                     "--image-cache-size", "20",
                     "--no-image-cache",
                     "--strict",
-                    "--max-request-bytes", "1024"
-                )
+                    "--max-request-bytes", "1024",
+                ),
             )
         } finally {
             System.setIn(originalIn)

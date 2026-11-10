@@ -10,7 +10,6 @@ import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.RichTextElement
-import com.pdfgenerator.model.StaticTextElement
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

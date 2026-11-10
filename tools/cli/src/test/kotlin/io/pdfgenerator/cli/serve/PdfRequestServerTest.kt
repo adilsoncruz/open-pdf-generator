@@ -153,11 +153,12 @@ class PdfRequestServerTest {
         val dir = Files.createTempDirectory("serve-max")
         val path = writeTemplate(dir)
         var logMessage = ""
-        val s = PdfRequestServer(
-            generator = PDFGenerator(PDFGeneratorConfig()),
-            maxRequestBytes = 20,
-            log = { logMessage = it }
-        )
+        val s =
+            PdfRequestServer(
+                generator = PDFGenerator(PDFGeneratorConfig()),
+                maxRequestBytes = 20,
+                log = { logMessage = it },
+            )
         s.preload(listOf(path.toString()))
 
         val responses = serve(s, """{"id":1,"template":"$path","data":{}}""")
@@ -189,10 +190,11 @@ class PdfRequestServerTest {
         // Template missing required fields so generator.generateToStream throws
         Files.writeString(brokenTpl, """{"version":"1.0"}""")
         var logged = ""
-        val s = PdfRequestServer(
-            generator = PDFGenerator(PDFGeneratorConfig()),
-            log = { logged += it }
-        )
+        val s =
+            PdfRequestServer(
+                generator = PDFGenerator(PDFGeneratorConfig()),
+                log = { logged += it },
+            )
         val res = serve(s, """{"id":55,"template":"$brokenTpl","data":{}}""").single()
         assertFalse(res["ok"].asBoolean)
         assertTrue(logged.contains("failed template="))

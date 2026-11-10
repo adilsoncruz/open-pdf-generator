@@ -6,7 +6,6 @@ import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.TextElement
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -15,8 +14,8 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayInputStream
 import java.nio.file.Path
 
+@Suppress("LargeClass")
 class JasperTemplateConverterCoverageTest {
-
     @TempDir
     lateinit var tempDir: Path
 
@@ -375,7 +374,7 @@ class JasperTemplateConverterCoverageTest {
         org.junit.jupiter.api.assertThrows<JasperTemplateConversionException> {
             JasperTemplateConverter.fromString(
                 jrxmlUnsupported,
-                JasperConversionOptions(failOnUnsupportedElement = true)
+                JasperConversionOptions(failOnUnsupportedElement = true),
             )
         }
 
@@ -535,10 +534,11 @@ class JasperTemplateConverterCoverageTest {
         val parentFile = tempDir.resolve("parent_sub.jrxml").toFile()
         parentFile.writeText(parentJrxml)
 
-        val tpl = JasperTemplateConverter.fromFile(
-            parentFile.absolutePath,
-            JasperConversionOptions(baseDir = tempDir.toFile())
-        )
+        val tpl =
+            JasperTemplateConverter.fromFile(
+                parentFile.absolutePath,
+                JasperConversionOptions(baseDir = tempDir.toFile()),
+            )
         val container = tpl.bodyElements().filterIsInstance<ContainerElement>().first()
         assertTrue(container.elements.isNotEmpty())
 
@@ -546,10 +546,11 @@ class JasperTemplateConverterCoverageTest {
         val brokenFile = tempDir.resolve("broken.jrxml").toFile()
         brokenFile.writeText("invalid xml")
         val parentBrokenJrxml = parentJrxml.replace("child_sub.jasper", "broken.jrxml")
-        val tplBroken = JasperTemplateConverter.fromString(
-            parentBrokenJrxml,
-            JasperConversionOptions(baseDir = tempDir.toFile())
-        )
+        val tplBroken =
+            JasperTemplateConverter.fromString(
+                parentBrokenJrxml,
+                JasperConversionOptions(baseDir = tempDir.toFile()),
+            )
         val containerBroken = tplBroken.bodyElements().filterIsInstance<ContainerElement>().first()
         assertTrue(containerBroken.elements.isEmpty())
     }

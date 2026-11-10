@@ -11,7 +11,6 @@ import com.pdfgenerator.model.StaticTextElement
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.openpdf.text.PageSize
-import org.openpdf.text.Rectangle
 import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

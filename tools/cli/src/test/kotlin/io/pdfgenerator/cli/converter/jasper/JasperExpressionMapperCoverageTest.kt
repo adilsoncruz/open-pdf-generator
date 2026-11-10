@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class JasperExpressionMapperCoverageTest {
-
     @Test
     fun testNormalizeVar() {
         assertEquals("pageNumber", JasperExpressionMapper.normalizeVar("PAGE_NUMBER"))
