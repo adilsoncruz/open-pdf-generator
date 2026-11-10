@@ -32,12 +32,33 @@ class PageFlowOrchestrator(
         elements.forEach { element ->
             try {
                 if (shouldRenderElement(element, pageGroupIndex, data)) {
+                    val isContainerPageBreak = element is ContainerElement && element.pageBreakBefore == true
+                    if (isContainerPageBreak) {
+                        val shouldBreak = element.pageBreakCondition == null ||
+                            ConditionEvaluator.evaluate(element.pageBreakCondition, data, null)
+                        if (shouldBreak) {
+                            context.document.newPage()
+                            renderState.currentY = 0f
+                        }
+                    }
+
                     val isRelative = isRelativeFlow(element)
                     val effectiveY = calculateEffectiveY(element, isRelative, renderState.currentY)
 
+                    val usablePageHeight =
+                        context.document.pageSize.height - context.document.topMargin() - context.document.bottomMargin()
+                    val pageRelativeY =
+                        if (isContainerPageBreak) {
+                            0f
+                        } else if (usablePageHeight > 0f && element.y >= usablePageHeight) {
+                            element.y % usablePageHeight
+                        } else {
+                            element.y
+                        }
+
                     val renderContext =
                         if (isRelative) {
-                            context.copy(offsetY = context.bodyOffsetY + (effectiveY - element.y))
+                            context.copy(offsetY = context.bodyOffsetY + (effectiveY - pageRelativeY))
                         } else {
                             context
                         }

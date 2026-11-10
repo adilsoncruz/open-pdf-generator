@@ -33,7 +33,7 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
         if (element.pageBreakBefore == true) {
             val shouldBreak = element.pageBreakCondition == null ||
                 ConditionEvaluator.evaluate(element.pageBreakCondition, context.data, context.loopContext)
-            if (shouldBreak) {
+            if (shouldBreak && (context.renderState?.currentY ?: 0f) > 0f) {
                 context.document.newPage()
                 context.renderState?.currentY = 0f
             }
