@@ -166,6 +166,11 @@ export const restackBodyContainers = (elements: Element[], template?: Template):
   return elements.map((el) => {
     if (el.type !== 'container' && el.type !== 'page_break' && el.type !== 'spacer') return el
 
+    if (el.type === 'container' && el.pageBreakBefore && currentY > 0) {
+      const currentPageIndex = Math.floor((currentY - 0.1) / usableHeight)
+      currentY = (currentPageIndex + 1) * usableHeight
+    }
+
     const next = {
       ...el,
       x: 0,

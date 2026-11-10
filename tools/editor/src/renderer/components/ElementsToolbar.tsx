@@ -164,11 +164,15 @@ export default function ElementsToolbar() {
       case 'page_break':
         element = {
           ...baseElement,
+          type: 'container',
+          name: 'Container (Nova Página)',
           x: 0,
           width: '100%',
-          height: 20,
-          positionMode: 'RELATIVE',
-          relativeOffsetY: 0
+          height: 200,
+          pageBreakBefore: true,
+          heightMode: 'auto',
+          autoHeight: true,
+          elements: [],
         }
         break
       case 'spacer':

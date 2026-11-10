@@ -30,7 +30,7 @@ function normalizeElement(element: Element, location: ElementLocation, template:
         : 120
     const lastY = typeof last.y === 'number' ? last.y : 0
 
-    if (last.type === 'page_break' && location === 'body') {
+    if ((element.type === 'container' && element.pageBreakBefore && location === 'body') || (last.type === 'page_break' && location === 'body')) {
       const pageIndex = Math.floor((lastY + lastH - 0.1) / (sectionHeight || 1))
       nextY = (pageIndex + 1) * sectionHeight
     } else {

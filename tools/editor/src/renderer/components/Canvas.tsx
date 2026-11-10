@@ -104,7 +104,7 @@ export default function Canvas() {
         : 150
     const bottom = (el.y || 0) + h
     if (bottom > maxBodyBottom) maxBodyBottom = bottom
-    if (el.type === 'page_break') pageBreakCount++
+    if (el.type === 'page_break' || (el.type === 'container' && el.pageBreakBefore)) pageBreakCount++
   })
 
   const minPagesFromBreaks = pageBreakCount > 0 ? pageBreakCount + 1 : 1
