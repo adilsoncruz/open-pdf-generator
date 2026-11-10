@@ -8,6 +8,7 @@ O `ContainerElement` funciona como uma caixa delimitadora e um contexto de layou
 - ✅ **Largura e altura dinâmicas**: Suporta valores fixos (`400`), percentuais (`"100%"`) e `autoHeight`.
 - ✅ **Estilização**: Cor de fundo, bordas, raio dos cantos e padding via `style`.
 - ✅ **Renderização condicional**: Suporta `printCondition` para mostrar ou ocultar todo o container e seus filhos.
+- ✅ **Controle de quebra de página**: Suporta `pageBreakBefore: true` e `pageBreakCondition` opcional para iniciar o container em uma nova página.
 - ✅ **Cálculo de altura automática**: Se expande automaticamente com base no conteúdo interno quando `autoHeight: true`.
 
 ---
@@ -27,6 +28,8 @@ O `ContainerElement` funciona como uma caixa delimitadora e um contexto de layou
 | `elements` | array | ✅ | Lista de elementos filhos dentro do container |
 | `style` | object | ❌ | Estilo: `backgroundColor`, `borderColor`, `borderWidth`, `borderRadius` |
 | `printCondition` | string | ❌ | Expressão de condição para renderizar o container |
+| `pageBreakBefore` | boolean | ❌ | Quando `true`, força o container a iniciar em uma nova página (padrão: `false`) |
+| `pageBreakCondition` | string | ❌ | Expressão opcional para avaliar condicionalmente a quebra |
 | `positionMode` | string | ❌ | Modo de posição (`"absolute"` ou `"relative"`) |
 | `relativeOffsetY` | number | ❌ | Espaçamento quando posicionado abaixo do conteúdo de fluxo anterior |
 

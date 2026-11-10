@@ -17,7 +17,6 @@ Referencia completa de todos los elementos disponibles para las plantillas.
 | [RectangleElement](#rectangleelement) | Rectángulos y fondos | ❌ |
 | [LineElement](#lineelement) | Líneas y divisores | ❌ |
 | [SpacerElement](#spacerelement) | Espaciado vertical/horizontal en el layout | ❌ |
-| [PageBreakElement](#pagebreakelement) | Salto de página explícito del documento | ❌ |
 | [BarcodeElement](#barcodeelement) | Códigos QR y códigos de barras | ✅ |
 | [ConditionalElement](#conditionalelement) | Renderizado condicional | ✅ |
 | [LoopElement](#loopelement) | Repetición de elementos | ✅ |
@@ -439,11 +438,13 @@ Actúa como un contenedor de layout que agrupa elementos hijos, con estilos de f
 }
 ```
 
-| Propiedad | Tipo | Predeterminado | Descripción |
+| Propriedade | Tipo | Predeterminado | Descripción |
 |----------|------|---------|-------------|
 | `elements` | array | `[]` | Lista de elementos hijos anidados |
 | `autoHeight` | boolean | `true` | Ajusta automáticamente el alto del contenedor al contenido |
 | `heightMode` | string | `auto` | Modo de dimensionamiento del alto (`auto` o `fixed`) |
+| `pageBreakBefore` | boolean | `false` | Cuando es true, renderiza el contenedor en una página nueva |
+| `pageBreakCondition` | string | `null` | Expresión opcional para evaluar condicionalmente el salto |
 | `style` | object | - | Estilos (`backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`) |
 
 ---
@@ -528,21 +529,6 @@ Inserta un espacio vacío vertical u horizontal en layouts de flujo relativo.
 |----------|------|---------|-------------|
 | `height` | number | `0` | Alto del espaciado en puntos |
 | `width` | number \| string | `"100%"` | Ancho del espaciado en puntos o porcentaje |
-
----
-
-## PageBreakElement
-
-Fuerza un salto de página explícito.
-
-### Propiedades
-
-```json
-{
-  "type": "page_break",
-  "id": "break-1"
-}
-```
 
 ---
 
