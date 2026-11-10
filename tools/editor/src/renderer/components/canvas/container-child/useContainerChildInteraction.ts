@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useTemplateStore } from '../../../store/templateStore'
 import { useUIStore } from '../../../store/uiStore'
 import type { ContainerChildElementProps } from '../types'
@@ -95,6 +95,45 @@ export function useContainerChildInteraction({
     onSnapGuide,
   })
 
+  const [isEditingText, setIsEditingText] = useState(false)
+  const [editingValue, setEditingValue] = useState('')
+
+  const handleDoubleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    if (child.type === 'text') {
+      setEditingValue(child.dataBinding || '')
+      setIsEditingText(true)
+    } else if (child.type === 'static_text') {
+      setEditingValue(child.value || '')
+      setIsEditingText(true)
+    }
+  }, [child.type, child.dataBinding, child.value])
+
+  const handleTextEditBlur = useCallback(() => {
+    setIsEditingText(false)
+    if (child.type === 'text') {
+      if (editingValue !== (child.dataBinding || '')) {
+        updateContainerChildElement(containerId, child.id, { dataBinding: editingValue }, location)
+        saveSnapshot()
+      }
+    } else if (child.type === 'static_text') {
+      if (editingValue !== (child.value || '')) {
+        updateContainerChildElement(containerId, child.id, { value: editingValue }, location)
+        saveSnapshot()
+      }
+    }
+  }, [child.id, child.type, child.dataBinding, child.value, containerId, editingValue, location, saveSnapshot, updateContainerChildElement])
+
+  const handleTextEditKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      handleTextEditBlur()
+    } else if (e.key === 'Escape') {
+      setIsEditingText(false)
+      setEditingValue(child.type === 'text' ? (child.dataBinding || '') : (child.value || ''))
+    }
+  }, [child.type, child.dataBinding, child.value, handleTextEditBlur])
+
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault()
@@ -117,8 +156,14 @@ export function useContainerChildInteraction({
   return {
     isSelected,
     isDragging,
+    isEditingText,
+    editingValue,
+    setEditingValue,
     handleMouseDown,
     handleResizeMouseDown,
+    handleDoubleClick,
+    handleTextEditBlur,
+    handleTextEditKeyDown,
     handleContextMenu,
     resolveWidth,
     resolveHeight,

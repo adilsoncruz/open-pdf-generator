@@ -7,8 +7,14 @@ export function ContainerChildElement(props: ContainerChildElementProps) {
   const { child, effectiveX, effectiveY, effectiveWidth } = props
   const {
     isSelected,
+    isEditingText,
+    editingValue,
+    setEditingValue,
     handleMouseDown,
     handleResizeMouseDown,
+    handleDoubleClick,
+    handleTextEditBlur,
+    handleTextEditKeyDown,
     handleContextMenu,
     resolveWidth,
     resolveHeight,
@@ -33,13 +39,19 @@ export function ContainerChildElement(props: ContainerChildElementProps) {
           ? { height: child.height }
           : {}),
       }}
-      onMouseDown={handleMouseDown}
+      onMouseDown={isEditingText ? undefined : handleMouseDown}
       onContextMenu={handleContextMenu}
     >
       <ContainerChildRenderer
         {...props}
         resolveWidth={resolveWidth}
         resolveHeight={resolveHeight}
+        isEditingText={isEditingText}
+        editingValue={editingValue}
+        onDoubleClick={handleDoubleClick}
+        onTextChange={setEditingValue}
+        onTextBlur={handleTextEditBlur}
+        onTextKeyDown={handleTextEditKeyDown}
       />
       {isSelected && (
         <>

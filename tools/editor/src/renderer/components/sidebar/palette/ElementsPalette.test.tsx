@@ -51,7 +51,7 @@ describe('ElementsPalette', () => {
     expect(addElementSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'text',
-        value: 'Novo Texto',
+        dataBinding: 'field',
       }),
       'header'
     )

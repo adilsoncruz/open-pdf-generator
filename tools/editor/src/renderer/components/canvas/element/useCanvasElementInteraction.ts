@@ -116,7 +116,10 @@ export function useCanvasElementInteraction(props: CanvasElementProps) {
 
   const handleDoubleClick = (e: ReactMouseEvent<HTMLDivElement>) => {
     e.stopPropagation()
-    if (element.type === 'text' || element.type === 'static_text') {
+    if (element.type === 'text') {
+      setEditingValue(element.dataBinding || '')
+      setIsEditingText(true)
+    } else if (element.type === 'static_text') {
       setEditingValue(element.value || '')
       setIsEditingText(true)
     }
@@ -124,9 +127,16 @@ export function useCanvasElementInteraction(props: CanvasElementProps) {
 
   const handleTextEditBlur = () => {
     setIsEditingText(false)
-    if (editingValue !== (element.value || '')) {
-      onUpdate({ value: editingValue })
-      saveSnapshot()
+    if (element.type === 'text') {
+      if (editingValue !== (element.dataBinding || '')) {
+        onUpdate({ dataBinding: editingValue })
+        saveSnapshot()
+      }
+    } else if (element.type === 'static_text') {
+      if (editingValue !== (element.value || '')) {
+        onUpdate({ value: editingValue })
+        saveSnapshot()
+      }
     }
   }
 
@@ -136,7 +146,7 @@ export function useCanvasElementInteraction(props: CanvasElementProps) {
       handleTextEditBlur()
     } else if (e.key === 'Escape') {
       setIsEditingText(false)
-      setEditingValue(element.value || '')
+      setEditingValue(element.type === 'text' ? (element.dataBinding || '') : (element.value || ''))
     }
   }
 

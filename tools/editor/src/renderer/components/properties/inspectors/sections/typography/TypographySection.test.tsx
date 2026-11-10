@@ -305,6 +305,39 @@ describe('TypographySection and modular typography controls', () => {
       expect(onStyleUpdate).toHaveBeenCalledWith('marginRight', 6)
     })
 
+    it('does not render text-content-textarea for text element (dynamic text)', () => {
+      const onUpdate = vi.fn()
+      const onStyleUpdate = vi.fn()
+
+      render(
+        <TextSpacingAndContentControls
+          element={baseTextElement}
+          onUpdate={onUpdate}
+          onStyleUpdate={onStyleUpdate}
+        />
+      )
+
+      expect(screen.queryByTestId('text-content-textarea')).toBeNull()
+    })
+
+    it('renders text-content-textarea for static_text element', () => {
+      const onUpdate = vi.fn()
+      const onStyleUpdate = vi.fn()
+
+      render(
+        <TextSpacingAndContentControls
+          element={{ ...baseTextElement, type: 'static_text', value: 'Static Label' }}
+          onUpdate={onUpdate}
+          onStyleUpdate={onStyleUpdate}
+        />
+      )
+
+      const textarea = screen.getByTestId('text-content-textarea')
+      expect(textarea).toBeInTheDocument()
+      fireEvent.change(textarea, { target: { value: 'New Static' } })
+      expect(onUpdate).toHaveBeenCalledWith('value', 'New Static')
+    })
+
     it('updates text value and handles link URL for link elements', () => {
       const onUpdate = vi.fn()
       const onStyleUpdate = vi.fn()

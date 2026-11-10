@@ -193,4 +193,80 @@ describe('ContainerChildElement component', () => {
     expect(screen.getByText('teste 2')).toBeInTheDocument()
     expect(screen.getByText('teste 3')).toBeInTheDocument()
   })
+
+  it('allows inline editing of dataBinding on double click for container child text', () => {
+    const updateSpy = vi.spyOn(useTemplateStore.getState(), 'updateContainerChildElement')
+    const dynamicChild: Element = {
+      id: 'dyn-child-1',
+      type: 'text',
+      x: 10,
+      y: 10,
+      width: 100,
+      height: 30,
+      dataBinding: 'item.name',
+    }
+
+    render(
+      <ContainerChildElement
+        child={dynamicChild}
+        containerId="cont-1"
+        containerWidth={400}
+        containerHeight={200}
+      />
+    )
+
+    const textNode = screen.getByText('{item.name}')
+    fireEvent.doubleClick(textNode)
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('item.name')
+
+    fireEvent.change(textarea, { target: { value: 'item.sku' } })
+    fireEvent.blur(textarea)
+
+    expect(updateSpy).toHaveBeenCalledWith(
+      'cont-1',
+      'dyn-child-1',
+      { dataBinding: 'item.sku' },
+      'body'
+    )
+  })
+
+  it('allows inline editing of value on double click for container child static_text', () => {
+    const updateSpy = vi.spyOn(useTemplateStore.getState(), 'updateContainerChildElement')
+    const staticChild: Element = {
+      id: 'static-child-1',
+      type: 'static_text',
+      x: 10,
+      y: 10,
+      width: 100,
+      height: 30,
+      value: 'Static Child',
+    }
+
+    render(
+      <ContainerChildElement
+        child={staticChild}
+        containerId="cont-1"
+        containerWidth={400}
+        containerHeight={200}
+      />
+    )
+
+    const textNode = screen.getByText('Static Child')
+    fireEvent.doubleClick(textNode)
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('Static Child')
+
+    fireEvent.change(textarea, { target: { value: 'Updated Static' } })
+    fireEvent.blur(textarea)
+
+    expect(updateSpy).toHaveBeenCalledWith(
+      'cont-1',
+      'static-child-1',
+      { value: 'Updated Static' },
+      'body'
+    )
+  })
 })
