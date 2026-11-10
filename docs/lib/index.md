@@ -45,7 +45,7 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.adilsoncruz:open-pdf-generator:1.0.0")
+    implementation("io.github.adilsoncruz:open-pdf-generator:1.1.0")
 }
 ```
 
@@ -62,7 +62,7 @@ dependencies {
 <dependency>
     <groupId>io.github.adilsoncruz</groupId>
     <artifactId>open-pdf-generator</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 

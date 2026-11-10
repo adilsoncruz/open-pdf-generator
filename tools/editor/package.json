@@ -1,6 +1,6 @@
 {
   "name": "pdf-template-editor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Desktop app for creating and editing PDF templates",
   "main": "dist/main/index.js",
   "scripts": {
