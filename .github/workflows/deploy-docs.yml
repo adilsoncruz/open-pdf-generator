@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: docs/package-lock.json
 
@@ -47,7 +47,7 @@ jobs:
 
       - name: Build Web Editor Playground
         run: |
-          npm ci
+          npm ci --legacy-peer-deps
           npm run build:renderer
         working-directory: tools/editor
         env:
