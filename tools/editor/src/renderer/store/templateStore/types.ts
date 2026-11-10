@@ -15,6 +15,8 @@ export interface Element {
   height?: number | string
   heightMode?: 'auto' | 'fixed'
   autoHeight?: boolean
+  pageBreakBefore?: boolean
+  pageBreakCondition?: string | null
   style?: Record<string, any>  
   value?: string
   dataBinding?: string

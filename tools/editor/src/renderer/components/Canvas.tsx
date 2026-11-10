@@ -92,20 +92,21 @@ export default function Canvas() {
     pageSize.height - (margins.top || 0) - (margins.bottom || 0) - headerHeight - footerHeight
 
   let maxBodyBottom = 0
+  let pageBreakCount = 0
   template.page.forEach((el) => {
     const h =
       typeof el.height === 'number'
         ? el.height
-        : el.type === 'page_break'
-        ? 20
         : el.type === 'spacer'
         ? 50
         : 150
     const bottom = (el.y || 0) + h
     if (bottom > maxBodyBottom) maxBodyBottom = bottom
+    if (el.type === 'container' && el.pageBreakBefore) pageBreakCount++
   })
 
-  const numberOfPages = Math.max(1, Math.ceil(maxBodyBottom / (bodyUsableHeight || 1)))
+  const minPagesFromBreaks = pageBreakCount > 0 ? pageBreakCount + 1 : 1
+  const numberOfPages = Math.max(minPagesFromBreaks, Math.ceil(maxBodyBottom / (bodyUsableHeight || 1)))
   const totalCanvasHeight = pageSize.height + (numberOfPages - 1) * bodyUsableHeight
 
   const marginSnap = checkMarginSnap(template.page, pageSize, margins, bodyUsableHeight)

@@ -26,13 +26,6 @@ describe('resolveElementDimensions', () => {
     expect(dims.height).toBe(50)
   })
 
-  it('resolves page_break dimensions defaults', () => {
-    const el: Element = { id: '3', type: 'page_break', x: 0, y: 0 }
-    const dims = resolveElementDimensions(el, pageSize, margins)
-    expect(dims.width).toBe(535)
-    expect(dims.height).toBe(24)
-  })
-
   it('falls back to default dimensions if not defined', () => {
     const el: Element = { id: '4', type: 'text', x: 0, y: 0 }
     const dims = resolveElementDimensions(el, pageSize, margins)

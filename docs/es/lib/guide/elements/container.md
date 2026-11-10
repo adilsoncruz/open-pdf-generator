@@ -8,6 +8,7 @@ El `ContainerElement` actúa como una caja contenedora y contexto de layout rela
 - ✅ **Ancho y alto dinámicos**: soporta valores fijos (`400`), porcentajes (`"100%"`) y `autoHeight`.
 - ✅ **Estilos**: color de fondo, bordes, radio de las esquinas y padding a través de `style`.
 - ✅ **Renderizado condicional**: soporta `printCondition` para mostrar u ocultar todo el contenedor y sus hijos.
+- ✅ **Control de salto de página**: soporta `pageBreakBefore: true` y `pageBreakCondition` opcional para iniciar el contenedor en una página nueva.
 - ✅ **Cálculo de altura automático**: se expande automáticamente según su contenido interno cuando `autoHeight: true`.
 
 ---
@@ -27,6 +28,8 @@ El `ContainerElement` actúa como una caja contenedora y contexto de layout rela
 | `elements` | array | ✅ | Lista de elementos hijos dentro del contenedor |
 | `style` | object | ❌ | Estilos: `backgroundColor`, `borderColor`, `borderWidth`, `borderRadius` |
 | `printCondition` | string | ❌ | Expresión de condición para renderizar el contenedor |
+| `pageBreakBefore` | boolean | ❌ | Cuando es `true`, fuerza al contenedor a iniciar en una nueva página (predeterminado: `false`) |
+| `pageBreakCondition` | string | ❌ | Expresión opcional para evaluar condicionalmente el salto |
 | `positionMode` | string | ❌ | Modo de posición (`"absolute"` o `"relative"`) |
 | `relativeOffsetY` | number | ❌ | Espaciado cuando se coloca debajo del contenido de flujo anterior |
 

@@ -128,33 +128,6 @@ export function ContainerChildRenderer({
         </div>
       )
     }
-    case 'page_break': {
-      const pbWidth = resolveWidth(child.width || '100%')
-      return (
-        <div
-          style={{
-            width: pbWidth,
-            height: 20,
-            borderBottom: '2px dashed #9ca3af',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <span
-            style={{
-              background: 'white',
-              padding: '0 8px',
-              color: '#6b7280',
-              fontSize: '10px',
-              fontFamily: 'monospace',
-            }}
-          >
-            PAGE BREAK
-          </span>
-        </div>
-      )
-    }
     case 'spacer':
     case 'rectangle': {
       const rectWidth = resolveWidth(child.width)

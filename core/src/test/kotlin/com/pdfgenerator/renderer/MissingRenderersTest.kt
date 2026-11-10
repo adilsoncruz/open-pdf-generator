@@ -147,6 +147,51 @@ class MissingRenderersTest {
         }
 
         @Test
+        fun `should respect pageBreakBefore and pageBreakCondition on container`(
+            @TempDir tempDir: File,
+        ) {
+            val templateJson =
+                """
+                {
+                  "version": "1.0",
+                  "pageSettings": {
+                    "size": "A4",
+                    "orientation": "portrait",
+                    "margins": {"top": 30, "right": 30, "bottom": 30, "left": 30}
+                  },
+                  "pageElements": [
+                    {
+                      "type": "container",
+                      "id": "c1",
+                      "x": 0,
+                      "y": 0,
+                      "width": 200,
+                      "height": 50,
+                      "elements": [{ "type": "text", "id": "t1", "x": 0, "y": 0, "value": "Page 1" }]
+                    },
+                    {
+                      "type": "container",
+                      "id": "c2",
+                      "x": 0,
+                      "y": 0,
+                      "pageBreakBefore": true,
+                      "pageBreakCondition": "shouldBreak == true",
+                      "elements": [{ "type": "text", "id": "t2", "x": 0, "y": 0, "value": "Page 2" }]
+                    }
+                  ]
+                }
+                """.trimIndent()
+
+            val template = Template.fromString(templateJson)
+            val generator = PDFGenerator()
+            val outputFile = File(tempDir, "container-break.pdf")
+            generator.generate(template, mapOf("shouldBreak" to true), outputFile)
+
+            assertTrue(outputFile.exists())
+            assertTrue(outputFile.length() > 0)
+        }
+
+        @Test
         fun `should render container with auto height expanding based on children`(
             @TempDir tempDir: File,
         ) {

@@ -122,26 +122,31 @@ class HeaderFooterSnapshotTest {
                   "style": { "fontSize": 10, "color": "#334155", "lineHeight": 1.4 }
                 },
                 {
-                  "type": "pageBreak",
-                  "id": "break-1"
-                },
-                {
-                  "type": "text",
-                  "id": "p2-headline",
+                  "type": "container",
+                  "id": "break-1",
                   "x": 0,
-                  "y": 15,
-                  "value": "Section 2: Forensic Evidence & Log Reconciliation",
-                  "style": { "fontSize": 15, "fontWeight": "bold", "color": "#1e293b" }
-                },
-                {
-                  "type": "text",
-                  "id": "p2-desc",
-                  "x": 0,
-                  "y": 40,
-                  "width": 523,
-                  "multiline": true,
-                  "value": "Second page following explicit page break. Notice the footer dynamically updates to 'Page 2' via synthetic data-binding while preserving header branding.",
-                  "style": { "fontSize": 10, "color": "#334155", "lineHeight": 1.4 }
+                  "y": 0,
+                  "pageBreakBefore": true,
+                  "elements": [
+                    {
+                      "type": "text",
+                      "id": "p2-headline",
+                      "x": 0,
+                      "y": 15,
+                      "value": "Section 2: Forensic Evidence & Log Reconciliation",
+                      "style": { "fontSize": 15, "fontWeight": "bold", "color": "#1e293b" }
+                    },
+                    {
+                      "type": "text",
+                      "id": "p2-desc",
+                      "x": 0,
+                      "y": 40,
+                      "width": 523,
+                      "multiline": true,
+                      "value": "Second page following explicit page break. Notice the footer dynamically updates to 'Page 2' via synthetic data-binding while preserving header branding.",
+                      "style": { "fontSize": 10, "color": "#334155", "lineHeight": 1.4 }
+                    }
+                  ]
                 }
               ]
             }

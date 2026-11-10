@@ -57,7 +57,8 @@ export function useBodyFlowLayout(
             : typeof element.y === 'number'
             ? element.y
             : 0
-        const maxAllowed = Math.max(30, bodyUsableHeight - currentContainerY)
+        const yOnPage = bodyUsableHeight > 0 ? currentContainerY % bodyUsableHeight : 0
+        const maxAllowed = Math.max(30, bodyUsableHeight - yOnPage)
         const containerAutoHeight = Math.min(
           isContainerFixed
             ? containerBaseHeight

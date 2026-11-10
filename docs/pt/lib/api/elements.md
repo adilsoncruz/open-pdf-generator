@@ -17,7 +17,6 @@ Referência completa de todos os elementos disponíveis para templates.
 | [RectangleElement](#rectangleelement) | Retângulos e fundos | ❌ |
 | [LineElement](#lineelement) | Linhas e divisores | ❌ |
 | [SpacerElement](#spacerelement) | Espaçamento vertical/horizontal no layout | ❌ |
-| [PageBreakElement](#pagebreakelement) | Quebra de página explícita no documento | ❌ |
 | [BarcodeElement](#barcodeelement) | QR Code e códigos de barras | ✅ |
 | [ConditionalElement](#conditionalelement) | Renderização condicional | ✅ |
 | [LoopElement](#loopelement) | Repetição de elementos | ✅ |
@@ -444,6 +443,8 @@ Funciona como um contêiner de layout que agrupa elementos filhos com estilizaç
 | `elements` | array | `[]` | Lista de elementos filhos aninhados |
 | `autoHeight` | boolean | `true` | Ajusta automaticamente a altura do contêiner ao conteúdo |
 | `heightMode` | string | `auto` | Modo de dimensionamento da altura (`auto` ou `fixed`) |
+| `pageBreakBefore` | boolean | `false` | Quando true, renderiza o container em uma nova página |
+| `pageBreakCondition` | string | `null` | Expressão opcional para avaliar condicionalmente a quebra |
 | `style` | object | - | Estilização (`backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`) |
 
 ---
@@ -528,21 +529,6 @@ Insere espaço vertical ou horizontal vazio em layouts de fluxo relativo.
 |----------|------|---------|-------------|
 | `height` | number | `0` | Altura do espaçamento em pontos |
 | `width` | number \| string | `"100%"` | Largura do espaçamento em pontos ou porcentagem |
-
----
-
-## PageBreakElement
-
-Força uma quebra de página explícita.
-
-### Propriedades
-
-```json
-{
-  "type": "page_break",
-  "id": "break-1"
-}
-```
 
 ---
 

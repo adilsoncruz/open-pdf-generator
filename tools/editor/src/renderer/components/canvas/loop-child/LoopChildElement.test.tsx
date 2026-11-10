@@ -145,28 +145,6 @@ describe('LoopChildElement component', () => {
     expect(container.querySelector('svg')).toBeInTheDocument()
   })
 
-  it('renders page_break element', () => {
-    const pbChild: Element = {
-      id: 'lpb-1',
-      type: 'page_break',
-      x: 0,
-      y: 0,
-      width: '100%',
-    }
-
-    render(
-      <LoopChildElement
-        child={pbChild}
-        loopId="loop-1"
-        location="page"
-        loopWidth={500}
-        loopHeight={300}
-      />
-    )
-
-    expect(screen.getByText('PAGE BREAK')).toBeInTheDocument()
-  })
-
   it('renders rectangle / spacer and line elements', () => {
     const rectChild: Element = {
       id: 'lrect-1',

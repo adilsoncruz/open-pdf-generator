@@ -70,23 +70,70 @@ export function ContainerPropertiesSection({ element, onUpdate }: ContainerPrope
                     : 'Tamanho fixo. Impede a inserção de elementos que ultrapassem a altura do container.'}
                 </p>
               </div>
+
+              {/* Quebra de Página antes deste Container (estilo Jasper isStartNewPage) */}
+              <div className="pt-3 border-t border-slate-800/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-200 block">Iniciar em Nova Página</span>
+                    <span className="text-[10px] text-slate-400 block">Força quebra antes deste bloco</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!element.pageBreakBefore}
+                      onChange={(e) => onUpdate('pageBreakBefore', e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+
+                {element.pageBreakBefore && (
+                  <div className="p-2.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 space-y-2 mt-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-indigo-300">Condição de Quebra</label>
+                      <span className="text-[10px] text-indigo-400 font-mono">opcional</span>
+                    </div>
+                    <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 transition">
+                      <input
+                        type="text"
+                        value={element.pageBreakCondition || ''}
+                        onChange={(e) => onUpdate('pageBreakCondition', e.target.value || null)}
+                        placeholder="Ex: total > 1000 ou ${pageNumber == 1}"
+                        className="w-full bg-transparent text-slate-200 font-mono text-xs focus:outline-none"
+                      />
+                      {element.pageBreakCondition && (
+                        <button
+                          type="button"
+                          onClick={() => onUpdate('pageBreakCondition', null)}
+                          className="text-slate-500 hover:text-slate-300 text-xs ml-1"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      Se preenchido, a quebra de página só ocorrerá quando a condição for verdadeira.
+                    </p>
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {(['pageNumber == 1', 'total > 1000', 'items.length > 5'] as const).map((val) => (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => onUpdate('pageBreakCondition', val)}
+                          className="px-2 py-0.5 rounded bg-slate-900 hover:bg-indigo-600/30 border border-slate-700/60 text-[9px] font-mono text-slate-300 transition cursor-pointer"
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )
         })()}
-
-        {/* Page Break specific */}
-        {element.type === 'page_break' && (
-          <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 space-y-1.5">
-            <div className="text-xs font-semibold text-indigo-300 flex items-center gap-1.5">
-              <span>✂ Quebra de Página (Page Break)</span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Força o início de uma nova página no PDF a partir desta posição vertical. Use <strong className="text-slate-300">Print Condition</strong> abaixo para quebras de página condicionais.
-            </p>
-          </div>
-        )}
-
-
     </>
   )
 }
