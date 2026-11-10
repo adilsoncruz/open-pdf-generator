@@ -1,0 +1,32 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CanvasResizeHandles > renders all 8 handles when width and height are not full and matches snapshot 1`] = `
+<div>
+  <div
+    style="position: absolute; width: 8px; height: 8px; background-color: rgb(255, 255, 255); border: 1.5px solid rgb(59, 130, 246); border-radius: 50%; z-index: 20; box-shadow: 0 1px 3px rgba(0,0,0,0.2); top: -4px; left: -4px; cursor: nw-resize;"
+  />
+  <div
+    style="position: absolute; width: 8px; height: 8px; background-color: rgb(255, 255, 255); border: 1.5px solid rgb(59, 130, 246); border-radius: 50%; z-index: 20; box-shadow: 0 1px 3px rgba(0,0,0,0.2); top: -4px; right: -4px; cursor: ne-resize;"
+  />
+  <div
+    style="position: absolute; width: 8px; height: 8px; background-color: rgb(255, 255, 255); border: 1.5px solid rgb(59, 130, 246); border-radius: 50%; z-index: 20; box-shadow: 0 1px 3px rgba(0,0,0,0.2); bottom: -4px; left: -4px; cursor: sw-resize;"
+  />
+  <div
+    style="position: absolute; width: 8px; height: 8px; background-color: rgb(255, 255, 255); border: 1.5px solid rgb(59, 130, 246); border-radius: 50%; z-index: 20; box-shadow: 0 1px 3px rgba(0,0,0,0.2); bottom: -4px; right: -4px; cursor: se-resize;"
+  />
+  <div
+    style="position: absolute; width: 8px; height: 8px; background-color: rgb(255, 255, 255); border: 1.5px solid rgb(59, 130, 246); border-radius: 50%; z-index: 20; box-shadow: 0 1px 3px rgba(0,0,0,0.2); top: -4px; left: 46px; cursor: n-resize;"
+  />
+  <div
+    style="position: absolute; width: 8px; height: 8px; background-color: rgb(255, 255, 255); border: 1.5px solid rgb(59, 130, 246); border-radius: 50%; z-index: 20; box-shadow: 0 1px 3px rgba(0,0,0,0.2); bottom: -4px; left: 46px; cursor: s-resize;"
+  />
+  <div
+    style="position: absolute; width: 8px; height: 8px; background-color: rgb(255, 255, 255); border: 1.5px solid rgb(59, 130, 246); border-radius: 50%; z-index: 20; box-shadow: 0 1px 3px rgba(0,0,0,0.2); top: 36px; left: -4px; cursor: w-resize;"
+  />
+  <div
+    style="position: absolute; width: 8px; height: 8px; background-color: rgb(255, 255, 255); border: 1.5px solid rgb(59, 130, 246); border-radius: 50%; z-index: 20; box-shadow: 0 1px 3px rgba(0,0,0,0.2); top: 36px; right: -4px; cursor: e-resize;"
+  />
+</div>
+`;
+
+exports[`CanvasResizeHandles > renders no handles when both width and height are full 1`] = `<div />`;

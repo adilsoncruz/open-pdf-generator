@@ -133,4 +133,42 @@ describe('ListElementRenderer', () => {
     expect(el.style.width).toBe('250px')
     expect(el.style.height).toBe('80px')
   })
+
+  it('renders START, DASH, DIAMOND list styles, checklist with array items, and snapshot', () => {
+    const listStyles = ['START', 'DASH', 'DIAMOND'] as const
+
+    listStyles.forEach((style) => {
+      const { container } = render(
+        <ListElementRenderer
+          element={{
+            id: `list-${style}`,
+            type: 'list',
+            width: 200,
+            height: 50,
+            listStyle: style,
+            items: ['Item 1'],
+          }}
+          isSelected={false}
+          testData={null}
+        />
+      )
+      expect(container).toMatchSnapshot()
+    })
+
+    // Checklist with array items
+    const { container: clContainer } = render(
+      <ListElementRenderer
+        element={{
+          id: 'chk-arr',
+          type: 'check_list',
+          width: 250,
+          height: 60,
+          items: ['Task 1', 'Task 2'],
+        }}
+        isSelected={false}
+        testData={null}
+      />
+    )
+    expect(clContainer).toMatchSnapshot()
+  })
 })

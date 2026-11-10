@@ -136,8 +136,8 @@ export function ShapeElementRenderer({
     }
 
     const lineContainerDims = getLineContainerDimensions()
-    const lineElWidthRaw = element.width ?? (element.x2 ? element.x2 - element.x : 100)
-    const lineElHeightRaw = element.height ?? (element.y2 ? element.y2 - element.y : 0)
+    const lineElWidthRaw = element.width ?? (element.x2 ? element.x2 - (element.x ?? 0) : 100)
+    const lineElHeightRaw = element.height ?? (element.y2 ? element.y2 - (element.y ?? 0) : 0)
     const lineElWidth = resolveLineDimension(lineElWidthRaw, lineContainerDims.width, 100)
     const lineElHeight = resolveLineDimension(lineElHeightRaw, lineContainerDims.height, 0)
     const lineStrokeWidth = element.style?.strokeWidth || 1

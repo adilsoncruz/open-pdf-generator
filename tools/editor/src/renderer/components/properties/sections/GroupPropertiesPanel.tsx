@@ -109,7 +109,7 @@ export function GroupPropertiesPanel({
                   <div className="text-[9px] text-slate-500 uppercase">{element.type}</div>
                 </div>
                 <div className="text-[10px] text-slate-500 font-mono">
-                  {Math.round(element.x)},{Math.round(element.y)}
+                  {Math.round(element.x ?? 0)},{Math.round(element.y ?? 0)}
                 </div>
               </div>
             ))}

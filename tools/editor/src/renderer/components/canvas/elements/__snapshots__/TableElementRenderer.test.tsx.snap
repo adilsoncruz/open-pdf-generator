@@ -1,0 +1,183 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TableElementRenderer > renders empty placeholder when columns are empty 1`] = `
+<div>
+  <div
+    class="cursor-move select-none "
+    style="width: 400px; min-height: 50px;"
+  >
+    <div
+      class="w-full h-full min-h-[50px] flex items-center justify-center text-gray-400 text-xs p-4"
+    >
+      📊 Table without columns
+      <br />
+      <span
+        class="text-xs"
+      >
+        Select and add columns
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`TableElementRenderer > renders error boundary fallback when render throws 1`] = `
+<div>
+  <div
+    class="cursor-move select-none border-2 border-red-300 bg-red-50 text-red-700 text-xs p-2"
+    style="width: 400px; min-height: 50px;"
+  >
+    ⚠️ Erro na tabela 
+    table-err
+    <br />
+    Exploding columns
+  </div>
+</div>
+`;
+
+exports[`TableElementRenderer > renders table with columns, borders and sample rows 1`] = `
+<div>
+  <div
+    class="cursor-move select-none ring-2 ring-primary-500"
+    style="width: 400px; min-height: 50px;"
+  >
+    <table
+      class="w-full pointer-events-none border-collapse"
+      style="table-layout: fixed;"
+    >
+      <thead>
+        <tr
+          style="background-color: rgb(226, 232, 240); color: rgb(0, 0, 0); font-size: 12px;"
+        >
+          <th
+            class="font-semibold"
+            style="border-left-width: 1px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 0.5px; border-right-style: solid; border-right-color: rgb(204, 204, 204); border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; vertical-align: center;"
+          >
+            Col 1
+          </th>
+          <th
+            class="font-semibold"
+            style="border-left-width: 0.5px; border-left-style: solid; border-left-color: rgb(204, 204, 204); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(204, 204, 204); border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; vertical-align: center;"
+          >
+            Col 2
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          style="font-size: 11px; color: rgb(0, 0, 0);"
+        >
+          <td
+            style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(204, 204, 204); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; vertical-align: center;"
+          >
+            c1
+          </td>
+          <td
+            style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(204, 204, 204); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(204, 204, 204); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(204, 204, 204); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; vertical-align: center;"
+          >
+            c2
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
+
+exports[`TableElementRenderer > renders table with row header borders and cells/row cell borders 1`] = `
+<div>
+  <div
+    class="cursor-move select-none "
+    style="width: 400px; min-height: 50px;"
+  >
+    <table
+      class="w-full pointer-events-none border-collapse"
+      style="table-layout: fixed;"
+    >
+      <thead>
+        <tr
+          style="background-color: rgb(240, 240, 240); color: rgb(0, 0, 0); font-size: 12px;"
+        >
+          <th
+            class="font-semibold"
+            style="border-left-width: 0px; border-left-style: solid; border-left-color: rgb(153, 153, 153); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(153, 153, 153); border-top-width: 1px; border-top-style: solid; border-top-color: rgb(153, 153, 153); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(153, 153, 153); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; vertical-align: center;"
+          >
+            H1
+          </th>
+          <th
+            class="font-semibold"
+            style="border-left-width: 0px; border-left-style: solid; border-left-color: rgb(153, 153, 153); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(153, 153, 153); border-top-width: 1px; border-top-style: solid; border-top-color: rgb(153, 153, 153); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(153, 153, 153); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: justify; vertical-align: center;"
+          >
+            H2
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          style="font-size: 10px; color: rgb(0, 0, 0);"
+        >
+          <td
+            style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(153, 153, 153); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(153, 153, 153); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(153, 153, 153); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(153, 153, 153); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; vertical-align: top;"
+          >
+            f1
+          </td>
+          <td
+            style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(153, 153, 153); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(153, 153, 153); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(153, 153, 153); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(153, 153, 153); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: justify; vertical-align: bottom;"
+          >
+            f2
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
+
+exports[`TableElementRenderer > renders table with row header borders and cells/row cell borders 2`] = `
+<div>
+  <div
+    class="cursor-move select-none "
+    style="width: 400px; min-height: 50px;"
+  >
+    <table
+      class="w-full pointer-events-none border-collapse"
+      style="table-layout: fixed;"
+    >
+      <thead>
+        <tr
+          style="background-color: rgb(240, 240, 240); color: rgb(0, 0, 0); font-size: 12px;"
+        >
+          <th
+            class="font-semibold"
+            style="border-left-width: 0px; border-left-style: solid; border-left-color: rgb(153, 153, 153); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(153, 153, 153); border-top-width: 1px; border-top-style: solid; border-top-color: rgb(153, 153, 153); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(153, 153, 153); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; vertical-align: center;"
+          >
+            H1
+          </th>
+          <th
+            class="font-semibold"
+            style="border-left-width: 0px; border-left-style: solid; border-left-color: rgb(153, 153, 153); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(153, 153, 153); border-top-width: 1px; border-top-style: solid; border-top-color: rgb(153, 153, 153); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(153, 153, 153); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: justify; vertical-align: center;"
+          >
+            H2
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          style="font-size: 10px; color: rgb(0, 0, 0);"
+        >
+          <td
+            style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(153, 153, 153); border-right-width: 0.5px; border-right-style: solid; border-right-color: rgb(153, 153, 153); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(153, 153, 153); border-left-width: 1px; border-left-style: solid; border-left-color: rgb(153, 153, 153); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; vertical-align: top;"
+          >
+            f1
+          </td>
+          <td
+            style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(153, 153, 153); border-right-width: 1px; border-right-style: solid; border-right-color: rgb(153, 153, 153); border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(153, 153, 153); border-left-width: 0.5px; border-left-style: solid; border-left-color: rgb(153, 153, 153); width: 200px; min-width: 200px; max-width: 200px; padding: 5px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: justify; vertical-align: bottom;"
+          >
+            f2
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+`;

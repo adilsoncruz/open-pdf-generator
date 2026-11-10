@@ -7,8 +7,8 @@ export type ElementLocation = 'body' | 'header' | 'footer' | 'bodyBackground' | 
 export interface Element {
   type: string
   id: string
-  x: number
-  y: number
+  x?: number
+  y?: number
   groupId?: string 
   hidden?: boolean  
   width?: number | string

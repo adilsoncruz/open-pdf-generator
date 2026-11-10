@@ -93,9 +93,35 @@ describe('LayersPanel', () => {
     expect(screen.getByText('Summary Band')).toBeInTheDocument()
     expect(screen.getByText('Footer (40pt)')).toBeInTheDocument()
 
-    // Test clicking a band header calls onToggleLayer
+    // Test clicking each band header calls onToggleLayer
     fireEvent.click(screen.getByText('Header (50pt)'))
     expect(onToggleLayer).toHaveBeenCalledWith('header')
+
+    fireEvent.click(screen.getByText('Background Layer'))
+    expect(onToggleLayer).toHaveBeenCalledWith('bodyBackground')
+
+    fireEvent.click(screen.getByText('Summary Band'))
+    expect(onToggleLayer).toHaveBeenCalledWith('summary')
+
+    fireEvent.click(screen.getByText('Footer (40pt)'))
+    expect(onToggleLayer).toHaveBeenCalledWith('footer')
+  })
+
+  it('toggles and closes the Add Band dropdown and matches snapshot', () => {
+    const onToggleLayer = vi.fn()
+    const { container } = render(
+      <LayersPanel
+        currentSection="body"
+        openLayer="body"
+        onToggleLayer={onToggleLayer}
+      />
+    )
+    expect(container).toMatchSnapshot()
+
+    // Find and click the add band button
+    const addBandBtn = screen.getByTitle('Add')
+    fireEvent.click(addBandBtn)
+    expect(container).toMatchSnapshot()
   })
 
   it('renders elements in the open section including containers and loops', () => {

@@ -1,0 +1,646 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SchemaPanel > renders correctly with empty schema, hints and matches snapshot 1`] = `
+<div>
+  <div
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+  >
+    <div
+      class="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col text-slate-200 overflow-hidden"
+    >
+      <div
+        class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50"
+      >
+        <div
+          class="flex items-center gap-3"
+        >
+          <div
+            class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-mono text-xs font-bold"
+          >
+            { }
+          </div>
+          <div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <h2
+                class="text-base font-semibold text-slate-100"
+              >
+                Schema Validation
+              </h2>
+              <span
+                class="text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+              >
+                JSON Schema
+              </span>
+            </div>
+            <p
+              class="text-xs text-slate-400"
+            >
+              Define o contrato de dados do PDF. Não obrigatório no template.
+            </p>
+          </div>
+        </div>
+        <button
+          class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+          title="Fechar (Esc)"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M6 18L18 6M6 6l12 12"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="px-6 py-3 border-b border-slate-800 bg-slate-950/20 flex items-center justify-between gap-2 flex-wrap"
+      >
+        <div
+          class="flex items-center gap-2 flex-wrap"
+        >
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+            disabled=""
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+              />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
+            Formatar
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+            title="Gera um JSON Schema baseado nos dados de teste atuais"
+          >
+            <span
+              class="font-mono text-xs"
+            >
+              ⚡
+            </span>
+            Inferir dos Dados
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+            disabled=""
+            title="Gera dados de teste compatíveis com este Schema e atualiza o Test Data"
+          >
+            <span
+              class="font-mono text-xs"
+            >
+              ⚡
+            </span>
+            Gerar Dados de Teste
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+            title="Carrega exemplo de JSON Schema"
+          >
+            Exemplo
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                cx="11"
+                cy="11"
+                r="8"
+              />
+              <line
+                x1="21"
+                x2="16.65"
+                y1="21"
+                y2="16.65"
+              />
+            </svg>
+            Buscar (Ctrl+F)
+          </button>
+        </div>
+        <div
+          class="flex items-center gap-2"
+        >
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-700"
+          >
+            Salvar no Template
+          </button>
+        </div>
+      </div>
+      <div
+        class="p-6 flex-1 flex flex-col min-h-0 overflow-hidden gap-4"
+      >
+        <div
+          class="flex items-center gap-3 text-xs flex-wrap"
+        >
+          <div
+            class="flex items-center gap-1.5 px-2.5 py-1 rounded-md border font-medium bg-slate-800/60 border-slate-700 text-slate-400"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-slate-400"
+            />
+            Nenhum schema definido (opcional)
+          </div>
+        </div>
+        <div
+          class="relative flex flex-1 min-h-[220px] rounded-lg border overflow-hidden bg-slate-950 font-mono text-xs border-slate-800 focus-within:border-indigo-500/80"
+        >
+          <div
+            class="flex-shrink-0 bg-slate-900/80 border-r border-slate-800 text-slate-500 text-right select-none py-2 px-2.5 overflow-hidden"
+            style="min-width: 3.2rem;"
+          >
+            <div
+              class="leading-5 "
+            >
+              1
+            </div>
+            <div
+              class="leading-5 "
+            >
+              2
+            </div>
+            <div
+              class="leading-5 "
+            >
+              3
+            </div>
+            <div
+              class="leading-5 "
+            >
+              4
+            </div>
+            <div
+              class="leading-5 "
+            >
+              5
+            </div>
+            <div
+              class="leading-5 "
+            >
+              6
+            </div>
+            <div
+              class="leading-5 "
+            >
+              7
+            </div>
+            <div
+              class="leading-5 "
+            >
+              8
+            </div>
+            <div
+              class="leading-5 "
+            >
+              9
+            </div>
+            <div
+              class="leading-5 "
+            >
+              10
+            </div>
+            <div
+              class="leading-5 "
+            >
+              11
+            </div>
+            <div
+              class="leading-5 "
+            >
+              12
+            </div>
+            <div
+              class="leading-5 "
+            >
+              13
+            </div>
+            <div
+              class="leading-5 "
+            >
+              14
+            </div>
+            <div
+              class="leading-5 "
+            >
+              15
+            </div>
+            <div
+              class="leading-5 "
+            >
+              16
+            </div>
+            <div
+              class="leading-5 "
+            >
+              17
+            </div>
+            <div
+              class="leading-5 "
+            >
+              18
+            </div>
+          </div>
+          <textarea
+            class="flex-1 bg-transparent text-slate-200 p-2 leading-5 resize-none focus:outline-none whitespace-pre overflow-auto font-mono selection:bg-indigo-500/30"
+            placeholder="Cole ou edite seu JSON Schema aqui (ex: { "type": "object", ... })"
+            spellcheck="false"
+          />
+        </div>
+      </div>
+      <div
+        class="px-6 py-3 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between text-xs text-slate-400"
+      >
+        <div>
+          Dica: Ao gerar PDF ou Preview, os dados serão validados contra este schema.
+        </div>
+        <button
+          class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+        >
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SchemaPanel > validates testData against schema and reports specific errors and matches snapshot 1`] = `
+<div>
+  <div
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+  >
+    <div
+      class="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col text-slate-200 overflow-hidden"
+    >
+      <div
+        class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50"
+      >
+        <div
+          class="flex items-center gap-3"
+        >
+          <div
+            class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-mono text-xs font-bold"
+          >
+            { }
+          </div>
+          <div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <h2
+                class="text-base font-semibold text-slate-100"
+              >
+                Schema Validation
+              </h2>
+              <span
+                class="text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+              >
+                JSON Schema
+              </span>
+              <span
+                class="text-[10px] font-medium px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+              >
+                Ativo no Template
+              </span>
+            </div>
+            <p
+              class="text-xs text-slate-400"
+            >
+              Define o contrato de dados do PDF. Não obrigatório no template.
+            </p>
+          </div>
+        </div>
+        <button
+          class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+          title="Fechar (Esc)"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M6 18L18 6M6 6l12 12"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="px-6 py-3 border-b border-slate-800 bg-slate-950/20 flex items-center justify-between gap-2 flex-wrap"
+      >
+        <div
+          class="flex items-center gap-2 flex-wrap"
+        >
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+              />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
+            Formatar
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+            title="Gera um JSON Schema baseado nos dados de teste atuais"
+          >
+            <span
+              class="font-mono text-xs"
+            >
+              ⚡
+            </span>
+            Inferir dos Dados
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+            title="Gera dados de teste compatíveis com este Schema e atualiza o Test Data"
+          >
+            <span
+              class="font-mono text-xs"
+            >
+              ⚡
+            </span>
+            Gerar Dados de Teste
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+            title="Carrega exemplo de JSON Schema"
+          >
+            Exemplo
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                cx="11"
+                cy="11"
+                r="8"
+              />
+              <line
+                x1="21"
+                x2="16.65"
+                y1="21"
+                y2="16.65"
+              />
+            </svg>
+            Buscar (Ctrl+F)
+          </button>
+        </div>
+        <div
+          class="flex items-center gap-2"
+        >
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700 active:bg-red-800 px-2 py-1 text-xs"
+          >
+            Remover Schema
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-700"
+          >
+            Salvar no Template
+          </button>
+        </div>
+      </div>
+      <div
+        class="p-6 flex-1 flex flex-col min-h-0 overflow-hidden gap-4"
+      >
+        <div
+          class="flex items-center gap-3 text-xs flex-wrap"
+        >
+          <div
+            class="flex items-center gap-1.5 px-2.5 py-1 rounded-md border font-medium bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-emerald-400"
+            />
+            Schema Sintaticamente Válido
+          </div>
+          <div
+            class="flex items-center gap-1.5 px-2.5 py-1 rounded-md border font-medium bg-amber-500/10 border-amber-500/30 text-amber-400"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-amber-400"
+            />
+            Dados de Teste: 1 violação(ões)
+          </div>
+        </div>
+        <div
+          class="relative flex flex-1 min-h-[220px] rounded-lg border overflow-hidden bg-slate-950 font-mono text-xs border-slate-800 focus-within:border-indigo-500/80"
+        >
+          <div
+            class="flex-shrink-0 bg-slate-900/80 border-r border-slate-800 text-slate-500 text-right select-none py-2 px-2.5 overflow-hidden"
+            style="min-width: 3.2rem;"
+          >
+            <div
+              class="leading-5 "
+            >
+              1
+            </div>
+            <div
+              class="leading-5 "
+            >
+              2
+            </div>
+            <div
+              class="leading-5 "
+            >
+              3
+            </div>
+            <div
+              class="leading-5 "
+            >
+              4
+            </div>
+            <div
+              class="leading-5 "
+            >
+              5
+            </div>
+            <div
+              class="leading-5 "
+            >
+              6
+            </div>
+            <div
+              class="leading-5 "
+            >
+              7
+            </div>
+            <div
+              class="leading-5 "
+            >
+              8
+            </div>
+            <div
+              class="leading-5 "
+            >
+              9
+            </div>
+            <div
+              class="leading-5 "
+            >
+              10
+            </div>
+            <div
+              class="leading-5 "
+            >
+              11
+            </div>
+            <div
+              class="leading-5 "
+            >
+              12
+            </div>
+            <div
+              class="leading-5 "
+            >
+              13
+            </div>
+            <div
+              class="leading-5 "
+            >
+              14
+            </div>
+            <div
+              class="leading-5 "
+            >
+              15
+            </div>
+            <div
+              class="leading-5 "
+            >
+              16
+            </div>
+            <div
+              class="leading-5 "
+            >
+              17
+            </div>
+            <div
+              class="leading-5 "
+            >
+              18
+            </div>
+          </div>
+          <textarea
+            class="flex-1 bg-transparent text-slate-200 p-2 leading-5 resize-none focus:outline-none whitespace-pre overflow-auto font-mono selection:bg-indigo-500/30"
+            placeholder="Cole ou edite seu JSON Schema aqui (ex: { "type": "object", ... })"
+            spellcheck="false"
+          >
+            {
+  "type": "object",
+  "properties": {
+    "requiredField": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "requiredField"
+  ]
+}
+          </textarea>
+        </div>
+        <div
+          class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-200 flex flex-col gap-1.5 max-h-36 overflow-auto shrink-0"
+        >
+          <div
+            class="font-semibold text-amber-300 flex items-center gap-1.5"
+          >
+            <span>
+              ⚠️ Os dados de teste violam este Schema:
+            </span>
+          </div>
+          <ul
+            class="space-y-1 pl-4 list-disc text-amber-200/90 font-mono"
+          >
+            <li>
+              <span
+                class="text-amber-400 font-semibold"
+              >
+                $
+                :
+              </span>
+               
+              <span>
+                must have required property 'requiredField'
+              </span>
+               
+              <span
+                class="text-slate-400 text-[11px]"
+              >
+                (
+                required
+                )
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="px-6 py-3 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between text-xs text-slate-400"
+      >
+        <div>
+          Dica: Ao gerar PDF ou Preview, os dados serão validados contra este schema.
+        </div>
+        <button
+          class="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed theme-bg-tertiary theme-text hover:opacity-80 border theme-border px-2 py-1 text-xs"
+        >
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;

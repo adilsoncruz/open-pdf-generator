@@ -1,0 +1,89 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ContainerChildLoopRenderer > renders empty loop with placeholder and snapshot 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative"
+    style="width: 300px; height: 80px; background-color: transparent; border-width: 0px; border-style: none; border-color: rgb(139, 92, 246); border-radius: 4px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute inset-0 flex items-center justify-center"
+      >
+        <div
+          class="text-center p-2 border border-dashed border-purple-200 rounded bg-purple-50/50"
+        >
+          <div
+            class="text-purple-400 text-[9px] font-medium"
+          >
+            Add elements
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ContainerChildLoopRenderer > renders loop child inside container with children 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative"
+    style="width: 400px; height: 120px; background-color: rgb(255, 255, 255); border-width: 1px; border-style: dashed; border-color: rgb(139, 92, 246); border-radius: 4px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute cursor-move "
+        style="left: 0px; top: 0px; width: 60px; height: 20px;"
+      >
+        <div
+          style="font-size: 10px; font-family: Helvetica; color: rgb(0, 0, 0); font-weight: normal; text-decoration: none; width: 60px; height: 20px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          title="Double-click to edit"
+        >
+          Child item
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ContainerChildLoopRenderer > renders nested relative loop children and computes coordinates 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative"
+    style="width: 400px; height: 200px; background-color: transparent; border-width: 1px; border-style: dashed; border-color: rgb(139, 92, 246); border-radius: 4px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute cursor-move "
+        style="left: 10px; top: 5px; width: 150px; height: 25px;"
+      >
+        <div
+          style="font-size: 10px; font-family: Helvetica; color: rgb(0, 0, 0); font-weight: normal; text-decoration: none; width: 150px; height: 25px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          title="Double-click to edit"
+        >
+          campo
+        </div>
+      </div>
+      <div
+        class="absolute cursor-move "
+        style="left: 10px; top: 40px; width: 150px; height: 25px;"
+      >
+        <div
+          style="font-size: 10px; font-family: Helvetica; color: rgb(0, 0, 0); font-weight: normal; text-decoration: none; width: 150px; height: 25px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          title="Double-click to edit"
+        >
+          campo
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
