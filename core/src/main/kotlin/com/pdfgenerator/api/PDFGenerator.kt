@@ -145,7 +145,7 @@ class PDFGenerator(
         outputFile: File,
     ) = generate(getOrLoadTemplate(templatePath), parseDataJson(dataJson), outputFile)
 
-    private inline fun <T> runCatchingJson(
+    private fun <T> runCatchingJson(
         templatePath: String? = null,
         action: () -> T,
     ): T =
