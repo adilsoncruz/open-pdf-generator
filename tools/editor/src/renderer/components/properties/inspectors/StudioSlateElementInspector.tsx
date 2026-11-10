@@ -10,7 +10,6 @@ import { ContainerPropertiesSection } from './sections/ContainerPropertiesSectio
 import { ListPropertiesSection } from './sections/ListPropertiesSection'
 import { AppearanceSection } from './sections/AppearanceSection'
 import { DataBindingSection } from './sections/DataBindingSection'
-import { PageBreakSection } from './sections/PageBreakSection'
 
 export function StudioSlateElementInspector(props: ElementInspectorProps) {
   const { t } = useTranslation()
@@ -213,15 +212,8 @@ export function StudioSlateElementInspector(props: ElementInspectorProps) {
           </div>
         )}
 
-        {/* Page Break specific */}
-        {element.type === 'page_break' && (
-          <PageBreakSection element={element} onUpdate={onUpdate} />
-        )}
-
-        {/* 2. Transform Section (Não exibido para Page Break) */}
-        {element.type !== 'page_break' && (
-          <TransformSection element={element} onUpdate={onUpdate} />
-        )}
+        {/* 2. Transform Section */}
+        <TransformSection element={element} onUpdate={onUpdate} />
 
         {/* 3. Typography Section */}
         {(element.type === 'text' ||
@@ -255,15 +247,11 @@ export function StudioSlateElementInspector(props: ElementInspectorProps) {
           />
         )}
 
-        {/* 6. Appearance Section (Não exibido para Page Break) */}
-        {element.type !== 'page_break' && (
-          <AppearanceSection element={element} onStyleUpdate={onStyleUpdate} />
-        )}
+        {/* 6. Appearance Section */}
+        <AppearanceSection element={element} onStyleUpdate={onStyleUpdate} />
 
-        {/* 7. Data Binding & Print Condition Section (Não exibido para Page Break pois já possui seção dedicada) */}
-        {element.type !== 'page_break' && (
-          <DataBindingSection element={element} onUpdate={onUpdate} />
-        )}
+        {/* 7. Data Binding & Print Condition Section */}
+        <DataBindingSection element={element} onUpdate={onUpdate} />
 
         {/* 8. Delete Action Button */}
         <div className="pt-2 border-t border-slate-800 space-y-1.5">

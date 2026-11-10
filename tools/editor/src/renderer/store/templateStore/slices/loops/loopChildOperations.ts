@@ -30,9 +30,6 @@ export const createLoopChildOperations = (
       const historyState = saveToHistory(state, state.template)
 
       const addToLoop = (elements: Element[]): Element[] => {
-        if (element.type === 'page_break') {
-          return elements // silently ignore
-        }
         return elements.map((el) => {
           if (el.id === loopId && isLoopContainer(el)) {
             return {

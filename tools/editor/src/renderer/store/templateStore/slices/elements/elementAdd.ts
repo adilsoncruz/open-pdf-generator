@@ -8,13 +8,13 @@ export interface ElementAddSlice {
 }
 
 function normalizeElement(element: Element, location: ElementLocation, template: any): Element {
-  if (element.type !== 'container' && element.type !== 'page_break' && element.type !== 'spacer') {
+  if (element.type !== 'container' && element.type !== 'spacer') {
     return { ...element }
   }
 
   const sectionHeight = getSectionHeight(template, location)
   const topElements = getSectionElements(template, location).filter(
-    (el) => el.type === 'container' || el.type === 'page_break' || el.type === 'spacer'
+    (el) => el.type === 'container' || el.type === 'spacer'
   )
   let nextY = 0
 
@@ -23,14 +23,12 @@ function normalizeElement(element: Element, location: ElementLocation, template:
     const lastH =
       typeof last.height === 'number'
         ? last.height
-        : last.type === 'page_break'
-        ? 20
         : last.type === 'spacer'
         ? 50
         : 120
     const lastY = typeof last.y === 'number' ? last.y : 0
 
-    if ((element.type === 'container' && element.pageBreakBefore && location === 'body') || (last.type === 'page_break' && location === 'body')) {
+    if (element.type === 'container' && element.pageBreakBefore && location === 'body') {
       const pageIndex = Math.floor((lastY + lastH - 0.1) / (sectionHeight || 1))
       nextY = (pageIndex + 1) * sectionHeight
     } else {
@@ -42,7 +40,7 @@ function normalizeElement(element: Element, location: ElementLocation, template:
 
   const yOnPage = location === 'body' && sectionHeight > 0 ? nextY % sectionHeight : nextY
   const remainingHeight = Math.max(30, sectionHeight - yOnPage)
-  const defaultHeight = element.type === 'page_break' ? 20 : element.type === 'spacer' ? 50 : 120
+  const defaultHeight = element.type === 'spacer' ? 50 : 120
   const height = Math.min(typeof element.height === 'number' ? element.height : defaultHeight, remainingHeight)
 
   return { ...element, x: 0, y: nextY, width: '100%', height }
@@ -106,11 +104,6 @@ function findTargetContainer(elements: Element[], selectedId?: string, parentId?
       const selectedEl = elements[selectedIdx]
       if (selectedEl.type === 'container') {
         return selectedEl
-      }
-      if (selectedEl.type === 'page_break') {
-        const nextContainer = elements.slice(selectedIdx + 1).find((el) => el.type === 'container')
-        if (nextContainer) return nextContainer
-        return null
       }
     }
   }
@@ -196,7 +189,7 @@ function insertIntoContainer(
     deltaH > 0 &&
     elements.some((item, idx) => {
       if (idx <= targetIdx) return false
-      const hasPageBreakBetween = elements.slice(targetIdx + 1, idx + 1).some((e) => e.type === 'page_break')
+      const hasPageBreakBetween = elements.slice(targetIdx + 1, idx + 1).some((e) => e.type === 'container' && e.pageBreakBefore)
       if (hasPageBreakBetween) return false
       const itemBottom =
         (typeof item.y === 'number' ? item.y : 0) + deltaH + (typeof item.height === 'number' ? item.height : 30)
@@ -231,28 +224,7 @@ export const createElementAdd = (
 
       let res: { newElements: Element[]; newSelectedId: string; newSelectedChildId: string | null; isTargetLoop: boolean }
 
-      if (normalizedElement.type === 'page_break') {
-        const pageIndex = Math.floor(((normalizedElement.y || 0) + 20 - 0.1) / (sectionHeight || 1))
-        const nextPageY = (pageIndex + 1) * sectionHeight
-        const nextContainer: Element = {
-          type: 'container',
-          id: `container-page-${pageIndex + 2}-${Date.now()}`,
-          name: `Container Página ${pageIndex + 2}`,
-          x: 0,
-          y: nextPageY,
-          width: '100%',
-          height: 200,
-          heightMode: 'auto',
-          autoHeight: true,
-          elements: [],
-        }
-        res = {
-          newElements: [...sectionElements, normalizedElement, nextContainer],
-          newSelectedId: normalizedElement.id,
-          newSelectedChildId: null,
-          isTargetLoop: false,
-        }
-      } else if (normalizedElement.type === 'container' || normalizedElement.type === 'spacer') {
+      if (normalizedElement.type === 'container' || normalizedElement.type === 'spacer') {
         res = { newElements: [...sectionElements, normalizedElement], newSelectedId: normalizedElement.id, newSelectedChildId: null, isTargetLoop: false }
       } else {
         const loop = findTargetLoop(sectionElements, state.selectedLoopParentId, state.selectedElementIds[0])

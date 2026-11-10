@@ -9,7 +9,6 @@ import com.pdfgenerator.adapter.openpdf.LineRenderer
 import com.pdfgenerator.adapter.openpdf.LinkRenderer
 import com.pdfgenerator.adapter.openpdf.ListRenderer
 import com.pdfgenerator.adapter.openpdf.LoopRenderer
-import com.pdfgenerator.adapter.openpdf.PageBreakRenderer
 import com.pdfgenerator.adapter.openpdf.RectangleRenderer
 import com.pdfgenerator.adapter.openpdf.RichTextRenderer
 import com.pdfgenerator.adapter.openpdf.SpacerRenderer
@@ -27,7 +26,6 @@ import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.ListElement
 import com.pdfgenerator.model.LoopElement
-import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.RichTextElement
 import com.pdfgenerator.model.SpacerElement
@@ -71,7 +69,6 @@ class RenderEngine(private val config: PDFGeneratorConfig) {
             ListElement::class to listRenderer,
             CheckListElement::class to checkListRenderer,
             ContainerElement::class to containerRenderer,
-            PageBreakElement::class to PageBreakRenderer,
             SpacerElement::class to spacerRenderer,
             LinkElement::class to linkRenderer,
         )

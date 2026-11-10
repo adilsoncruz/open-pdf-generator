@@ -97,14 +97,12 @@ export default function Canvas() {
     const h =
       typeof el.height === 'number'
         ? el.height
-        : el.type === 'page_break'
-        ? 20
         : el.type === 'spacer'
         ? 50
         : 150
     const bottom = (el.y || 0) + h
     if (bottom > maxBodyBottom) maxBodyBottom = bottom
-    if (el.type === 'page_break' || (el.type === 'container' && el.pageBreakBefore)) pageBreakCount++
+    if (el.type === 'container' && el.pageBreakBefore) pageBreakCount++
   })
 
   const minPagesFromBreaks = pageBreakCount > 0 ? pageBreakCount + 1 : 1

@@ -7,7 +7,6 @@ import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.ElementDeserializer
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.Margins
-import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.PageSettings
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
@@ -155,11 +154,9 @@ class PageFlowOrchestratorTest {
     @Test
     fun `test shouldAutoPageBreak`() {
         val elem = TextElement(id = "t1", x = 0f, y = 0f)
-        val pb = PageBreakElement(id = "pb")
 
         assertFalse(orchestrator.shouldAutoPageBreak(elem, 100f, 50f, null))
         assertFalse(orchestrator.shouldAutoPageBreak(elem, 100f, 50f, 0f))
-        assertFalse(orchestrator.shouldAutoPageBreak(pb, 850f, 0f, 800f))
 
         // Within container bounds
         assertFalse(orchestrator.shouldAutoPageBreak(elem, 500f, 100f, 800f))

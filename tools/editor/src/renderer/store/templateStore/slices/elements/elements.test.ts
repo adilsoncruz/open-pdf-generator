@@ -354,56 +354,56 @@ describe('elements modular slice', () => {
     })
   })
 
-  describe('multi-page and pageBreak element additions', () => {
-    it('allows adding and sizing a container after page_break on page 2', () => {
+  describe('multi-page container pageBreakBefore additions', () => {
+    it('positions container on page 2 when pageBreakBefore is set', () => {
       const { addElement } = useTemplateStore.getState()
 
-      // Add page_break (auto-creates next page container)
-      addElement({ type: 'page_break', id: 'pb1', x: 0, y: 0 }, 'body')
+      addElement(
+        {
+          type: 'container',
+          id: 'c2',
+          name: 'Page 2 Container',
+          x: 0,
+          y: 0,
+          pageBreakBefore: true,
+          elements: [],
+        },
+        'body'
+      )
 
       const page = useTemplateStore.getState().template.page
-      const c2 = page.find((el) => el.id !== 'c1' && el.type === 'container')
+      const c2 = page.find((el) => el.id === 'c2')
       expect(c2).toBeDefined()
       // Section height for A4 with margins 30/30 is 842 - 60 = 782
       expect(c2!.y).toBe(782)
-      // Height should be normal default container height (200), not crushed to 30
-      expect(c2!.height).toBe(200)
+      expect(c2!.height).toBe(120)
     })
 
-    it('allows adding child elements to container on page 2 after page_break', () => {
+    it('allows adding child elements to container on page 2 with pageBreakBefore', () => {
       const { addElement } = useTemplateStore.getState()
 
-      addElement({ type: 'page_break', id: 'pb1', x: 0, y: 0 }, 'body')
-      const pageBefore = useTemplateStore.getState().template.page
-      const c2 = pageBefore.find((el) => el.id !== 'c1' && el.type === 'container')
-      expect(c2).toBeDefined()
+      addElement(
+        {
+          type: 'container',
+          id: 'c2',
+          name: 'Page 2 Container',
+          x: 0,
+          y: 0,
+          pageBreakBefore: true,
+          elements: [],
+        },
+        'body'
+      )
 
-      useTemplateStore.setState({ selectedElementIds: [c2!.id] })
+      useTemplateStore.setState({ selectedElementIds: ['c2'] })
       addElement(
         { type: 'text', id: 't-page2', x: 20, y: 20, width: 200, height: 30, value: 'Page 2 Text' },
         'body'
       )
 
-      const pageAfter = useTemplateStore.getState().template.page
-      const c2After = pageAfter.find((el) => el.id === c2!.id)
-      expect(c2After?.elements?.some((el) => el.id === 't-page2')).toBe(true)
-    })
-
-    it('auto-creates container on next page when adding element with page_break selected', () => {
-      const { addElement } = useTemplateStore.getState()
-
-      addElement({ type: 'page_break', id: 'pb1', x: 0, y: 0 }, 'body')
-      useTemplateStore.setState({ selectedElementIds: ['pb1'] })
-
-      addElement(
-        { type: 'text', id: 't-after-pb', x: 10, y: 10, width: 150, height: 25, value: 'Hello Page 2' },
-        'body'
-      )
-
       const page = useTemplateStore.getState().template.page
-      const containersOnPage2 = page.filter((el) => el.id !== 'c1' && el.type === 'container')
-      expect(containersOnPage2.length).toBeGreaterThan(0)
-      expect(containersOnPage2.some((c) => c.elements?.some((el) => el.id === 't-after-pb'))).toBe(true)
+      const c2 = page.find((el) => el.id === 'c2')
+      expect(c2?.elements?.some((el) => el.id === 't-page2')).toBe(true)
     })
   })
 })

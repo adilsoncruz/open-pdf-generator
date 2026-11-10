@@ -6,7 +6,6 @@ import com.pdfgenerator.model.ContainerElement
 import com.pdfgenerator.model.Element
 import com.pdfgenerator.model.ElementGroup
 import com.pdfgenerator.model.LoopElement
-import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.SummaryPage
@@ -97,7 +96,6 @@ class PageFlowOrchestrator(
         hasRenderedContent: Boolean = true,
     ): Boolean {
         if (containerHeight == null || containerHeight <= 0f) return false
-        if (element is PageBreakElement) return false
         return hasRenderedContent && (effectiveY + elementHeight > containerHeight)
     }
 
