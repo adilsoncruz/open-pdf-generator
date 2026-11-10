@@ -53,11 +53,21 @@ jobs:
             core/build/pdf-snapshots/
           if-no-files-found: ignore
 
-      - name: Build & Test CLI
+      - name: Build, Test & Coverage CLI
         working-directory: tools/cli
         run: |
           chmod +x gradlew
-          ./gradlew test shadowJar
+          ./gradlew test jacocoTestReport shadowJar
+
+      - name: Upload CLI Test & Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-test-coverage-reports
+          path: |
+            tools/cli/build/reports/tests/test/
+            tools/cli/build/reports/jacoco/test/html/
+          if-no-files-found: ignore
 
   editor-check:
     name: Editor Desktop (Node 22)
@@ -84,9 +94,17 @@ jobs:
         working-directory: tools/editor
         run: npm run type-check
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: tools/editor
-        run: npm test
+        run: npm run test:coverage
+
+      - name: Upload Editor Test & Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: editor-coverage-reports
+          path: tools/editor/coverage/
+          if-no-files-found: ignore
 
       - name: Build Editor
         working-directory: tools/editor

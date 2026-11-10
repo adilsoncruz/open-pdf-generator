@@ -4,6 +4,7 @@ plugins {
     id("com.gradleup.shadow") version "9.6.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+    jacoco
 }
 
 group = "io.github.adilsoncruz"
@@ -59,6 +60,16 @@ tasks.named("startShadowScripts") { dependsOn(tasks.jar) }
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
 }
 
 kotlin {
