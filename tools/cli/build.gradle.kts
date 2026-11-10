@@ -33,7 +33,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.1.0")
+    testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.2.0")
 }
 
 application {

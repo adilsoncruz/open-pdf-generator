@@ -7,7 +7,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 /**
- * Visual regression tests powered by [io.github.adilsoncruz:pdf-snapshot-junit:0.1.0].
+ * Visual regression tests powered by [io.github.adilsoncruz:pdf-snapshot-junit:0.2.0].
  *
  * Validates pixel-level layout fidelity and visual rendering for all core elements:
  * Typography, Tables, Barcodes/QR, Containers, Watermarks, and Full Invoice documents.

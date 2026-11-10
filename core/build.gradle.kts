@@ -38,7 +38,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.14.11")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("org.apache.pdfbox:pdfbox:3.0.8")
-    testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.1.0")
+    testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.2.0")
 }
 
 tasks.test {
