@@ -73,20 +73,6 @@ export function ContainerPropertiesSection({ element, onUpdate }: ContainerPrope
             </div>
           )
         })()}
-
-        {/* Page Break specific */}
-        {element.type === 'page_break' && (
-          <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 space-y-1.5">
-            <div className="text-xs font-semibold text-indigo-300 flex items-center gap-1.5">
-              <span>✂ Quebra de Página (Page Break)</span>
-            </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Força o início de uma nova página no PDF a partir desta posição vertical. Use <strong className="text-slate-300">Print Condition</strong> abaixo para quebras de página condicionais.
-            </p>
-          </div>
-        )}
-
-
     </>
   )
 }

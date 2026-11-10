@@ -231,7 +231,28 @@ export const createElementAdd = (
 
       let res: { newElements: Element[]; newSelectedId: string; newSelectedChildId: string | null; isTargetLoop: boolean }
 
-      if (normalizedElement.type === 'container' || normalizedElement.type === 'page_break' || normalizedElement.type === 'spacer') {
+      if (normalizedElement.type === 'page_break') {
+        const pageIndex = Math.floor(((normalizedElement.y || 0) + 20 - 0.1) / (sectionHeight || 1))
+        const nextPageY = (pageIndex + 1) * sectionHeight
+        const nextContainer: Element = {
+          type: 'container',
+          id: `container-page-${pageIndex + 2}-${Date.now()}`,
+          name: `Container Página ${pageIndex + 2}`,
+          x: 0,
+          y: nextPageY,
+          width: '100%',
+          height: 200,
+          heightMode: 'auto',
+          autoHeight: true,
+          elements: [],
+        }
+        res = {
+          newElements: [...sectionElements, normalizedElement, nextContainer],
+          newSelectedId: normalizedElement.id,
+          newSelectedChildId: null,
+          isTargetLoop: false,
+        }
+      } else if (normalizedElement.type === 'container' || normalizedElement.type === 'spacer') {
         res = { newElements: [...sectionElements, normalizedElement], newSelectedId: normalizedElement.id, newSelectedChildId: null, isTargetLoop: false }
       } else {
         const loop = findTargetLoop(sectionElements, state.selectedLoopParentId, state.selectedElementIds[0])
