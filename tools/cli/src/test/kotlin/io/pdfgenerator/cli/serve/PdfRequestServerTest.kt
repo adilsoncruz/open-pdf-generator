@@ -147,4 +147,54 @@ class PdfRequestServerTest {
         assertEquals(1, stats.failed)
         assertEquals(3, output.toString(StandardCharsets.UTF_8).lines().count { it.isNotBlank() })
     }
+
+    @Test
+    fun `handles max request bytes and preload`() {
+        val dir = Files.createTempDirectory("serve-max")
+        val path = writeTemplate(dir)
+        var logMessage = ""
+        val s = PdfRequestServer(
+            generator = PDFGenerator(PDFGeneratorConfig()),
+            maxRequestBytes = 20,
+            log = { logMessage = it }
+        )
+        s.preload(listOf(path.toString()))
+
+        val responses = serve(s, """{"id":1,"template":"$path","data":{}}""")
+        assertFalse(responses.single()["ok"].asBoolean)
+        assertContains(responses.single()["error"].asString, "exceeds 20 bytes")
+        assertTrue(logMessage.isNotEmpty())
+    }
+
+    @Test
+    fun `handles missing template property and array input`() {
+        val s = server()
+        val r1 = serve(s, """{"id":99}""").single()
+        assertFalse(r1["ok"].asBoolean)
+        assertContains(r1["error"].asString, "Missing 'template'")
+
+        val r2 = serve(s, "null").single()
+        assertFalse(r2["ok"].asBoolean)
+        assertContains(r2["error"].asString, "Invalid JSON request")
+
+        val r3 = serve(s, "[]").single()
+        assertFalse(r3["ok"].asBoolean)
+        assertContains(r3["error"].asString, "Invalid JSON request")
+    }
+
+    @Test
+    fun `logs generation error when generator throws`() {
+        val dir = Files.createTempDirectory("serve-err")
+        val brokenTpl = dir.resolve("broken.json")
+        // Template missing required fields so generator.generateToStream throws
+        Files.writeString(brokenTpl, """{"version":"1.0"}""")
+        var logged = ""
+        val s = PdfRequestServer(
+            generator = PDFGenerator(PDFGeneratorConfig()),
+            log = { logged += it }
+        )
+        val res = serve(s, """{"id":55,"template":"$brokenTpl","data":{}}""").single()
+        assertFalse(res["ok"].asBoolean)
+        assertTrue(logged.contains("failed template="))
+    }
 }
