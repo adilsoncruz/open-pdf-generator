@@ -95,6 +95,12 @@ Elements are the building blocks of your PDF. Each element has:
 | `barcode` | QR Codes and barcodes |
 | `conditional` | Conditional groups |
 | `loop` | Element repetition |
+| `container` | Modular block with child elements, auto-height and borders |
+| `rich-text` | Formatted Markdown text (bold, italic) |
+| `link` | Clickable links (URL or email) |
+| `list` | Bulleted or numbered lists |
+| `check-list` | Interactive check lists |
+| `spacer` | Vertical layout spacer |
 
 ---
 

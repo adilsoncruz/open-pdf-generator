@@ -8,7 +8,6 @@ interface FileMenuProps {
   onNew: () => void
   onOpen: () => void
   onImportJasper?: () => void
-  onImportAI?: () => void
   onSave: () => void
   onSaveAs: () => void
   onExport: () => void
@@ -21,7 +20,6 @@ export function FileMenu({
   onNew,
   onOpen,
   onImportJasper,
-  onImportAI,
   onSave,
   onSaveAs,
   onExport,
@@ -56,11 +54,6 @@ export function FileMenu({
         <MenuItem onClick={() => { onImportJasper(); onOpenChange(false) }}>
           <span>{t.toolbar.importJasper}</span>
           <Badge variant="warning" className="uppercase tracking-wider text-[10px] py-0 px-1.5 font-semibold">Beta</Badge>
-        </MenuItem>
-      )}
-      {onImportAI && (
-        <MenuItem onClick={() => { onImportAI(); onOpenChange(false) }}>
-          {t.toolbar.importAI}
         </MenuItem>
       )}
       <div className="border-t border-slate-800 my-1" />

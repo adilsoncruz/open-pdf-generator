@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { EditorPage, HomePage, LoadingPage, MobileViewerPage } from './components/pages'
-import { AiImportModal } from './components/AiImportModal'
+import { UpdateNotification } from './components/UpdateNotification'
 import { useTabStore } from './store/tabStore'
 import { useTemplateStore } from './store/templateStore'
 import { useRecentFilesStore } from './store/recentFilesStore'
@@ -9,7 +9,6 @@ import { openTemplateFromContent, handleImportJasper } from './bootstrap'
 export function App() {
   const [screen, setScreen] = useState<'loading' | 'home' | 'editor' | 'mobile-viewer'>('loading')
   const [selectedTemplateTitle, setSelectedTemplateTitle] = useState<string>('')
-  const [showAiModal, setShowAiModal] = useState(false)
   const [forceDesktop, setForceDesktop] = useState(false)
 
   const isMobile = useMemo(() => {
@@ -45,60 +44,57 @@ export function App() {
     }
   }
 
-  if (screen === 'loading') return <LoadingPage />
+  return (
+    <>
+      {screen === 'loading' && <LoadingPage />}
 
-  if (screen === 'mobile-viewer') {
-    return (
-      <MobileViewerPage
-        templateTitle={selectedTemplateTitle}
-        onBack={() => setScreen('home')}
-        onOpenDesktopEditor={() => {
-          setForceDesktop(true)
-          setScreen('editor')
-        }}
-      />
-    )
-  }
-
-  if (screen === 'home') {
-    return (
-      <>
-        <HomePage
-          onNewTemplate={() => {
-            useTabStore.getState().createNewTemplateTab()
-            navigateToTemplate('Novo Template')
-          }}
-          onOpenFile={async () => {
-            const result = await window.electronAPI.openFile()
-            if (!result) return
-            handleOpenFromContent(result.path, result.content)
-          }}
-          onImportJasper={handleJasperImport}
-          onSelectGalleryTemplate={(item) => {
-            const success = openTemplateFromContent(`${item.id}.json`, JSON.stringify(item.template))
-            if (success) {
-              useTemplateStore.getState().setTestData(item.data)
-              navigateToTemplate(item.title)
-            }
-          }}
-          onOpenRecentFile={async (filePath: string) => {
-            const result = await window.electronAPI.readFile(filePath)
-            if (result.success && result.content) {
-              handleOpenFromContent(filePath, result.content)
-            } else {
-              window.alert('Não foi possível abrir o arquivo recente. Ele pode ter sido movido ou excluído.')
-              useRecentFilesStore.getState().removeRecentFile(filePath)
-            }
+      {screen === 'mobile-viewer' && (
+        <MobileViewerPage
+          templateTitle={selectedTemplateTitle}
+          onBack={() => setScreen('home')}
+          onOpenDesktopEditor={() => {
+            setForceDesktop(true)
+            setScreen('editor')
           }}
         />
-        <AiImportModal
-          isOpen={showAiModal}
-          onClose={() => setShowAiModal(false)}
-          onSuccess={() => setScreen('editor')}
-        />
-      </>
-    )
-  }
+      )}
 
-  return <EditorPage />
+      {screen === 'home' && (
+        <>
+          <HomePage
+            onNewTemplate={() => {
+              useTabStore.getState().createNewTemplateTab()
+              navigateToTemplate('Novo Template')
+            }}
+            onOpenFile={async () => {
+              const result = await window.electronAPI.openFile()
+              if (!result) return
+              handleOpenFromContent(result.path, result.content)
+            }}
+            onImportJasper={handleJasperImport}
+            onSelectGalleryTemplate={(item) => {
+              const success = openTemplateFromContent(`${item.id}.json`, JSON.stringify(item.template))
+              if (success) {
+                useTemplateStore.getState().setTestData(item.data)
+                navigateToTemplate(item.title)
+              }
+            }}
+            onOpenRecentFile={async (filePath: string) => {
+              const result = await window.electronAPI.readFile(filePath)
+              if (result.success && result.content) {
+                handleOpenFromContent(filePath, result.content)
+              } else {
+                window.alert('Não foi possível abrir o arquivo recente. Ele pode ter sido movido ou excluído.')
+                useRecentFilesStore.getState().removeRecentFile(filePath)
+              }
+            }}
+          />
+        </>
+      )}
+
+      {screen === 'editor' && <EditorPage />}
+
+      <UpdateNotification />
+    </>
+  )
 }

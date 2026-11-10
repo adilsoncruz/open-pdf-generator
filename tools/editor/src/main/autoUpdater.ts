@@ -1,5 +1,5 @@
 import { autoUpdater, UpdateInfo, ProgressInfo } from 'electron-updater'
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import * as log from 'electron-log'
 import type { UpdateStatus } from '../shared/types'
 
@@ -122,12 +122,18 @@ function sendStatusToRenderer() {
 async function notifyUpdateAvailable(info: UpdateInfo) {
   if (!mainWindow) return
 
+  const isMac = process.platform === 'darwin'
+  const detail = isMac
+    ? `Version ${info.version} is available for download.\n\nCurrent version: ${app.getVersion()}\n\nOn macOS, download the latest .dmg installer to update.`
+    : `Version ${info.version} is available for download.\n\nCurrent version: ${app.getVersion()}\n\nWould you like to download now?`
+  const buttons = isMac ? ['Download DMG', 'Later'] : ['Download Now', 'Later']
+
   const result = await dialog.showMessageBox(mainWindow, {
     type: 'info',
     title: 'Update Available',
     message: 'A new version is available!',
-    detail: `Version ${info.version} is available for download.\n\nCurrent version: ${app.getVersion()}\n\nWould you like to download now?`,
-    buttons: ['Download Now', 'Later'],
+    detail,
+    buttons,
     defaultId: 0,
     cancelId: 1
   })
@@ -209,6 +215,19 @@ function registerIpcHandlers() {
 }
 
 async function downloadUpdate() {
+  if (process.platform === 'darwin') {
+    const version = updateStatus.version || app.getVersion()
+    const arch = process.arch === 'arm64' ? 'arm64' : 'x64'
+    const dmgUrl = `https://github.com/adilsoncruz/open-pdf-generator/releases/download/editor-v${version}/PDF-Template-Editor-${version}-${arch}.dmg`
+    const releaseUrl = `https://github.com/adilsoncruz/open-pdf-generator/releases/tag/editor-v${version}`
+    try {
+      await shell.openExternal(dmgUrl)
+    } catch {
+      await shell.openExternal(releaseUrl)
+    }
+    return
+  }
+
   updateStatus = {
     ...updateStatus,
     downloading: true,

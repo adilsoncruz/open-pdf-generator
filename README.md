@@ -185,10 +185,43 @@ Templates are declarative JSON documents defining page dimensions, margins, head
       "style": { "fontSize": 14, "fontWeight": "bold", "color": "#4f46e5" }
     },
     {
+      "type": "container",
+      "id": "customer-card",
+      "x": 0,
+      "y": 35,
+      "width": "100%",
+      "autoHeight": true,
+      "style": {
+        "backgroundColor": "#f8fafc",
+        "borderColor": "#e2e8f0",
+        "borderWidth": 1,
+        "borderRadius": 6,
+        "padding": 12
+      },
+      "elements": [
+        {
+          "type": "text",
+          "id": "customer-label",
+          "x": 10,
+          "y": 10,
+          "value": "Billed To: ${customer.name}",
+          "style": { "fontWeight": "bold", "fontSize": 10 }
+        },
+        {
+          "type": "text",
+          "id": "customer-address",
+          "x": 10,
+          "y": 24,
+          "value": "${customer.address}",
+          "style": { "color": "#64748b", "fontSize": 9 }
+        }
+      ]
+    },
+    {
       "type": "table",
       "id": "items-table",
       "x": 0,
-      "y": 40,
+      "y": 95,
       "dataBinding": "items",
       "columns": [
         { "header": "Item", "field": "name", "width": 250 },

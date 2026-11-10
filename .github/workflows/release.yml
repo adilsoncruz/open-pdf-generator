@@ -606,3 +606,5 @@ jobs:
             release-artifacts/*.AppImage
             release-artifacts/*.deb
             release-artifacts/*.zip
+            release-artifacts/*.yml
+            release-artifacts/*.blockmap
