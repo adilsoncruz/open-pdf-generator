@@ -4,20 +4,13 @@ on:
   push:
     branches:
       - main
-      - develop
-      - bootstrap*
-      - chore/*
-      - feat/*
-      - feature/*
-      - fix/*
   pull_request:
     branches:
       - main
       - develop
-      - bootstrap*
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:

@@ -4,18 +4,15 @@ on:
   push:
     branches:
       - main
-      - develop
-      - bootstrap*
   pull_request:
     branches:
       - main
       - develop
-      - bootstrap*
   schedule:
     - cron: '0 6 * * 1'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
