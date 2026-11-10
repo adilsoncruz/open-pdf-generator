@@ -97,7 +97,6 @@ export function CanvasElementContent({
         />
       )
 
-    case 'page_break':
     case 'spacer':
     case 'rectangle':
     case 'line':

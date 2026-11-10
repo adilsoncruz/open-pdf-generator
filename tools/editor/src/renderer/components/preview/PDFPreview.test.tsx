@@ -182,6 +182,37 @@ describe('usePdfPreview', () => {
     expect(window.electronAPI.generatePDFPreview).toHaveBeenCalled()
     expect(usePreviewStore.getState().pdfData).toBe('JVBERi0xLjQK...')
   })
+
+  it('handles CLI and Java error responses and triggers downloadPdf', async () => {
+    window.electronAPI = {
+      generatePDFPreview: vi.fn().mockResolvedValue({
+        success: false,
+        errorCode: 'JAVA_NOT_INSTALLED',
+        cliError: 'Java runtime is missing',
+      }),
+    } as any
+
+    useTemplateStore.setState({
+      template: {
+        ...useTemplateStore.getState().template,
+        page: [{ type: 'text', id: 't1', x: 0, y: 0, value: 'Hello' }],
+      },
+    })
+
+    const { result } = renderHook(() => usePdfPreview({ debounceMs: 10 }))
+
+    await act(async () => {
+      await result.current.generatePreview(true)
+    })
+
+    expect(usePreviewStore.getState().error).toBe('Java runtime is missing')
+
+    // Download PDF when data is present
+    usePreviewStore.setState({ pdfData: 'JVBERi0xLjQK' })
+    await act(async () => {
+      await result.current.downloadPdf('test.pdf')
+    })
+  })
 })
 
 describe('PDFPreview component integration', () => {

@@ -26,13 +26,6 @@ describe('resolveElementDimensions', () => {
     expect(dims.height).toBe(50)
   })
 
-  it('resolves page_break dimensions defaults', () => {
-    const el: Element = { id: '3', type: 'page_break', x: 0, y: 0 }
-    const dims = resolveElementDimensions(el, pageSize, margins)
-    expect(dims.width).toBe(535)
-    expect(dims.height).toBe(24)
-  })
-
   it('falls back to default dimensions if not defined', () => {
     const el: Element = { id: '4', type: 'text', x: 0, y: 0 }
     const dims = resolveElementDimensions(el, pageSize, margins)
@@ -190,5 +183,65 @@ describe('CanvasElement integration', () => {
         elementId: 'el-text-1',
       })
     )
+  })
+
+  it('allows inline editing of dataBinding on double click for text element', () => {
+    const onUpdate = vi.fn()
+    const textElement: Element = {
+      id: 'el-text-bind',
+      type: 'text',
+      x: 10,
+      y: 10,
+      dataBinding: 'customer.name',
+    }
+
+    render(
+      <CanvasElement
+        {...defaultProps}
+        element={textElement}
+        onUpdate={onUpdate}
+      />
+    )
+
+    const textNode = screen.getByText('{{customer.name}}')
+    fireEvent.doubleClick(textNode)
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('customer.name')
+
+    fireEvent.change(textarea, { target: { value: 'invoice.number' } })
+    fireEvent.blur(textarea)
+
+    expect(onUpdate).toHaveBeenCalledWith({ dataBinding: 'invoice.number' })
+  })
+
+  it('allows inline editing of value on double click for static_text element', () => {
+    const onUpdate = vi.fn()
+    const staticTextElement: Element = {
+      id: 'el-static-1',
+      type: 'static_text',
+      x: 10,
+      y: 10,
+      value: 'Static Title',
+    }
+
+    render(
+      <CanvasElement
+        {...defaultProps}
+        element={staticTextElement}
+        onUpdate={onUpdate}
+      />
+    )
+
+    const textNode = screen.getByText('Static Title')
+    fireEvent.doubleClick(textNode)
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('Static Title')
+
+    fireEvent.change(textarea, { target: { value: 'Updated Title' } })
+    fireEvent.blur(textarea)
+
+    expect(onUpdate).toHaveBeenCalledWith({ value: 'Updated Title' })
   })
 })

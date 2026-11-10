@@ -25,7 +25,7 @@ describe('ElementsPalette', () => {
   })
 
   it('renders all categories and default elements', () => {
-    render(<ElementsPalette currentSection="body" />)
+    const { container } = render(<ElementsPalette currentSection="body" />)
 
     expect(screen.getByText('Standard')).toBeInTheDocument()
     expect(screen.getByText('Layout')).toBeInTheDocument()
@@ -36,6 +36,8 @@ describe('ElementsPalette', () => {
     expect(screen.getByRole('button', { name: /^Static Text$/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Container$/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^QR Code$/ })).toBeInTheDocument()
+
+    expect(container).toMatchSnapshot()
   })
 
   it('adds an element to the store when clicked', () => {
@@ -51,7 +53,7 @@ describe('ElementsPalette', () => {
     expect(addElementSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'text',
-        value: 'Novo Texto',
+        dataBinding: 'field',
       }),
       'header'
     )

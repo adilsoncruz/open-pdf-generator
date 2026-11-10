@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Label atom > renders default label and matches snapshot 1`] = `
+<div>
+  <label
+    class="flex items-center gap-1 text-xs font-medium theme-text-muted"
+  >
+    Name
+  </label>
+</div>
+`;
+
+exports[`Label atom > renders required asterisk and hint and matches snapshot 1`] = `
+<div>
+  <label
+    class="flex items-center gap-1 text-xs font-medium theme-text-muted"
+  >
+    Email
+    <span
+      class="text-red-500"
+    >
+      *
+    </span>
+    <span
+      class="text-xs theme-text-muted opacity-70"
+    >
+      (
+      optional
+      )
+    </span>
+  </label>
+</div>
+`;

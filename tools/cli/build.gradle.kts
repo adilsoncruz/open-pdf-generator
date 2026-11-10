@@ -4,10 +4,11 @@ plugins {
     id("com.gradleup.shadow") version "9.6.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+    jacoco
 }
 
 group = "io.github.adilsoncruz"
-version = "1.0.0"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -17,7 +18,7 @@ repositories {
 
 dependencies {
     // PDF Generator Core Library
-    implementation("io.github.adilsoncruz:open-pdf-generator:1.0.0")
+    implementation("io.github.adilsoncruz:open-pdf-generator:1.1.0")
 
     // Dependencies used directly by the CLI
     implementation("com.google.code.gson:gson:2.11.0")
@@ -32,7 +33,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.1.0")
+    testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.2.0")
 }
 
 application {
@@ -59,6 +60,27 @@ tasks.named("startShadowScripts") { dependsOn(tasks.jar) }
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.95".toBigDecimal()
+            }
+        }
+    }
 }
 
 kotlin {

@@ -8,7 +8,6 @@ import {
   ContainerIcon,
   LoopIcon,
   SpacerIcon,
-  PageBreakIcon,
   ImageIcon,
   TableIcon,
   ShapeIcon,
@@ -57,7 +56,7 @@ export const PALETTE_CATEGORIES: PaletteCategory[] = [
         icon: TextIcon,
         createElement: () =>
           makeElement('text', 'text', {
-            value: 'Novo Texto', x: 40, y: 40, width: 200, height: 25,
+            dataBinding: 'field', x: 40, y: 40, width: 200, height: 25,
             style: { fontSize: 12, fontFamily: 'Helvetica', color: '#000000' },
           }),
       },
@@ -167,15 +166,6 @@ export const PALETTE_CATEGORIES: PaletteCategory[] = [
         keywords: ['spacer', 'espaco', 'espacador', 'padding', 'margin'],
         icon: SpacerIcon,
         createElement: () => makeElement('spacer', 'spacer', { x: 0, y: 0, width: '100%', height: 40 }),
-      },
-      {
-        id: 'page_break',
-        type: 'page_break',
-        label: 'Page Break',
-        title: 'Page Break',
-        keywords: ['page', 'break', 'pagina', 'quebra'],
-        icon: PageBreakIcon,
-        createElement: () => makeElement('page_break', 'page_break', { x: 0, y: 0, width: '100%', height: 20 }),
       },
     ],
   },

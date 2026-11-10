@@ -23,13 +23,10 @@ export function AppearanceSection({ element, onStyleUpdate }: AppearanceSectionP
   const borderStyle = (element.style?.borderStyle as string) || (element.type === 'container' || element.type === 'loop' ? 'dashed' : 'solid')
 
   return (
-    <>
-        {/* 4. Appearance Section (Não exibido para Page Break) */}
-        {element.type !== 'page_break' && (
-        <div>
-          <div className="text-xs font-semibold text-slate-200 mb-2">
-            {t.properties.appearance}
-          </div>
+    <div>
+      <div className="text-xs font-semibold text-slate-200 mb-2">
+        {t.properties.appearance}
+      </div>
           <div className="space-y-2.5">
             {/* Fill Color Swatch + Hex Input + Transparent toggle */}
             <div className="flex items-center gap-2">
@@ -161,7 +158,5 @@ export function AppearanceSection({ element, onStyleUpdate }: AppearanceSectionP
             )}
           </div>
         </div>
-        )}
-    </>
   )
 }

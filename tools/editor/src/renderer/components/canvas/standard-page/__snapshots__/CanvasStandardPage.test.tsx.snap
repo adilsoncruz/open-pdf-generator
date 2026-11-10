@@ -1,0 +1,695 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CanvasStandardPage modular components > CanvasStandardPage > renders background elements and BACKGROUND badge when section is bodyBackground 1`] = `
+<div>
+  <div
+    class="absolute right-full mr-3 px-3 py-1 rounded-l text-xs font-semibold whitespace-nowrap bg-purple-500 text-white"
+    style="top: 50%; transform: translateY(-50%);"
+  >
+    BACKGROUND
+  </div>
+  <div
+    class="bg-white shadow-lg relative border-2 border-purple-400"
+    style="width: 595px; height: 842px;"
+  >
+    <div
+      class="absolute"
+      style="left: 30px; top: 30px; right: 30px; bottom: 30px;"
+    >
+      <div
+        class="absolute"
+        style="left: 50px; top: 50px;"
+      >
+        <div
+          class="relative"
+        >
+          <div
+            class="cursor-move select-none "
+            style="width: 200px; height: 50px; font-size: 12px; font-weight: normal; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 0px;"
+            title="Double-click to edit"
+          >
+            Background Watermark
+          </div>
+        </div>
+      </div>
+    </div>
+    <svg
+      class="absolute inset-0 pointer-events-none"
+      data-testid="margin-lines-overlay"
+      height="100%"
+      style="z-index: 5;"
+      width="100%"
+    >
+      <line
+        data-testid="margin-line-top"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="30"
+        y2="30"
+      />
+      <line
+        data-testid="header-end-line"
+        opacity="0.3"
+        stroke="#9ca3af"
+        stroke-dasharray="2,2"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="80"
+        y2="80"
+      />
+      <line
+        data-testid="footer-start-line"
+        opacity="0.3"
+        stroke="#9ca3af"
+        stroke-dasharray="2,2"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="772"
+        y2="772"
+      />
+      <line
+        data-testid="margin-line-bottom"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="812"
+        y2="812"
+      />
+      <line
+        data-testid="margin-line-left"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="30"
+        x2="30"
+        y1="0"
+        y2="842"
+      />
+      <line
+        data-testid="margin-line-right"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="565"
+        x2="565"
+        y1="0"
+        y2="842"
+      />
+    </svg>
+    <svg
+      class="absolute inset-0 pointer-events-none opacity-20"
+      data-testid="canvas-grid-overlay"
+      height="100%"
+      width="100%"
+    >
+      <defs>
+        <pattern
+          height="50"
+          id="grid"
+          patternUnits="userSpaceOnUse"
+          width="50"
+        >
+          <path
+            d="M 50 0 L 0 0 0 50"
+            fill="none"
+            stroke="gray"
+            stroke-width="0.5"
+          />
+        </pattern>
+      </defs>
+      <rect
+        fill="url(#grid)"
+        height="100%"
+        width="100%"
+      />
+    </svg>
+    <div
+      class="absolute text-xs text-gray-400 select-none pointer-events-none"
+      data-testid="standard-label-top"
+      style="left: 605px; top: 30px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      ↑ Margin: 
+      30
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-gray-500 select-none pointer-events-none"
+      data-testid="standard-label-header-end"
+      style="left: 605px; top: 80px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      Header End
+      : 
+      80
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-gray-500 select-none pointer-events-none"
+      data-testid="standard-label-footer-start"
+      style="left: 605px; top: 772px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      Footer Start
+      : 
+      772
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-gray-400 select-none pointer-events-none"
+      data-testid="standard-label-bottom"
+      style="left: 605px; top: 812px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      ↓ Margin: 
+      30
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-blue-600 select-none pointer-events-none"
+      data-testid="standard-label-left"
+      style="left: 30px; top: -25px; transform: translateX(-50%); white-space: nowrap;"
+    >
+      ← 
+      30
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-blue-600 select-none pointer-events-none"
+      data-testid="standard-label-right"
+      style="left: 565px; top: -25px; transform: translateX(-50%); white-space: nowrap;"
+    >
+      30
+      pt →
+    </div>
+  </div>
+</div>
+`;
+
+exports[`CanvasStandardPage modular components > CanvasStandardPage > renders body elements and body badge when currentSection is body 1`] = `
+<div>
+  <div
+    class="absolute right-full mr-3 px-3 py-1 rounded-l text-xs font-semibold whitespace-nowrap bg-purple-500 text-white"
+    style="top: 50%; transform: translateY(-50%);"
+  >
+    BODY
+  </div>
+  <div
+    class="bg-white shadow-lg relative"
+    style="width: 595px; height: 842px;"
+  >
+    <div
+      class="absolute border-b-2 border-dashed border-gray-300 bg-gray-50/50 "
+      style="top: 30px; left: 30px; right: 30px; height: 50px; z-index: 10;"
+    >
+      <div
+        class="absolute"
+        style="left: 10px; top: 10px;"
+      >
+        <div
+          class="relative"
+        >
+          <div
+            class="cursor-move select-none "
+            style="width: 100px; height: 20px; font-size: 12px; font-weight: normal; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 0px;"
+            title="Double-click to edit"
+          >
+            Header Title
+          </div>
+        </div>
+      </div>
+      <div
+        class="absolute inset-0 bg-gray-400/30 cursor-not-allowed"
+        style="z-index: 100;"
+      />
+    </div>
+    <div
+      class="absolute outline outline-2 outline-dashed outline-gray-400 -outline-offset-2 "
+      style="top: 80px; left: 30px; right: 30px; height: 692px; z-index: 10;"
+    >
+      <div
+        class="absolute"
+        style="left: 20px; top: 20px;"
+      >
+        <div
+          class="relative"
+        >
+          <div
+            class="cursor-move select-none "
+            style="width: 200px; height: 30px; font-size: 12px; font-weight: normal; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 0px;"
+            title="Double-click to edit"
+          >
+            Body Content
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="absolute border-t-2 border-dashed border-gray-300 bg-gray-50/50 "
+      style="top: 772px; left: 30px; right: 30px; height: 40px; z-index: 10;"
+    >
+      <div
+        class="absolute"
+        style="left: 10px; top: 10px;"
+      >
+        <div
+          class="relative"
+        >
+          <div
+            class="cursor-move select-none "
+            style="width: 100px; height: 20px; font-size: 12px; font-weight: normal; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 0px;"
+            title="Double-click to edit"
+          >
+            Footer Page 1
+          </div>
+        </div>
+      </div>
+      <div
+        class="absolute inset-0 bg-gray-400/30 cursor-not-allowed"
+        style="z-index: 100;"
+      />
+    </div>
+    <svg
+      class="absolute inset-0 pointer-events-none"
+      data-testid="margin-lines-overlay"
+      height="100%"
+      style="z-index: 5;"
+      width="100%"
+    >
+      <line
+        data-testid="margin-line-top"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="30"
+        y2="30"
+      />
+      <line
+        data-testid="header-end-line"
+        opacity="0.3"
+        stroke="#9ca3af"
+        stroke-dasharray="2,2"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="80"
+        y2="80"
+      />
+      <line
+        data-testid="footer-start-line"
+        opacity="0.3"
+        stroke="#9ca3af"
+        stroke-dasharray="2,2"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="772"
+        y2="772"
+      />
+      <line
+        data-testid="margin-line-bottom"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="812"
+        y2="812"
+      />
+      <line
+        data-testid="margin-line-left"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="30"
+        x2="30"
+        y1="0"
+        y2="842"
+      />
+      <line
+        data-testid="margin-line-right"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="565"
+        x2="565"
+        y1="0"
+        y2="842"
+      />
+    </svg>
+    <svg
+      class="absolute inset-0 pointer-events-none opacity-20"
+      data-testid="canvas-grid-overlay"
+      height="100%"
+      width="100%"
+    >
+      <defs>
+        <pattern
+          height="50"
+          id="grid"
+          patternUnits="userSpaceOnUse"
+          width="50"
+        >
+          <path
+            d="M 50 0 L 0 0 0 50"
+            fill="none"
+            stroke="gray"
+            stroke-width="0.5"
+          />
+        </pattern>
+      </defs>
+      <rect
+        fill="url(#grid)"
+        height="100%"
+        width="100%"
+      />
+    </svg>
+    <div
+      class="absolute text-xs text-gray-400 select-none pointer-events-none"
+      data-testid="standard-label-top"
+      style="left: 605px; top: 30px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      ↑ Margin: 
+      30
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-gray-500 select-none pointer-events-none"
+      data-testid="standard-label-header-end"
+      style="left: 605px; top: 80px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      Header End
+      : 
+      80
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-gray-500 select-none pointer-events-none"
+      data-testid="standard-label-footer-start"
+      style="left: 605px; top: 772px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      Footer Start
+      : 
+      772
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-gray-400 select-none pointer-events-none"
+      data-testid="standard-label-bottom"
+      style="left: 605px; top: 812px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      ↓ Margin: 
+      30
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-blue-600 select-none pointer-events-none"
+      data-testid="standard-label-left"
+      style="left: 30px; top: -25px; transform: translateX(-50%); white-space: nowrap;"
+    >
+      ← 
+      30
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-blue-600 select-none pointer-events-none"
+      data-testid="standard-label-right"
+      style="left: 565px; top: -25px; transform: translateX(-50%); white-space: nowrap;"
+    >
+      30
+      pt →
+    </div>
+  </div>
+</div>
+`;
+
+exports[`CanvasStandardPage modular components > CanvasStandardPage > renders footer section and handles element selection and watermark 1`] = `
+<div>
+  <div
+    class="absolute right-full mr-3 px-3 py-1 rounded-l text-xs font-semibold whitespace-nowrap bg-green-500 text-white"
+    style="top: 792px; transform: translateY(-50%);"
+  >
+    FOOTER
+  </div>
+  <div
+    class="bg-white shadow-lg relative"
+    style="width: 595px; height: 842px;"
+  >
+    <div
+      class="absolute border-b-2 border-dashed border-gray-300 bg-gray-50/50 "
+      style="top: 30px; left: 30px; right: 30px; height: 50px; z-index: 10;"
+    >
+      <div
+        class="absolute"
+        style="left: 10px; top: 10px;"
+      >
+        <div
+          class="relative"
+        >
+          <div
+            class="cursor-move select-none "
+            style="width: 100px; height: 20px; font-size: 12px; font-weight: normal; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 0px;"
+            title="Double-click to edit"
+          >
+            Header Title
+          </div>
+        </div>
+      </div>
+      <div
+        class="absolute inset-0 bg-gray-400/30 cursor-not-allowed"
+        style="z-index: 100;"
+      />
+    </div>
+    <div
+      class="absolute  "
+      style="top: 80px; left: 30px; right: 30px; height: 692px; z-index: 10;"
+    >
+      <div
+        class="absolute"
+        style="left: 20px; top: 20px;"
+      >
+        <div
+          class="relative"
+        >
+          <div
+            class="cursor-move select-none "
+            style="width: 200px; height: 30px; font-size: 12px; font-weight: normal; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 0px;"
+            title="Double-click to edit"
+          >
+            Body Content
+          </div>
+        </div>
+      </div>
+      <div
+        class="absolute inset-0 bg-gray-400/30 cursor-not-allowed"
+        style="z-index: 100;"
+      />
+    </div>
+    <div
+      class="absolute border-t-2 border-dashed border-green-400 bg-green-50/30 "
+      style="top: 772px; left: 30px; right: 30px; height: 40px; z-index: 10;"
+    >
+      <div
+        class="absolute"
+        style="left: 10px; top: 10px;"
+      >
+        <div
+          class="relative"
+        >
+          <div
+            class="cursor-move select-none "
+            style="width: 100px; height: 20px; font-size: 12px; font-weight: normal; text-decoration: none; font-style: normal; font-family: Arial, sans-serif; color: rgb(0, 0, 0); text-decoration-color: rgb(0, 0, 0); background-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; line-height: normal; border-top-width: 0px; border-top-style: solid; border-top-color: rgb(0, 0, 0); border-right-width: 0px; border-right-style: solid; border-right-color: rgb(0, 0, 0); border-bottom-width: 0px; border-bottom-style: solid; border-bottom-color: rgb(0, 0, 0); border-left-width: 0px; border-left-style: solid; border-left-color: rgb(0, 0, 0); border-radius: 0px; padding: 0px;"
+            title="Double-click to edit"
+          >
+            Footer Page 1
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="absolute inset-0 pointer-events-none select-none overflow-hidden"
+      style="z-index: 3;"
+    >
+      <div
+        class="absolute flex items-center justify-center pointer-events-none select-none"
+        style="left: 50%; top: 421px; transform: translate(-50%, -50%) rotate(-45deg); opacity: 0.3; white-space: nowrap;"
+      >
+        <span
+          style="font-size: 60px; font-weight: normal; font-style: normal; font-family: Outfit, sans-serif; color: rgb(148, 163, 184); letter-spacing: 0.1em;"
+        >
+          DRAFT
+        </span>
+      </div>
+    </div>
+    <svg
+      class="absolute inset-0 pointer-events-none"
+      data-testid="margin-lines-overlay"
+      height="100%"
+      style="z-index: 5;"
+      width="100%"
+    >
+      <line
+        data-testid="margin-line-top"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="30"
+        y2="30"
+      />
+      <line
+        data-testid="header-end-line"
+        opacity="0.3"
+        stroke="#9ca3af"
+        stroke-dasharray="2,2"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="80"
+        y2="80"
+      />
+      <line
+        data-testid="footer-start-line"
+        opacity="0.3"
+        stroke="#9ca3af"
+        stroke-dasharray="2,2"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="772"
+        y2="772"
+      />
+      <line
+        data-testid="margin-line-bottom"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="0"
+        x2="595"
+        y1="812"
+        y2="812"
+      />
+      <line
+        data-testid="margin-line-left"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="30"
+        x2="30"
+        y1="0"
+        y2="842"
+      />
+      <line
+        data-testid="margin-line-right"
+        opacity="0.5"
+        stroke="#3b82f6"
+        stroke-dasharray="5,5"
+        stroke-width="1"
+        x1="565"
+        x2="565"
+        y1="0"
+        y2="842"
+      />
+    </svg>
+    <svg
+      class="absolute inset-0 pointer-events-none opacity-20"
+      data-testid="canvas-grid-overlay"
+      height="100%"
+      width="100%"
+    >
+      <defs>
+        <pattern
+          height="50"
+          id="grid"
+          patternUnits="userSpaceOnUse"
+          width="50"
+        >
+          <path
+            d="M 50 0 L 0 0 0 50"
+            fill="none"
+            stroke="gray"
+            stroke-width="0.5"
+          />
+        </pattern>
+      </defs>
+      <rect
+        fill="url(#grid)"
+        height="100%"
+        width="100%"
+      />
+    </svg>
+    <div
+      class="absolute text-xs text-gray-400 select-none pointer-events-none"
+      data-testid="standard-label-top"
+      style="left: 605px; top: 30px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      ↑ Margin: 
+      30
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-gray-500 select-none pointer-events-none"
+      data-testid="standard-label-header-end"
+      style="left: 605px; top: 80px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      Header End
+      : 
+      80
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-gray-500 select-none pointer-events-none"
+      data-testid="standard-label-footer-start"
+      style="left: 605px; top: 772px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      Footer Start
+      : 
+      772
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-gray-400 select-none pointer-events-none"
+      data-testid="standard-label-bottom"
+      style="left: 605px; top: 812px; transform: translateY(-50%); white-space: nowrap;"
+    >
+      ↓ Margin: 
+      30
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-blue-600 select-none pointer-events-none"
+      data-testid="standard-label-left"
+      style="left: 30px; top: -25px; transform: translateX(-50%); white-space: nowrap;"
+    >
+      ← 
+      30
+      pt
+    </div>
+    <div
+      class="absolute text-xs text-blue-600 select-none pointer-events-none"
+      data-testid="standard-label-right"
+      style="left: 565px; top: -25px; transform: translateX(-50%); white-space: nowrap;"
+    >
+      30
+      pt →
+    </div>
+  </div>
+</div>
+`;

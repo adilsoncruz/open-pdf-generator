@@ -1,0 +1,104 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ContainerElementRenderer > renders container element with 100% width and children 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative ring-2 ring-primary-500"
+    style="width: 555px; height: 200px; box-sizing: border-box; background-color: rgb(255, 255, 255); border-width: 1px; border-style: dashed; border-color: rgb(0, 0, 0); border-radius: 4px;"
+  >
+    <div
+      class="absolute top-1 right-1 pointer-events-none z-20"
+    >
+      <span
+        class="text-[9px] font-mono px-1.5 py-0.5 rounded shadow-sm border bg-indigo-950/90 text-indigo-300 border-indigo-700/70"
+      >
+        Auto-Height
+      </span>
+    </div>
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute cursor-move "
+        style="left: 10px; top: 10px; width: 100px; height: 20px;"
+      >
+        <div
+          style="font-size: 10px; font-family: Helvetica; color: rgb(0, 0, 0); font-weight: normal; text-decoration: none; width: 100px; height: 20px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          title="Double-click to edit"
+        >
+          Inside Container
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ContainerElementRenderer > renders empty container with placeholder text and snapshot 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative "
+    style="width: 400px; height: 100px; box-sizing: border-box; background-color: transparent; border-width: 2px; border-style: dashed; border-color: rgb(139, 92, 246); border-radius: 4px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute inset-0 flex items-center justify-center"
+      >
+        <div
+          class="text-center p-3 border-2 border-dashed border-primary-200 rounded-lg bg-primary-50/50"
+        >
+          <div
+            class="text-primary-400 text-[10px] font-medium"
+          >
+            Add elements
+             
+            <span
+              class="text-primary-300 text-[9px]"
+            >
+              via sidebar
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ContainerElementRenderer > renders multiple relative children and computes container flow coordinates 1`] = `
+<div>
+  <div
+    class="cursor-move select-none relative "
+    style="width: 500px; height: 200px; box-sizing: border-box; background-color: transparent; border-width: 2px; border-style: dashed; border-color: rgb(139, 92, 246); border-radius: 4px;"
+  >
+    <div
+      class="relative w-full h-full"
+    >
+      <div
+        class="absolute cursor-move "
+        style="left: 10px; top: 10px; width: 150px; height: 30px;"
+      >
+        <div
+          style="font-size: 10px; font-family: Helvetica; color: rgb(0, 0, 0); font-weight: normal; text-decoration: none; width: 150px; height: 30px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          title="Double-click to edit"
+        >
+          campo
+        </div>
+      </div>
+      <div
+        class="absolute cursor-move "
+        style="left: 10px; top: 50px; width: 150px; height: 30px;"
+      >
+        <div
+          style="font-size: 10px; font-family: Helvetica; color: rgb(0, 0, 0); font-weight: normal; text-decoration: none; width: 150px; height: 30px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+          title="Double-click to edit"
+        >
+          campo
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

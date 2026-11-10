@@ -13,6 +13,8 @@ data class ContainerElement(
     override val printCondition: String? = null,
     val heightMode: String? = "auto",
     val autoHeight: Boolean? = true,
+    val pageBreakBefore: Boolean? = false,
+    val pageBreakCondition: String? = null,
 ) : Element {
     fun isAutoHeight(): Boolean = (heightMode ?: "auto").equals("auto", ignoreCase = true) && (autoHeight != false)
 

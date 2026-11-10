@@ -11,6 +11,12 @@ export interface LoopChildRendererProps {
   loopHeight: number
   resolveWidth: (value: string | number | undefined) => number
   resolveHeight: (value: string | number | undefined) => number
+  isEditingText?: boolean
+  editingValue?: string
+  onDoubleClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+  onTextChange?: (val: string) => void
+  onTextBlur?: () => void
+  onTextKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
 }
 
 export function LoopChildRenderer({
@@ -20,6 +26,12 @@ export function LoopChildRenderer({
   loopHeight,
   resolveWidth,
   resolveHeight,
+  isEditingText,
+  editingValue = '',
+  onDoubleClick,
+  onTextChange,
+  onTextBlur,
+  onTextKeyDown,
 }: LoopChildRendererProps) {
   const testData = useTemplateStore((state) => state.testData)
 
@@ -28,6 +40,31 @@ export function LoopChildRenderer({
     case 'static_text':
     case 'rich_text':
     case 'link': {
+      const textWidth = child.width ? resolveWidth(child.width) : 'auto'
+      const textHeight = child.height ? resolveHeight(child.height) : 'auto'
+
+      if (isEditingText) {
+        return (
+          <textarea
+            autoFocus
+            value={editingValue}
+            onChange={(e) => onTextChange?.(e.target.value)}
+            onBlur={onTextBlur}
+            onKeyDown={onTextKeyDown}
+            className="resize-none outline-none ring-2 ring-emerald-500 bg-white"
+            style={{
+              fontSize: child.style?.fontSize || 10,
+              fontFamily: child.style?.fontFamily || 'Helvetica',
+              color: child.style?.color || '#000000',
+              fontWeight: child.style?.fontWeight || 'normal',
+              width: textWidth,
+              height: textHeight,
+              boxSizing: 'border-box',
+            }}
+          />
+        )
+      }
+
       const displayText = resolveChildDisplayText(
         child,
         loopId,
@@ -36,14 +73,16 @@ export function LoopChildRenderer({
       )
       return (
         <div
+          onDoubleClick={onDoubleClick}
+          title="Double-click to edit"
           style={{
             fontSize: child.style?.fontSize || 10,
             fontFamily: child.style?.fontFamily || 'Helvetica',
             color: child.style?.color || '#000000',
             fontWeight: child.style?.fontWeight || 'normal',
             textDecoration: child.type === 'link' ? 'underline' : 'none',
-            width: child.width ? resolveWidth(child.width) : 'auto',
-            height: child.height ? resolveHeight(child.height) : 'auto',
+            width: textWidth,
+            height: textHeight,
             overflow: 'hidden',
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',
@@ -66,33 +105,6 @@ export function LoopChildRenderer({
             <circle cx="8.5" cy="8.5" r="1.5" />
             <path d="M21 15l-5-5L5 21" />
           </svg>
-        </div>
-      )
-    }
-    case 'page_break': {
-      const pbWidth = resolveWidth(child.width || '100%')
-      return (
-        <div
-          style={{
-            width: pbWidth,
-            height: 20,
-            borderBottom: '2px dashed #9ca3af',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <span
-            style={{
-              background: 'white',
-              padding: '0 8px',
-              color: '#6b7280',
-              fontSize: '10px',
-              fontFamily: 'monospace',
-            }}
-          >
-            PAGE BREAK
-          </span>
         </div>
       )
     }

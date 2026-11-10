@@ -145,28 +145,6 @@ describe('LoopChildElement component', () => {
     expect(container.querySelector('svg')).toBeInTheDocument()
   })
 
-  it('renders page_break element', () => {
-    const pbChild: Element = {
-      id: 'lpb-1',
-      type: 'page_break',
-      x: 0,
-      y: 0,
-      width: '100%',
-    }
-
-    render(
-      <LoopChildElement
-        child={pbChild}
-        loopId="loop-1"
-        location="page"
-        loopWidth={500}
-        loopHeight={300}
-      />
-    )
-
-    expect(screen.getByText('PAGE BREAK')).toBeInTheDocument()
-  })
-
   it('renders rectangle / spacer and line elements', () => {
     const rectChild: Element = {
       id: 'lrect-1',
@@ -282,6 +260,82 @@ describe('LoopChildElement component', () => {
         loopId: 'loop-1',
         location: 'page',
       })
+    )
+  })
+
+  it('allows inline editing of dataBinding on double click for loop child text', () => {
+    const updateSpy = vi.spyOn(useTemplateStore.getState(), 'updateLoopChildElement')
+    const dynamicChild: Element = {
+      id: 'lchild-dyn-1',
+      type: 'text',
+      x: 10,
+      y: 10,
+      width: 120,
+      height: 30,
+      dataBinding: 'item.price',
+    }
+
+    render(
+      <LoopChildElement
+        child={dynamicChild}
+        loopId="loop-1"
+        location="page"
+        loopWidth={500}
+        loopHeight={300}
+      />
+    )
+
+    const textNode = screen.getByText('{item.price}')
+    fireEvent.doubleClick(textNode)
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('item.price')
+
+    fireEvent.change(textarea, { target: { value: 'item.total' } })
+    fireEvent.blur(textarea)
+
+    expect(updateSpy).toHaveBeenCalledWith(
+      'loop-1',
+      'lchild-dyn-1',
+      { dataBinding: 'item.total' }
+    )
+  })
+
+  it('allows inline editing of value on double click for loop child static_text', () => {
+    const updateSpy = vi.spyOn(useTemplateStore.getState(), 'updateLoopChildElement')
+    const staticChild: Element = {
+      id: 'lchild-static-1',
+      type: 'static_text',
+      x: 10,
+      y: 10,
+      width: 120,
+      height: 30,
+      value: 'Static Loop Col',
+    }
+
+    render(
+      <LoopChildElement
+        child={staticChild}
+        loopId="loop-1"
+        location="page"
+        loopWidth={500}
+        loopHeight={300}
+      />
+    )
+
+    const textNode = screen.getByText('Static Loop Col')
+    fireEvent.doubleClick(textNode)
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('Static Loop Col')
+
+    fireEvent.change(textarea, { target: { value: 'Updated Static Col' } })
+    fireEvent.blur(textarea)
+
+    expect(updateSpy).toHaveBeenCalledWith(
+      'loop-1',
+      'lchild-static-1',
+      { value: 'Updated Static Col' }
     )
   })
 })

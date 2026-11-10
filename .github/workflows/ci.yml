@@ -4,17 +4,13 @@ on:
   push:
     branches:
       - main
-      - bootstrap*
-      - chore/*
-      - feat/*
-      - fix/*
   pull_request:
     branches:
       - main
-      - bootstrap*
+      - develop
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -33,17 +29,38 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: Build & Test Core Engine
+      - name: Build, Test & Verify Coverage (Core Engine)
         working-directory: core
         run: |
           chmod +x gradlew
-          ./gradlew test jacocoTestReport jar
+          ./gradlew test jacocoTestReport jacocoTestCoverageVerification jar
 
-      - name: Build & Test CLI
+      - name: Upload Core Test & Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-test-coverage-reports
+          path: |
+            core/build/reports/tests/test/
+            core/build/reports/jacoco/test/html/
+            core/build/pdf-snapshots/
+          if-no-files-found: ignore
+
+      - name: Build, Test & Coverage CLI
         working-directory: tools/cli
         run: |
           chmod +x gradlew
-          ./gradlew test shadowJar
+          ./gradlew test jacocoTestReport shadowJar
+
+      - name: Upload CLI Test & Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-test-coverage-reports
+          path: |
+            tools/cli/build/reports/tests/test/
+            tools/cli/build/reports/jacoco/test/html/
+          if-no-files-found: ignore
 
   editor-check:
     name: Editor Desktop (Node 22)
@@ -66,9 +83,21 @@ jobs:
         working-directory: tools/editor
         run: npm audit --audit-level=high
 
-      - name: Run tests
+      - name: TypeScript type-check
         working-directory: tools/editor
-        run: npm test
+        run: npm run type-check
+
+      - name: Run tests with coverage
+        working-directory: tools/editor
+        run: npm run test:coverage
+
+      - name: Upload Editor Test & Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: editor-coverage-reports
+          path: tools/editor/coverage/
+          if-no-files-found: ignore
 
       - name: Build Editor
         working-directory: tools/editor
@@ -80,10 +109,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: docs/package-lock.json
 

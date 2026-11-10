@@ -20,7 +20,7 @@ NC := \033[0m # No Color
 
 # Project info
 PROJECT_NAME := Open PDF Generator
-VERSION := 1.0.0
+VERSION := 1.1.0
 
 # Directories
 ROOT_DIR := $(shell pwd)

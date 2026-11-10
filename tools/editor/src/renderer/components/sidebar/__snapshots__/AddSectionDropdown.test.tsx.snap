@@ -1,0 +1,289 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AddSectionDropdown > renders open menu with section options, matches snapshot, and triggers add actions 1`] = `
+<div>
+  <div
+    class="relative"
+  >
+    <button
+      class="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 hover:text-white transition"
+      title="Add"
+      type="button"
+    >
+      <svg
+        class="w-3 h-3"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M12 5v14M5 12h14"
+        />
+      </svg>
+    </button>
+    <div
+      class="fixed inset-0 z-40 cursor-default"
+    />
+    <div
+      class="absolute top-full right-0 mt-1 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 py-1.5 backdrop-blur-md"
+    >
+      <div
+        class="px-3 py-1 text-[10px] font-semibold tracking-wider text-slate-400 uppercase border-b border-slate-800/80 mb-1"
+      >
+        Adicionar Seção
+      </div>
+      <button
+        class="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
+      >
+        <div
+          class="w-6 h-6 rounded-md bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 group-hover:border-indigo-500/40"
+        >
+          <svg
+            class="w-3.5 h-3.5 text-indigo-400"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              fill="currentColor"
+              fill-opacity="0.2"
+              height="6"
+              rx="1"
+              width="18"
+              x="3"
+              y="3"
+            />
+            <rect
+              height="18"
+              rx="2"
+              width="18"
+              x="3"
+              y="3"
+            />
+          </svg>
+        </div>
+        <div>
+          <div
+            class="font-medium text-slate-200 group-hover:text-white"
+          >
+            Header Band
+          </div>
+          <div
+            class="text-[10px] text-slate-400"
+          >
+            Faixa fixa superior
+          </div>
+        </div>
+      </button>
+      <button
+        class="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
+      >
+        <div
+          class="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 group-hover:border-emerald-500/40"
+        >
+          <svg
+            class="w-3.5 h-3.5 text-emerald-400"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+            />
+            <polyline
+              points="14 2 14 8 20 8"
+            />
+            <line
+              x1="16"
+              x2="8"
+              y1="13"
+              y2="13"
+            />
+            <line
+              x1="16"
+              x2="8"
+              y1="17"
+              y2="17"
+            />
+          </svg>
+        </div>
+        <div>
+          <div
+            class="font-medium text-slate-200 group-hover:text-white"
+          >
+            Summary Band
+          </div>
+          <div
+            class="text-[10px] text-slate-400"
+          >
+            Totais e assinaturas
+          </div>
+        </div>
+      </button>
+      <button
+        class="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
+      >
+        <div
+          class="w-6 h-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:border-blue-500/40"
+        >
+          <svg
+            class="w-3.5 h-3.5 text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              fill="currentColor"
+              fill-opacity="0.2"
+              height="6"
+              rx="1"
+              width="18"
+              x="3"
+              y="15"
+            />
+            <rect
+              height="18"
+              rx="2"
+              width="18"
+              x="3"
+              y="3"
+            />
+          </svg>
+        </div>
+        <div>
+          <div
+            class="font-medium text-slate-200 group-hover:text-white"
+          >
+            Footer Band
+          </div>
+          <div
+            class="text-[10px] text-slate-400"
+          >
+            Faixa fixa no rodapé
+          </div>
+        </div>
+      </button>
+      <button
+        class="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
+      >
+        <div
+          class="w-6 h-6 rounded-md bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 group-hover:border-purple-500/40"
+        >
+          <svg
+            class="w-3.5 h-3.5 text-purple-400"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              height="18"
+              rx="2"
+              stroke-dasharray="2 2"
+              width="18"
+              x="3"
+              y="3"
+            />
+            <circle
+              cx="8.5"
+              cy="8.5"
+              r="1.5"
+            />
+            <polyline
+              points="21 15 16 10 5 21"
+            />
+          </svg>
+        </div>
+        <div>
+          <div
+            class="font-medium text-slate-200 group-hover:text-white"
+          >
+            Background Layer
+          </div>
+          <div
+            class="text-[10px] text-slate-400"
+          >
+            Marca d'água / Timbrado
+          </div>
+        </div>
+      </button>
+      <div
+        class="border-t border-slate-800 my-1"
+      />
+      <button
+        class="w-full px-2.5 py-1.5 text-xs text-left flex items-center gap-2.5 hover:bg-slate-800 rounded-lg transition text-slate-300 group"
+      >
+        <div
+          class="w-6 h-6 rounded-md bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0 group-hover:border-cyan-500/40"
+        >
+          <svg
+            class="w-3.5 h-3.5 text-cyan-400"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              height="18"
+              rx="2"
+              stroke-dasharray="3 3"
+              width="18"
+              x="3"
+              y="3"
+            />
+            <path
+              d="M3 9h18M3 15h18M9 3v18M15 3v18"
+              stroke-opacity="0.5"
+              stroke-width="1.2"
+            />
+          </svg>
+        </div>
+        <div>
+          <div
+            class="font-medium text-slate-200 group-hover:text-white"
+          >
+            Container (em 
+            BODY
+            )
+          </div>
+          <div
+            class="text-[10px] text-slate-400"
+          >
+            Agrupador dentro da camada
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AddSectionDropdown > renders trigger button and calls onToggle 1`] = `
+<div>
+  <div
+    class="relative"
+  >
+    <button
+      class="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 hover:text-white transition"
+      title="Add"
+      type="button"
+    >
+      <svg
+        class="w-3 h-3"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M12 5v14M5 12h14"
+        />
+      </svg>
+    </button>
+  </div>
+</div>
+`;

@@ -73,11 +73,22 @@ export function resolveBindingWithLoopData(
 }
 
 export function resolveChildDisplayText(
-  el: { value?: string; dataBinding?: string },
+  el: { type?: string; value?: string; dataBinding?: string },
   loopId: string,
   testData: unknown,
   fallback: string = ''
 ): string {
+  if (el.type === 'text') {
+    if (el.dataBinding) {
+      if (testData && typeof testData === 'object' && Object.keys(testData).length > 0) {
+        return resolveBindingWithLoopData(el.dataBinding, loopId, testData)
+      }
+      return `{${el.dataBinding}}`
+    }
+    if (el.value) return el.value
+    return fallback
+  }
+
   if (el.value) return el.value
   if (el.dataBinding) {
     if (testData && typeof testData === 'object' && Object.keys(testData).length > 0) {

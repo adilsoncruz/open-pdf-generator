@@ -17,7 +17,6 @@ Complete reference of all available elements for templates.
 | [RectangleElement](#rectangleelement) | Rectangles and backgrounds | ❌ |
 | [LineElement](#lineelement) | Lines and dividers | ❌ |
 | [SpacerElement](#spacerelement) | Vertical/horizontal layout spacing | ❌ |
-| [PageBreakElement](#pagebreakelement) | Explicit document page break | ❌ |
 | [BarcodeElement](#barcodeelement) | QR Code and barcodes | ✅ |
 | [ConditionalElement](#conditionalelement) | Conditional rendering | ✅ |
 | [LoopElement](#loopelement) | Element repetition | ✅ |
@@ -444,6 +443,8 @@ Acts as a layout container grouping child elements with background and border st
 | `elements` | array | `[]` | List of nested child elements |
 | `autoHeight` | boolean | `true` | Automatically adjust container height to contents |
 | `heightMode` | string | `auto` | Height sizing mode (`auto` or `fixed`) |
+| `pageBreakBefore` | boolean | `false` | When true, renders container on a new page |
+| `pageBreakCondition` | string | `null` | Optional expression to conditionally evaluate page break |
 | `style` | object | - | Styling (`backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`) |
 
 ---
@@ -528,21 +529,6 @@ Inserts empty vertical or horizontal space in relative flow layouts.
 |----------|------|---------|-------------|
 | `height` | number | `0` | Spacing height in points |
 | `width` | number \| string | `"100%"` | Spacing width in points or percentage |
-
----
-
-## PageBreakElement
-
-Forces an explicit page break.
-
-### Properties
-
-```json
-{
-  "type": "page_break",
-  "id": "break-1"
-}
-```
 
 ---
 

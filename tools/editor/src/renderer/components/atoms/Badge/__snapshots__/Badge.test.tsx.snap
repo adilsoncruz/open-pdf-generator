@@ -1,0 +1,51 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Badge atom > renders all variants and custom className 1`] = `
+<div>
+  <span
+    class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400"
+  >
+    Primary
+  </span>
+</div>
+`;
+
+exports[`Badge atom > renders all variants and custom className 2`] = `
+<div>
+  <span
+    class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-600 dark:text-green-400"
+  >
+    Success
+  </span>
+</div>
+`;
+
+exports[`Badge atom > renders all variants and custom className 3`] = `
+<div>
+  <span
+    class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+  >
+    Warning
+  </span>
+</div>
+`;
+
+exports[`Badge atom > renders all variants and custom className 4`] = `
+<div>
+  <span
+    class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-red-500/10 text-red-600 dark:text-red-400 custom-extra"
+  >
+    Danger
+  </span>
+</div>
+`;
+
+exports[`Badge atom > renders default badge and matches snapshot 1`] = `
+<div>
+  <span
+    class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-500/10 text-gray-600 dark:text-gray-400"
+  >
+    Default
+  </span>
+</div>
+`;

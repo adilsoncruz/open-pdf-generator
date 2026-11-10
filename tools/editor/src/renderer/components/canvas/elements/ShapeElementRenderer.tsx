@@ -18,45 +18,6 @@ export function ShapeElementRenderer({
   isSelected,
   onMouseDown,
 }: ShapeElementRendererProps) {
-  if (element.type === 'page_break') {
-    const pbWidth =
-      element.width === '100%'
-        ? pageSize.width - margins.left - margins.right
-        : element.width || pageSize.width - margins.left - margins.right
-
-    return (
-      <div
-        className={`cursor-pointer select-none ${isSelected ? 'ring-2 ring-indigo-500 rounded' : ''}`}
-        style={{
-          width: pbWidth,
-          height: 24,
-          borderBottom: isSelected ? '3px dashed #6366f1' : '3px dashed #94a3b8',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-        }}
-        onMouseDown={onMouseDown}
-      >
-        <span
-          style={{
-            background: isSelected ? '#eef2ff' : 'white',
-            padding: '1px 10px',
-            color: isSelected ? '#4f46e5' : '#64748b',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            borderRadius: '4px',
-            border: isSelected ? '1px solid #818cf8' : '1px solid #cbd5e1',
-            transform: 'translateY(10px)',
-            pointerEvents: 'none',
-          }}
-        >
-          ✂ PAGE BREAK
-        </span>
-      </div>
-    )
-  }
-
   if (element.type === 'spacer' || element.type === 'rectangle') {
     const borderWidth = element.style?.borderWidth ?? 1
     const borderColor = element.style?.borderColor || '#000000'
@@ -175,8 +136,8 @@ export function ShapeElementRenderer({
     }
 
     const lineContainerDims = getLineContainerDimensions()
-    const lineElWidthRaw = element.width ?? (element.x2 ? element.x2 - element.x : 100)
-    const lineElHeightRaw = element.height ?? (element.y2 ? element.y2 - element.y : 0)
+    const lineElWidthRaw = element.width ?? (element.x2 ? element.x2 - (element.x ?? 0) : 100)
+    const lineElHeightRaw = element.height ?? (element.y2 ? element.y2 - (element.y ?? 0) : 0)
     const lineElWidth = resolveLineDimension(lineElWidthRaw, lineContainerDims.width, 100)
     const lineElHeight = resolveLineDimension(lineElHeightRaw, lineContainerDims.height, 0)
     const lineStrokeWidth = element.style?.strokeWidth || 1

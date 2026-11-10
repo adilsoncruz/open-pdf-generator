@@ -142,17 +142,19 @@ export function TextSpacingAndContentControls({
       </div>
 
       {/* Text Value */}
-      <div>
-        <label className="text-[10px] text-slate-400 block mb-1">{t.properties.textContent}</label>
-        <textarea
-          value={(element.value as string) || ''}
-          onChange={(e) => onUpdate('value', e.target.value)}
-          rows={2}
-          data-testid="text-content-textarea"
-          className="w-full bg-slate-950/70 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans resize-none"
-          placeholder={t.properties.textPlaceholder}
-        />
-      </div>
+      {element.type !== 'text' && (
+        <div>
+          <label className="text-[10px] text-slate-400 block mb-1">{t.properties.textContent}</label>
+          <textarea
+            value={(element.value as string) || ''}
+            onChange={(e) => onUpdate('value', e.target.value)}
+            rows={2}
+            data-testid="text-content-textarea"
+            className="w-full bg-slate-950/70 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans resize-none"
+            placeholder={t.properties.textPlaceholder}
+          />
+        </div>
+      )}
 
       {/* URL for Link */}
       {element.type === 'link' && (

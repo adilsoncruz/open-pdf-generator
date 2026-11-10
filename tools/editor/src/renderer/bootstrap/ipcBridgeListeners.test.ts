@@ -136,8 +136,11 @@ describe('ipcBridgeListeners', () => {
   })
 
   describe('setupIpcBridgeListeners', () => {
-    it('subscribes to onMenuSetLanguage if present', () => {
-      const onMenuSetLanguageMock = vi.fn()
+    it('subscribes to onMenuSetLanguage if present and changes language', () => {
+      let langCallback: any
+      const onMenuSetLanguageMock = vi.fn().mockImplementation((cb) => {
+        langCallback = cb
+      })
       window.electronAPI = {
         ...window.electronAPI,
         onMenuSetLanguage: onMenuSetLanguageMock,
@@ -145,6 +148,46 @@ describe('ipcBridgeListeners', () => {
 
       setupIpcBridgeListeners()
       expect(onMenuSetLanguageMock).toHaveBeenCalled()
+
+      // Fire language callback
+      langCallback('en')
+    })
+
+    it('runs useIpcBridgeListeners hook', async () => {
+      const { renderHook } = await import('@testing-library/react')
+      const { useIpcBridgeListeners } = await import('./ipcBridgeListeners')
+      const { unmount } = renderHook(() => useIpcBridgeListeners())
+      unmount()
+    })
+
+    it('handles handleImportJasper when electronAPI is missing or raw XML or error thrown', async () => {
+      const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {})
+
+      // 1. Missing electronAPI
+      const origAPI = window.electronAPI
+      delete (window as any).electronAPI
+      const noApiRes = await handleImportJasper()
+      expect(noApiRes).toBe(false)
+      window.electronAPI = origAPI
+
+      // 2. Raw XML without conversion
+      window.electronAPI = {
+        ...window.electronAPI,
+        openJasperFile: vi.fn().mockResolvedValue({ path: '/tmp/report.jrxml', content: '<jasperReport>' }),
+      } as any
+      const rawRes = await handleImportJasper()
+      expect(rawRes).toBe(false)
+      expect(alertMock).toHaveBeenCalled()
+
+      // 3. Exception in parsing
+      window.electronAPI = {
+        ...window.electronAPI,
+        openJasperFile: vi.fn().mockResolvedValue({ path: '/tmp/report.jrxml', content: '{ invalid json' }),
+      } as any
+      const errRes = await handleImportJasper()
+      expect(errRes).toBe(false)
+
+      alertMock.mockRestore()
     })
   })
 })

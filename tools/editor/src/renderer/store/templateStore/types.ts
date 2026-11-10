@@ -7,14 +7,16 @@ export type ElementLocation = 'body' | 'header' | 'footer' | 'bodyBackground' | 
 export interface Element {
   type: string
   id: string
-  x: number
-  y: number
+  x?: number
+  y?: number
   groupId?: string 
   hidden?: boolean  
   width?: number | string
   height?: number | string
   heightMode?: 'auto' | 'fixed'
   autoHeight?: boolean
+  pageBreakBefore?: boolean
+  pageBreakCondition?: string | null
   style?: Record<string, any>  
   value?: string
   dataBinding?: string

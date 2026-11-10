@@ -58,6 +58,7 @@ describe('ContextMenu Component', () => {
     expect(screen.getByText('Copiar')).toBeDefined()
     expect(screen.getByText('Colar')).toBeDefined()
     expect(screen.getByText('Duplicar')).toBeDefined()
+    expect(document.body).toMatchSnapshot()
     expect(screen.getByText('Ocultar Elemento')).toBeDefined()
     expect(screen.getByText('Trazer para frente')).toBeDefined()
     expect(screen.getByText('Enviar para trás')).toBeDefined()
@@ -239,7 +240,7 @@ describe('ContextMenu Component', () => {
 
     fireEvent.click(screen.getByText('Texto Dinâmico'))
     expect(addElementSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'text', value: 'Novo Texto' }),
+      expect.objectContaining({ type: 'text', dataBinding: 'field' }),
       'body'
     )
   })
@@ -294,5 +295,85 @@ describe('ContextMenu Component', () => {
     expect(menuEl).toBeDefined()
     expect(menuEl.style.left).toBe('690px')
     expect(menuEl.style.top).toBe('390px')
+  })
+
+  it('handles ungroup, edit group, bring to front, send to back, and delete container child', () => {
+    const ungroupSpy = vi.spyOn(useTemplateStore.getState(), 'ungroupElements').mockImplementation(() => {})
+    const selectGroupSpy = vi.spyOn(useTemplateStore.getState(), 'selectGroup').mockImplementation(() => {})
+    const reorderSpy = vi.spyOn(useTemplateStore.getState(), 'reorderElement').mockImplementation(() => {})
+    const deleteChildSpy = vi.spyOn(useTemplateStore.getState(), 'deleteLoopChildElement').mockImplementation(() => {})
+
+    useTemplateStore.setState({
+      template: {
+        ...useTemplateStore.getState().template,
+        groups: [{ id: 'grp-active', name: 'MyGroup', elementIds: ['text-1'], location: 'body' as const }],
+      },
+      selectedElementIds: ['text-1'],
+      selectedGroupId: 'grp-active',
+    })
+
+    useUIStore.getState().openContextMenu({
+      x: 100,
+      y: 100,
+      targetType: 'element',
+      elementId: 'text-1',
+      containerId: 'loop-parent-1',
+      location: 'body',
+    })
+
+    const { getByText, rerender } = render(<ContextMenu />)
+
+    // Edit group
+    fireEvent.click(getByText('Propriedades do Grupo'))
+    expect(selectGroupSpy).toHaveBeenCalledWith('grp-active', 'body')
+
+    // Reopen menu for ungroup
+    useTemplateStore.setState({ selectedElementIds: ['text-1'], selectedGroupId: 'grp-active' })
+    useUIStore.getState().openContextMenu({
+      x: 100,
+      y: 100,
+      targetType: 'element',
+      elementId: 'text-1',
+      location: 'body',
+    })
+    rerender(<ContextMenu />)
+    fireEvent.click(getByText('Desagrupar'))
+    expect(ungroupSpy).toHaveBeenCalledWith('grp-active', 'body')
+
+    // Reopen menu for bring to front & send to back
+    useUIStore.getState().openContextMenu({
+      x: 100,
+      y: 100,
+      targetType: 'element',
+      elementId: 'text-1',
+      location: 'body',
+    })
+    rerender(<ContextMenu />)
+    fireEvent.click(getByText('Trazer para frente'))
+    expect(reorderSpy).toHaveBeenCalledWith('text-1', 9999, 'body')
+
+    useUIStore.getState().openContextMenu({
+      x: 100,
+      y: 100,
+      targetType: 'element',
+      elementId: 'text-1',
+      location: 'body',
+    })
+    rerender(<ContextMenu />)
+    fireEvent.click(getByText('Enviar para trás'))
+    expect(reorderSpy).toHaveBeenCalledWith('text-1', 0, 'body')
+
+    // Delete loop child element
+    useUIStore.getState().openContextMenu({
+      x: 100,
+      y: 100,
+      targetType: 'element',
+      elementId: 'text-1',
+      containerId: 'loop-parent-1',
+      location: 'body',
+    })
+    rerender(<ContextMenu />)
+    fireEvent.click(getByText('Excluir'))
+    expect(deleteChildSpy).toHaveBeenCalledWith('loop-parent-1', 'text-1', 'body')
   })
 })

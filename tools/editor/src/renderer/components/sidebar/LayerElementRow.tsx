@@ -121,8 +121,6 @@ export function LayerElementRow({
         return '⊞'
       case 'spacer':
         return '↕'
-      case 'page_break':
-        return '✂'
       default:
         return '•'
     }

@@ -81,11 +81,11 @@ export const ensureContainersInSection = (
   }
 
   const looseElements = elements.filter(
-    (el) => el.type !== 'container' && el.type !== 'page_break' && el.type !== 'spacer'
+    (el) => el.type !== 'container' && el.type !== 'spacer'
   )
   if (looseElements.length > 0) {
     const topElements = elements.filter(
-      (el) => el.type === 'container' || el.type === 'page_break' || el.type === 'spacer'
+      (el) => el.type === 'container' || el.type === 'spacer'
     )
     let attached = false
     return topElements.map((c) => {
@@ -98,7 +98,7 @@ export const ensureContainersInSection = (
   }
 
   return elements.map((el) =>
-    el.type === 'container' || el.type === 'page_break' || el.type === 'spacer'
+    el.type === 'container' || el.type === 'spacer'
       ? { ...el, x: 0, width: '100%' }
       : el
   )
@@ -164,7 +164,12 @@ export const restackBodyContainers = (elements: Element[], template?: Template):
   }
 
   return elements.map((el) => {
-    if (el.type !== 'container' && el.type !== 'page_break' && el.type !== 'spacer') return el
+    if (el.type !== 'container' && el.type !== 'spacer') return el
+
+    if (el.type === 'container' && el.pageBreakBefore && currentY > 0) {
+      const currentPageIndex = Math.floor((currentY - 0.1) / usableHeight)
+      currentY = (currentPageIndex + 1) * usableHeight
+    }
 
     const next = {
       ...el,
@@ -176,19 +181,11 @@ export const restackBodyContainers = (elements: Element[], template?: Template):
     const h =
       typeof el.height === 'number'
         ? el.height
-        : el.type === 'page_break'
-        ? 20
         : el.type === 'spacer'
         ? 50
         : 150
 
-    if (el.type === 'page_break') {
-      currentY += h
-      const currentPageIndex = Math.floor((currentY - 0.1) / usableHeight)
-      currentY = (currentPageIndex + 1) * usableHeight
-    } else {
-      currentY += h
-    }
+    currentY += h
 
     return next
   })

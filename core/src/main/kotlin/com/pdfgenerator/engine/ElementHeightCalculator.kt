@@ -12,7 +12,6 @@ import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.ListElement
 import com.pdfgenerator.model.LoopElement
-import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.RectangleElement
 import com.pdfgenerator.model.RichTextElement
 import com.pdfgenerator.model.SpacerElement
@@ -86,7 +85,6 @@ object ElementHeightCalculator {
             is ContainerElement -> ContainerHeightCalculator.calculateContainerHeight(element, data, context)
             is ListElement -> measureListHeight(element, data)
             is CheckListElement -> measureCheckListHeight(element, data)
-            is PageBreakElement -> 0f
             is SpacerElement -> element.height
             else -> 0f
         }
