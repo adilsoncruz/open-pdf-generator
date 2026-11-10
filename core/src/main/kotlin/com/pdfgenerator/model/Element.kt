@@ -38,8 +38,6 @@ class ElementDeserializer : JsonDeserializer<Element> {
                     "conditional" to ConditionalElement::class.java,
                     "loop" to LoopElement::class.java,
                     "container" to ContainerElement::class.java,
-                    "page_break" to PageBreakElement::class.java,
-                    "pageBreak" to PageBreakElement::class.java,
                     "spacer" to SpacerElement::class.java,
                     "rich_text" to RichTextElement::class.java,
                     "richText" to RichTextElement::class.java,

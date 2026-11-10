@@ -56,7 +56,8 @@ export function ContainerElementRenderer({
                 ? footerH
                 : Math.max(0, pageSize.height - margins.top - margins.bottom - headerH - footerH)
               const containerStartY = typeof effectiveY === 'number' ? effectiveY : (typeof element.y === 'number' ? element.y : 0)
-              const maxAllowedContainerH = Math.max(30, sectionMaxH - containerStartY)
+              const yOnSectionPage = location === 'body' && sectionMaxH > 0 ? containerStartY % sectionMaxH : containerStartY
+              const maxAllowedContainerH = Math.max(30, sectionMaxH - yOnSectionPage)
 
               const isFixed = element.heightMode === 'fixed' || element.autoHeight === false
               const baseHeight = element.height === '100%'
@@ -99,6 +100,12 @@ export function ContainerElementRenderer({
                   }}
                   onMouseDown={onMouseDown}
                 >
+                  {element.pageBreakBefore && (
+                    <div className="absolute -top-3 left-3 px-2 py-0.5 rounded bg-indigo-600 text-white font-mono text-[9px] font-semibold flex items-center gap-1 shadow-sm z-30 pointer-events-none">
+                      <span>✂ Início de Nova Página</span>
+                      {element.pageBreakCondition && <span className="opacity-80">({element.pageBreakCondition})</span>}
+                    </div>
+                  )}
 {/*
                   <div
                     className={`absolute flex items-center gap-2 px-2 py-1 bg-primary-500 text-white rounded-md shadow-sm pointer-events-none transition-opacity ${

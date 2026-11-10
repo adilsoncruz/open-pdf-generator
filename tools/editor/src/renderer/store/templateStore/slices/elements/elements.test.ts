@@ -353,4 +353,57 @@ describe('elements modular slice', () => {
       expect(ys?.[2]).toBe(100)
     })
   })
+
+  describe('multi-page container pageBreakBefore additions', () => {
+    it('positions container on page 2 when pageBreakBefore is set', () => {
+      const { addElement } = useTemplateStore.getState()
+
+      addElement(
+        {
+          type: 'container',
+          id: 'c2',
+          name: 'Page 2 Container',
+          x: 0,
+          y: 0,
+          pageBreakBefore: true,
+          elements: [],
+        },
+        'body'
+      )
+
+      const page = useTemplateStore.getState().template.page
+      const c2 = page.find((el) => el.id === 'c2')
+      expect(c2).toBeDefined()
+      // Section height for A4 with margins 30/30 is 842 - 60 = 782
+      expect(c2!.y).toBe(782)
+      expect(c2!.height).toBe(120)
+    })
+
+    it('allows adding child elements to container on page 2 with pageBreakBefore', () => {
+      const { addElement } = useTemplateStore.getState()
+
+      addElement(
+        {
+          type: 'container',
+          id: 'c2',
+          name: 'Page 2 Container',
+          x: 0,
+          y: 0,
+          pageBreakBefore: true,
+          elements: [],
+        },
+        'body'
+      )
+
+      useTemplateStore.setState({ selectedElementIds: ['c2'] })
+      addElement(
+        { type: 'text', id: 't-page2', x: 20, y: 20, width: 200, height: 30, value: 'Page 2 Text' },
+        'body'
+      )
+
+      const page = useTemplateStore.getState().template.page
+      const c2 = page.find((el) => el.id === 'c2')
+      expect(c2?.elements?.some((el) => el.id === 't-page2')).toBe(true)
+    })
+  })
 })

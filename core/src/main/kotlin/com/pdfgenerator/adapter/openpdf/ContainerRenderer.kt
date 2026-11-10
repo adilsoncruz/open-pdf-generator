@@ -30,9 +30,27 @@ class ContainerRenderer(private val renderEngine: RenderEngine) : Renderer<Conta
             return
         }
 
+        if (element.pageBreakBefore == true) {
+            val shouldBreak = element.pageBreakCondition == null ||
+                ConditionEvaluator.evaluate(element.pageBreakCondition, context.data, context.loopContext)
+            if (shouldBreak && (context.renderState?.currentY ?: 0f) > 0f) {
+                context.document.newPage()
+                context.renderState?.currentY = 0f
+            }
+        }
+
         // Container is always treated as full-width and relative in body flow.
         val containerX = 0f
-        val containerY = element.y
+        val usablePageHeight =
+            context.document.pageSize.height - context.document.topMargin() - context.document.bottomMargin()
+        val containerY =
+            if (element.pageBreakBefore == true) {
+                0f
+            } else if (usablePageHeight > 0f && element.y >= usablePageHeight) {
+                element.y % usablePageHeight
+            } else {
+                element.y
+            }
         val containerWidth = context.containerWidth ?: element.resolveWidth(595.28f)
         val resolvedHeight = element.resolveHeight(context.containerHeight ?: 0f)
         val baseHeight = if (resolvedHeight > 0f) resolvedHeight else (context.containerHeight ?: 0f)

@@ -11,7 +11,6 @@ const ELEMENT_TYPES: { type: string; label: string; icon: IconName }[] = [
   { type: 'line', label: 'Line', icon: 'line' },
   { type: 'barcode', label: 'Barcode/QR', icon: 'barcode' },
   { type: 'loop', label: 'Loop', icon: 'loop' },
-  { type: 'page_break', label: 'Page Break', icon: 'page-break' },
   { type: 'spacer', label: 'Spacer', icon: 'spacer' },
   { type: 'rich_text', label: 'Rich Text', icon: 'markdown' },
   { type: 'link', label: 'Link', icon: 'link' },
@@ -32,7 +31,6 @@ export default function ElementsToolbar() {
     line: t.elements.line,
     barcode: t.elements.barcode,
     loop: t.elements.loop,
-    page_break: t.elements.pageBreak,
     spacer: t.elements.spacer,
     rich_text: t.elements.richText,
     link: t.elements.link,
@@ -159,16 +157,6 @@ export default function ElementsToolbar() {
             borderWidth: 1,
             borderStyle: 'dashed',
           },
-        }
-        break
-      case 'page_break':
-        element = {
-          ...baseElement,
-          x: 0,
-          width: '100%',
-          height: 20,
-          positionMode: 'RELATIVE',
-          relativeOffsetY: 0
         }
         break
       case 'spacer':

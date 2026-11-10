@@ -27,7 +27,6 @@ const ELEMENT_CATEGORIES: ElementCategory[] = [
       { name: 'Container', type: 'container', description: 'Boxes and groups elements together with background and border.', usage: 'Cards, headers, panels' },
       { name: 'Loop', type: 'loop', description: 'Iterates through an array and repeats child elements vertically.', usage: 'dataBinding="invoice.items"' },
       { name: 'Spacer', type: 'spacer', description: 'Adds fixed vertical whitespace between sections.', usage: 'height: 24' },
-      { name: 'Page Break', type: 'page_break', description: 'Forces content following it onto a new PDF page.', usage: 'type: "page_break"' },
     ],
   },
   {

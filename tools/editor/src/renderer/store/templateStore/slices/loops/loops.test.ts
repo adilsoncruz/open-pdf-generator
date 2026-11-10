@@ -98,20 +98,6 @@ describe('loops modular slice', () => {
       expect(state.isDirty).toBe(true)
     })
 
-    it('silently ignores adding page_break to loop', () => {
-      const { addElementToLoop } = useTemplateStore.getState()
-      addElementToLoop('loop-1', {
-        type: 'page_break',
-        id: 'pb-1',
-        x: 0,
-        y: 0,
-      })
-
-      const state = useTemplateStore.getState()
-      const loop = state.template.page.find((el) => el.id === 'loop-1')
-      expect(loop?.elements?.map((el) => el.id)).toEqual(['child-1', 'child-2'])
-    })
-
     it('adds element to a loop located in header', () => {
       const { addElementToLoop } = useTemplateStore.getState()
       addElementToLoop(

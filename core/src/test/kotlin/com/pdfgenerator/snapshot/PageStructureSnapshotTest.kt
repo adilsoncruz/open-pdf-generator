@@ -250,26 +250,31 @@ class PageStructureSnapshotTest {
                   "style": { "fontSize": 10.5, "color": "#334155", "lineHeight": 1.4 }
                 },
                 {
-                  "type": "pageBreak",
-                  "id": "pb-1"
-                },
-                {
-                  "type": "text",
-                  "id": "page2-title",
+                  "type": "container",
+                  "id": "pb-1",
                   "x": 0,
                   "y": 0,
-                  "value": "Section 2: Detailed Performance Telemetry",
-                  "style": { "fontSize": 16, "fontWeight": "bold", "color": "#0f172a" }
-                },
-                {
-                  "type": "text",
-                  "id": "page2-content",
-                  "x": 0,
-                  "y": 30,
-                  "width": 520,
-                  "multiline": true,
-                  "value": "Second page following an explicit pageBreak. Header and footer are seamlessly rendered with updated pageNumber={{pageNumber}}.",
-                  "style": { "fontSize": 10.5, "color": "#334155", "lineHeight": 1.4 }
+                  "pageBreakBefore": true,
+                  "elements": [
+                    {
+                      "type": "text",
+                      "id": "page2-title",
+                      "x": 0,
+                      "y": 0,
+                      "value": "Section 2: Detailed Performance Telemetry",
+                      "style": { "fontSize": 16, "fontWeight": "bold", "color": "#0f172a" }
+                    },
+                    {
+                      "type": "text",
+                      "id": "page2-content",
+                      "x": 0,
+                      "y": 30,
+                      "width": 520,
+                      "multiline": true,
+                      "value": "Second page following an explicit pageBreak. Header and footer are seamlessly rendered with updated pageNumber={{pageNumber}}.",
+                      "style": { "fontSize": 10.5, "color": "#334155", "lineHeight": 1.4 }
+                    }
+                  ]
                 }
               ]
             }

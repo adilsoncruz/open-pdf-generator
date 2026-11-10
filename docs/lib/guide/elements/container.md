@@ -8,6 +8,7 @@ The `ContainerElement` acts as a bounding box and relative layout context for mu
 - ✅ **Dynamic Width & Height**: Supports fixed values (`400`), percentage (`"100%"`), and `autoHeight`.
 - ✅ **Styling**: Background color, borders, corner radius, and padding via `style`.
 - ✅ **Conditional Rendering**: Supports `printCondition` to show or hide the entire container and its children.
+- ✅ **Page Break Control**: Supports `pageBreakBefore: true` and optional `pageBreakCondition` to start the container on a new page.
 - ✅ **Auto-Height Calculation**: Automatically expands based on its internal content when `autoHeight: true`.
 
 ---
@@ -27,6 +28,8 @@ The `ContainerElement` acts as a bounding box and relative layout context for mu
 | `elements` | array | ✅ | List of child elements inside the container |
 | `style` | object | ❌ | Styling: `backgroundColor`, `borderColor`, `borderWidth`, `borderRadius` |
 | `printCondition` | string | ❌ | Expression condition to render container |
+| `pageBreakBefore` | boolean | ❌ | When `true`, forces container to start on a new page (default: `false`) |
+| `pageBreakCondition` | string | ❌ | Optional expression to conditionally evaluate `pageBreakBefore` |
 | `positionMode` | string | ❌ | Position mode (`"absolute"` or `"relative"`) |
 | `relativeOffsetY` | number | ❌ | Spacing when placed below preceding flow content |
 

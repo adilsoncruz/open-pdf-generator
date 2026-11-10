@@ -240,7 +240,7 @@ class ApiCoverageBoostTest {
                   "height": "auto",
                   "elements": [
                     { "type": "spacer", "id": "sp-1", "height": 20 },
-                    { "type": "pageBreak", "id": "pb-1" }
+                    { "type": "spacer", "id": "sp-2", "height": 10 }
                   ]
                 }
               ]

@@ -8,7 +8,6 @@ import com.pdfgenerator.model.LineElement
 import com.pdfgenerator.model.LinkElement
 import com.pdfgenerator.model.LoopElement
 import com.pdfgenerator.model.Margins
-import com.pdfgenerator.model.PageBreakElement
 import com.pdfgenerator.model.PageSettings
 import com.pdfgenerator.model.PositionMode
 import com.pdfgenerator.model.RectangleElement
@@ -122,9 +121,6 @@ class ElementHeightCalculatorTest {
 
         val spacer = SpacerElement(id = "s1", x = 0f, y = 0f, height = 15f)
         assertEquals(15f, ElementHeightCalculator.getElementHeight(spacer, data, context))
-
-        val pageBreak = PageBreakElement(id = "pb1")
-        assertEquals(0f, ElementHeightCalculator.getElementHeight(pageBreak, data, context))
     }
 
     @Test
