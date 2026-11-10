@@ -13,17 +13,35 @@ function normalizeElement(element: Element, location: ElementLocation, template:
   }
 
   const sectionHeight = getSectionHeight(template, location)
-  const containers = getSectionElements(template, location).filter((el) => el.type === 'container')
+  const topElements = getSectionElements(template, location).filter(
+    (el) => el.type === 'container' || el.type === 'page_break' || el.type === 'spacer'
+  )
   let nextY = 0
 
-  if (containers.length > 0) {
-    const last = containers[containers.length - 1]
-    nextY = (typeof last.y === 'number' ? last.y : 0) + (typeof last.height === 'number' ? last.height : 120)
+  if (topElements.length > 0) {
+    const last = topElements[topElements.length - 1]
+    const lastH =
+      typeof last.height === 'number'
+        ? last.height
+        : last.type === 'page_break'
+        ? 20
+        : last.type === 'spacer'
+        ? 50
+        : 120
+    const lastY = typeof last.y === 'number' ? last.y : 0
+
+    if (last.type === 'page_break' && location === 'body') {
+      const pageIndex = Math.floor((lastY + lastH - 0.1) / (sectionHeight || 1))
+      nextY = (pageIndex + 1) * sectionHeight
+    } else {
+      nextY = lastY + lastH
+    }
   } else if (typeof element.y === 'number' && element.y > 0) {
     nextY = element.y
   }
 
-  const remainingHeight = Math.max(30, sectionHeight - nextY)
+  const yOnPage = location === 'body' && sectionHeight > 0 ? nextY % sectionHeight : nextY
+  const remainingHeight = Math.max(30, sectionHeight - yOnPage)
   const defaultHeight = element.type === 'page_break' ? 20 : element.type === 'spacer' ? 50 : 120
   const height = Math.min(typeof element.height === 'number' ? element.height : defaultHeight, remainingHeight)
 
@@ -83,8 +101,18 @@ function insertIntoLoop(elements: Element[], targetLoop: Element, el: Element) {
 
 function findTargetContainer(elements: Element[], selectedId?: string, parentId?: string | null): Element | null {
   if (selectedId) {
-    const match = elements.find((el) => el.id === selectedId && el.type === 'container')
-    if (match) return match
+    const selectedIdx = elements.findIndex((el) => el.id === selectedId)
+    if (selectedIdx !== -1) {
+      const selectedEl = elements[selectedIdx]
+      if (selectedEl.type === 'container') {
+        return selectedEl
+      }
+      if (selectedEl.type === 'page_break') {
+        const nextContainer = elements.slice(selectedIdx + 1).find((el) => el.type === 'container')
+        if (nextContainer) return nextContainer
+        return null
+      }
+    }
   }
   if (parentId) {
     const parent = elements.find((el) => el.id === parentId && el.type === 'container')
@@ -143,7 +171,9 @@ function insertIntoContainer(
   const requiredH = childBottom + 15
   const currentH = typeof container.height === 'number' ? container.height : 150
   const isFixed = container.heightMode === 'fixed' || container.autoHeight === false
-  const maxH = Math.max(30, sectionHeight - (container.y || 0))
+  const containerYOnPage =
+    location === 'body' && sectionHeight > 0 ? (container.y || 0) % sectionHeight : (container.y || 0)
+  const maxH = Math.max(30, sectionHeight - containerYOnPage)
 
   if (isFixed && childBottom > currentH) {
     alert(`O container "${container.name || container.id}" possui altura fixa (${currentH} pt) e não há espaço suficiente para adicionar este elemento (necessário: ${childBottom} pt). Altere para auto-height ou aumente a altura do container.`)
@@ -158,7 +188,21 @@ function insertIntoContainer(
   const deltaH = newContainerH - currentH
   const targetIdx = elements.findIndex((item) => item.id === container.id)
 
-  if (deltaH > 0 && elements.some((item, idx) => idx > targetIdx && ((typeof item.y === 'number' ? item.y : 0) + deltaH + (typeof item.height === 'number' ? item.height : 30)) > sectionHeight)) {
+  const currentPageIndex =
+    location === 'body' && sectionHeight > 0 ? Math.floor((container.y || 0) / sectionHeight) : 0
+  const pageLimit = (currentPageIndex + 1) * sectionHeight
+
+  if (
+    deltaH > 0 &&
+    elements.some((item, idx) => {
+      if (idx <= targetIdx) return false
+      const hasPageBreakBetween = elements.slice(targetIdx + 1, idx + 1).some((e) => e.type === 'page_break')
+      if (hasPageBreakBetween) return false
+      const itemBottom =
+        (typeof item.y === 'number' ? item.y : 0) + deltaH + (typeof item.height === 'number' ? item.height : 30)
+      return itemBottom > pageLimit
+    })
+  ) {
     alert('Não é possível adicionar o elemento: os containers seguintes seriam empurrados para fora da página.')
     return { newElements: elements, newSelectedId: container.id, newSelectedChildId: null, isTargetLoop: false }
   }

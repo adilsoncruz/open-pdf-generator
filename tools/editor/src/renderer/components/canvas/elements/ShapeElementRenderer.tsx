@@ -51,7 +51,7 @@ export function ShapeElementRenderer({
             pointerEvents: 'none',
           }}
         >
-          ✂ PAGE BREAK
+          ✂ PAGE BREAK{element.printCondition ? ` (${element.printCondition})` : ''}
         </span>
       </div>
     )

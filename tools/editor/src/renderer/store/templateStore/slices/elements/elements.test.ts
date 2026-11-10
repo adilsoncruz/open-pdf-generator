@@ -353,4 +353,59 @@ describe('elements modular slice', () => {
       expect(ys?.[2]).toBe(100)
     })
   })
+
+  describe('multi-page and pageBreak element additions', () => {
+    it('allows adding and sizing a container after page_break on page 2', () => {
+      const { addElement } = useTemplateStore.getState()
+
+      // Add page_break
+      addElement({ type: 'page_break', id: 'pb1' }, 'body')
+
+      // Add container on page 2
+      addElement({ type: 'container', id: 'c2' }, 'body')
+
+      const page = useTemplateStore.getState().template.page
+      const c2 = page.find((el) => el.id === 'c2')
+      expect(c2).toBeDefined()
+      // Section height for A4 with margins 30/30 is 842 - 60 = 782
+      expect(c2!.y).toBe(782)
+      // Height should be normal default container height (120), not crushed to 30
+      expect(c2!.height).toBe(120)
+    })
+
+    it('allows adding child elements to container on page 2 after page_break', () => {
+      const { addElement } = useTemplateStore.getState()
+
+      addElement({ type: 'page_break', id: 'pb1' }, 'body')
+      addElement({ type: 'container', id: 'c2' }, 'body')
+
+      useTemplateStore.setState({ selectedElementIds: ['c2'] })
+      addElement(
+        { type: 'text', id: 't-page2', x: 20, y: 20, width: 200, height: 30, value: 'Page 2 Text' },
+        'body'
+      )
+
+      const page = useTemplateStore.getState().template.page
+      const c2 = page.find((el) => el.id === 'c2')
+      expect(c2?.elements?.some((el) => el.id === 't-page2')).toBe(true)
+    })
+
+    it('auto-creates container on next page when adding element with page_break selected', () => {
+      const { addElement } = useTemplateStore.getState()
+
+      addElement({ type: 'page_break', id: 'pb1' }, 'body')
+      useTemplateStore.setState({ selectedElementIds: ['pb1'] })
+
+      addElement(
+        { type: 'text', id: 't-after-pb', x: 10, y: 10, width: 150, height: 25, value: 'Hello Page 2' },
+        'body'
+      )
+
+      const page = useTemplateStore.getState().template.page
+      const newContainer = page.find((el) => el.id !== 'c1' && el.type === 'container')
+      expect(newContainer).toBeDefined()
+      expect(newContainer!.y).toBe(782)
+      expect(newContainer?.elements?.some((el) => el.id === 't-after-pb')).toBe(true)
+    })
+  })
 })
