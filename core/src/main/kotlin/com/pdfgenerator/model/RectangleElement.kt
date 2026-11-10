@@ -10,7 +10,7 @@ data class RectangleElement(
     val width: Any,
     val height: Any,
     val style: RectangleStyle? = null,
-    val printCondition: String? = null,
+    override val printCondition: String? = null,
 ) : Element {
     override fun validate(pageSettings: PageSettings): List<ValidationError> = emptyList()
 

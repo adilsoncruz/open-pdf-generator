@@ -67,6 +67,7 @@ export function useCanvasPageDrop({
       setIsDragOver(false)
 
       const elementData =
+        e.dataTransfer.getData('application/x-openpdf-element') ||
         e.dataTransfer.getData('application/json') ||
         e.dataTransfer.getData('text/plain')
 

@@ -2,6 +2,7 @@ import React from 'react'
 import { useTemplateStore, type Element } from '../../../store/templateStore'
 import type { ElementLocation } from '../../../store/templateStore/types'
 import type { GuideLine } from '../snapping'
+import type { SnappedGuides } from '../types'
 import { ContainerChildTableRenderer } from '../elements/ContainerChildTableRenderer'
 import { ContainerChildLoopRenderer } from './ContainerChildLoopRenderer'
 import { ListElementRenderer } from '../elements/ListElementRenderer'
@@ -18,7 +19,7 @@ export interface ContainerChildRendererProps {
   containerPageX?: number
   containerPageY?: number
   scale?: number
-  onSnapGuide?: (guide: GuideLine | null) => void
+  onSnapGuide?: (guide: SnappedGuides) => void
   resolveWidth: (value: string | number | undefined) => number
   resolveHeight: (value: string | number | undefined) => number
 }

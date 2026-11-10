@@ -24,6 +24,7 @@ describe('ContextMenu Component', () => {
         id: 'tpl-1',
         name: 'Test Template',
         version: '1.0',
+        metadata: { name: 'Test Template' },
         pageSettings: {
           size: 'A4',
           orientation: 'portrait',

@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.1.10"
     application
     id("com.gradleup.shadow") version "9.6.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
@@ -31,10 +31,16 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
     testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
+    testImplementation("io.github.adilsoncruz:pdf-snapshot-junit:0.1.0")
 }
 
 application {
     mainClass.set("io.pdfgenerator.cli.MainKt")
+}
+
+tasks.jar {
+    archiveClassifier.set("plain")
 }
 
 tasks.shadowJar {

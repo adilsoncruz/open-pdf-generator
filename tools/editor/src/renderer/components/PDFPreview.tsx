@@ -67,7 +67,11 @@ export default function PDFPreview({ onClose }: PDFPreviewProps) {
   }, [previewMode, setPreviewMode])
 
   return (
-    <div className="flex flex-col h-full theme-bg-secondary border-l theme-border relative select-none">
+    <div
+      className={`flex flex-col h-full theme-bg-secondary ${
+        previewMode === 'split' ? 'border-l theme-border' : ''
+      } relative select-none`}
+    >
       {/* Top Toolbar */}
       <PreviewToolbar
         lastGeneratedAt={lastGeneratedAt}

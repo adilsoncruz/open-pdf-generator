@@ -13,7 +13,9 @@ export function PaletteItem({ item, onAdd, disabled = false }: PaletteItemProps)
   const handleDragStart = (e: React.DragEvent<HTMLButtonElement>) => {
     try {
       const element = item.createElement()
-      e.dataTransfer.setData('application/x-openpdf-element', JSON.stringify(element))
+      const jsonPayload = JSON.stringify(element)
+      e.dataTransfer.setData('application/x-openpdf-element', jsonPayload)
+      e.dataTransfer.setData('application/json', jsonPayload)
       e.dataTransfer.setData('text/plain', item.type)
       e.dataTransfer.effectAllowed = 'copy'
     } catch {

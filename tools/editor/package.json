@@ -5,8 +5,8 @@
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\"",
-    "dev:renderer": "cross-env VITE_PORT=5175 node node_modules/vite/bin/vite.js --port 5175",
-    "dev:main": "node node_modules/typescript/bin/tsc -p tsconfig.main.json && cross-env NODE_ENV=development VITE_PORT=5175 node node_modules/electron/cli.js .",
+    "dev:renderer": "cross-env VITE_PORT=5185 node node_modules/vite/bin/vite.js --port 5185",
+    "dev:main": "node node_modules/typescript/bin/tsc -p tsconfig.main.json && cross-env NODE_ENV=development VITE_PORT=5185 node node_modules/electron/cli.js .",
     "build": "npm run build:renderer && npm run build:main",
     "build:renderer": "node node_modules/vite/bin/vite.js build",
     "build:main": "node node_modules/typescript/bin/tsc -p tsconfig.main.json",

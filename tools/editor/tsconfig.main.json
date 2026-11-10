@@ -4,11 +4,12 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "allowImportingTsExtensions": false,
-    "outDir": "dist/main",
+    "outDir": "dist",
+    "rootDir": "src",
     "noEmit": false,
     "lib": ["ES2020"]
   },
-  "include": ["src/main"],
+  "include": ["src/main", "src/shared"],
   "exclude": ["**/*.test.ts", "**/*.spec.ts"]
 }
 

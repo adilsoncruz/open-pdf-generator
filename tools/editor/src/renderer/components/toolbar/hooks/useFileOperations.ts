@@ -3,7 +3,6 @@ import { useTabStore } from '../../../store/tabStore'
 import { usePreviewStore } from '../../../store/previewStore'
 import { useRecentFilesStore } from '../../../store/recentFilesStore'
 import { useTranslation } from '../../../i18n'
-import { convertJrxmlToTemplate } from '../../../utils/jrxmlImporter'
 import type { CLIStatus } from '../types'
 
 interface UseFileOperationsOptions {
@@ -42,7 +41,6 @@ export function useFileOperations({
         break
       }
       try {
-        let loadedTemplate: any
         const isJrxml =
           result.isJrxml ||
           result.path?.toLowerCase().endsWith('.jrxml') ||
@@ -50,10 +48,20 @@ export function useFileOperations({
           result.content.includes('<jasperReport')
 
         if (isJrxml && !result.content.trim().startsWith('{')) {
-          loadedTemplate = convertJrxmlToTemplate(result.content)
-          result.convertedFromJasper = true
-        } else {
-          loadedTemplate = JSON.parse(result.content)
+          alert('A importação de templates Jasper (.jrxml) requer a CLI em execução no Desktop App.')
+          break
+        }
+
+        const loadedTemplate = JSON.parse(result.content)
+
+        if (loadedTemplate.pageElements && !loadedTemplate.page) {
+          loadedTemplate.page = loadedTemplate.pageElements
+        }
+        if (loadedTemplate.elements && !loadedTemplate.page) {
+          loadedTemplate.page = loadedTemplate.elements
+        }
+        if (!Array.isArray(loadedTemplate.page)) {
+          loadedTemplate.page = []
         }
 
         let structuralError = ''
@@ -61,7 +69,7 @@ export function useFileOperations({
           structuralError = t.validation.missingVersion
         } else if (!loadedTemplate.pageSettings) {
           structuralError = t.validation.missingPageSettings
-        } else if (!loadedTemplate.elements && !loadedTemplate.page) {
+        } else if (!loadedTemplate.elements && !loadedTemplate.page && !loadedTemplate.pageElements) {
           structuralError = t.validation.missingElements
         }
         if (structuralError) {
@@ -120,11 +128,21 @@ export function useFileOperations({
         : await window.electronAPI.openFile()
       if (!result) return
 
-      let loadedTemplate: any
-      if (result.content.trim().startsWith('{')) {
-        loadedTemplate = JSON.parse(result.content)
-      } else {
-        loadedTemplate = convertJrxmlToTemplate(result.content)
+      if (!result.content.trim().startsWith('{')) {
+        alert('A importação de templates Jasper (.jrxml) requer a CLI em execução no Desktop App.')
+        return
+      }
+
+      const loadedTemplate = JSON.parse(result.content)
+
+      if (loadedTemplate.pageElements && !loadedTemplate.page) {
+        loadedTemplate.page = loadedTemplate.pageElements
+      }
+      if (loadedTemplate.elements && !loadedTemplate.page) {
+        loadedTemplate.page = loadedTemplate.elements
+      }
+      if (!Array.isArray(loadedTemplate.page)) {
+        loadedTemplate.page = []
       }
 
       const tabTitle = (result.path.split(/[/\\]/).pop() || 'jasper-template.jrxml').replace(/\.jrxml$/i, '.json')

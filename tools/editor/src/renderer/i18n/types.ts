@@ -30,6 +30,8 @@ export interface Translations {
     no: string
     none: string
     unsaved: string
+    title?: string
+    [key: string]: string | undefined
   }
 
   // Toolbar
@@ -390,6 +392,8 @@ export interface Translations {
     emptyTemplateHint: string
     genericError: string
     tryAgain: string
+    splitMode: string
+    fullMode: string
   }
 
   // Error messages

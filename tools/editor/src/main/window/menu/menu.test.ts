@@ -97,6 +97,10 @@ describe('fileMenu', () => {
     openBtn?.click?.({} as any, {} as any, {} as any)
     expect(send).toHaveBeenCalledWith('menu:open')
 
+    const importJasperBtn = submenu.find((item) => item.label === strings.importJasper)
+    importJasperBtn?.click?.({} as any, {} as any, {} as any)
+    expect(send).toHaveBeenCalledWith('menu:import-jasper')
+
     const saveBtn = submenu.find((item) => item.label === strings.save)
     saveBtn?.click?.({} as any, {} as any, {} as any)
     expect(send).toHaveBeenCalledWith('menu:save')

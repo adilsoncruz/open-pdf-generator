@@ -73,6 +73,96 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(`{"status":"online","service":"Open PDF Generator API","endpoints":["/health","/api/generate-preview","/api/render"]}`))
 }
 
+type pdfGenError struct {
+	Code    string
+	Message string
+	Status  int
+}
+
+func (e *pdfGenError) Error() string {
+	return e.Message
+}
+
+func runPdfGenerator(ctx context.Context, req PreviewRequest) ([]byte, *pdfGenError) {
+	templateStr := strings.TrimSpace(req.TemplateJson)
+	if templateStr == "" && len(req.Template) > 0 {
+		templateStr = string(req.Template)
+	}
+
+	dataStr := strings.TrimSpace(req.DataJson)
+	if dataStr == "" && len(req.Data) > 0 {
+		dataStr = string(req.Data)
+	}
+	if dataStr == "" {
+		dataStr = "{}"
+	}
+
+	if templateStr == "" {
+		return nil, &pdfGenError{
+			Code:    "MISSING_TEMPLATE",
+			Message: "Template payload cannot be empty",
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	tmpDir, err := os.MkdirTemp("", "open-pdf-*")
+	if err != nil {
+		return nil, &pdfGenError{
+			Code:    "TMP_DIR_ERROR",
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	templatePath := filepath.Join(tmpDir, "template.json")
+	dataPath := filepath.Join(tmpDir, "data.json")
+	outputPath := filepath.Join(tmpDir, "output.pdf")
+
+	if err := os.WriteFile(templatePath, []byte(templateStr), 0600); err != nil {
+		return nil, &pdfGenError{
+			Code:    "IO_ERROR",
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	if err := os.WriteFile(dataPath, []byte(dataStr), 0600); err != nil {
+		return nil, &pdfGenError{
+			Code:    "IO_ERROR",
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	bin, baseArgs := getCliCommand()
+	args := append([]string{}, baseArgs...)
+	args = append(args, "generate", templatePath, "-d", dataPath, "-o", outputPath)
+
+	execCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(execCtx, bin, args...)
+	if output, cmdErr := cmd.CombinedOutput(); cmdErr != nil {
+		return nil, &pdfGenError{
+			Code:    "ERROR_GENERATING_PDF",
+			Message: fmt.Sprintf("%s\n%s", cmdErr.Error(), string(output)),
+			Status:  http.StatusUnprocessableEntity,
+		}
+	}
+
+	pdfBytes, err := os.ReadFile(outputPath)
+	if err != nil {
+		return nil, &pdfGenError{
+			Code:    "ERROR_READING_PDF",
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	return pdfBytes, nil
+}
+
 func handleGeneratePreview(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"error":"Method not allowed"}`, http.StatusMethodNotAllowed)
@@ -104,101 +194,19 @@ func handleGeneratePreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Resolve template string
-	templateStr := strings.TrimSpace(req.TemplateJson)
-	if templateStr == "" && len(req.Template) > 0 {
-		templateStr = string(req.Template)
-	}
-
-	// Resolve data string
-	dataStr := strings.TrimSpace(req.DataJson)
-	if dataStr == "" && len(req.Data) > 0 {
-		dataStr = string(req.Data)
-	}
-	if dataStr == "" {
-		dataStr = "{}"
-	}
-
-	if templateStr == "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(PreviewResponse{
-			Success:   false,
-			ErrorCode: "MISSING_TEMPLATE",
-			CliError:  "Template payload cannot be empty",
-		})
-		return
-	}
-
-	// Create temporary directory for generation
-	tmpDir, err := os.MkdirTemp("", "open-pdf-preview-*")
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(PreviewResponse{
-			Success:   false,
-			ErrorCode: "TMP_DIR_ERROR",
-			CliError:  err.Error(),
-		})
-		return
-	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	templatePath := filepath.Join(tmpDir, "template.json")
-	dataPath := filepath.Join(tmpDir, "data.json")
-	outputPath := filepath.Join(tmpDir, "output.pdf")
-
-	if err := os.WriteFile(templatePath, []byte(templateStr), 0600); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(PreviewResponse{
-			Success:   false,
-			ErrorCode: "IO_ERROR",
-			CliError:  err.Error(),
-		})
-		return
-	}
-
-	if err := os.WriteFile(dataPath, []byte(dataStr), 0600); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(PreviewResponse{
-			Success:   false,
-			ErrorCode: "IO_ERROR",
-			CliError:  err.Error(),
-		})
-		return
-	}
-
-	bin, baseArgs := getCliCommand()
-	args := append([]string{}, baseArgs...)
-	args = append(args, "generate", templatePath, "-d", dataPath, "-o", outputPath)
-
-	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, bin, args...)
-	output, cmdErr := cmd.CombinedOutput()
-
+	pdfBytes, genErr := runPdfGenerator(r.Context(), req)
 	w.Header().Set("Content-Type", "application/json")
 
-	if cmdErr != nil {
-		w.WriteHeader(http.StatusOK) // Return 200 with success: false for editor consistency
+	if genErr != nil {
+		status := genErr.Status
+		if genErr.Code == "ERROR_GENERATING_PDF" || genErr.Code == "ERROR_READING_PDF" {
+			status = http.StatusOK // Return 200 with success: false for editor consistency
+		}
+		w.WriteHeader(status)
 		_ = json.NewEncoder(w).Encode(PreviewResponse{
 			Success:   false,
-			ErrorCode: "ERROR_GENERATING_PDF",
-			CliError:  fmt.Sprintf("%s\n%s", cmdErr.Error(), string(output)),
-		})
-		return
-	}
-
-	pdfBytes, err := os.ReadFile(outputPath)
-	if err != nil {
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(PreviewResponse{
-			Success:   false,
-			ErrorCode: "ERROR_READING_PDF",
-			CliError:  err.Error(),
+			ErrorCode: genErr.Code,
+			CliError:  genErr.Message,
 		})
 		return
 	}
@@ -229,60 +237,9 @@ func handleRenderDirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templateStr := strings.TrimSpace(req.TemplateJson)
-	if templateStr == "" && len(req.Template) > 0 {
-		templateStr = string(req.Template)
-	}
-
-	dataStr := strings.TrimSpace(req.DataJson)
-	if dataStr == "" && len(req.Data) > 0 {
-		dataStr = string(req.Data)
-	}
-	if dataStr == "" {
-		dataStr = "{}"
-	}
-
-	if templateStr == "" {
-		http.Error(w, "Missing template", http.StatusBadRequest)
-		return
-	}
-
-	tmpDir, err := os.MkdirTemp("", "open-pdf-render-*")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	templatePath := filepath.Join(tmpDir, "template.json")
-	dataPath := filepath.Join(tmpDir, "data.json")
-	outputPath := filepath.Join(tmpDir, "output.pdf")
-
-	if err := os.WriteFile(templatePath, []byte(templateStr), 0600); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if err := os.WriteFile(dataPath, []byte(dataStr), 0600); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	bin, baseArgs := getCliCommand()
-	args := append([]string{}, baseArgs...)
-	args = append(args, "generate", templatePath, "-d", dataPath, "-o", outputPath)
-
-	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, bin, args...)
-	if output, cmdErr := cmd.CombinedOutput(); cmdErr != nil {
-		http.Error(w, fmt.Sprintf("Generation failed: %s (%s)", cmdErr.Error(), string(output)), http.StatusUnprocessableEntity)
-		return
-	}
-
-	pdfBytes, err := os.ReadFile(outputPath)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	pdfBytes, genErr := runPdfGenerator(r.Context(), req)
+	if genErr != nil {
+		http.Error(w, genErr.Message, genErr.Status)
 		return
 	}
 

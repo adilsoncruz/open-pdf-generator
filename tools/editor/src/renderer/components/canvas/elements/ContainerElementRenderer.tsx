@@ -16,6 +16,7 @@ interface ContainerElementRendererProps {
   containerOffsetX?: number
   containerOffsetY?: number
   effectiveY?: number
+  effectiveX?: number
   onSnapGuide?: (snapped: SnappedGuides) => void
   onMouseDown: (e: ReactMouseEvent) => void
 }
@@ -32,6 +33,7 @@ export function ContainerElementRenderer({
   containerOffsetX,
   containerOffsetY,
   effectiveY,
+  effectiveX,
   onSnapGuide,
   onMouseDown,
 }: ContainerElementRendererProps) {

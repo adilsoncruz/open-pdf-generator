@@ -9,16 +9,17 @@ export interface ComputedFlowElement {
 }
 
 export function useBodyFlowLayout(
-  elements: Element[],
+  elements: Element[] = [],
   bodyUsableHeight: number
 ): ComputedFlowElement[] {
   return useMemo(() => {
+    const safeElements = Array.isArray(elements) ? elements : []
     let currentFlowY = 0
     let lastFlowX: number | undefined = undefined
     let lastFlowWidth: number | string | undefined = undefined
 
-    return elements
-      .filter((element) => !element.hidden)
+    return safeElements
+      .filter((element) => element && !element.hidden)
       .map((element) => {
         const isRelativeFlow =
           ((element.positionMode || element.position || '') as string).toUpperCase() === 'RELATIVE' &&

@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { Icon } from '../../atoms'
 import PDFPreview from '../../PDFPreview'
 import { useTemplateStore } from '../../../store/templateStore'
 import { useTranslation } from '../../../i18n'

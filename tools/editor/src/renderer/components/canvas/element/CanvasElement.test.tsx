@@ -13,13 +13,13 @@ describe('resolveElementDimensions', () => {
   const margins = { top: 20, right: 30, bottom: 20, left: 30 }
 
   it('resolves numeric width and height directly', () => {
-    const el: Element = { id: '1', type: 'text', width: 250, height: 40 }
+    const el: Element = { id: '1', type: 'text', x: 0, y: 0, width: 250, height: 40 }
     const dims = resolveElementDimensions(el, pageSize, margins)
     expect(dims).toEqual({ width: 250, height: 40 })
   })
 
   it('resolves 100% width to printable page width', () => {
-    const el: Element = { id: '2', type: 'text', width: '100%', height: 50 }
+    const el: Element = { id: '2', type: 'text', x: 0, y: 0, width: '100%', height: 50 }
     const dims = resolveElementDimensions(el, pageSize, margins)
     // 595 - 30 - 30 = 535
     expect(dims.width).toBe(535)
@@ -27,20 +27,20 @@ describe('resolveElementDimensions', () => {
   })
 
   it('resolves page_break dimensions defaults', () => {
-    const el: Element = { id: '3', type: 'page_break' }
+    const el: Element = { id: '3', type: 'page_break', x: 0, y: 0 }
     const dims = resolveElementDimensions(el, pageSize, margins)
     expect(dims.width).toBe(535)
     expect(dims.height).toBe(24)
   })
 
   it('falls back to default dimensions if not defined', () => {
-    const el: Element = { id: '4', type: 'text' }
+    const el: Element = { id: '4', type: 'text', x: 0, y: 0 }
     const dims = resolveElementDimensions(el, pageSize, margins)
     expect(dims).toEqual({ width: 100, height: 25 })
   })
 
   it('uses dom dimensions if provided and element lacks width/height', () => {
-    const el: Element = { id: '5', type: 'text' }
+    const el: Element = { id: '5', type: 'text', x: 0, y: 0 }
     const dims = resolveElementDimensions(el, pageSize, margins, { width: 180, height: 45 })
     expect(dims).toEqual({ width: 180, height: 45 })
   })
@@ -153,6 +153,8 @@ describe('CanvasElement integration', () => {
   beforeEach(() => {
     useTemplateStore.setState({
       template: {
+        version: '1.0',
+        metadata: { name: 'Test' },
         pageSettings: {
           size: 'A4',
           orientation: 'portrait',

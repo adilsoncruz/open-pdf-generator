@@ -59,6 +59,9 @@ export function useElectronMenuEvents({ toolbarRef }: UseElectronMenuEventsProps
     window.electronAPI.onMenuOpen?.(() => {
       toolbarRef.current?.handleOpen()
     })
+    window.electronAPI.onMenuImportJasper?.(() => {
+      toolbarRef.current?.handleImportJasper()
+    })
     window.electronAPI.onMenuSave?.(() => {
       toolbarRef.current?.handleSave()
     })

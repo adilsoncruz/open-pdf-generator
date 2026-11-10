@@ -1,4 +1,4 @@
-import React from 'react'
+import type { Element } from '../../../../store/templateStore'
 
 type ListPropertiesSectionProps = {
   element: Element

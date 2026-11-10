@@ -73,11 +73,11 @@ export function CanvasElement(props: CanvasElementProps) {
         <CanvasElementBoundingBox
           isSelected={props.isSelected}
           isDragging={isDragging}
-          isResizing={isResizing}
+          isResizing={Boolean(isResizing)}
           width={dims.width}
           height={dims.height}
-          isWidthFull={isWidthFull}
-          isHeightFull={isHeightFull}
+          isWidthFull={Boolean(isWidthFull)}
+          isHeightFull={Boolean(isHeightFull)}
           elementGroup={elementGroup}
           onResizeMouseDown={handleResizeMouseDown}
         />

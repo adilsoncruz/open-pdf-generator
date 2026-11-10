@@ -1,5 +1,5 @@
 import { useTranslation } from '../../../../i18n'
-import type { Element } from '../../../../../store/templateStore'
+import type { Element } from '../../../../store/templateStore'
 
 export interface TableDataRowStyleSectionProps {
   element: Element

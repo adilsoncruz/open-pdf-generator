@@ -482,6 +482,8 @@ const pt: Translations = {
     emptyTemplateHint: 'Adicione elementos ao seu modelo e salve para visualizar.',
     genericError: 'Ocorreu um erro ao gerar a visualização.',
     tryAgain: 'Tentar novamente',
+    splitMode: 'Modo dividido',
+    fullMode: 'Tela cheia',
   },
 
   errors: {
