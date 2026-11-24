@@ -23,7 +23,8 @@ const shared = {
     ['meta', { name: 'twitter:title', content: 'Open PDF Generator - Open Source JSON-to-PDF Engine' }],
     ['meta', { name: 'twitter:description', content: 'Fast, lightweight JasperReports alternative for Java/Kotlin, CLI and Desktop visual template editor.' }],
     ['meta', { name: 'twitter:image', content: 'https://adilsoncruz.github.io/open-pdf-generator/icon.png' }],
-    ['meta', { name: 'keywords', content: 'pdf generator, jasperreports alternative, kotlin pdf, java pdf template, open source pdf editor, json to pdf' }]
+    ['meta', { name: 'keywords', content: 'pdf generator, jasperreports alternative, kotlin pdf, java pdf template, open source pdf editor, json to pdf' }],
+    ['meta', { name: 'google-site-verification', content: 'OAJZChC0yLVqvLDqnZikKZ-RvgmLSce1RKzVGWZFFUA' }]
   ],
 
   appearance: 'dark',
