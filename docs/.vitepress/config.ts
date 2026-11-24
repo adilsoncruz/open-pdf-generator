@@ -13,7 +13,18 @@ const shared = {
     /^\/open-pdf-generator\/playground/,
   ],
 
-  head: [['link', { rel: 'icon', href: '/open-pdf-generator/icon.png' }]],
+  head: [
+    ['link', { rel: 'icon', href: '/open-pdf-generator/icon.png' }],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:title', content: 'Open PDF Generator - Open Source JSON-to-PDF Engine' }],
+    ['meta', { property: 'og:description', content: 'Fast, lightweight JasperReports alternative for Java/Kotlin, CLI and Desktop visual template editor.' }],
+    ['meta', { property: 'og:image', content: 'https://adilsoncruz.github.io/open-pdf-generator/icon.png' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'Open PDF Generator - Open Source JSON-to-PDF Engine' }],
+    ['meta', { name: 'twitter:description', content: 'Fast, lightweight JasperReports alternative for Java/Kotlin, CLI and Desktop visual template editor.' }],
+    ['meta', { name: 'twitter:image', content: 'https://adilsoncruz.github.io/open-pdf-generator/icon.png' }],
+    ['meta', { name: 'keywords', content: 'pdf generator, jasperreports alternative, kotlin pdf, java pdf template, open source pdf editor, json to pdf' }]
+  ],
 
   appearance: 'dark',
 
@@ -432,6 +443,9 @@ const es = {
 export default defineConfig({
   ...shared,
   title: 'Open PDF Generator',
+  sitemap: {
+    hostname: 'https://adilsoncruz.github.io/open-pdf-generator/'
+  },
   locales: {
     root: { label: 'English', lang: 'en', ...en },
     pt,
